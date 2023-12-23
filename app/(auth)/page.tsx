@@ -2,23 +2,19 @@
 import Image from "next/image";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ACCESS_TOKEN_KEY } from "@/constants/token.contant";
+import { ACCESS_TOKEN_KEY } from "@/constants/token.constant";
 import token from "@/lib/token";
-import { postLogin } from "@/repositories/auth/authRepository";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useLogin } from "@/queries/auth.query";
 
 const Login = () => {
   const [login, setLogin] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const loginMutation = useLogin();
   const onLogin = async () => {
-    postLogin({ login, password }).then((res) => {
-      const result = res.data;
-      const { token: userToken, user } = result || {};
-      console.log("userToken", userToken);
-      console.log("user", user);
-      token.setToken(ACCESS_TOKEN_KEY, "meo");
-    });
+    const data = await loginMutation.mutateAsync({ login, password });
+    console.log("data", data);
   };
 
   return (
@@ -40,7 +36,6 @@ const Login = () => {
         <Input
           id="email"
           className="w-full p-2 rounded bg-gray-700 text-white"
-          placeholder="Vui lòng nhập tên đăng nhập"
           value={login}
           onChange={(e) => setLogin(e.target.value)}
         />
@@ -54,7 +49,6 @@ const Login = () => {
           type="password"
           id="password"
           className="w-full p-2 rounded bg-gray-700 text-white"
-          placeholder="Vui lòng nhập mật khẩu"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
@@ -64,10 +58,18 @@ const Login = () => {
         <Button
           onClick={onLogin}
           variant="default"
-          className="w-full justify-start"
+          className="w-full justify-start mr-4 bg-red-400"
           size="default"
         >
-          Đăng nhập
+          Đăng nhập Gò Vấp
+        </Button>
+        <Button
+          onClick={onLogin}
+          variant="default"
+          className="w-full justify-start bg-blue-400"
+          size="default"
+        >
+          Đăng nhập Tân Phú
         </Button>
       </div>
     </>
