@@ -87,57 +87,69 @@ const CheckInCalendar = () => {
     queryFn: () => fetcher(`/api/check-in-item`),
   });
 
-  const handleDayClick = async (day: string, star: number) => {
-    console.log("herererere");
-    if (!isChecking) {
-      const hasCheckIn = userCheckIn.find(
-        (x) =>
-          dayjs(x.createdAt).format("DD/MM/YYYY") ===
-          dayjs(day).format("DD/MM/YYYY"),
-      );
-      if (hasCheckIn) {
-        toast.error("Hôm nay bạn đã điểm danh rồi!");
-        return;
-      }
-      if (dayjs(day).isToday()) {
-        if (todaySpentTime >= MIN_LOGIN_TIME) {
-          setIsChecking(true);
-          const { userId, rankId, stars } = userData;
-          await executeUpdateUser({
-            userId,
-            rankId,
-            stars: stars + star,
-            rocks: 0,
-          });
-          await executeCheckIn({ userId });
-          setIsChecking(false);
-          window.location.reload();
-        } else {
-          toast.error(`Hôm nay bạn chưa chơi đủ ${MIN_LOGIN_TIME} phút !`);
+  const handleDayClick = useCallback(
+    async (day: string, star: number) => {
+      if (!isChecking && userCheckIn) {
+        const hasCheckIn = userCheckIn.find(
+          (x) =>
+            dayjs(x.createdAt).format("DD/MM/YYYY") ===
+            dayjs(day).format("DD/MM/YYYY"),
+        );
+        if (hasCheckIn) {
+          toast.error("Hôm nay bạn đã điểm danh rồi!");
           return;
         }
-      } else if (dayjs(day).isSameOrAfter(dayjs())) {
-        toast.error("Chưa đến ngày điểm danh rồi!");
-        return;
-      } else {
-        // setShowModal(true);
-        // setCurrentInfo({ day, star });
-        toast.error("Đã quá hạn điểm danh rồi!");
+        if (dayjs(day).isToday()) {
+          if (todaySpentTime && todaySpentTime >= MIN_LOGIN_TIME) {
+            setIsChecking(true);
+            if (userData) {
+              const { userId, rankId, stars } = userData;
+              await executeUpdateUser({
+                userId,
+                rankId,
+                stars: stars + star,
+                rocks: 0,
+              });
+              await executeCheckIn({ userId });
+              setIsChecking(false);
+              window.location.reload();
+            }
+          } else {
+            toast.error(`Hôm nay bạn chưa chơi đủ ${MIN_LOGIN_TIME} phút !`);
+            return;
+          }
+        } else if (dayjs(day).isSameOrAfter(dayjs())) {
+          toast.error("Chưa đến ngày điểm danh rồi!");
+          return;
+        } else {
+          // setShowModal(true);
+          // setCurrentInfo({ day, star });
+          toast.error("Đã quá hạn điểm danh rồi!");
+        }
       }
-    }
-  };
-
+    },
+    [
+      userCheckIn,
+      isChecking,
+      executeUpdateUser,
+      executeCheckIn,
+      userData,
+      todaySpentTime,
+    ],
+  );
   const checkInArray = chunkArrayInGroups(getAllDaysOfMonth(), 7);
 
   const confirmPassCheckIn = async () => {
-    const { day, star } = currentInfo || {};
-    setShowModal(false);
-    setIsChecking(true);
-    const { userId, rankId, stars } = userData;
-    await executeUpdateUser({ userId, rankId, stars: stars + star });
-    await executeCheckIn({ userId });
-    setIsChecking(false);
-    window.location.reload();
+    if (currentInfo && userData) {
+      const { star } = currentInfo || {};
+      setShowModal(false);
+      setIsChecking(true);
+      const { userId, rankId, stars } = userData;
+      await executeUpdateUser({ userId, rankId, stars: stars + star });
+      await executeCheckIn({ userId });
+      setIsChecking(false);
+      window.location.reload();
+    }
   };
 
   const renderCheckIn = useCallback(() => {
@@ -152,8 +164,11 @@ const CheckInCalendar = () => {
                   return null;
                 }
 
-                const stars = checkInData.find((x) => x.dayName === date)
-                  ?.stars;
+                let stars = 0;
+                const currentDate = checkInData.find((x) => x.dayName === date);
+                if (currentDate) {
+                  stars = currentDate.stars;
+                }
 
                 const hasCheckIn = userCheckIn.find(
                   (x) =>

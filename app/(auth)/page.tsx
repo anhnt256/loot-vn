@@ -18,7 +18,7 @@ const Login = () => {
   const router = useRouter();
 
   const { execute } = useAction(createUser, {
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast.success("Chào mừng đến với The GateWay!");
       router.push("/dashboard");
     },
@@ -36,7 +36,7 @@ const Login = () => {
     const result = await loginMutation.mutateAsync({ login, password });
     const { statusCode, data } = result || {};
     if (statusCode === 200) {
-      await execute({ userId: data, userName: login });
+      await execute({ userId: data });
     }
   };
 

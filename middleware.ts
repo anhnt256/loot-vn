@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { ACCESS_TOKEN_KEY } from "@/constants/token.constant";
-import dayjs from "@/lib/dayjs";
 
+import dayjs from "@/lib/dayjs";
+import { deleteCookie } from "cookies-next";
 
 export function middleware(request: NextRequest) {
   const currentUser = request.cookies.get(ACCESS_TOKEN_KEY)?.value;
@@ -14,8 +15,11 @@ export function middleware(request: NextRequest) {
   )
     return NextResponse.next();
   if (currentUser) {
-    const { expiration_date } = currentUser;
-    if (!dayjs().isSameOrAfter(expiration_date)) {
+    const { expiration_date } = JSON.parse(currentUser);
+    console.log("expiration_date", expiration_date);
+    console.log("expiration_date", !dayjs().isSameOrAfter(expiration_date));
+    if (dayjs().isSameOrAfter(expiration_date)) {
+      deleteCookie(ACCESS_TOKEN_KEY);
       return NextResponse.redirect(new URL("/", request.url));
     }
     return NextResponse.next();

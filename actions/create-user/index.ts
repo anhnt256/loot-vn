@@ -8,7 +8,7 @@ import { InputType, ReturnType } from "./type";
 import { User } from "@prisma/client";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
-  const { userId, userName, rankId = 1, stars = 0 } = data;
+  const { userId, rankId = 1, stars = 0 } = data;
   let createUser;
 
   const currentUser: User | null = await db.user.findUnique({
@@ -25,7 +25,6 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     createUser = await db.user.create({
       data: {
         userId,
-        userName,
         rankId,
         stars,
       },
