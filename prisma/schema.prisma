@@ -6,9 +6,10 @@ generator client {
 }
 
 datasource db {
-  provider     = "mysql"
-  url          = env("DATABASE_URL")
-  relationMode = "prisma"
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+  relationMode      = "prisma"
 }
 
 enum ACTION {
@@ -17,11 +18,103 @@ enum ACTION {
   DELETE
 }
 
+enum ITEM_TYPE {
+  HOURS
+  DRINK
+  FOOD
+}
+
 model User {
-  id         String   @id @default(uuid())
-  token      String
-  expireTime DateTime
+  id     Int @id @default(autoincrement())
+  userId Int @unique
+  rocks  Int @default(0)
+  rankId Int
+  stars  Int
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Rank {
+  id           Int    @id @default(autoincrement())
+  name         String
+  fromValue    Float
+  toValue      Float
+  discount     Float?
+  foodVoucher  Int?
+  drinkVoucher Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Game {
+  id            Int      @id @default(autoincrement())
+  name          String
+  startDate     DateTime
+  endDate       DateTime
+  starsPerRound Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CheckInResult {
+  id     Int @id @default(autoincrement())
+  userId Int
+
+  createdAt DateTime @default(now())
+}
+
+model CheckInItem {
+  id      Int    @id @default(autoincrement())
+  dayName String
+  stars   Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CheckInPromotion {
+  id            Int      @id @default(autoincrement())
+  checkInItemId Int
+  coefficient   Float
+  startDate     DateTime
+  endDate       DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Item {
+  id         Int       @id @default(autoincrement())
+  name       String
+  rating     Float
+  type       ITEM_TYPE
+  maxValue   Float
+  maxPercent Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GameItemMap {
+  id     Int @id @default(autoincrement())
+  gameId Int @unique
+  itemId Int @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GameResult {
+  id      Int    @id @default(autoincrement())
+  voucher String @default(uuid())
+  userId  Int
+  itemId  Int
+
+  startDate DateTime @default(now())
+  endDate   DateTime
+
+  createdAt DateTime @default(now())
 }

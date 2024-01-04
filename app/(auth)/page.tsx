@@ -1,20 +1,43 @@
 "use client";
 import Image from "next/image";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { ACCESS_TOKEN_KEY } from "@/constants/token.constant";
-import token from "@/lib/token";
+
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useLogin } from "@/queries/auth.query";
+import { useAction } from "@/hooks/use-action";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { createUser } from "@/actions/create-user";
 
 const Login = () => {
   const [login, setLogin] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const loginMutation = useLogin();
+  const router = useRouter();
+
+  const { execute } = useAction(createUser, {
+    onSuccess: (data) => {
+      toast.success("Chào mừng đến với The GateWay!");
+      router.push("/dashboard");
+    },
+    onError: (error) => {
+      if (error === "User has exist.") {
+        toast.success("Chào mừng đến với The GateWay!");
+        router.push("/dashboard");
+      } else {
+        toast.error(error);
+      }
+    },
+  });
+
   const onLogin = async () => {
-    const data = await loginMutation.mutateAsync({ login, password });
-    console.log("data", data);
+    const result = await loginMutation.mutateAsync({ login, password });
+    const { statusCode, data } = result || {};
+    if (statusCode === 200) {
+      await execute({ userId: data, userName: login });
+    }
   };
 
   return (

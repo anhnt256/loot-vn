@@ -37,8 +37,8 @@ apiClient.interceptors.request.use(async (request) => {
   }
 
   //#region StartDebug
-  const { method, url } = request || {};
-  logOnDev(`🚀 [${method?.toUpperCase()}] ${url} | Request`, request);
+  // const { method, url } = request || {};
+  // logOnDev(`🚀 [${method?.toUpperCase()}] ${url} | Request`, request);
   //#endregion
 
   return request;
