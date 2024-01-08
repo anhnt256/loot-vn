@@ -3,6 +3,7 @@ import { CURRENT_USER } from "@/constants/token.constant";
 import { User } from "@prisma/client";
 import { fetcher } from "@/lib/fetcher";
 import { useQuery } from "@tanstack/react-query";
+import { getCookie } from "cookies-next";
 
 export const useUserInfo = () => {
   const [currentUserId, setCurrentUserId] = useState<number | undefined>();
@@ -13,10 +14,11 @@ export const useUserInfo = () => {
     setCurrentUserId(id);
     setUserName(login);
   }, []);
+  const branch = getCookie("branch");
   const { data: userData } = useQuery<User>({
     queryKey: ["user", currentUserId],
-    enabled: !!currentUserId,
-    queryFn: () => fetcher(`/api/user/${currentUserId}`),
+    enabled: !!currentUserId && !!branch,
+    queryFn: () => fetcher(`/api/user/${currentUserId}/${branch}`),
   });
   const { data: todaySpentTime } = useQuery<number>({
     queryKey: ["today-spent-time", userName],

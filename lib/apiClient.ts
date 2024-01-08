@@ -4,14 +4,16 @@ import axios, {
   InternalAxiosRequestConfig,
   AxiosError,
 } from "axios";
+import { getCookie } from "cookies-next";
 
-const host = process.env.NEXT_PUBLIC_GATEWAY_GO_VAP_API;
-const secretKey = process.env.NEXT_PUBLIC_GATEWAY_GO_VAP_SECRET_KEY;
+let host = process.env.NEXT_PUBLIC_GATEWAY_GO_VAP_API;
+let secretKey = process.env.NEXT_PUBLIC_GATEWAY_GO_VAP_SECRET_KEY;
 
 const isServer = typeof window === "undefined";
 
 const apiClient = axios.create({
   baseURL: host,
+  withCredentials: true,
 });
 
 const logOnDev = (
@@ -25,11 +27,21 @@ const logOnDev = (
 
 apiClient.interceptors.request.use(async (request) => {
   if (isServer) {
+    const cookie = request.headers.Cookie;
+    if (cookie && cookie === "TAN_PHU") {
+      host = process.env.NEXT_PUBLIC_GATEWAY_TAN_PHU_API;
+      secretKey = process.env.NEXT_PUBLIC_GATEWAY_TAN_PHU_SECRET_KEY;
+    } else {
+      host = process.env.NEXT_PUBLIC_GATEWAY_GO_VAP_API;
+      secretKey = process.env.NEXT_PUBLIC_GATEWAY_GO_VAP_SECRET_KEY;
+    }
+
+    request.baseURL = host;
+
     if (secretKey) {
       request.headers["Authorization"] = `Key ${secretKey}`;
     }
   } else {
-    const { getCookie } = await import("cookies-next");
     const token = getCookie(ACCESS_TOKEN_KEY);
     if (token) {
       request.headers["Authorization"] = `Bearer ${token}`;

@@ -1,4 +1,3 @@
-import UserSection from "@/app/(dashboard)/dashboard/_component/UserSection/UserSection";
 import CheckInCalendar from "./_component/CheckInCalendar/CheckInCalendar";
 
 const Dashboard = () => {
@@ -24,7 +23,7 @@ const Dashboard = () => {
             </div>
             <div className="flex">
               <div className="w-4 h-4 bg-white mr-2 border" />
-              <div className="text-xs">Điểm danh chưa mở</div>
+              <div className="text-xs">Sắp mở</div>
             </div>
           </div>
         </div>

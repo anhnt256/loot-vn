@@ -56,24 +56,6 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
           >
             Đổi thưởng
           </Link>
-          <Link
-            className={cn(
-              "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
-              pathname === "/game" ? "bg-gray-700" : "transparent",
-            )}
-            href="/game"
-          >
-            Game
-          </Link>
-          <a
-            className={cn(
-              "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
-              pathname === "/promotion" ? "bg-gray-700" : "transparent",
-            )}
-            href="/promotion"
-          >
-            Thông tin khuyến mãi
-          </a>
           <a
             className={cn(
               "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",

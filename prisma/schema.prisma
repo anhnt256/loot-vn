@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,40 +9,29 @@ datasource db {
   relationMode      = "prisma"
 }
 
-enum ACTION {
-  CREATE
-  UPDATE
-  DELETE
-}
-
-enum ITEM_TYPE {
-  HOURS
-  DRINK
-  FOOD
-}
-
 model User {
-  id     Int @id @default(autoincrement())
-  userId Int @unique
-  rocks  Int @default(0)
-  rankId Int
-  stars  Int
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               Int             @id @default(autoincrement())
+  userId           Int
+  rankId           Int
+  stars            Int
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  magicStone       Int             @default(0)
+  branch           String
+  UserMissionMap   UserMissionMap? @relation(fields: [userMissionMapId], references: [id])
+  userMissionMapId Int?
 }
 
 model Rank {
-  id           Int    @id @default(autoincrement())
+  id           Int      @id @default(autoincrement())
   name         String
   fromValue    Float
   toValue      Float
   discount     Float?
   foodVoucher  Int?
   drinkVoucher Int?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model Game {
@@ -54,23 +40,20 @@ model Game {
   startDate     DateTime
   endDate       DateTime
   starsPerRound Int
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model CheckInResult {
-  id     Int @id @default(autoincrement())
-  userId Int
-
+  id        Int      @id @default(autoincrement())
+  userId    Int
   createdAt DateTime @default(now())
 }
 
 model CheckInItem {
-  id      Int    @id @default(autoincrement())
-  dayName String
-  stars   Float
-
+  id        Int      @id @default(autoincrement())
+  dayName   String
+  stars     Float
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -81,40 +64,72 @@ model CheckInPromotion {
   coefficient   Float
   startDate     DateTime
   endDate       DateTime
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Item {
   id         Int       @id @default(autoincrement())
   name       String
   rating     Float
-  type       ITEM_TYPE
+  type       Item_type
   maxValue   Float
   maxPercent Float
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 }
 
 model GameItemMap {
-  id     Int @id @default(autoincrement())
-  gameId Int @unique
-  itemId Int @unique
-
+  id        Int      @id @default(autoincrement())
+  gameId    Int      @unique
+  itemId    Int      @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model GameResult {
-  id      Int    @id @default(autoincrement())
-  voucher String @default(uuid())
-  userId  Int
-  itemId  Int
-
+  id        Int      @id @default(autoincrement())
+  voucher   String   @default(uuid())
+  userId    Int
+  itemId    Int
   startDate DateTime @default(now())
   endDate   DateTime
-
   createdAt DateTime @default(now())
+}
+
+model Mission {
+  id             Int              @id @default(autoincrement())
+  name           String
+  description    String
+  reward         Float
+  startHours     Int
+  endHours       Int
+  createdAt      DateTime         @default(now())
+  quantity       Int
+  type           Mission_type
+  UserMissionMap UserMissionMap[]
+}
+
+model UserMissionMap {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  missionId Int
+  branch    String
+  isDone    Boolean  @default(false)
+  users     User[]
+  mission   Mission  @relation(fields: [missionId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Item_type {
+  HOURS
+  ORDER
+  COMBO
+}
+
+enum Mission_type {
+  HOURS
+  ORDER
+  COMBO
 }

@@ -13,7 +13,6 @@ export async function GET(
 
     return NextResponse.json(checkInItems);
   } catch (error) {
-    console.log("error", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

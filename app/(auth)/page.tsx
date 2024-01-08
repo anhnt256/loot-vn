@@ -10,6 +10,7 @@ import { useAction } from "@/hooks/use-action";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { createUser } from "@/actions/create-user";
+import { BRANCH } from "@/constants/enum.constant";
 
 const Login = () => {
   const [login, setLogin] = useState<string>("");
@@ -18,7 +19,7 @@ const Login = () => {
   const router = useRouter();
 
   const { execute } = useAction(createUser, {
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast.success("Chào mừng đến với The GateWay!");
       router.push("/dashboard");
     },
@@ -32,11 +33,13 @@ const Login = () => {
     },
   });
 
-  const onLogin = async () => {
-    const result = await loginMutation.mutateAsync({ login, password });
-    const { statusCode, data } = result || {};
+  const onLogin = async (branch: BRANCH) => {
+    const result = await loginMutation.mutateAsync({ login, password, branch });
+    const { statusCode, data, message } = result || {};
     if (statusCode === 200) {
-      await execute({ userId: data });
+      await execute({ userId: data, branch, stars: 0, rankId: 1 });
+    } else if (statusCode === 500) {
+      toast.error(message);
     }
   };
 
@@ -79,7 +82,7 @@ const Login = () => {
 
       <div className="flex justify-end">
         <Button
-          onClick={onLogin}
+          onClick={() => onLogin(BRANCH.GOVAP)}
           variant="default"
           className="w-full justify-start mr-4 bg-red-400"
           size="default"
@@ -87,7 +90,7 @@ const Login = () => {
           Đăng nhập Gò Vấp
         </Button>
         <Button
-          onClick={onLogin}
+          onClick={() => onLogin(BRANCH.TANPHU)}
           variant="default"
           className="w-full justify-start bg-blue-400"
           size="default"

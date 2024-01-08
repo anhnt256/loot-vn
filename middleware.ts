@@ -16,8 +16,6 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   if (currentUser) {
     const { expiration_date } = JSON.parse(currentUser);
-    console.log("expiration_date", expiration_date);
-    console.log("expiration_date", !dayjs().isSameOrAfter(expiration_date));
     if (dayjs().isSameOrAfter(expiration_date)) {
       deleteCookie(ACCESS_TOKEN_KEY);
       return NextResponse.redirect(new URL("/", request.url));

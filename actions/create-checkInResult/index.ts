@@ -8,7 +8,6 @@ import { InputType, ReturnType } from "./type";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
   const { userId } = data;
-  console.log("userId", userId);
   let updateUser;
 
   try {
