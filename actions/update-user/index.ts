@@ -7,18 +7,19 @@ import { UpdateUser } from "./schema";
 import { InputType, ReturnType } from "./type";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
-  const { userId, rankId = 1, stars = 0, rocks = 0 } = data;
+  const { id, userId, rankId = 1, stars = 0, magicStone = 0 } = data;
   let updateUser;
 
   try {
     updateUser = await db.user.update({
       where: {
+        id,
         userId,
       },
       data: {
         rankId,
         stars,
-        rocks,
+        magicStone,
       },
     });
   } catch (error) {

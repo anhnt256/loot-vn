@@ -8,7 +8,7 @@ import { InputType, ReturnType } from "./type";
 import dayjs from "@/lib/dayjs";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
-  const { userId, missionId } = data;
+  const { userId, missionId, branch } = data;
   let createUserMissionMap;
 
   const currentMissions = await db.userMissionMap.findMany({
@@ -26,6 +26,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
       data: {
         userId,
         missionId,
+        branch,
       },
     });
   } catch (error) {

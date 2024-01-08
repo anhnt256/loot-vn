@@ -1,11 +1,8 @@
 import { useMutation } from "@tanstack/react-query";
 import { setCookie } from "cookies-next";
-import {
-  ACCESS_TOKEN_KEY,
-  BRANCH,
-  CURRENT_USER,
-} from "@/constants/token.constant";
+import { ACCESS_TOKEN_KEY, CURRENT_USER } from "@/constants/token.constant";
 import dayjs from "dayjs";
+import { BRANCH } from "@/constants/enum.constant";
 
 export interface postLoginParam {
   login: string;

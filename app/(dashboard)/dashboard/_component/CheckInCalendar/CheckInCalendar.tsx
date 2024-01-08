@@ -103,12 +103,13 @@ const CheckInCalendar = () => {
           if (todaySpentTime && todaySpentTime >= MIN_LOGIN_TIME) {
             setIsChecking(true);
             if (userData) {
-              const { userId, rankId, stars } = userData;
+              const { id, userId, rankId, stars } = userData;
               await executeUpdateUser({
+                id,
                 userId,
                 rankId,
                 stars: stars + star,
-                rocks: 0,
+                magicStone: 0,
               });
               await executeCheckIn({ userId });
               setIsChecking(false);
@@ -144,8 +145,8 @@ const CheckInCalendar = () => {
       const { star } = currentInfo || {};
       setShowModal(false);
       setIsChecking(true);
-      const { userId, rankId, stars } = userData;
-      await executeUpdateUser({ userId, rankId, stars: stars + star });
+      const { id, userId, rankId, stars } = userData;
+      await executeUpdateUser({ id, userId, rankId, stars: stars + star });
       await executeCheckIn({ userId });
       setIsChecking(false);
       window.location.reload();

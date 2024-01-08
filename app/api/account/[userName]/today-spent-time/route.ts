@@ -31,7 +31,7 @@ export async function GET(
 
     let minutes = 0;
 
-    ticketActions.forEach((action) => {
+    ticketActions.forEach((action: any) => {
       const { start, end } = action;
       if (end !== null) {
         const dateStart = dayjs(start);
@@ -45,7 +45,7 @@ export async function GET(
     });
 
     if (minutes === 0) {
-      priceActions.forEach((action) => {
+      priceActions.forEach((action: any) => {
         const { start, end } = action;
         if (end !== null) {
           const dateStart = dayjs(start);

@@ -10,10 +10,11 @@ import { createUserMissionMap } from "@/actions/create-user-mission-map";
 import { toast } from "sonner";
 import { useUserInfo } from "@/hooks/use-user-info";
 import { getCookie } from "cookies-next";
+import { BRANCH } from "@/constants/enum.constant";
 const List = () => {
   const [currentData, setCurrentData] = useState<Mission[]>([]);
   const { userData } = useUserInfo();
-  const branch = getCookie("branch");
+  const branch = getCookie("branch") || BRANCH.GOVAP;
 
   const { data: cards, isLoading } = useQuery<[Mission]>({
     queryKey: ["mission"],
@@ -44,15 +45,12 @@ const List = () => {
         if (userData) {
           cards.forEach((card) => {
             executeCreateUserMissionMap({
+              branch,
               userId: userData.userId,
               missionId: card.id,
             });
           });
         }
-      }
-    } else {
-      if (userMissionData) {
-        setCurrentData(userMissionData);
       }
     }
   }, [cards, userMissionData]);
