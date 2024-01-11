@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { createUser } from "@/actions/create-user";
 import { BRANCH } from "@/constants/enum.constant";
+import { nowUtc } from "@/lib/dayjs";
 
 const Login = () => {
   const [login, setLogin] = useState<string>("");
@@ -37,7 +38,13 @@ const Login = () => {
     const result = await loginMutation.mutateAsync({ login, password, branch });
     const { statusCode, data, message } = result || {};
     if (statusCode === 200) {
-      await execute({ userId: data, branch, stars: 0, rankId: 1 });
+      await execute({
+        userId: data,
+        branch,
+        stars: 0,
+        createdAt: nowUtc,
+        rankId: 1,
+      });
     } else if (statusCode === 500) {
       toast.error(message);
     }

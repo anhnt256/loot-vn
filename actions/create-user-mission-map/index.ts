@@ -5,14 +5,15 @@ import { createSafeAction } from "@/lib/create-safe-action";
 
 import { CreateUserMissionMap } from "./schema";
 import { InputType, ReturnType } from "./type";
-import dayjs from "@/lib/dayjs";
+import dayjs, { nowUtc, startUtc } from "@/lib/dayjs";
 
-const handler = async (data: InputType): Promise<ReturnType> => {
-  const { userId, missionId, branch } = data;
+const handler = async (data: InputType): Promise<any> => {
   let createUserMissionMap;
 
+  const { userId, branch } = data[0];
+
   const currentMissions = await db.userMissionMap.findMany({
-    where: { userId },
+    where: { userId, branch, createdAt: { gt: startUtc } },
   });
 
   if (currentMissions.length >= 5 && dayjs().isToday()) {
@@ -22,12 +23,9 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   }
 
   try {
-    createUserMissionMap = await db.userMissionMap.create({
-      data: {
-        userId,
-        missionId,
-        branch,
-      },
+    createUserMissionMap = await db.userMissionMap.createMany({
+      data,
+      skipDuplicates: true,
     });
   } catch (error) {
     return {
@@ -35,7 +33,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     };
   }
 
-  return { data: createUserMissionMap };
+  return { data: createUserMissionMap.count };
 };
 
 export const createUserMissionMap = createSafeAction(

@@ -45,7 +45,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
             )}
             href="/missions"
           >
-            Trung tâm nhiệm vụ
+            Nhiệm vụ
           </Link>
           <Link
             className={cn(

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { User } from "@prisma/client";
+import dayjs, { nowUtc, startUtc } from "@/lib/dayjs";
 
 export async function GET(
   req: Request,
@@ -11,11 +12,15 @@ export async function GET(
   try {
     if (userId && branch) {
       const currentUserMissionMap = await db.userMissionMap.findMany({
-        where: { userId: parseInt(userId, 10), branch },
-        include: { mission: { select: { name: true } } },
+        where: {
+          userId: parseInt(userId, 10),
+          branch,
+          createdAt: { gt: startUtc },
+        },
+        include: {
+          mission: true,
+        },
       });
-
-      console.log("currentUserMissionMap", currentUserMissionMap);
 
       return NextResponse.json(currentUserMissionMap);
     }

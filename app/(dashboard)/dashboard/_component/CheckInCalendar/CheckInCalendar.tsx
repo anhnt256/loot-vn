@@ -31,7 +31,7 @@ const MIN_LOGIN_TIME = 30; // minutes
 const CheckInCalendar = () => {
   const [isChecking, setIsChecking] = useState<boolean | undefined>(false);
   const [isShowModal, setShowModal] = useState<boolean>(false);
-  const { userData, todaySpentTime, userCheckIn } = useUserInfo();
+  const { userName, userData, userCheckIn } = useUserInfo();
   const [currentInfo, setCurrentInfo] = useState<
     | {
         day: string;
@@ -39,6 +39,12 @@ const CheckInCalendar = () => {
       }
     | undefined
   >();
+
+  const { data: todaySpentTime } = useQuery<number>({
+    queryKey: ["today-spent-time", userName],
+    enabled: !!userName,
+    queryFn: () => fetcher(`/api/account/${userName}/today-spent-time`),
+  });
 
   // Get the first day of the next month
   function getAllDaysOfMonth() {
@@ -76,7 +82,14 @@ const CheckInCalendar = () => {
   });
 
   const { execute: executeUpdateUser } = useAction(updateUser, {
-    onSuccess: () => {},
+    onSuccess: async () => {
+      if (userData) {
+        const { userId } = userData;
+        await executeCheckIn({ userId });
+        setIsChecking(false);
+        window.location.reload();
+      }
+    },
     onError: (error) => {
       toast.error(error);
     },
@@ -106,14 +119,10 @@ const CheckInCalendar = () => {
               const { id, userId, rankId, stars } = userData;
               await executeUpdateUser({
                 id,
-                userId,
                 rankId,
                 stars: stars + star,
                 magicStone: 0,
               });
-              await executeCheckIn({ userId });
-              setIsChecking(false);
-              window.location.reload();
             }
           } else {
             toast.error(`Hôm nay bạn chưa chơi đủ ${MIN_LOGIN_TIME} phút !`);
@@ -146,7 +155,7 @@ const CheckInCalendar = () => {
       setShowModal(false);
       setIsChecking(true);
       const { id, userId, rankId, stars } = userData;
-      await executeUpdateUser({ id, userId, rankId, stars: stars + star });
+      await executeUpdateUser({ id, rankId, stars: stars + star });
       await executeCheckIn({ userId });
       setIsChecking(false);
       window.location.reload();

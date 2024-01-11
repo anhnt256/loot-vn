@@ -31,20 +31,22 @@ export async function GET(
 
     let minutes = 0;
 
-    ticketActions.forEach((action: any) => {
-      const { start, end } = action;
-      if (end !== null) {
-        const dateStart = dayjs(start);
-        const dateEnd = dayjs(end);
-        minutes += dateEnd.diff(dateStart, "minute");
-      } else {
-        const dateStart = dayjs(start);
-        const dateEnd = dayjs();
-        minutes += dateEnd.diff(dateStart, "minute");
-      }
-    });
+    if (ticketActions && ticketActions.length > 0) {
+      ticketActions.forEach((action: any) => {
+        const { start, end } = action;
+        if (end !== null) {
+          const dateStart = dayjs(start);
+          const dateEnd = dayjs(end);
+          minutes += dateEnd.diff(dateStart, "minute");
+        } else {
+          const dateStart = dayjs(start);
+          const dateEnd = dayjs();
+          minutes += dateEnd.diff(dateStart, "minute");
+        }
+      });
+    }
 
-    if (minutes === 0) {
+    if (minutes === 0 && priceActions && priceActions.length > 0) {
       priceActions.forEach((action: any) => {
         const { start, end } = action;
         if (end !== null) {

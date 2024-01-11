@@ -7,6 +7,7 @@ import { CreateUser } from "./schema";
 import { InputType, ReturnType } from "./type";
 import { User } from "@prisma/client";
 import { BRANCH } from "@/constants/enum.constant";
+import { nowUtc } from "@/lib/dayjs";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
   const { userId, rankId = 1, branch = BRANCH.GOVAP, stars = 0 } = data;
@@ -29,6 +30,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         branch,
         rankId,
         stars,
+        createdAt: nowUtc,
       },
     });
   } catch (error) {
