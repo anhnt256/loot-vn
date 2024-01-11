@@ -10,17 +10,17 @@ export async function GET(
 ) {
   const [startHours, endHours, quantity, type] = params.slug;
   try {
-    // const result = await apiClient({
-    //   method: "get",
-    //   url: `/account/${userName}/balance-history/?format=json`,
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    // });
-    //
-    // const actions = result.data;
+    const result = await apiClient({
+      method: "get",
+      url: `/account/${params.userName}/balance-history/?format=json`,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-    const actions = data;
+    const actions = result.data;
+
+    // const actions = data;
 
     const priceActions = actions.filter(
       (x: any) =>
