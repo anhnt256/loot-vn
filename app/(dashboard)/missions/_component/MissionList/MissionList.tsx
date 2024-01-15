@@ -27,8 +27,6 @@ const List = ({
   const { userData } = useUserInfo();
   const branch = getCookie("branch") || BRANCH.GOVAP;
 
-  console.log("canClaimItems", canClaimItems);
-
   const { execute: executeCreateUserMissionMap, isLoading } = useAction(
     createUserMissionMap,
     {
@@ -70,11 +68,10 @@ const List = ({
     return (
       <>
         {currentData &&
+          currentData.length > 0 &&
           currentData.map((card, index) => (
             <div className="w-1/5 p-4" key={index}>
-              {currentData && currentData.length > 0 && (
-                <MissionCard data={card} canClaimItems={canClaimItems} />
-              )}
+              <MissionCard data={card} canClaimItems={canClaimItems} />
             </div>
           ))}
       </>

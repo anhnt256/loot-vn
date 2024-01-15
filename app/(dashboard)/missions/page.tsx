@@ -9,7 +9,8 @@ import { useUserInfo } from "@/hooks/use-user-info";
 import { getCookie } from "cookies-next";
 import { BRANCH } from "@/constants/enum.constant";
 import { useCallback, useEffect, useState } from "react";
-import { cloneDeep } from "lodash";
+import { checkReward } from "@/lib/utils";
+import { toast } from "sonner";
 
 const Missions = () => {
   const { userName, userData } = useUserInfo();
@@ -29,31 +30,31 @@ const Missions = () => {
       fetcher(`/api/user-mission-map/${userData?.userId}/${branch}`),
   });
 
-  const onCheckReward = useCallback(async () => {
-    if (userMissionData && userMissionData.length > 0) {
-      const claims: any[] = [];
-      await Promise.all(
-        userMissionData.map(async (item, index) => {
-          const { id } = item;
-          const { startHours, endHours, quantity, type } = item.mission;
-          const result = await fetcher(
-            `/api/account/${userName}/check-reward/${startHours}/${endHours}/${quantity}/${type}`,
-          );
-
-          const { canClaim } = result;
-          claims.push({ canClaim, id });
-        }),
-      );
-
-      setCanClaimItems(claims);
-    }
-  }, [userMissionData]);
+  const onCheckReward = useCallback(
+    async (isClick: boolean) => {
+      if (userMissionData && userMissionData.length > 0) {
+        const claims: any[] = [];
+        const result = await fetcher(`/api/account/${userName}/balance`);
+        await Promise.all(
+          userMissionData.map(async (item, index) => {
+            const { id } = item;
+            const canClaim = checkReward(result, item.mission);
+            claims.push({ canClaim, id });
+          }),
+        );
+        setCanClaimItems(claims);
+        if (isClick) {
+          toast.success("Cập nhật tiến độ thành công!");
+        }
+      }
+    },
+    [userMissionData],
+  );
 
   useEffect(() => {
     (async () => {
       if (userMissionData && userMissionData.length > 0) {
-        console.log("123");
-        await onCheckReward();
+        await onCheckReward(false);
       }
     })();
   }, [userMissionData]);
@@ -75,7 +76,7 @@ const Missions = () => {
               <div className="w-4 h-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 mr-2" />
               <div className="text-xs">Có thể nhận thưởng</div>
             </div>
-            <Button variant="green" onClick={onCheckReward}>
+            <Button variant="green" onClick={() => onCheckReward(true)}>
               Cập nhật tiến độ
             </Button>
           </div>

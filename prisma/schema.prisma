@@ -3,23 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider          = "mysql"
-  url               = env("DATABASE_URL")
-  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
-  relationMode      = "prisma"
-}
-
-model User {
-  id               Int             @id @default(autoincrement())
-  userId           Int
-  rankId           Int
-  stars            Int
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-  magicStone       Int             @default(0)
-  branch           String
-  UserMissionMap   UserMissionMap? @relation(fields: [userMissionMapId], references: [id])
-  userMissionMapId Int?
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
 model Rank {
@@ -95,6 +81,37 @@ model GameResult {
   startDate DateTime @default(now())
   endDate   DateTime
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserMissionMap {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  missionId Int
+  branch    String
+  isDone    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users     User[]
+  mission   Mission  @relation(fields: [missionId], references: [id])
+
+  @@index([missionId])
+}
+
+model User {
+  id               Int             @id @default(autoincrement())
+  userId           Int
+  rankId           Int
+  stars            Int
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  magicStone       Int             @default(0)
+  branch           String
+  userMissionMapId Int?
+  UserMissionMap   UserMissionMap? @relation(fields: [userMissionMapId], references: [id])
+  UserRewardMap    UserRewardMap[]
+
+  @@index([userMissionMapId])
 }
 
 model Mission {
@@ -110,16 +127,49 @@ model Mission {
   UserMissionMap UserMissionMap[]
 }
 
-model UserMissionMap {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  missionId Int
-  branch    String
-  isDone    Boolean  @default(false)
-  users     User[]
-  mission   Mission  @relation(fields: [missionId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model UserRewardMap {
+  id              Int            @id @default(autoincrement())
+  userId          Int?
+  rewardId        Int?
+  promotionCodeId Int?
+  duration        Int?
+  createdAt       DateTime?      @default(now())
+  updatedAt       DateTime?      @updatedAt
+  isUsed          Boolean        @default(false)
+  branch          String?        @default("GO_VAP")
+  promotionCode   PromotionCode? @relation(fields: [promotionCodeId], references: [id])
+  user            User?          @relation(fields: [userId], references: [id])
+  reward          Reward?        @relation(fields: [rewardId], references: [id])
+
+  @@index([promotionCodeId])
+  @@index([userId])
+  @@index([rewardId])
+}
+
+model Reward {
+  id            Int             @id @default(autoincrement())
+  name          String?         @db.VarChar(45)
+  stars         Int?
+  value         Int?
+  quantity      Int?
+  remain        Int?
+  startDate     DateTime?
+  endDate       DateTime?
+  createdAt     DateTime?       @default(now())
+  updateAt      DateTime?       @updatedAt
+  UserRewardMap UserRewardMap[]
+}
+
+model PromotionCode {
+  id            Int             @id @default(autoincrement())
+  name          String?         @db.VarChar(45)
+  code          String?         @db.VarChar(45)
+  value         Int?
+  branch        String?         @db.VarChar(45)
+  isUsed        Boolean?        @default(false)
+  createdAt     DateTime?       @default(now())
+  updatedAt     DateTime?       @updatedAt
+  UserRewardMap UserRewardMap[]
 }
 
 enum Item_type {

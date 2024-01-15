@@ -22,11 +22,6 @@ const Card: React.FC<CardProps> = ({ data, canClaimItems }) => {
   const { name, description, reward, startHours, endHours, quantity, type } =
     mission || {};
 
-  console.log(
-    "canClaimItems",
-    canClaimItems.filter((x: any) => x.id === missionId),
-  );
-
   const canClaim = canClaimItems.filter((x: any) => x.id === missionId)[0]
     ?.canClaim;
 
