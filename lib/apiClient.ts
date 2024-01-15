@@ -28,6 +28,13 @@ const logOnDev = (
 apiClient.interceptors.request.use(async (request) => {
   if (isServer) {
     const cookie = request.headers.Cookie;
+    const tokenString = request.headers.Token;
+
+    let token = null;
+    if (tokenString) {
+      token = JSON.parse(tokenString);
+    }
+
     if (cookie && cookie === "TAN_PHU") {
       host = process.env.NEXT_PUBLIC_GATEWAY_TAN_PHU_API;
       secretKey = process.env.NEXT_PUBLIC_GATEWAY_TAN_PHU_SECRET_KEY;
@@ -38,7 +45,9 @@ apiClient.interceptors.request.use(async (request) => {
 
     request.baseURL = host;
 
-    if (secretKey) {
+    if (token) {
+      request.headers["Authorization"] = `Bearer ${token.token}`;
+    } else if (secretKey) {
       request.headers["Authorization"] = `Key ${secretKey}`;
     }
   } else {

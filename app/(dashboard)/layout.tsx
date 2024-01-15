@@ -4,13 +4,29 @@ import React from "react";
 import Link from "next/link";
 import { useUserInfo } from "@/hooks/use-user-info";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useLogout } from "@/queries/auth.query";
+import { toast } from "sonner";
 
 const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
+  const router = useRouter();
+  const loginMutation = useLogout();
+
   const { userData } = useUserInfo();
   const { stars } = userData || {};
   const pathname = usePathname();
+
+  const handleLogout = async () => {
+    const result = await loginMutation.mutateAsync();
+    const { statusCode, data, message } = result || {};
+    if (statusCode === 200) {
+      router.push("/");
+    } else if (statusCode === 500) {
+      toast.error(message);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-gray-200">
       <div className="bg-gray-800 text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out">
@@ -56,7 +72,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
           >
             Đổi thưởng
           </Link>
-          <a
+          <Link
             className={cn(
               "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
               pathname === "/voucher" ? "bg-gray-700" : "transparent",
@@ -64,13 +80,13 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
             href="/voucher"
           >
             Voucher
-          </a>
-          <a
-            className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700"
-            href="/logout"
+          </Link>
+          <div
+            onClick={handleLogout}
+            className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 cursor-pointer"
           >
             Đăng xuất
-          </a>
+          </div>
         </nav>
       </div>
 

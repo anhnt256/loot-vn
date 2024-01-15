@@ -13,7 +13,6 @@ const Voucher = () => {
   const { userData } = useUserInfo();
   const { userId, branch } = userData || {};
 
-
   const { data: vouchers } = useQuery<[any]>({
     queryKey: ["vouchers"],
     enabled: !!userData,
@@ -24,9 +23,7 @@ const Voucher = () => {
     <div className="flex flex-col p-5 gap-4">
       <div className="bg-white shadow-lg rounded-lg p-4 w-full overflow-auto max-h-[89vh]">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold mb-2 mr-4">
-            Trung tâm quà tặng
-          </h2>
+          <h2 className="text-xl font-semibold mb-2 mr-4">Kho voucher</h2>
         </div>
 
         <div id="calendar" className="overflow-y-auto">

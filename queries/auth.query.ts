@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { setCookie } from "cookies-next";
+import { deleteCookie, setCookie } from "cookies-next";
 import { ACCESS_TOKEN_KEY, CURRENT_USER } from "@/constants/token.constant";
 import dayjs from "dayjs";
 import { BRANCH } from "@/constants/enum.constant";
@@ -17,7 +17,7 @@ export const postLogin = async (loginParam: postLoginParam): Promise<any> => {
   setCookie("branch", branch, {
     expires: new Date(expirationDate),
   });
-  const result = await fetch("api/auth", {
+  const result = await fetch("api/login", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -51,4 +51,23 @@ export const postLogin = async (loginParam: postLoginParam): Promise<any> => {
   };
 };
 
+export const postLogout = async (): Promise<any> => {
+  const result = await fetch("api/logout", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+
+  const resultText = await result.text();
+
+  if (resultText !== "Internal Error") {
+    deleteCookie(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(CURRENT_USER);
+    return { statusCode: 200, data: null };
+  }
+};
+
 export const useLogin = () => useMutation({ mutationFn: postLogin });
+export const useLogout = () => useMutation({ mutationFn: postLogout });
