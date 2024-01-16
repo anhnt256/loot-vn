@@ -8,6 +8,7 @@ export async function GET(
   { params }: { params: { slug: string[] } },
 ) {
   try {
+
     const [userId, branch] = params.slug;
 
     if (userId) {

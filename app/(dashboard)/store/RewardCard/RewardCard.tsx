@@ -17,7 +17,7 @@ interface CardProps {
 const RewardCard: React.FC<CardProps> = ({ data }) => {
   const { userData } = useUserInfo();
   const { userId, stars } = userData || {};
-  const { id, name, value } = data;
+  const { id, name, value, totalPromotion } = data;
   const branch = getCookie("branch") || BRANCH.GOVAP;
 
   let bgColor = "";
@@ -64,14 +64,20 @@ const RewardCard: React.FC<CardProps> = ({ data }) => {
     },
   );
   const onReward = async () => {
-    if (userId) {
-      executeCreateUserRewardMap({
-        userId,
-        rewardId: id,
-        value,
-        branch,
-        createdAt: nowUtc,
-      });
+    if (totalPromotion === 0) {
+      toast.error(
+        "Số luợng mã đã hết. Vui lòng liên hệ admin để bổ sung. Xin cảm ơn.",
+      );
+    } else {
+      if (userId) {
+        executeCreateUserRewardMap({
+          userId,
+          rewardId: id,
+          value,
+          branch,
+          createdAt: nowUtc,
+        });
+      }
     }
   };
 
@@ -89,14 +95,19 @@ const RewardCard: React.FC<CardProps> = ({ data }) => {
         <div className="font-bold text-xs mb-2 min-h-[32px] cursor-default">
           {name}
         </div>
-        {/*<p className="text-gray-700 font-normal text-xs min-h-[64px] cursor-default">*/}
-        {/*  {description}*/}
-        {/*</p>*/}
+        <p className="text-gray-700 font-normal text-xs min-h-[64px] cursor-default">
+          {`Số lượng: ${totalPromotion.toLocaleString()}`}
+        </p>
       </div>
       <hr />
       <div className="px-5 py-4">
         <div className="flex justify-center items-center">
-          <Button variant="primary" className={bgColor} onClick={onReward}>
+          <Button
+            disabled={totalPromotion === 0}
+            variant="primary"
+            className={bgColor}
+            onClick={onReward}
+          >
             <div className="mr-1">{value?.toLocaleString()}</div>
             <Image src="/star.png" width="22" height="22" alt="stars" />
           </Button>

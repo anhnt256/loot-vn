@@ -6,11 +6,14 @@ import { useQuery } from "@tanstack/react-query";
 import React, { useMemo } from "react";
 import RewardList from "./RewardList/RewardList";
 import { Button } from "@/components/ui/button";
+import { getCookie } from "cookies-next";
+import { BRANCH } from "@/constants/enum.constant";
 
 const Store = () => {
+  const branch = getCookie("branch") || BRANCH.GOVAP;
   const { data: rewards } = useQuery<[Reward]>({
     queryKey: ["reward"],
-    queryFn: () => fetcher(`/api/reward`),
+    queryFn: () => fetcher(`/api/reward/${branch}`),
   });
   return (
     <div className="flex flex-col p-5 gap-4">
@@ -20,6 +23,10 @@ const Store = () => {
             Trung tâm quà tặng
           </h2>
           <div className="flex mr-4 items-center justify-between">
+            <div className="flex mr-4">
+              <div className="w-4 h-4 bg-orange-700/50 mr-2" />
+              <div className="text-xs">Đã hết mã</div>
+            </div>
             <div className="flex mr-4">
               <div className="w-4 h-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 mr-2" />
               <div className="text-xs">Có thể đổi thưởng</div>
