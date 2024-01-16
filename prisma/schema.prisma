@@ -33,8 +33,8 @@ model Game {
 model CheckInResult {
   id        Int      @id @default(autoincrement())
   userId    Int
-  branch    String?  @default("GO_VAP")
   createdAt DateTime @default(now())
+  branch    String?  @default("GO_VAP")
 }
 
 model CheckInItem {
@@ -152,8 +152,6 @@ model Reward {
   name          String?         @db.VarChar(45)
   stars         Int?
   value         Int?
-  quantity      Int?
-  remain        Int?
   startDate     DateTime?
   endDate       DateTime?
   createdAt     DateTime?       @default(now())

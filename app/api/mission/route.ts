@@ -20,6 +20,8 @@ export async function GET(req: Request) {
 
     const orderMission = missions.filter((x) => x.type === MISSION_TYPE.ORDER);
 
+    const comboMission = missions.filter((x) => x.type === MISSION_TYPE.COMBO);
+
     if (morningMission.length > 0) {
       results.push(getRandomItem(morningMission));
     }
@@ -34,7 +36,10 @@ export async function GET(req: Request) {
 
     if (orderMission.length > 0) {
       results.push(getRandomItem(orderMission));
-      results.push(getRandomItem(orderMission));
+    }
+
+    if (comboMission.length > 0) {
+      results.push(getRandomItem(comboMission));
     }
 
     return NextResponse.json(results);
