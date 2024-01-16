@@ -7,7 +7,7 @@ import { getCookie } from "cookies-next";
 
 export const useUserInfo = () => {
   const [currentUserId, setCurrentUserId] = useState<number | undefined>();
-  const [userName, setUserName] = useState<number | undefined>();
+  const [userName, setUserName] = useState<string | undefined>();
   useEffect(() => {
     const currentUser = localStorage.getItem(CURRENT_USER) || "";
     if (currentUser) {

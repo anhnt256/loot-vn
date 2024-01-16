@@ -54,7 +54,7 @@ const Login = () => {
     <>
       <div className="flex justify-center mb-2">
         <Image
-          src="/logo.jpg"
+          src="/logo.png"
           alt="Logo"
           className="rounded-full"
           width={100}

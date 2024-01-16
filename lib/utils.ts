@@ -21,9 +21,6 @@ export const checkReward = (actions: any[], mission: any) => {
   // set test values
   // actions = data;
 
-  const dateStart = dayjs(startHours);
-  const dateEnd = dayjs(endHours);
-
   const priceActions = actions.filter(
     (x: any) =>
       x.action_name.includes("Phiên theo biểu giá") && dayjs(x.start).isToday(),
@@ -46,7 +43,7 @@ export const checkReward = (actions: any[], mission: any) => {
     ticketActions.forEach((action: any) => {
       const { start, end } = action;
 
-      if (dayjs(start).hour() >= dateStart.hour()) {
+      if (dayjs(start).hour() >= startHours) {
         return true;
       }
     });
@@ -60,14 +57,20 @@ export const checkReward = (actions: any[], mission: any) => {
   ) {
     priceActions.forEach((action: any) => {
       const { start, end } = action;
+      const currentDateStart = dayjs(start);
+      const currentDateEnd = dayjs(end);
 
-      if (dayjs(start).hour() >= dateStart.hour()) {
+      if (
+        currentDateStart.hour() >= startHours &&
+        currentDateStart.hour() < endHours
+      ) {
         if (end !== null) {
-          const dateEnd = dayjs(end);
-          minutes += dateEnd.diff(dateStart, "minute");
+          minutes += currentDateEnd.diff(currentDateStart, "minute");
+
+          console.log("minutes", minutes);
         } else {
           const dateEnd = dayjs();
-          minutes += dateEnd.diff(dateStart, "minute");
+          minutes += currentDateEnd.diff(currentDateStart, "minute");
         }
       }
     });

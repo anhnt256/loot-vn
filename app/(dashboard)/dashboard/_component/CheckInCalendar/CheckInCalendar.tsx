@@ -25,8 +25,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-
-const MIN_LOGIN_TIME = 30; // minutes
+import { MIN_LOGIN_TIME } from "@/constants/constant";
 
 const CheckInCalendar = () => {
   const [isChecking, setIsChecking] = useState<boolean | undefined>(false);
@@ -84,8 +83,8 @@ const CheckInCalendar = () => {
   const { execute: executeUpdateUser } = useAction(updateUser, {
     onSuccess: async () => {
       if (userData) {
-        const { userId } = userData;
-        await executeCheckIn({ userId });
+        const { userId, branch } = userData;
+        await executeCheckIn({ userId, branch });
         setIsChecking(false);
         window.location.reload();
       }
@@ -109,32 +108,37 @@ const CheckInCalendar = () => {
             dayjs(day).format("DD/MM/YYYY"),
         );
         if (hasCheckIn) {
-          toast.error("Hôm nay bạn đã điểm danh rồi!");
+          toast.error("Hôm nay bạn đã điểm danh!");
           return;
         }
         if (dayjs(day).isToday()) {
           if (todaySpentTime && todaySpentTime >= MIN_LOGIN_TIME) {
             setIsChecking(true);
             if (userData) {
-              const { id, userId, rankId, stars } = userData;
-              await executeUpdateUser({
-                id,
-                rankId,
-                stars: stars + star,
-                magicStone: 0,
-              });
+              const { id, userId, rankId, stars, branch } = userData;
+              if (userName) {
+                await executeUpdateUser({
+                  id,
+                  rankId,
+                  stars: stars + star,
+                  magicStone: 0,
+                  userId,
+                  branch,
+                  userName,
+                });
+              }
             }
           } else {
             toast.error(`Hôm nay bạn chưa chơi đủ ${MIN_LOGIN_TIME} phút !`);
             return;
           }
         } else if (dayjs(day).isSameOrAfter(dayjs())) {
-          toast.error("Chưa đến ngày điểm danh rồi!");
+          toast.error("Chưa đến ngày điểm danh!");
           return;
         } else {
           // setShowModal(true);
           // setCurrentInfo({ day, star });
-          toast.error("Đã quá hạn điểm danh rồi!");
+          toast.error("Đã quá hạn điểm danh!");
         }
       }
     },
@@ -154,9 +158,9 @@ const CheckInCalendar = () => {
       const { star } = currentInfo || {};
       setShowModal(false);
       setIsChecking(true);
-      const { id, userId, rankId, stars } = userData;
+      const { id, userId, rankId, stars, branch } = userData;
       await executeUpdateUser({ id, rankId, stars: stars + star });
-      await executeCheckIn({ userId });
+      await executeCheckIn({ userId, branch });
       setIsChecking(false);
       window.location.reload();
     }

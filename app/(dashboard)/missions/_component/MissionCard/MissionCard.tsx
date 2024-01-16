@@ -9,7 +9,7 @@ import dayjs, { nowUtc } from "@/lib/dayjs";
 import { updateUser } from "@/actions/update-user";
 import { useUserInfo } from "@/hooks/use-user-info";
 import { fetcher } from "@/lib/fetcher";
-import { cn } from "@/lib/utils";
+import { checkReward, cn } from "@/lib/utils";
 
 interface CardProps {
   data: any;
@@ -34,7 +34,7 @@ const Card: React.FC<CardProps> = ({ data, canClaimItems }) => {
   const { execute: executeUpdateUserMissionMap, isLoading } = useAction(
     updateUserMissionMap,
     {
-      onSuccess: async () => {
+      onSuccess: async (data) => {
         if (userData) {
           const { id: userId, rankId, stars } = userData;
           await executeUpdateUser({
@@ -66,11 +66,8 @@ const Card: React.FC<CardProps> = ({ data, canClaimItems }) => {
 
   const onReward = async (id: number) => {
     if (!isLoading) {
-      const result = await fetcher(
-        `/api/account/${userName}/check-reward/${startHours}/${endHours}/${quantity}/${type}`,
-      );
-
-      const { canClaim } = result;
+      const result = await fetcher(`/api/account/${userName}/balance`);
+      const canClaim = checkReward(result, mission);
 
       if (canClaim) {
         await executeUpdateUserMissionMap({

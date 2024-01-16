@@ -8,6 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useLogout } from "@/queries/auth.query";
 import { toast } from "sonner";
+import FacebookMsg from "@/components/FacebookMsg";
 
 const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
@@ -92,6 +93,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
 
       <div className="flex-1 p-10 text-2xl font-bold bg-gray-400">
         {children}
+        <FacebookMsg />
       </div>
     </div>
   );

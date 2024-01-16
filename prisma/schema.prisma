@@ -33,6 +33,7 @@ model Game {
 model CheckInResult {
   id        Int      @id @default(autoincrement())
   userId    Int
+  branch    String?  @default("GO_VAP")
   createdAt DateTime @default(now())
 }
 
