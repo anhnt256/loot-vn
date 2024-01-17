@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 
 import apiClient from "@/lib/apiClient";
 import dayjs from "@/lib/dayjs";
-import { data } from "@/constants/data";
 
 export async function GET(
   req: Request,
@@ -16,9 +15,8 @@ export async function GET(
         "Content-Type": "application/json",
       },
     });
-    const actions = data;
 
-    // const actions = result.data;
+    const actions = result.data;
 
     const priceActions = actions.filter(
       (x: any) =>
