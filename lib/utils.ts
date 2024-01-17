@@ -60,15 +60,31 @@ export const checkReward = (actions: any[], mission: any) => {
       const currentDateStart = dayjs(start);
       const currentDateEnd = dayjs(end);
 
-      if (
-        currentDateStart.hour() >= startHours &&
-        currentDateStart.hour() < endHours
-      ) {
-        if (end !== null) {
-          minutes += currentDateEnd.diff(currentDateStart, "minute");
+      if (end !== null) {
+        if (currentDateStart.hour() >= startHours) {
+          if (currentDateStart.hour() < endHours) {
+            minutes += currentDateEnd.diff(currentDateStart, "minute");
+          } else if (currentDateStart.hour() > endHours) {
+            const currentEndDateFix = dayjs().hour(endHours);
+            minutes += currentEndDateFix.diff(currentDateStart, "minute");
+          }
+        }
+      } else {
+        const currentDate = dayjs().hour();
+        const currentEndDateFix = dayjs().hour(endHours);
+        const currentStartDateFix = dayjs().hour(startHours);
+        if (currentDateStart.hour() >= startHours) {
+          if (currentDate < endHours) {
+            minutes += dayjs().diff(currentDateStart, "minute");
+          } else {
+            minutes += currentEndDateFix.diff(currentDateStart, "minute");
+          }
         } else {
-          const dateEnd = dayjs();
-          minutes += currentDateEnd.diff(currentDateStart, "minute");
+          if (currentDate < endHours) {
+            minutes += dayjs().diff(currentStartDateFix, "minute");
+          } else {
+            minutes += currentEndDateFix.diff(currentStartDateFix, "minute");
+          }
         }
       }
     });
