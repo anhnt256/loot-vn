@@ -42,7 +42,6 @@ const Missions = () => {
             claims.push({ canClaim, id });
           }),
         );
-        console.log("claims", claims);
         setCanClaimItems(claims);
         if (isClick) {
           toast.success("Cập nhật tiến độ thành công!");
@@ -55,7 +54,6 @@ const Missions = () => {
   useEffect(() => {
     (async () => {
       if (userMissionData && userMissionData.length > 0) {
-        console.log("meo");
         await onCheckReward(false);
       }
     })();

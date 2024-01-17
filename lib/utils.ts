@@ -66,8 +66,6 @@ export const checkReward = (actions: any[], mission: any) => {
       ) {
         if (end !== null) {
           minutes += currentDateEnd.diff(currentDateStart, "minute");
-
-          console.log("minutes", minutes);
         } else {
           const dateEnd = dayjs();
           minutes += currentDateEnd.diff(currentDateStart, "minute");

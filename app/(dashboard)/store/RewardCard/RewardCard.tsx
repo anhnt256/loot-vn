@@ -64,19 +64,21 @@ const RewardCard: React.FC<CardProps> = ({ data }) => {
     },
   );
   const onReward = async () => {
-    if (totalPromotion === 0) {
-      toast.error(
-        "Số luợng mã đã hết. Vui lòng liên hệ admin để bổ sung. Xin cảm ơn.",
-      );
-    } else {
-      if (userId) {
-        executeCreateUserRewardMap({
-          userId,
-          rewardId: id,
-          value,
-          branch,
-          createdAt: nowUtc,
-        });
+    if (!isLoading) {
+      if (totalPromotion === 0) {
+        toast.error(
+          "Số luợng mã đã hết. Vui lòng liên hệ admin để bổ sung. Xin cảm ơn.",
+        );
+      } else {
+        if (userId) {
+          executeCreateUserRewardMap({
+            userId,
+            rewardId: id,
+            value,
+            branch,
+            createdAt: nowUtc,
+          });
+        }
       }
     }
   };
@@ -103,7 +105,7 @@ const RewardCard: React.FC<CardProps> = ({ data }) => {
       <div className="px-5 py-4">
         <div className="flex justify-center items-center">
           <Button
-            disabled={totalPromotion === 0}
+            disabled={totalPromotion === 0 || isLoading}
             variant="primary"
             className={bgColor}
             onClick={onReward}
