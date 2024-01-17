@@ -8,12 +8,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useUserInfo } from "@/hooks/use-user-info";
 import { getCookie } from "cookies-next";
 import { BRANCH } from "@/constants/enum.constant";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { checkReward } from "@/lib/utils";
 import { toast } from "sonner";
 
 const Missions = () => {
-  const { userName, userData } = useUserInfo();
+  const { userBalance, userData } = useUserInfo();
   const branch = getCookie("branch") || BRANCH.GOVAP;
 
   const [canClaimItems, setCanClaimItems] = useState<any[]>([]);
@@ -34,11 +34,11 @@ const Missions = () => {
     async (isClick: boolean) => {
       if (userMissionData && userMissionData.length > 0) {
         const claims: any[] = [];
-        const result = await fetcher(`/api/account/${userName}/balance`);
+
         await Promise.all(
           userMissionData.map(async (item, index) => {
             const { id } = item;
-            const canClaim = checkReward(result, item.mission);
+            const canClaim = checkReward(userBalance, item.mission);
             claims.push({ canClaim, id });
           }),
         );
@@ -48,16 +48,18 @@ const Missions = () => {
         }
       }
     },
-    [userMissionData],
+    [userMissionData, userBalance],
   );
 
   useEffect(() => {
     (async () => {
       if (userMissionData && userMissionData.length > 0) {
-        await onCheckReward(false);
+        if (userBalance && userBalance.length > 0) {
+          await onCheckReward(false);
+        }
       }
     })();
-  }, [userMissionData]);
+  }, [userMissionData, userBalance]);
 
   return (
     <div className="flex flex-col p-5 gap-4">
@@ -83,11 +85,13 @@ const Missions = () => {
         </div>
 
         <div id="calendar" className="overflow-y-auto">
-          <MissionList
-            cards={cards}
-            canClaimItems={canClaimItems}
-            userMissionData={userMissionData}
-          />
+          {userBalance && userBalance.length > 0 && (
+            <MissionList
+              cards={cards}
+              canClaimItems={canClaimItems}
+              userMissionData={userMissionData}
+            />
+          )}
         </div>
       </div>
     </div>

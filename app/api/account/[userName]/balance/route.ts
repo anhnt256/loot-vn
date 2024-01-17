@@ -14,8 +14,10 @@ export async function GET(
         "Content-Type": "application/json",
       },
     });
+
     return NextResponse.json(result.data);
   } catch (error) {
+    console.log("error", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

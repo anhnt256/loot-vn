@@ -1,6 +1,30 @@
+"use client";
+
+import { useEffect } from "react";
 import CheckInCalendar from "./_component/CheckInCalendar/CheckInCalendar";
+import { useUserInfo } from "@/hooks/use-user-info";
+import { fetcher } from "@/lib/fetcher";
+import dayjs from "@/lib/dayjs";
 
 const Dashboard = () => {
+  const { userName } = useUserInfo();
+
+  useEffect(() => {
+    if (userName) {
+      (async () => {
+        const result = await fetcher(`/api/account/${userName}/balance`);
+        const currentMonthBalance = result.filter(
+          (x: any) => dayjs(x.start).month() === dayjs().month(),
+        );
+
+        localStorage.setItem(
+          "userBalance",
+          JSON.stringify(currentMonthBalance),
+        );
+      })();
+    }
+  }, [userName]);
+
   return (
     <div className="flex flex-col p-5 gap-4">
       <div className="bg-white shadow-lg rounded-lg p-4 w-full">

@@ -11,7 +11,7 @@ import { fetcher } from "@/lib/fetcher";
 import { useCallback, useState } from "react";
 import { createCheckInResult } from "@/actions/create-checkInResult";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
+import { checkTodaySpentTime, cn } from "@/lib/utils";
 import dayjs from "@/lib/dayjs";
 import { useUserInfo } from "@/hooks/use-user-info";
 import {
@@ -30,7 +30,7 @@ import { MIN_LOGIN_TIME } from "@/constants/constant";
 const CheckInCalendar = () => {
   const [isChecking, setIsChecking] = useState<boolean | undefined>(false);
   const [isShowModal, setShowModal] = useState<boolean>(false);
-  const { userName, userData, userCheckIn } = useUserInfo();
+  const { userBalance, userName, userData, userCheckIn } = useUserInfo();
   const [currentInfo, setCurrentInfo] = useState<
     | {
         day: string;
@@ -38,12 +38,6 @@ const CheckInCalendar = () => {
       }
     | undefined
   >();
-
-  const { data: todaySpentTime } = useQuery<number>({
-    queryKey: ["today-spent-time", userName],
-    enabled: !!userName,
-    queryFn: () => fetcher(`/api/account/${userName}/today-spent-time`),
-  });
 
   // Get the first day of the next month
   function getAllDaysOfMonth() {
@@ -112,6 +106,7 @@ const CheckInCalendar = () => {
           return;
         }
         if (dayjs(day).isToday()) {
+          const todaySpentTime = checkTodaySpentTime(userBalance);
           if (todaySpentTime && todaySpentTime >= MIN_LOGIN_TIME) {
             setIsChecking(true);
             if (userData) {
@@ -120,9 +115,9 @@ const CheckInCalendar = () => {
                 await executeUpdateUser({
                   id,
                   rankId,
+                  userId,
                   stars: stars + star,
                   magicStone: 0,
-                  userId,
                   branch,
                   userName,
                 });
@@ -142,14 +137,7 @@ const CheckInCalendar = () => {
         }
       }
     },
-    [
-      userCheckIn,
-      isChecking,
-      executeUpdateUser,
-      executeCheckIn,
-      userData,
-      todaySpentTime,
-    ],
+    [userCheckIn, isChecking, executeUpdateUser, executeCheckIn, userData],
   );
   const checkInArray = chunkArrayInGroups(getAllDaysOfMonth(), 7);
 
@@ -159,7 +147,14 @@ const CheckInCalendar = () => {
       setShowModal(false);
       setIsChecking(true);
       const { id, userId, rankId, stars, branch } = userData;
-      await executeUpdateUser({ id, rankId, stars: stars + star });
+      await executeUpdateUser({
+        id,
+        rankId,
+        userId,
+        stars: stars + star,
+        userName,
+        branch,
+      });
       await executeCheckIn({ userId, branch });
       setIsChecking(false);
       window.location.reload();
@@ -184,11 +179,13 @@ const CheckInCalendar = () => {
                   stars = currentDate.stars;
                 }
 
-                const hasCheckIn = userCheckIn.find(
-                  (x) =>
-                    dayjs(x.createdAt).format("DD/MM/YYYY") ===
-                    dayjs(day).format("DD/MM/YYYY"),
-                );
+                const hasCheckIn = userCheckIn.find((x) => {
+                  return (
+                    dayjs(x.createdAt).add(-7, "hour").format("DD/MM/YYYY") ===
+                    dayjs(day).format("DD/MM/YYYY")
+                  );
+                });
+
                 let bgColor = "bg-red-200";
                 if (dayjs(day).isToday()) {
                   if (hasCheckIn) {

@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import dayjs from "@/lib/dayjs";
+import dayjs, { nowUtc, startUtc } from "@/lib/dayjs";
 import { NextResponse } from "next/server";
 import { data } from "@/constants/data";
 
@@ -59,6 +59,9 @@ export const checkReward = (actions: any[], mission: any) => {
       const { start, end } = action;
       const currentDateStart = dayjs(start);
       const currentDateEnd = dayjs(end);
+      const currentDate = dayjs().hour();
+      const currentEndDateFix = dayjs().hour(endHours);
+      const currentStartDateFix = dayjs().hour(startHours);
 
       if (end !== null) {
         if (currentDateStart.hour() >= startHours) {
@@ -68,11 +71,14 @@ export const checkReward = (actions: any[], mission: any) => {
             const currentEndDateFix = dayjs().hour(endHours);
             minutes += currentEndDateFix.diff(currentDateStart, "minute");
           }
+        } else {
+          if (currentDate < endHours) {
+            minutes += dayjs().diff(currentStartDateFix, "minute");
+          } else {
+            minutes += currentEndDateFix.diff(currentStartDateFix, "minute");
+          }
         }
       } else {
-        const currentDate = dayjs().hour();
-        const currentEndDateFix = dayjs().hour(endHours);
-        const currentStartDateFix = dayjs().hour(startHours);
         if (currentDateStart.hour() >= startHours) {
           if (currentDate < endHours) {
             minutes += dayjs().diff(currentDateStart, "minute");
@@ -106,4 +112,49 @@ export const checkReward = (actions: any[], mission: any) => {
     }
   }
   return false;
+};
+
+export const checkTodaySpentTime = (actions: any[]) => {
+  const priceActions = actions.filter(
+    (x: any) =>
+      x.action_name.includes("Phiên theo biểu giá") && dayjs(x.start).isToday(),
+  );
+
+  const ticketActions = actions.filter(
+    (x: any) =>
+      x.action_name.includes("Ticket session") && dayjs(x.start).isToday(),
+  );
+
+  let minutes = 0;
+
+  if (ticketActions && ticketActions.length > 0) {
+    ticketActions.forEach((action: any) => {
+      const { start, end } = action;
+      if (end !== null) {
+        const dateStart = dayjs(start);
+        const dateEnd = dayjs(end);
+        minutes += dateEnd.diff(dateStart, "minute");
+      } else {
+        const dateStart = dayjs(start);
+        const dateEnd = dayjs();
+        minutes += dateEnd.diff(dateStart, "minute");
+      }
+    });
+  }
+
+  if (minutes === 0 && priceActions && priceActions.length > 0) {
+    priceActions.forEach((action: any) => {
+      const { start, end } = action;
+      if (end !== null) {
+        const dateStart = dayjs(start);
+        const dateEnd = dayjs(end);
+        minutes += dateEnd.diff(dateStart, "minute");
+      } else {
+        const dateStart = dayjs(start);
+        const dateEnd = dayjs();
+        minutes += dateEnd.diff(dateStart, "minute");
+      }
+    });
+  }
+  return minutes;
 };

@@ -64,7 +64,7 @@ export const postLogout = async (): Promise<any> => {
 
   if (resultText !== "Internal Error") {
     deleteCookie(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(CURRENT_USER);
+    localStorage.clear();
     return { statusCode: 200, data: null };
   }
 };

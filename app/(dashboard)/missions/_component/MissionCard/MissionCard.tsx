@@ -18,8 +18,9 @@ interface CardProps {
 
 const Card: React.FC<CardProps> = ({ data, canClaimItems }) => {
   const { id: missionId, mission, isDone } = data;
-  const { userName, userData } = useUserInfo();
-  const { name, description, reward, startHours, endHours, quantity, type } =
+
+  const { userBalance, userName, userData } = useUserInfo();
+  const { name, description, reward, type, startHours, endHours, quantity } =
     mission || {};
 
   const canClaim = canClaimItems.filter((x: any) => x.id === missionId)[0]
@@ -31,20 +32,36 @@ const Card: React.FC<CardProps> = ({ data, canClaimItems }) => {
       "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white";
   }
 
+  const { execute: executeUpdateUser } = useAction(updateUser, {
+    onSuccess: () => {},
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
+
   const { execute: executeUpdateUserMissionMap, isLoading } = useAction(
     updateUserMissionMap,
     {
       onSuccess: async (data) => {
         if (userData) {
-          const { id: userId, rankId, stars } = userData;
-          await executeUpdateUser({
-            id: userId,
+          const { id, userId, rankId, stars, branch } = userData;
+          const data = {
+            id,
             rankId,
+            userId,
             stars: stars + reward,
-            magicStone: 0,
-          });
+            userName,
+            branch,
+            mission: {
+              type,
+              startHours,
+              endHours,
+              quantity,
+            },
+          };
+          await executeUpdateUser(data);
         }
-        window.location.reload();
+        // window.location.reload();
       },
       onError: (error) => {
         if (error === "Reward has claim.") {
@@ -57,18 +74,9 @@ const Card: React.FC<CardProps> = ({ data, canClaimItems }) => {
     },
   );
 
-  const { execute: executeUpdateUser } = useAction(updateUser, {
-    onSuccess: () => {},
-    onError: (error) => {
-      toast.error(error);
-    },
-  });
-
   const onReward = async (id: number) => {
     if (!isLoading) {
-      const result = await fetcher(`/api/account/${userName}/balance`);
-      const canClaim = checkReward(result, mission);
-
+      const canClaim = checkReward(userBalance, mission);
       if (canClaim) {
         await executeUpdateUserMissionMap({
           id,

@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { createUser } from "@/actions/create-user";
 import { BRANCH } from "@/constants/enum.constant";
 import { nowUtc } from "@/lib/dayjs";
+import { fetcher } from "@/lib/fetcher";
 
 const Login = () => {
   const [login, setLogin] = useState<string>("");
@@ -20,7 +21,7 @@ const Login = () => {
   const router = useRouter();
 
   const { execute } = useAction(createUser, {
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       toast.success("Chào mừng đến với The GateWay!");
       router.push("/dashboard");
     },
