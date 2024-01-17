@@ -23,7 +23,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   } = data;
   let updateUser;
 
-  if (!mission) {
+  if (!mission && !userName && !branch) {
     const userCheckIn = await db.checkInResult.findMany({
       where: { userId, branch },
     });

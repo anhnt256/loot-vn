@@ -49,6 +49,7 @@ const RewardCard: React.FC<CardProps> = ({ data }) => {
             rankId,
             stars: stars - value,
             magicStone: 0,
+            userId,
           });
           window.location.reload();
         }
