@@ -5,6 +5,7 @@ import { createSafeAction } from "@/lib/create-safe-action";
 
 import { CreateCheckInResult } from "./schema";
 import { InputType, ReturnType } from "./type";
+import { nowUtc } from "@/lib/dayjs";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
   const { userId, branch } = data;
@@ -15,9 +16,9 @@ const handler = async (data: InputType): Promise<ReturnType> => {
       data: {
         userId,
         branch,
+        createdAt: nowUtc,
       },
     });
-
   } catch (error) {
     return {
       error: "Failed to create.",

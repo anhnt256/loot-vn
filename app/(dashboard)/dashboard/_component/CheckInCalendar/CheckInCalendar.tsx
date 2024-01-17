@@ -199,6 +199,8 @@ const CheckInCalendar = () => {
                   }
                 } else if (dayjs(day).isSameOrAfter(dayjs())) {
                   bgColor = "bg-white";
+                } else if (hasCheckIn) {
+                  bgColor = "bg-green-200";
                 }
 
                 return (
