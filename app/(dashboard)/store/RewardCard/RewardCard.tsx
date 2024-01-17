@@ -71,7 +71,7 @@ const RewardCard: React.FC<CardProps> = ({ data }) => {
           "Số luợng mã đã hết. Vui lòng liên hệ admin để bổ sung. Xin cảm ơn.",
         );
       } else {
-        if (userId) {
+        if (userId && stars && stars - value > 0) {
           executeCreateUserRewardMap({
             userId,
             rewardId: id,
@@ -79,6 +79,8 @@ const RewardCard: React.FC<CardProps> = ({ data }) => {
             branch,
             createdAt: nowUtc,
           });
+        } else {
+          toast.error("Bạn không có đủ số sao để đổi thưởng.");
         }
       }
     }

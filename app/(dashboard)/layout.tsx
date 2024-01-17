@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { useUserInfo } from "@/hooks/use-user-info";
 import Image from "next/image";
@@ -9,14 +9,38 @@ import { cn } from "@/lib/utils";
 import { useLogout } from "@/queries/auth.query";
 import { toast } from "sonner";
 import FacebookMsg from "@/components/FacebookMsg";
+import { useAction } from "@/hooks/use-action";
+import { updateUser } from "@/actions/update-user";
 
 const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const loginMutation = useLogout();
 
-  const { userData } = useUserInfo();
+  const { userName, userData } = useUserInfo();
   const { stars } = userData || {};
   const pathname = usePathname();
+
+  const { execute: executeUpdateUser } = useAction(updateUser, {
+    onSuccess: async () => {},
+    onError: (error) => {
+      toast.error(error);
+    },
+  });
+
+  useEffect(() => {
+    if (userData && userName) {
+      const { id, rankId, userId, stars, branch } = userData;
+
+      const data = {
+        id,
+        rankId,
+        userId,
+        stars,
+        userName,
+      };
+      executeUpdateUser(data);
+    }
+  }, [userName, userData]);
 
   const handleLogout = async () => {
     const result = await loginMutation.mutateAsync();
@@ -92,9 +116,8 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
       </div>
 
       <div className="flex-1 p-10 text-2xl font-bold bg-gray-400">
-        {/*{children}*/}
+        {children}
         {/*<FacebookMsg />*/}
-        Website bảo trì
       </div>
     </div>
   );

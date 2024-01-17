@@ -93,26 +93,25 @@ model UserMissionMap {
   isDone    Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  users     User[]
+  users     User     @relation(fields: [userId], references: [id])
   mission   Mission  @relation(fields: [missionId], references: [id])
 
   @@index([missionId])
+  @@index([userId])
 }
 
 model User {
-  id               Int             @id @default(autoincrement())
-  userId           Int
-  rankId           Int
-  stars            Int
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-  magicStone       Int             @default(0)
-  branch           String
-  userMissionMapId Int?
-  UserMissionMap   UserMissionMap? @relation(fields: [userMissionMapId], references: [id])
-  UserRewardMap    UserRewardMap[]
-
-  @@index([userMissionMapId])
+  id             Int              @id @default(autoincrement())
+  userName       String?          @db.VarChar(45)
+  userId         Int
+  rankId         Int
+  stars          Int
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  magicStone     Int              @default(0)
+  branch         String
+  UserRewardMap  UserRewardMap[]
+  UserMissionMap UserMissionMap[]
 }
 
 model Mission {

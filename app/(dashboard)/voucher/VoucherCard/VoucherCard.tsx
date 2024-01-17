@@ -14,24 +14,11 @@ interface CardProps {
 }
 
 const VoucherCard: React.FC<CardProps> = ({ data }) => {
-  const { userData } = useUserInfo();
   const [value, copy] = useCopyToClipboard();
 
-  const { userId, stars } = userData || {};
   const { id, promotionCode } = data;
   const { code, name } = promotionCode || {};
 
-  const { execute: executeUpdateUser } = useAction(updateUser, {
-    onSuccess: async () => {
-      if (userData) {
-        const { userId } = userData;
-        window.location.reload();
-      }
-    },
-    onError: (error) => {
-      toast.error(error);
-    },
-  });
   const onReward = async () => {
     await copy(code);
     toast.message(

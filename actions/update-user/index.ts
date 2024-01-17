@@ -39,7 +39,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         error: "User has checkin.",
       };
     }
-  } else {
+  } else if (mission) {
     const result = await apiClient({
       method: "get",
       url: `/account/${userName}/balance-history/?format=json`,
@@ -68,6 +68,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         rankId,
         stars,
         magicStone,
+        userName,
         updatedAt: nowUtc,
       },
     });

@@ -15,7 +15,17 @@ const handler = async (data: InputType): Promise<any> => {
     where: { value, branch },
   });
 
-  if (promotion) {
+  const user = await db.user.findFirst({
+    where: { userId, branch },
+  });
+
+  if (promotion && user) {
+    const { stars } = user;
+    if (stars - value < 0) {
+      return {
+        error: "Failed to create.",
+      };
+    }
     const { id } = promotion;
 
     await db.promotionCode.update({

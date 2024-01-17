@@ -14,13 +14,27 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   let createUser;
 
   const currentUser: User | null = await db.user.findFirst({
-    where: { userId },
+    where: { userId, branch },
   });
 
   if (currentUser) {
-    return {
-      error: "User has exist.",
-    };
+    const { id, userName } = currentUser;
+    if (!userName) {
+      createUser = await db.user.update({
+        where: {
+          id,
+        },
+        data: {
+          rankId,
+          stars,
+          updatedAt: nowUtc,
+        },
+      });
+    } else {
+      return {
+        error: "User has exist.",
+      };
+    }
   }
 
   try {

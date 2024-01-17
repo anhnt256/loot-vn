@@ -16,7 +16,7 @@ export const getRandomItem = (arr: any) => {
 };
 
 export const checkReward = (actions: any[], mission: any) => {
-  const { startHours, endHours, quantity, type } = mission;
+  const { startHours, endHours, quantity, type } = mission || {};
 
   // set test values
   // actions = data;
