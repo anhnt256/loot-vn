@@ -92,8 +92,9 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
       </div>
 
       <div className="flex-1 p-10 text-2xl font-bold bg-gray-400">
-        {children}
+        {/*{children}*/}
         {/*<FacebookMsg />*/}
+        Website bảo trì
       </div>
     </div>
   );
