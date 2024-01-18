@@ -49,6 +49,8 @@ export const checkReward = (actions: any[], mission: any) => {
     });
   }
 
+  console.log("priceActions", priceActions);
+
   if (
     minutes === 0 &&
     priceActions &&
@@ -73,7 +75,7 @@ export const checkReward = (actions: any[], mission: any) => {
           }
         } else {
           if (currentDate < endHours) {
-            minutes += dayjs().diff(currentStartDateFix, "minute");
+            minutes += currentDateEnd.diff(currentStartDateFix, "minute");
           } else {
             minutes += currentEndDateFix.diff(currentStartDateFix, "minute");
           }
