@@ -49,8 +49,6 @@ export const checkReward = (actions: any[], mission: any) => {
     });
   }
 
-  console.log("priceActions", priceActions);
-
   if (
     minutes === 0 &&
     priceActions &&
