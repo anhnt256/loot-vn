@@ -11,7 +11,7 @@ import { fetcher } from "@/lib/fetcher";
 import { useCallback, useState } from "react";
 import { createCheckInResult } from "@/actions/create-checkInResult";
 import { Skeleton } from "@/components/ui/skeleton";
-import { checkTodaySpentTime, cn } from "@/lib/utils";
+import { checkTodaySpentTime, cn, updateUserBalance } from "@/lib/utils";
 import dayjs from "@/lib/dayjs";
 import { useUserInfo } from "@/hooks/use-user-info";
 import {

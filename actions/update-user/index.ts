@@ -45,6 +45,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
       url: `/account/${userName}/balance-history/?format=json`,
       headers: {
         "Content-Type": "application/json",
+        Cookie: branch,
       },
     });
 

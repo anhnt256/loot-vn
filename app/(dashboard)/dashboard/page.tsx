@@ -3,8 +3,7 @@
 import { useEffect } from "react";
 import CheckInCalendar from "./_component/CheckInCalendar/CheckInCalendar";
 import { useUserInfo } from "@/hooks/use-user-info";
-import { fetcher } from "@/lib/fetcher";
-import dayjs from "@/lib/dayjs";
+import { updateUserBalance } from "@/lib/utils";
 
 const Dashboard = () => {
   const { userName } = useUserInfo();
@@ -12,15 +11,7 @@ const Dashboard = () => {
   useEffect(() => {
     if (userName) {
       (async () => {
-        const result = await fetcher(`/api/account/${userName}/balance`);
-        const currentMonthBalance = result.filter(
-          (x: any) => dayjs(x.start).month() === dayjs().month(),
-        );
-
-        localStorage.setItem(
-          "userBalance",
-          JSON.stringify(currentMonthBalance),
-        );
+        await updateUserBalance(userName);
       })();
     }
   }, [userName]);

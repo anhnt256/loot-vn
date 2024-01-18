@@ -3,6 +3,7 @@ import { twMerge } from "tailwind-merge";
 import dayjs, { nowUtc, startUtc } from "@/lib/dayjs";
 import { NextResponse } from "next/server";
 import { data } from "@/constants/data";
+import { fetcher } from "@/lib/fetcher";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -159,4 +160,13 @@ export const checkTodaySpentTime = (actions: any[]) => {
     });
   }
   return minutes;
+};
+
+export const updateUserBalance = async (userName: string) => {
+  const result = await fetcher(`/api/account/${userName}/balance`);
+  const currentMonthBalance = result.filter(
+    (x: any) => dayjs(x.start).month() === dayjs().month(),
+  );
+
+  localStorage.setItem("userBalance", JSON.stringify(currentMonthBalance));
 };
