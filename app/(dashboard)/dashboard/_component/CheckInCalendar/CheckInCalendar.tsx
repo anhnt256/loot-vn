@@ -95,6 +95,9 @@ const CheckInCalendar = () => {
 
   const handleDayClick = useCallback(
     async (day: string, star: number) => {
+      if (isChecking) {
+        return;
+      }
       if (!isChecking && userCheckIn) {
         const hasCheckIn = userCheckIn.find(
           (x) =>
