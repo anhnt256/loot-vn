@@ -12,7 +12,7 @@ const handler = async (data: InputType): Promise<any> => {
   let createUserRewardMap;
 
   const promotion = await db.promotionCode.findFirst({
-    where: { value, branch },
+    where: { value, branch, isUsed: false },
   });
 
   const user = await db.user.findFirst({
