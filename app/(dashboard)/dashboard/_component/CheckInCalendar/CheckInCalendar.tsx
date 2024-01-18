@@ -137,7 +137,14 @@ const CheckInCalendar = () => {
         }
       }
     },
-    [userCheckIn, isChecking, executeUpdateUser, executeCheckIn, userData],
+    [
+      userCheckIn,
+      isChecking,
+      executeUpdateUser,
+      executeCheckIn,
+      userData,
+      userBalance,
+    ],
   );
   const checkInArray = chunkArrayInGroups(getAllDaysOfMonth(), 7);
 
