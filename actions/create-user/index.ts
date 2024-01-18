@@ -18,23 +18,9 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   });
 
   if (currentUser) {
-    const { id, userName } = currentUser;
-    if (!userName) {
-      createUser = await db.user.update({
-        where: {
-          id,
-        },
-        data: {
-          rankId,
-          stars,
-          updatedAt: nowUtc,
-        },
-      });
-    } else {
-      return {
-        error: "User has exist.",
-      };
-    }
+    return {
+      error: "User has exist.",
+    };
   }
 
   try {
