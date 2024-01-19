@@ -116,8 +116,6 @@ export const checkReward = (actions: any[], mission: any) => {
 };
 
 export const checkTodaySpentTime = (actions: any[]) => {
-  console.log("actions", actions);
-
   const priceActions = actions.filter(
     (x: any) =>
       x.action_name.includes("Phiên theo biểu giá") && dayjs(x.start).isToday(),
