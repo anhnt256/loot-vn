@@ -6,7 +6,7 @@ import { useAction } from "@/hooks/use-action";
 import { toast } from "sonner";
 import { updateUser } from "@/actions/update-user";
 import { useQuery } from "@tanstack/react-query";
-import { CheckInItem } from "@prisma/client";
+import { CheckInItem, User } from "@prisma/client";
 import { fetcher } from "@/lib/fetcher";
 import { useCallback, useState } from "react";
 import { createCheckInResult } from "@/actions/create-checkInResult";
@@ -38,6 +38,8 @@ const CheckInCalendar = () => {
       }
     | undefined
   >();
+
+  const { userId, branch } = userData || {};
 
   // Get the first day of the next month
   function getAllDaysOfMonth() {
@@ -93,6 +95,12 @@ const CheckInCalendar = () => {
     queryFn: () => fetcher(`/api/check-in-item`),
   });
 
+  const { data: newUserData } = useQuery<User>({
+    queryKey: ["user", userId],
+    enabled: !!branch && !!branch,
+    queryFn: () => fetcher(`/api/user/${userId}/${branch}`),
+  });
+
   const handleDayClick = useCallback(
     async (day: string, star: number) => {
       if (isChecking) {
@@ -113,8 +121,8 @@ const CheckInCalendar = () => {
           const todaySpentTime = checkTodaySpentTime(userBalance);
           if (todaySpentTime && todaySpentTime >= MIN_LOGIN_TIME) {
             setIsChecking(true);
-            if (userData) {
-              const { id, userId, rankId, stars, branch } = userData;
+            if (newUserData) {
+              const { id, userId, rankId, stars, branch } = newUserData;
               if (userName && branch) {
                 await executeUpdateUser({
                   id,

@@ -1,5 +1,5 @@
 import React from "react";
-import { Mission } from "@prisma/client";
+import { Mission, User } from "@prisma/client";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useAction } from "@/hooks/use-action";
@@ -10,6 +10,7 @@ import { updateUser } from "@/actions/update-user";
 import { useUserInfo } from "@/hooks/use-user-info";
 import { fetcher } from "@/lib/fetcher";
 import { checkReward, cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
 
 interface CardProps {
   data: any;
@@ -22,6 +23,8 @@ const Card: React.FC<CardProps> = ({ data, canClaimItems }) => {
   const { userBalance, userName, userData } = useUserInfo();
   const { name, description, reward, type, startHours, endHours, quantity } =
     mission || {};
+
+  const { userId, branch } = userData || {};
 
   const canClaim = canClaimItems.filter((x: any) => x.id === missionId)[0]
     ?.canClaim;
@@ -39,12 +42,18 @@ const Card: React.FC<CardProps> = ({ data, canClaimItems }) => {
     },
   });
 
+  const { data: newUserData } = useQuery<User>({
+    queryKey: ["user", userId],
+    enabled: !!branch && !!branch,
+    queryFn: () => fetcher(`/api/user/${userId}/${branch}`),
+  });
+
   const { execute: executeUpdateUserMissionMap, isLoading } = useAction(
     updateUserMissionMap,
     {
       onSuccess: async (data) => {
-        if (userData) {
-          const { id, userId, rankId, stars, branch } = userData;
+        if (newUserData) {
+          const { id, userId, rankId, stars, branch } = newUserData;
           const data = {
             id,
             rankId,
@@ -61,7 +70,7 @@ const Card: React.FC<CardProps> = ({ data, canClaimItems }) => {
           };
           await executeUpdateUser(data);
         }
-        window.location.reload();
+        // window.location.reload();
       },
       onError: (error) => {
         if (error === "Reward has claim.") {
