@@ -105,7 +105,7 @@ const CheckInCalendar = () => {
             dayjs(day).format("DD/MM/YYYY"),
         );
         if (hasCheckIn) {
-          toast.error("Hôm nay bạn đã điểm danh!");
+          toast.error("Bạn đã điểm danh ngày này rồi!");
           return;
         }
         if (dayjs(day).isToday()) {
@@ -114,7 +114,7 @@ const CheckInCalendar = () => {
             setIsChecking(true);
             if (userData) {
               const { id, userId, rankId, stars, branch } = userData;
-              if (userName) {
+              if (userName && branch) {
                 await executeUpdateUser({
                   id,
                   rankId,
