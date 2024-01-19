@@ -99,11 +99,12 @@ const CheckInCalendar = () => {
         return;
       }
       if (!isChecking && userCheckIn) {
-        const hasCheckIn = userCheckIn.find(
-          (x) =>
-            dayjs(x.createdAt).format("DD/MM/YYYY") ===
-            dayjs(day).format("DD/MM/YYYY"),
-        );
+        const hasCheckIn = userCheckIn.find((x) => {
+          return (
+            dayjs(x.createdAt).add(-7, "hour").format("DD/MM/YYYY") ===
+            dayjs(day).format("DD/MM/YYYY")
+          );
+        });
         if (hasCheckIn) {
           toast.error("Bạn đã điểm danh ngày này rồi!");
           return;
