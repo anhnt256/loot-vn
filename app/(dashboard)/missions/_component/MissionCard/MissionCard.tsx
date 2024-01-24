@@ -70,7 +70,7 @@ const Card: React.FC<CardProps> = ({ data, canClaimItems }) => {
           };
           await executeUpdateUser(data);
         }
-        // window.location.reload();
+        window.location.reload();
       },
       onError: (error) => {
         if (error === "Reward has claim.") {
