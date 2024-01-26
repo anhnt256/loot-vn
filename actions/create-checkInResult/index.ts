@@ -8,16 +8,40 @@ import { InputType, ReturnType } from "./type";
 import { nowUtc } from "@/lib/dayjs";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
-  const { userId, branch } = data;
-  let updateUser;
+  const { userId, branch, oldStars, newStars, currentUserId } = data;
+  let checkIn;
 
   try {
-    updateUser = await db.checkInResult.create({
-      data: {
-        userId,
-        branch,
-        createdAt: nowUtc,
-      },
+    await db.$transaction(async (tx) => {
+      checkIn = await db.checkInResult.create({
+        data: {
+          userId,
+          branch,
+          createdAt: nowUtc,
+        },
+      });
+
+      if (checkIn) {
+        const { id } = checkIn;
+        await tx.userStarHistory.create({
+          data: {
+            userId,
+            type: "CHECK_IN",
+            oldStars,
+            newStars,
+            targetId: id,
+            createdAt: nowUtc,
+          },
+        });
+
+        await tx.user.update({
+          where: { id: currentUserId },
+          data: {
+            stars: newStars,
+            updatedAt: nowUtc,
+          },
+        });
+      }
     });
   } catch (error) {
     return {
@@ -25,7 +49,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     };
   }
 
-  return { data: updateUser };
+  return { data: checkIn };
 };
 
 export const createCheckInResult = createSafeAction(

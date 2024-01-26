@@ -80,6 +80,7 @@ const Card: React.FC<CardProps> = ({ data, canClaimItems }) => {
         await executeUpdateUserMissionMap({
           id,
           userId,
+          oldStars: stars,
           stars: newStars,
           isDone: true,
           updatedAt: nowUtc,

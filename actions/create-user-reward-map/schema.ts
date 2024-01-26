@@ -5,6 +5,7 @@ export const CreateUserRewardMap = z.object({
   currentUserId: z.number(),
   rewardId: z.number(),
   value: z.number(),
+  oldStars: z.number(),
   newStars: z.number(),
   branch: z.optional(z.string()),
   promotionCodeId: z.optional(z.number()),

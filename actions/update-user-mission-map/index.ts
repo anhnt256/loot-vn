@@ -8,7 +8,14 @@ import { InputType, ReturnType } from "./type";
 import { nowUtc, startUtc } from "@/lib/dayjs";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
-  const { id, isDone = true, updatedAt = nowUtc, userId, stars } = data;
+  const {
+    id,
+    isDone = true,
+    updatedAt = nowUtc,
+    userId,
+    stars,
+    oldStars,
+  } = data;
   let updateUserMissionMap;
   let updateUser;
 
@@ -41,6 +48,17 @@ const handler = async (data: InputType): Promise<ReturnType> => {
           data: {
             stars,
             updatedAt,
+          },
+        });
+
+        await tx.userStarHistory.create({
+          data: {
+            userId,
+            type: "MISSION",
+            oldStars,
+            newStars: stars,
+            targetId: id,
+            createdAt: nowUtc,
           },
         });
       }

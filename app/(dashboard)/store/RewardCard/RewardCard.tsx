@@ -77,6 +77,7 @@ const RewardCard: React.FC<CardProps> = ({ data }) => {
             currentUserId: currentUserId,
             value,
             branch,
+            oldStars: stars,
             newStars,
             createdAt: nowUtc,
           });

@@ -16,6 +16,7 @@ const handler = async (data: InputType): Promise<any> => {
     isUsed = true,
     value,
     branch,
+    oldStars,
     newStars,
   } = data;
   let createUserRewardMap;
@@ -61,13 +62,24 @@ const handler = async (data: InputType): Promise<any> => {
         });
 
         if (createUserRewardMap) {
-          return tx.user.update({
+          await tx.user.update({
             where: {
               id: currentUserId,
             },
             data: {
               stars: newStars,
               updatedAt: nowUtc,
+            },
+          });
+
+          await tx.userStarHistory.create({
+            data: {
+              userId,
+              type: "REWARD",
+              oldStars,
+              newStars,
+              targetId: rewardId,
+              createdAt: nowUtc,
             },
           });
         }

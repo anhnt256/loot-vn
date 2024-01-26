@@ -170,6 +170,16 @@ model PromotionCode {
   UserRewardMap UserRewardMap[]
 }
 
+model UserStarHistory {
+  id        Int                   @id @default(autoincrement())
+  userId    Int?
+  oldStars  Int?
+  newStars  Int?
+  type      UserStarHistory_type?
+  createdAt DateTime?             @default(now())
+  targetId  Int?
+}
+
 enum Item_type {
   HOURS
   ORDER
@@ -180,4 +190,10 @@ enum Mission_type {
   HOURS
   ORDER
   COMBO
+}
+
+enum UserStarHistory_type {
+  CHECK_IN
+  MISSION
+  REWARD
 }

@@ -39,8 +39,6 @@ const CheckInCalendar = () => {
     | undefined
   >();
 
-  const { userId, branch } = userData || {};
-
   // Get the first day of the next month
   function getAllDaysOfMonth() {
     const year = dayjs().year();
@@ -76,29 +74,9 @@ const CheckInCalendar = () => {
     },
   });
 
-  const { execute: executeUpdateUser } = useAction(updateUser, {
-    onSuccess: async () => {
-      if (userData) {
-        const { userId, branch } = userData;
-        await executeCheckIn({ userId, branch });
-        setIsChecking(false);
-        window.location.reload();
-      }
-    },
-    onError: (error) => {
-      toast.error(error);
-    },
-  });
-
   const { data: checkInData, isLoading } = useQuery<[CheckInItem]>({
     queryKey: ["check-in-item"],
     queryFn: () => fetcher(`/api/check-in-item`),
-  });
-
-  const { data: newUserData } = useQuery<User>({
-    queryKey: ["user", userId],
-    enabled: !!branch && !!branch,
-    queryFn: () => fetcher(`/api/user/${userId}/${branch}`),
   });
 
   const handleDayClick = useCallback(
@@ -120,20 +98,18 @@ const CheckInCalendar = () => {
         if (dayjs(day).isToday()) {
           const todaySpentTime = checkTodaySpentTime(userBalance);
           if (todaySpentTime && todaySpentTime >= MIN_LOGIN_TIME) {
-            setIsChecking(true);
-            if (newUserData) {
-              const { id, userId, rankId, stars, branch } = newUserData;
-              if (userName && branch) {
-                await executeUpdateUser({
-                  id,
-                  rankId,
-                  userId,
-                  stars: stars + star,
-                  magicStone: 0,
-                  branch,
-                  userName,
-                });
-              }
+            if (userData) {
+              const { id, userId, branch, stars } = userData;
+              setIsChecking(true);
+              await executeCheckIn({
+                userId,
+                currentUserId: id,
+                branch,
+                oldStars: stars,
+                newStars: stars + star,
+              });
+              setIsChecking(false);
+              window.location.reload();
             }
           } else {
             toast.error(`Hôm nay bạn chưa chơi đủ ${MIN_LOGIN_TIME} phút !`);
@@ -149,35 +125,23 @@ const CheckInCalendar = () => {
         }
       }
     },
-    [
-      userCheckIn,
-      isChecking,
-      executeUpdateUser,
-      executeCheckIn,
-      userData,
-      userBalance,
-    ],
+    [userCheckIn, isChecking, executeCheckIn, userData, userBalance],
   );
   const checkInArray = chunkArrayInGroups(getAllDaysOfMonth(), 7);
 
   const confirmPassCheckIn = async () => {
-    if (currentInfo && userData) {
-      const { star } = currentInfo || {};
-      setShowModal(false);
-      setIsChecking(true);
-      const { id, userId, rankId, stars, branch } = userData;
-      await executeUpdateUser({
-        id,
-        rankId,
-        userId,
-        stars: stars + star,
-        userName,
-        branch,
-      });
-      await executeCheckIn({ userId, branch });
-      setIsChecking(false);
-      window.location.reload();
-    }
+    // if (currentInfo && userData) {
+    //   const { star } = currentInfo || {};
+    //   setShowModal(false);
+    //   if (userData) {
+    //     const { userId, branch } = userData;
+    //     setIsChecking(true);
+    //     await executeCheckIn({ userId, branch });
+    //     setIsChecking(false);
+    //     window.location.reload();
+    //   }
+    //   window.location.reload();
+    // }
   };
 
   const renderCheckIn = useCallback(() => {
