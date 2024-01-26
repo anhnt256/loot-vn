@@ -8,7 +8,16 @@ import { InputType } from "./type";
 import { nowUtc } from "@/lib/dayjs";
 
 const handler = async (data: InputType): Promise<any> => {
-  const { userId, rewardId, duration = 7, isUsed = true, value, branch } = data;
+  const {
+    currentUserId,
+    userId,
+    rewardId,
+    duration = 7,
+    isUsed = true,
+    value,
+    branch,
+    newStars,
+  } = data;
   let createUserRewardMap;
 
   const promotion = await db.promotionCode.findFirst({
@@ -26,30 +35,45 @@ const handler = async (data: InputType): Promise<any> => {
         error: "Failed to create.",
       };
     }
-    const { id } = promotion;
-
-    await db.promotionCode.update({
-      where: {
-        id,
-      },
-      data: {
-        isUsed: true,
-        updatedAt: nowUtc,
-      },
-    });
 
     try {
-      createUserRewardMap = await db.userRewardMap.create({
-        data: {
-          userId,
-          rewardId,
-          promotionCodeId: id,
-          duration,
-          isUsed,
-          createdAt: nowUtc,
-        },
+      await db.$transaction(async (tx) => {
+        const { id } = promotion;
+        await tx.promotionCode.update({
+          where: {
+            id,
+          },
+          data: {
+            isUsed: true,
+            updatedAt: nowUtc,
+          },
+        });
+
+        createUserRewardMap = await tx.userRewardMap.create({
+          data: {
+            userId,
+            rewardId,
+            promotionCodeId: id,
+            duration,
+            isUsed,
+            createdAt: nowUtc,
+          },
+        });
+
+        if (createUserRewardMap) {
+          return tx.user.update({
+            where: {
+              id: currentUserId,
+            },
+            data: {
+              stars: newStars,
+              updatedAt: nowUtc,
+            },
+          });
+        }
       });
     } catch (error) {
+      console.log("error", error);
       return {
         error: "Failed to create.",
       };

@@ -4,18 +4,24 @@ import { User } from "@prisma/client";
 import { fetcher } from "@/lib/fetcher";
 import { useQuery } from "@tanstack/react-query";
 import { getCookie } from "cookies-next";
+import dayjs from "@/lib/dayjs";
 
 export const useUserInfo = () => {
   const [currentUserId, setCurrentUserId] = useState<number | undefined>();
   const [userName, setUserName] = useState<string | undefined>();
   const [userBalance, setUserBalance] = useState<any[]>([]);
+  const [isNewUser, setIsNewUser] = useState<boolean | undefined>(false);
+
   useEffect(() => {
     const currentUser = localStorage.getItem(CURRENT_USER) || "";
     const userBalanceString = localStorage.getItem("userBalance");
     if (currentUser) {
-      const { id, login } = JSON.parse(currentUser);
+      const { id, login, create_date } = JSON.parse(currentUser);
       setCurrentUserId(id);
       setUserName(login);
+
+      const startDate = dayjs("2024-02-01");
+      setIsNewUser(dayjs(create_date).isSameOrAfter(startDate));
     }
     if (userBalanceString) {
       setUserBalance(JSON.parse(userBalanceString));
@@ -34,5 +40,12 @@ export const useUserInfo = () => {
     queryFn: () => fetcher(`/api/check-in-result/${currentUserId}`),
   });
 
-  return { currentUserId, userName, userData, userCheckIn, userBalance };
+  return {
+    currentUserId,
+    userName,
+    userData,
+    userCheckIn,
+    userBalance,
+    isNewUser,
+  };
 };

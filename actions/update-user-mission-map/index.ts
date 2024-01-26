@@ -8,8 +8,9 @@ import { InputType, ReturnType } from "./type";
 import { nowUtc, startUtc } from "@/lib/dayjs";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
-  const { id, isDone = true, updatedAt = nowUtc } = data;
+  const { id, isDone = true, updatedAt = nowUtc, userId, stars } = data;
   let updateUserMissionMap;
+  let updateUser;
 
   const currentMissions = await db.userMissionMap.findFirst({
     where: { id, isDone: true },
@@ -22,14 +23,27 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   }
 
   try {
-    updateUserMissionMap = await db.userMissionMap.update({
-      where: {
-        id,
-      },
-      data: {
-        isDone,
-        updatedAt,
-      },
+    await db.$transaction(async (tx) => {
+      updateUserMissionMap = await tx.userMissionMap.update({
+        where: {
+          id,
+        },
+        data: {
+          isDone,
+          updatedAt,
+        },
+      });
+      if (updateUserMissionMap) {
+        updateUser = await tx.user.update({
+          where: {
+            id: userId,
+          },
+          data: {
+            stars,
+            updatedAt,
+          },
+        });
+      }
     });
   } catch (error) {
     return {

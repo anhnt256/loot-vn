@@ -3,7 +3,7 @@
 import { Reward } from "@prisma/client";
 import { fetcher } from "@/lib/fetcher";
 import { useQuery } from "@tanstack/react-query";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import RewardList from "./RewardList/RewardList";
 import { Button } from "@/components/ui/button";
 import { getCookie } from "cookies-next";
@@ -15,6 +15,7 @@ const Store = () => {
     queryKey: ["reward"],
     queryFn: () => fetcher(`/api/reward/${branch}`),
   });
+
   return (
     <div className="flex flex-col p-5 gap-4">
       <div className="bg-white shadow-lg rounded-lg p-4 w-full overflow-auto max-h-[89vh]">

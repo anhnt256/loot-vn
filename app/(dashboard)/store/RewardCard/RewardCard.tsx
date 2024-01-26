@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useUserInfo } from "@/hooks/use-user-info";
@@ -26,34 +26,10 @@ const RewardCard: React.FC<CardProps> = ({ data }) => {
       "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white";
   }
 
-  const { execute: executeUpdateUser } = useAction(updateUser, {
-    onSuccess: async () => {
-      if (userData) {
-        const { userId } = userData;
-        window.location.reload();
-      }
-    },
-    onError: (error) => {
-      toast.error(error);
-    },
-  });
-
   const { execute: executeCreateUserRewardMap, isLoading } = useAction(
     createUserRewardMap,
     {
-      onSuccess: async () => {
-        if (userData) {
-          const { id: currentUserId, userId, rankId, stars } = userData;
-          await executeUpdateUser({
-            id: currentUserId,
-            rankId,
-            stars: stars - value,
-            magicStone: 0,
-            userId,
-          });
-          window.location.reload();
-        }
-      },
+      onSuccess: async () => {},
       onError: (error) => {
         if (error === "Reward has claim.") {
           toast.error(error);
@@ -64,6 +40,27 @@ const RewardCard: React.FC<CardProps> = ({ data }) => {
       },
     },
   );
+
+  useEffect(() => {
+    const handleKeyDown = (e: any) => {
+      if (e.key === "F5") {
+        e.preventDefault();
+      }
+    };
+
+    const handleBeforeUnload = (event: any) => {
+      event.preventDefault();
+      event.returnValue = "Dữ liệu sẽ bị mất, bạn có muốn tiếp tục?";
+    };
+
+    if (isLoading) {
+      window.addEventListener("keydown", handleKeyDown);
+      window.addEventListener("beforeunload", handleBeforeUnload);
+    } else {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    }
+  }, [isLoading]);
   const onReward = async () => {
     if (!isLoading) {
       if (totalPromotion === 0) {
@@ -71,14 +68,19 @@ const RewardCard: React.FC<CardProps> = ({ data }) => {
           "Số luợng mã đã hết. Vui lòng liên hệ admin để bổ sung. Xin cảm ơn.",
         );
       } else {
-        if (userId && stars && stars - value > 0) {
-          executeCreateUserRewardMap({
+        if (userId && stars && stars - value >= 0 && userData) {
+          const { id: currentUserId, stars } = userData;
+          const newStars = stars - value;
+          await executeCreateUserRewardMap({
             userId,
             rewardId: id,
+            currentUserId: currentUserId,
             value,
             branch,
+            newStars,
             createdAt: nowUtc,
           });
+          window.location.reload();
         } else {
           toast.error("Bạn không có đủ số sao để đổi thưởng.");
         }

@@ -2,7 +2,7 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import dayjs, { nowUtc, startUtc } from "@/lib/dayjs";
 import { NextResponse } from "next/server";
-import { data } from "@/constants/data";
+import { data } from "@/constants/data-tp";
 import { fetcher } from "@/lib/fetcher";
 
 export function cn(...inputs: ClassValue[]) {
@@ -20,7 +20,7 @@ export const checkReward = (actions: any[], mission: any) => {
   const { startHours, endHours, quantity, type } = mission || {};
 
   // set test values
-  // actions = data;
+  actions = data;
 
   const priceActions = actions.filter(
     (x: any) =>

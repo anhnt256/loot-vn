@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Mission, User } from "@prisma/client";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -35,43 +35,10 @@ const Card: React.FC<CardProps> = ({ data, canClaimItems }) => {
       "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white";
   }
 
-  const { execute: executeUpdateUser } = useAction(updateUser, {
-    onSuccess: () => {},
-    onError: (error) => {
-      toast.error(error);
-    },
-  });
-
-  const { data: newUserData } = useQuery<User>({
-    queryKey: ["user", userId],
-    enabled: !!branch && !!branch,
-    queryFn: () => fetcher(`/api/user/${userId}/${branch}`),
-  });
-
   const { execute: executeUpdateUserMissionMap, isLoading } = useAction(
     updateUserMissionMap,
     {
-      onSuccess: async (data) => {
-        if (newUserData) {
-          const { id, userId, rankId, stars, branch } = newUserData;
-          const data = {
-            id,
-            rankId,
-            userId,
-            stars: stars + reward,
-            userName,
-            branch,
-            mission: {
-              type,
-              startHours,
-              endHours,
-              quantity,
-            },
-          };
-          await executeUpdateUser(data);
-        }
-        window.location.reload();
-      },
+      onSuccess: async (data) => {},
       onError: (error) => {
         if (error === "Reward has claim.") {
           toast.error(error);
@@ -83,15 +50,41 @@ const Card: React.FC<CardProps> = ({ data, canClaimItems }) => {
     },
   );
 
+  useEffect(() => {
+    const handleKeyDown = (e: any) => {
+      if (e.key === "F5") {
+        e.preventDefault();
+      }
+    };
+
+    const handleBeforeUnload = (event: any) => {
+      event.preventDefault();
+      event.returnValue = "Dữ liệu sẽ bị mất, bạn có muốn tiếp tục?";
+    };
+
+    if (isLoading) {
+      window.addEventListener("keydown", handleKeyDown);
+      window.addEventListener("beforeunload", handleBeforeUnload);
+    } else {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    }
+  }, [isLoading]);
+
   const onReward = async (id: number) => {
     if (!isLoading) {
       const canClaim = checkReward(userBalance, mission);
-      if (canClaim) {
+      if (canClaim && userData) {
+        const { id: userId, stars } = userData;
+        const newStars = stars + reward;
         await executeUpdateUserMissionMap({
           id,
+          userId,
+          stars: newStars,
           isDone: true,
           updatedAt: nowUtc,
         });
+        window.location.reload();
       } else {
         toast.message(
           "Bạn chưa đủ điều kiện nhận thưởng. Hãy quay lại sau nhé.",
