@@ -8,17 +8,18 @@ import { useRouter } from "next/navigation";
 import VoucherList from "@/app/(dashboard)/voucher/VoucherList/VoucherList";
 import { getCookie } from "cookies-next";
 import { BRANCH } from "@/constants/enum.constant";
+import Image from "next/image";
 import { useUserInfo } from "@/hooks/use-user-info";
 
 const Voucher = () => {
   const router = useRouter();
   const { userData, isNewUser } = useUserInfo();
 
-  // useEffect(() => {
-  //   if (!isNewUser) {
-  //     router.push("/dashboard");
-  //   }
-  // }, [isNewUser, router]);
+  useEffect(() => {
+    if (!isNewUser) {
+      router.push("/dashboard");
+    }
+  }, [isNewUser, router]);
 
   const arrayCard = [
     {
@@ -117,8 +118,11 @@ const Voucher = () => {
           <div className="flex justify-between mb-8">
             {arrayCard.map((item, index) => {
               return (
-                <div className="max-w-sm rounded overflow-hidden shadow-lg relative mb-4 mr-4">
-                  <img
+                <div
+                  key={index}
+                  className="max-w-sm rounded overflow-hidden shadow-lg relative mb-4 mr-4"
+                >
+                  <Image
                     className="w-full"
                     src="./welcome.png"
                     alt="Card Image"
@@ -145,8 +149,11 @@ const Voucher = () => {
           <div className="flex justify-start">
             {arrayOther.map((item, index) => {
               return (
-                <div className="max-w-sm rounded overflow-hidden shadow-lg relative mb-4 mr-4">
-                  <img
+                <div
+                  key={index}
+                  className="max-w-sm rounded overflow-hidden shadow-lg relative mb-4 mr-4"
+                >
+                  <Image
                     className="w-full"
                     src="./welcome.png"
                     alt="Card Image"
