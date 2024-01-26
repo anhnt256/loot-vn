@@ -20,7 +20,7 @@ export const checkReward = (actions: any[], mission: any) => {
   const { startHours, endHours, quantity, type } = mission || {};
 
   // set test values
-  actions = data;
+  // actions = data;
 
   const priceActions = actions.filter(
     (x: any) =>
