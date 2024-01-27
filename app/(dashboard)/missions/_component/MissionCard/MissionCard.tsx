@@ -75,7 +75,7 @@ const Card: React.FC<CardProps> = ({ data, canClaimItems }) => {
     if (!isLoading) {
       const canClaim = checkReward(userBalance, mission);
       if (canClaim && userData) {
-        const { id: userId, stars } = userData;
+        const { userId, stars } = userData;
         const newStars = stars + reward;
         await executeUpdateUserMissionMap({
           id,
