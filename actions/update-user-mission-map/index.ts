@@ -13,8 +13,8 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     isDone = true,
     updatedAt = nowUtc,
     userId,
-    stars,
-    oldStars,
+    currentUserId,
+    reward,
   } = data;
   let updateUserMissionMap;
   let updateUser;
@@ -41,26 +41,34 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         },
       });
       if (updateUserMissionMap) {
-        updateUser = await tx.user.update({
-          where: {
-            id: userId,
-          },
-          data: {
-            stars,
-            updatedAt,
-          },
-        });
+        const user = await tx.user.findUnique({ where: { id: currentUserId } });
 
-        await tx.userStarHistory.create({
-          data: {
-            userId,
-            type: "MISSION",
-            oldStars,
-            newStars: stars,
-            targetId: id,
-            createdAt: nowUtc,
-          },
-        });
+        if (user) {
+          const { stars: oldStars } = user;
+
+          const newStars = oldStars + reward;
+
+          updateUser = await tx.user.update({
+            where: {
+              id: userId,
+            },
+            data: {
+              stars: newStars,
+              updatedAt,
+            },
+          });
+
+          await tx.userStarHistory.create({
+            data: {
+              userId,
+              type: "MISSION",
+              oldStars,
+              newStars,
+              targetId: id,
+              createdAt: nowUtc,
+            },
+          });
+        }
       }
     });
   } catch (error) {

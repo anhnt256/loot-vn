@@ -24,8 +24,6 @@ const Card: React.FC<CardProps> = ({ data, canClaimItems }) => {
   const { name, description, reward, type, startHours, endHours, quantity } =
     mission || {};
 
-  const { userId, branch } = userData || {};
-
   const canClaim = canClaimItems.filter((x: any) => x.id === missionId)[0]
     ?.canClaim;
 
@@ -75,13 +73,13 @@ const Card: React.FC<CardProps> = ({ data, canClaimItems }) => {
     if (!isLoading) {
       const canClaim = checkReward(userBalance, mission);
       if (canClaim && userData) {
-        const { userId, stars } = userData;
+        const { id: currentUserId, userId, stars } = userData;
         const newStars = stars + reward;
         await executeUpdateUserMissionMap({
           id,
           userId,
-          oldStars: stars,
-          stars: newStars,
+          currentUserId,
+          reward,
           isDone: true,
           updatedAt: nowUtc,
         });
