@@ -57,6 +57,7 @@ const handler = async (data: InputType): Promise<any> => {
             promotionCodeId: id,
             duration,
             isUsed,
+            branch,
             createdAt: nowUtc,
           },
         });
