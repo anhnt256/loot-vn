@@ -50,7 +50,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
 
           updateUser = await tx.user.update({
             where: {
-              id: userId,
+              id: currentUserId,
             },
             data: {
               stars: newStars,
