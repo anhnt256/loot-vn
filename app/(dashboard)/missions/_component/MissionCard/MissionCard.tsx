@@ -48,27 +48,6 @@ const Card: React.FC<CardProps> = ({ data, canClaimItems }) => {
     },
   );
 
-  useEffect(() => {
-    const handleKeyDown = (e: any) => {
-      if (e.key === "F5") {
-        e.preventDefault();
-      }
-    };
-
-    const handleBeforeUnload = (event: any) => {
-      event.preventDefault();
-      event.returnValue = "Dữ liệu sẽ bị mất, bạn có muốn tiếp tục?";
-    };
-
-    if (isLoading) {
-      window.addEventListener("keydown", handleKeyDown);
-      window.addEventListener("beforeunload", handleBeforeUnload);
-    } else {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    }
-  }, [isLoading]);
-
   const onReward = async (id: number) => {
     if (!isLoading) {
       const canClaim = checkReward(userBalance, mission);

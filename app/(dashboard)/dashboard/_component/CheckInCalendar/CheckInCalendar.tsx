@@ -4,14 +4,13 @@ import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import { useAction } from "@/hooks/use-action";
 import { toast } from "sonner";
-import { updateUser } from "@/actions/update-user";
 import { useQuery } from "@tanstack/react-query";
 import { CheckInItem, User } from "@prisma/client";
 import { fetcher } from "@/lib/fetcher";
 import { useCallback, useState } from "react";
 import { createCheckInResult } from "@/actions/create-checkInResult";
 import { Skeleton } from "@/components/ui/skeleton";
-import { checkTodaySpentTime, cn, updateUserBalance } from "@/lib/utils";
+import { checkTodaySpentTime, cn } from "@/lib/utils";
 import dayjs from "@/lib/dayjs";
 import { useUserInfo } from "@/hooks/use-user-info";
 import {
@@ -105,8 +104,7 @@ const CheckInCalendar = () => {
                 userId,
                 currentUserId: id,
                 branch,
-                oldStars: stars,
-                newStars: stars + star,
+                addedStar: star,
               });
               setIsChecking(false);
               window.location.reload();

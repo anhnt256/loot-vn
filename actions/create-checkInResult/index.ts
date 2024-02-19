@@ -8,7 +8,7 @@ import { InputType, ReturnType } from "./type";
 import { nowUtc } from "@/lib/dayjs";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
-  const { userId, branch, oldStars, newStars, currentUserId } = data;
+  const { userId, branch, currentUserId, addedStar } = data;
   let checkIn;
 
   try {
@@ -23,24 +23,32 @@ const handler = async (data: InputType): Promise<ReturnType> => {
 
       if (checkIn) {
         const { id } = checkIn;
-        await tx.userStarHistory.create({
-          data: {
-            userId,
-            type: "CHECK_IN",
-            oldStars,
-            newStars,
-            targetId: id,
-            createdAt: nowUtc,
-          },
-        });
 
-        await tx.user.update({
-          where: { id: currentUserId },
-          data: {
-            stars: newStars,
-            updatedAt: nowUtc,
-          },
-        });
+        const user = await tx.user.findUnique({ where: { id: currentUserId } });
+
+        if (user) {
+          const { stars: oldStars } = user;
+
+          const newStars = oldStars + addedStar;
+
+          await tx.userStarHistory.create({
+            data: {
+              userId,
+              type: "CHECK_IN",
+              oldStars,
+              newStars,
+              targetId: id,
+              createdAt: nowUtc,
+            },
+          });
+          await tx.user.update({
+            where: { id: currentUserId },
+            data: {
+              stars: newStars,
+              updatedAt: nowUtc,
+            },
+          });
+        }
       }
     });
   } catch (error) {
