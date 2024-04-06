@@ -136,9 +136,9 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
       </div>
 
       <div className="flex-1 p-10 text-2xl font-bold bg-gray-400">
-        {/*{children}*/}
-        {/*<FacebookMsg />*/}
-        <h1>Website bảo trì để sửa lỗi. Dự kiến hoàn thành ngày 08/04/2024. Rất mong các bạn thông cảm.</h1>
+        {children}
+        <FacebookMsg />
+        {/*<h1>Website bảo trì để sửa lỗi. Dự kiến hoàn thành ngày 08/04/2024. Rất mong các bạn thông cảm.</h1>*/}
       </div>
     </div>
   );

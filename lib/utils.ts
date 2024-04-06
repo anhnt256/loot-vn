@@ -2,8 +2,9 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import dayjs, { nowUtc, startUtc } from "@/lib/dayjs";
 import { NextResponse } from "next/server";
-import { data } from "@/constants/data-tp";
+import { data } from "@/constants/data";
 import { fetcher } from "@/lib/fetcher";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -18,6 +19,8 @@ export const getRandomItem = (arr: any) => {
 
 export const checkReward = (actions: any[], mission: any) => {
   const { startHours, endHours, quantity, type } = mission || {};
+
+  // console.group(`checkReward ${startHours} - ${endHours}`);
 
   // set test values
   // actions = data;
@@ -50,52 +53,76 @@ export const checkReward = (actions: any[], mission: any) => {
     });
   }
 
-  if (
-    minutes === 0 &&
-    priceActions &&
-    priceActions.length > 0 &&
-    type === "HOURS"
-  ) {
+  if (priceActions && priceActions.length > 0 && type === "HOURS") {
     priceActions.forEach((action: any) => {
+      if (minutes < 0) {
+        minutes = 0;
+      }
       const { start, end } = action;
       const currentDateStart = dayjs(start);
-      const currentDateEnd = dayjs(end);
-      const currentDate = dayjs().hour();
-      const currentEndDateFix = dayjs().hour(endHours);
-      const currentStartDateFix = dayjs().hour(startHours);
+      let currentDateEnd = dayjs().add(1, "day");
+      const currentEndDateFix = dayjs().hour(endHours).minute(0).second(0);
+      const currentStartDateFix = dayjs().hour(startHours).minute(0).second(0);
+
+      // console.log(
+      //   "currentDateStart",
+      //   currentDateStart.format("DD/MM/YYYY HH:mm:ss"),
+      // );
+      // console.log(
+      //   "currentDateEnd",
+      //   currentDateEnd.format("DD/MM/YYYY HH:mm:ss"),
+      // );
+      // console.log(
+      //   "currentEndDateFix",
+      //   currentEndDateFix.format("DD/MM/YYYY HH:mm:ss"),
+      // );
+      // console.log(
+      //   "currentStartDateFix",
+      //   currentStartDateFix.format("DD/MM/YYYY HH:mm:ss"),
+      // );
 
       if (end !== null) {
+        currentDateEnd = dayjs(end);
+        // console.log(
+        //   "currentDateEnd-New",
+        //   currentDateEnd.format("DD/MM/YYYY HH:mm:ss"),
+        // );
         if (currentDateStart.hour() >= startHours) {
-          if (currentDateStart.hour() < endHours) {
-            minutes += currentDateEnd.diff(currentDateStart, "minute");
-          } else if (currentDateStart.hour() > endHours) {
-            const currentEndDateFix = dayjs().hour(endHours);
+          if (currentDateEnd.isSameOrAfter(currentEndDateFix)) {
             minutes += currentEndDateFix.diff(currentDateStart, "minute");
-          }
-        } else {
-          if (currentDate < endHours) {
-            minutes += currentDateEnd.diff(currentStartDateFix, "minute");
           } else {
+            minutes += currentDateEnd.diff(currentDateStart, "minute");
+          }
+        }
+        // Trường hợp khách chơi từ sáng đến khuya. Nên StartDate sẽ lớn hơn điều kiện
+        // Ví dụ StartDate 7h:45, EndDate 23h45 , nhưng Start Hours 13h, End Hours 17h, Chơi 1h
+        else if (currentDateStart.hour() <= startHours) {
+          if (currentDateEnd.isSameOrAfter(currentEndDateFix)) {
             minutes += currentEndDateFix.diff(currentStartDateFix, "minute");
+          } else {
+            minutes += currentDateEnd.diff(currentStartDateFix, "minute");
           }
         }
       } else {
-        if (currentDateStart.hour() >= startHours) {
-          if (currentDate < endHours) {
-            minutes += dayjs().diff(currentDateStart, "minute");
-          } else {
-            minutes += currentEndDateFix.diff(currentDateStart, "minute");
-          }
-        } else {
-          if (currentDate < endHours) {
-            minutes += dayjs().diff(currentStartDateFix, "minute");
-          } else {
+        if (currentDateEnd.hour() >= startHours) {
+          minutes += dayjs().diff(currentDateStart, "minute");
+        }
+        // Trường hợp khách chơi từ sáng đến khuya. Nên StartDate sẽ lớn hơn điều kiện
+        // Ví dụ StartDate 7h:45, EndDate 23h45 , nhưng Start Hours 13h, End Hours 17h, Chơi 1h
+        else if (currentDateStart.hour() <= startHours) {
+          if (currentDateEnd.isSameOrAfter(currentEndDateFix)) {
             minutes += currentEndDateFix.diff(currentStartDateFix, "minute");
+          } else {
+            minutes += currentDateEnd.diff(currentStartDateFix, "minute");
           }
         }
       }
     });
   }
+  // console.log("current Minutes", minutes);
+  //
+  // console.groupEnd();
+  //
 
   if (minutes >= parseInt(quantity, 10) * 60) {
     return true;
@@ -165,9 +192,9 @@ export const checkTodaySpentTime = (actions: any[]) => {
 
 export const updateUserBalance = async (userName: string) => {
   const result = await fetcher(`/api/account/${userName}/balance`);
-  const currentMonthBalance = result.filter(
-    (x: any) => dayjs(x.start).month() === dayjs().month(),
-  );
+  // const currentMonthBalance = result.filter(
+  //   (x: any) => dayjs(x.start).month() === dayjs().month(),
+  // );
 
-  localStorage.setItem("userBalance", JSON.stringify(currentMonthBalance));
+  localStorage.setItem("userBalance", JSON.stringify(result));
 };
