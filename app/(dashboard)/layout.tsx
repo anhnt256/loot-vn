@@ -70,17 +70,17 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
             {/*  <Image src="/rock.png" width="22" height="22" alt="stars" />*/}
             {/*</div>*/}
           </div>
-          {isNewUser && (
-            <Link
-              className={cn(
-                "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
-                pathname === "/welcome" ? "bg-gray-700" : "transparent",
-              )}
-              href="/welcome"
-            >
-              Quà chào mừng
-            </Link>
-          )}
+          {/*{isNewUser && (*/}
+          {/*  <Link*/}
+          {/*    className={cn(*/}
+          {/*      "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",*/}
+          {/*      pathname === "/welcome" ? "bg-gray-700" : "transparent",*/}
+          {/*    )}*/}
+          {/*    href="/welcome"*/}
+          {/*  >*/}
+          {/*    Quà chào mừng*/}
+          {/*  </Link>*/}
+          {/*)}*/}
           {/*<Link*/}
           {/*  className={cn(*/}
           {/*    "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",*/}
