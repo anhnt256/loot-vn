@@ -12,10 +12,17 @@ import { nowUtc } from "@/lib/dayjs";
 const handler = async (data: InputType): Promise<ReturnType> => {
   const { userId, rankId = 1, branch = BRANCH.GOVAP, stars = 0 } = data;
   let createUser;
+  let currentUser: User | null;
 
-  const currentUser: User | null = await db.user.findFirst({
-    where: { userId, branch },
-  });
+  try {
+    currentUser = await db.user.findFirst({
+      where: { userId, branch },
+    });
+  } catch (error) {
+    return {
+      error: "Failed to create.",
+    };
+  }
 
   if (currentUser) {
     return {
