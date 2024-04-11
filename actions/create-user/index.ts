@@ -18,9 +18,9 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     currentUser = await db.user.findFirst({
       where: { userId, branch },
     });
-  } catch (error) {
+  } catch (error: any) {
     return {
-      error: "Failed to create.",
+      error: error.message,
     };
   }
 
