@@ -86,7 +86,7 @@ const CheckInCalendar = () => {
       if (!isChecking && userCheckIn) {
         const hasCheckIn = userCheckIn.find((x) => {
           return (
-            dayjs(x.createdAt).add(-7, "hour").format("DD/MM/YYYY") ===
+            dayjs(x.createdAt).format("DD/MM/YYYY") ===
             dayjs(day).format("DD/MM/YYYY")
           );
         });
