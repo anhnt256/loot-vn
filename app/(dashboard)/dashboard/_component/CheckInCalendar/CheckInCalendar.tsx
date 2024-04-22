@@ -95,6 +95,9 @@ const CheckInCalendar = () => {
           return;
         }
 
+        console.log("test", dayjs(day).format("DD/MM/YYYY"));
+        console.log("server time", dayjs().format("DD/MM/YYYY"));
+
         if (dayjs(day).isToday()) {
           const todaySpentTime = checkTodaySpentTime(userBalance);
 
