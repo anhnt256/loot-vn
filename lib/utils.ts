@@ -142,18 +142,28 @@ export const checkReward = (actions: any[], mission: any) => {
   return false;
 };
 
+function isGreaterThanOrEqualYesterday(customDate: string) {
+  const yesterday = dayjs().subtract(1, "day").startOf("day");
+
+  const customDayjs = dayjs(customDate);
+
+  return customDayjs.isSameOrAfter(yesterday);
+}
+
 export const checkTodaySpentTime = (actions: any[]) => {
   // set test values
   // actions = data;
 
   const priceActions = actions.filter(
     (x: any) =>
-      x.action_name.includes("Phiên theo biểu giá") && dayjs(x.start).isToday(),
+      x.action_name.includes("Phiên theo biểu giá") &&
+      isGreaterThanOrEqualYesterday(x.start),
   );
 
   const ticketActions = actions.filter(
     (x: any) =>
-      x.action_name.includes("Ticket session") && dayjs(x.start).isToday(),
+      x.action_name.includes("Ticket session") &&
+      isGreaterThanOrEqualYesterday(x.start),
   );
 
   let minutes = 0;

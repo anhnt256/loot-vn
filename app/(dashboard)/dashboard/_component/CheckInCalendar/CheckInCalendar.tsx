@@ -94,8 +94,10 @@ const CheckInCalendar = () => {
           toast.error("Bạn đã điểm danh ngày này rồi!");
           return;
         }
+
         if (dayjs(day).isToday()) {
           const todaySpentTime = checkTodaySpentTime(userBalance);
+
           if (todaySpentTime && todaySpentTime >= MIN_LOGIN_TIME) {
             if (userData) {
               const { id, userId, branch, stars } = userData;
