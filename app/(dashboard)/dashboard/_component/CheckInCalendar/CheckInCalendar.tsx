@@ -95,15 +95,16 @@ const CheckInCalendar = () => {
           return;
         }
 
-        console.log("test", dayjs(day).format("DD/MM/YYYY"));
-        console.log("server time", dayjs().format("DD/MM/YYYY"));
+        console.log("test", dayjs(day).format("DD/MM/YYYY HH:mm:ss"));
+        console.log("server time", dayjs().format("DD/MM/YYYY HH:mm:ss"));
 
         if (dayjs(day).isToday()) {
           const todaySpentTime = checkTodaySpentTime(userBalance);
 
           if (todaySpentTime && todaySpentTime >= MIN_LOGIN_TIME) {
             if (userData) {
-              const { id, userId, branch, stars } = userData;
+              const { id, userId, branch } = userData;
+              console.log("userData", userData);
               setIsChecking(true);
               await executeCheckIn({
                 userId,
