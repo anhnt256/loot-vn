@@ -41,6 +41,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
               createdAt: nowUtc,
             },
           });
+
           await tx.user.update({
             where: { id: currentUserId },
             data: {
