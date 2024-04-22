@@ -80,48 +80,50 @@ const CheckInCalendar = () => {
 
   const handleDayClick = useCallback(
     async (day: string, star: number) => {
-      if (isChecking) {
-        return;
-      }
-      if (!isChecking && userCheckIn) {
-        const hasCheckIn = userCheckIn.find((x) => {
-          return (
-            dayjs(x.createdAt).format("DD/MM/YYYY") ===
-            dayjs(day).format("DD/MM/YYYY")
-          );
-        });
-        if (hasCheckIn) {
-          toast.error("Bạn đã điểm danh ngày này rồi!");
+      if (userBalance && userBalance.length > 0) {
+        if (isChecking) {
           return;
         }
-
-        if (dayjs(day).isToday()) {
-          const todaySpentTime = checkTodaySpentTime(userBalance);
-
-          if (todaySpentTime && todaySpentTime >= MIN_LOGIN_TIME) {
-            if (userData) {
-              const { id, userId, branch } = userData;
-              setIsChecking(true);
-              await executeCheckIn({
-                userId,
-                currentUserId: id,
-                branch,
-                addedStar: star,
-              });
-              setIsChecking(false);
-              window.location.reload();
-            }
-          } else {
-            toast.error(`Hôm nay bạn chưa chơi đủ ${MIN_LOGIN_TIME} phút !`);
+        if (!isChecking && userCheckIn) {
+          const hasCheckIn = userCheckIn.find((x) => {
+            return (
+              dayjs(x.createdAt).format("DD/MM/YYYY") ===
+              dayjs(day).format("DD/MM/YYYY")
+            );
+          });
+          if (hasCheckIn) {
+            toast.error("Bạn đã điểm danh ngày này rồi!");
             return;
           }
-        } else if (dayjs(day).isSameOrAfter(dayjs())) {
-          toast.error("Chưa đến ngày điểm danh!");
-          return;
-        } else {
-          // setShowModal(true);
-          // setCurrentInfo({ day, star });
-          toast.error("Đã quá hạn điểm danh!");
+
+          if (dayjs(day).isToday()) {
+            const todaySpentTime = checkTodaySpentTime(userBalance);
+
+            if (todaySpentTime && todaySpentTime >= MIN_LOGIN_TIME) {
+              if (userData) {
+                const { id, userId, branch } = userData;
+                setIsChecking(true);
+                await executeCheckIn({
+                  userId,
+                  currentUserId: id,
+                  branch,
+                  addedStar: star,
+                });
+                setIsChecking(false);
+                window.location.reload();
+              }
+            } else {
+              toast.error(`Hôm nay bạn chưa chơi đủ ${MIN_LOGIN_TIME} phút !`);
+              return;
+            }
+          } else if (dayjs(day).isSameOrAfter(dayjs())) {
+            toast.error("Chưa đến ngày điểm danh!");
+            return;
+          } else {
+            // setShowModal(true);
+            // setCurrentInfo({ day, star });
+            toast.error("Đã quá hạn điểm danh!");
+          }
         }
       }
     },
