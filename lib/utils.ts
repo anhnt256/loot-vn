@@ -202,9 +202,6 @@ export const checkTodaySpentTime = (actions: any[]) => {
 
 export const updateUserBalance = async (userName: string) => {
   const result = await fetcher(`/api/account/${userName}/balance`);
-  // const currentMonthBalance = result.filter(
-  //   (x: any) => dayjs(x.start).month() === dayjs().month(),
-  // );
-
   localStorage.setItem("userBalance", JSON.stringify(result));
+  window.location.reload();
 };
