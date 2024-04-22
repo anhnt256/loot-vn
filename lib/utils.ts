@@ -201,9 +201,9 @@ export const checkTodaySpentTime = (actions: any[]) => {
 };
 
 export const updateUserBalance = async (userName: string) => {
-  const result = await fetcher(`/api/account/${userName}/balance`);
   const userBalance = localStorage.getItem("userBalance");
   if (userBalance && userBalance.length === 0) {
+    const result = await fetcher(`/api/account/${userName}/balance`);
     localStorage.setItem("userBalance", JSON.stringify(result));
     window.location.reload();
   }
