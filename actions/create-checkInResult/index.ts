@@ -14,10 +14,6 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   // check user has check-in
   const startDate = dayjs().utc().add(7, "hour").startOf("day").toISOString();
 
-  console.log("userId", userId);
-  console.log("branch", branch);
-  console.log("startDate", startDate);
-
   const checkInResult = await db.checkInResult.findFirst({
     where: {
       userId: userId,
@@ -27,8 +23,6 @@ const handler = async (data: InputType): Promise<ReturnType> => {
       },
     },
   });
-
-  console.log("checkInResult", checkInResult);
 
   if (checkInResult) {
     return {
