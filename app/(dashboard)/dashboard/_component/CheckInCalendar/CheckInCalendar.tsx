@@ -84,17 +84,6 @@ const CheckInCalendar = () => {
         return;
       }
       if (!isChecking && userCheckIn) {
-        const hasCheckIn = userCheckIn.find((x) => {
-          return (
-            dayjs(x.createdAt).format("DD/MM/YYYY") ===
-            dayjs(day).format("DD/MM/YYYY")
-          );
-        });
-        if (hasCheckIn) {
-          toast.error("Bạn đã điểm danh ngày này rồi!");
-          return;
-        }
-
         if (dayjs(day).isToday()) {
           const todaySpentTime = checkTodaySpentTime(userBalance);
 
@@ -102,7 +91,7 @@ const CheckInCalendar = () => {
             if (userData) {
               const { id, userId, branch } = userData;
               setIsChecking(true);
-              await executeCheckIn({
+              const result = await executeCheckIn({
                 userId,
                 currentUserId: id,
                 branch,
@@ -119,8 +108,6 @@ const CheckInCalendar = () => {
           toast.error("Chưa đến ngày điểm danh!");
           return;
         } else {
-          // setShowModal(true);
-          // setCurrentInfo({ day, star });
           toast.error("Đã quá hạn điểm danh!");
         }
       }
