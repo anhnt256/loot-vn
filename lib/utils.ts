@@ -44,13 +44,16 @@ export const checkReward = (actions: any[], mission: any) => {
   let minutes = 0;
 
   if (ticketActions && ticketActions.length > 0 && type === "COMBO") {
-    ticketActions.forEach((action: any) => {
-      const { start, end } = action;
+    const isActionInTimeRange = ticketActions.some((action: any) => {
+      const { start } = action;
+      const currentHour = dayjs(start).hour();
 
-      if (dayjs(start).hour() >= startHours) {
-        return true;
-      }
+      return currentHour >= parseInt(startHours, 10);
     });
+
+    if (isActionInTimeRange) {
+      return true;
+    }
   }
 
   if (priceActions && priceActions.length > 0 && type === "HOURS") {
@@ -139,6 +142,9 @@ export const checkReward = (actions: any[], mission: any) => {
       return true;
     }
   }
+
+  console.log("meo");
+
   return false;
 };
 

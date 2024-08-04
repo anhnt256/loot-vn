@@ -11,6 +11,7 @@ import { BRANCH } from "@/constants/enum.constant";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { checkReward } from "@/lib/utils";
 import { toast } from "sonner";
+import { Alert } from "antd";
 
 const Missions = () => {
   const { userBalance, userData } = useUserInfo();
@@ -84,6 +85,14 @@ const Missions = () => {
           </div>
         </div>
 
+        <div className="m-4">
+          <Alert
+            message="Lưu ý"
+            description="Nhiệm vụ sẽ hết hạn khi qua 0h ngày mới. Vui lòng nhận thưởng sớm. Xin cảm ơn."
+            type="info"
+            showIcon
+          />
+        </div>
         <div id="calendar" className="overflow-y-auto">
           {userBalance && userBalance.length > 0 && (
             <MissionList
