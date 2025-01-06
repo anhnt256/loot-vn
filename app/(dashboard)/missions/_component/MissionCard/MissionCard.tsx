@@ -48,7 +48,7 @@ const Card: React.FC<CardProps> = ({ data, canClaimItems }) => {
     if (!isLoading) {
       const canClaim = checkReward(userBalance, mission);
       if (canClaim && userData) {
-        const { id: currentUserId, userId, stars } = userData;
+        const { id: currentUserId, userId, stars, branch } = userData;
         const newStars = stars + reward;
         await executeUpdateUserMissionMap({
           id,
@@ -57,6 +57,7 @@ const Card: React.FC<CardProps> = ({ data, canClaimItems }) => {
           reward,
           isDone: true,
           updatedAt: currentTimeVN,
+          branch,
         });
         window.location.reload();
       } else {
