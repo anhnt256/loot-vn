@@ -8,7 +8,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useLogout } from "@/queries/auth.query";
 import { toast } from "sonner";
-import FacebookMsg from "@/components/FacebookMsg";
 import { useAction } from "@/hooks/use-action";
 import { updateUser } from "@/actions/update-user";
 
@@ -57,11 +56,18 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
       <div className="bg-gray-800 text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out">
         <nav>
           <div className="flex justify-end mb-4">
-            <div className="flex justify-center items-center mr-4">
-              <div className="mr-1 cursor-default">
-                {stars?.toLocaleString()}
+            <div className="flex gap-2">
+              <div className="flex items-center bg-gray-600/80 rounded-full px-3 py-1.5">
+                <span className="text-white font-semibold flex items-center gap-2">
+                  {stars?.toLocaleString()}
+                  <Image src="/star.png" width="24" height="24" alt="stars" />
+                </span>
               </div>
-              <Image src="/star.png" width="22" height="22" alt="stars" />
+
+              <div className="flex items-center gap-2 bg-gray-600/80 rounded-full px-3 py-1.5">
+                <span className="text-white font-semibold">25</span>
+                <Image src={"/rock.png"} alt="wish" width="24" height="24" />
+              </div>
             </div>
             {/*<div className="flex justify-center items-center">*/}
             {/*  <div className="mr-1 cursor-default">*/}
@@ -81,15 +87,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
           {/*    Quà chào mừng*/}
           {/*  </Link>*/}
           {/*)}*/}
-          {/*<Link*/}
-          {/*  className={cn(*/}
-          {/*    "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",*/}
-          {/*    pathname === "/welcome" ? "bg-gray-700" : "transparent",*/}
-          {/*  )}*/}
-          {/*  href="/welcome"*/}
-          {/*>*/}
-          {/*  Quà chào mừng*/}
-          {/*</Link>*/}
+
           <Link
             className={cn(
               "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
@@ -107,6 +105,15 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
             href="/missions"
           >
             Nhiệm vụ
+          </Link>
+          <Link
+            className={cn(
+              "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
+              pathname === "/game" ? "bg-gray-700" : "transparent",
+            )}
+            href="/game"
+          >
+            Trò chơi
           </Link>
           <Link
             className={cn(
@@ -136,8 +143,8 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
       </div>
 
       <div className="flex-1 p-10 text-2xl font-bold bg-gray-400">
-        {/*{children}*/}
-        <h1>Website bảo trì để sửa lỗi. Dự kiến hoàn thành ngày 05/09/2024. Rất mong các bạn thông cảm.</h1>
+        {children}
+        {/*<h1>Website bảo trì để sửa lỗi. Dự kiến hoàn thành ngày 05/09/2024. Rất mong các bạn thông cảm.</h1>*/}
       </div>
     </div>
   );

@@ -3,15 +3,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import MissionCard from "../MissionCard/MissionCard";
 import { Mission } from "@prisma/client";
-import { fetcher } from "@/lib/fetcher";
-import { useQuery } from "@tanstack/react-query";
 import { useAction } from "@/hooks/use-action";
 import { createUserMissionMap } from "@/actions/create-user-mission-map";
 import { toast } from "sonner";
 import { useUserInfo } from "@/hooks/use-user-info";
 import { getCookie } from "cookies-next";
 import { BRANCH } from "@/constants/enum.constant";
-import { nowUtc } from "@/lib/dayjs";
+import { currentTimeVN } from "@/lib/dayjs";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const List = ({
@@ -49,7 +47,7 @@ const List = ({
               branch,
               userId: userData.userId,
               missionId: card.id,
-              createdAt: nowUtc,
+              createdAt: currentTimeVN,
             });
           });
           executeCreateUserMissionMap(data);

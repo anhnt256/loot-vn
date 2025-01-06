@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { User } from "@prisma/client";
-import dayjs, { nowUtc, startUtc } from "@/lib/dayjs";
+import { startOfDayVN } from "@/lib/dayjs";
 
 export async function GET(
   req: Request,
@@ -15,7 +14,7 @@ export async function GET(
         where: {
           userId: parseInt(userId, 10),
           branch,
-          createdAt: { gt: startUtc },
+          createdAt: { gt: startOfDayVN },
         },
         include: {
           mission: true,

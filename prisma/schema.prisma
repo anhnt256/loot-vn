@@ -28,6 +28,9 @@ model Game {
   starsPerRound Int
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  balance_rate  Float?   @db.Float
+  play_rate     Float?   @db.Float
+  jackpot       Float?   @db.Float
 }
 
 model CheckInResult {
@@ -56,14 +59,13 @@ model CheckInPromotion {
 }
 
 model Item {
-  id         Int       @id @default(autoincrement())
-  name       String
-  rating     Float
-  type       Item_type
-  maxValue   Float
-  maxPercent Float
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id        Int       @id @default(autoincrement())
+  name      String    @db.VarChar(255)
+  image_url String    @db.VarChar(255)
+  rating    Float     @db.Float
+  value     Float     @db.Float
+  createdAt DateTime? @default(now()) @db.DateTime(0)
+  updatedAt DateTime? @default(now()) @updatedAt @db.DateTime(0)
 }
 
 model GameItemMap {
@@ -178,22 +180,49 @@ model UserStarHistory {
   type      UserStarHistory_type?
   createdAt DateTime?             @default(now())
   targetId  Int?
+  branch    String?               @db.VarChar(45)
 }
 
-enum Item_type {
-  HOURS
-  ORDER
-  COMBO
+model SavingPlan {
+  id          Int      @id @default(autoincrement())
+  uuid        String   @db.Text
+  name        String   @db.Text
+  price       Int
+  description String?  @db.LongText
+  isDelete    Boolean? @db.Bit(1)
+}
+
+model FundHistory {
+  id           Int       @id @default(autoincrement())
+  date         DateTime? @db.DateTime(0)
+  startValue   Float?    @db.Float
+  currentValue Float?    @db.Float
+  endValue     Float?    @db.Float
+  createdAt    DateTime? @default(now()) @db.DateTime(0)
+  updatedAt    Float?    @default(dbgenerated("(current_timestamp())")) @db.Float
+}
+
+model UserSpendMap {
+  id         Int       @id @default(autoincrement())
+  userId     Int?
+  branch     String?   @db.VarChar(45)
+  totalSpend Float?    @db.Float
+  date       DateTime? @default(now()) @db.Date
+  createdAt  DateTime? @default(now()) @db.DateTime(0)
+  updatedAt  DateTime? @default(now()) @db.DateTime(0)
 }
 
 enum Mission_type {
   HOURS
   ORDER
   COMBO
+  GAME
 }
 
 enum UserStarHistory_type {
   CHECK_IN
   MISSION
   REWARD
+  GAME
+  RETURN_GIFT
 }

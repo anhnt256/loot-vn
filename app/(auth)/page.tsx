@@ -11,8 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { createUser } from "@/actions/create-user";
 import { BRANCH } from "@/constants/enum.constant";
-import { nowUtc } from "@/lib/dayjs";
-import { fetcher } from "@/lib/fetcher";
+import { currentTimeVN } from "@/lib/dayjs";
 
 const Login = () => {
   const [login, setLogin] = useState<string>("");
@@ -43,7 +42,7 @@ const Login = () => {
         userId: data,
         branch,
         stars: 0,
-        createdAt: nowUtc,
+        createdAt: currentTimeVN,
         rankId: 1,
       });
     } else if (statusCode === 500) {

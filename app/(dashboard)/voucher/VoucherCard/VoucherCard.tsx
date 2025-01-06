@@ -1,12 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { useUserInfo } from "@/hooks/use-user-info";
-import { useAction } from "@/hooks/use-action";
 import { toast } from "sonner";
-import { createUserRewardMap } from "@/actions/create-user-reward-map";
-import { nowUtc } from "@/lib/dayjs";
-import { updateUser } from "@/actions/update-user";
 import { useCopyToClipboard } from "@/hooks/userCopyToClipboard";
 
 interface CardProps {

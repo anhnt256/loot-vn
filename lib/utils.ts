@@ -1,10 +1,11 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import dayjs, { nowUtc, startUtc } from "@/lib/dayjs";
+import dayjs from "@/lib/dayjs";
 import { NextResponse } from "next/server";
 import { data } from "@/constants/data";
 import { fetcher } from "@/lib/fetcher";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import isEmpty from "lodash/isEmpty";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -143,74 +144,34 @@ export const checkReward = (actions: any[], mission: any) => {
     }
   }
 
-  console.log("meo");
-
   return false;
 };
 
-function isGreaterThanOrEqualYesterday(customDate: string) {
-  const yesterday = dayjs().subtract(1, "day").startOf("day");
-
-  const customDayjs = dayjs(customDate);
-
-  return customDayjs.isSameOrAfter(yesterday);
-}
-
 export const checkTodaySpentTime = (actions: any[]) => {
-  // set test values
-  // actions = data;
+  const billingMinutes = actions.filter((action) =>
+    action.change_details.some(
+      (detail: any) => detail.change_item_type === "billing",
+    ),
+  ).length;
 
-  const priceActions = actions.filter(
-    (x: any) =>
-      x.action_name.includes("Phiên theo biểu giá") &&
-      isGreaterThanOrEqualYesterday(x.start),
-  );
-
-  const ticketActions = actions.filter(
-    (x: any) =>
-      x.action_name.includes("Ticket session") &&
-      isGreaterThanOrEqualYesterday(x.start),
-  );
-
-  let minutes = 0;
-
-  if (ticketActions && ticketActions.length > 0) {
-    ticketActions.forEach((action: any) => {
-      const { start, end } = action;
-      if (end !== null) {
-        const dateStart = dayjs(start);
-        const dateEnd = dayjs(end);
-        minutes += dateEnd.diff(dateStart, "minute");
-      } else {
-        const dateStart = dayjs(start);
-        const dateEnd = dayjs();
-        minutes += dateEnd.diff(dateStart, "minute");
-      }
-    });
-  }
-
-  if (minutes === 0 && priceActions && priceActions.length > 0) {
-    priceActions.forEach((action: any) => {
-      const { start, end } = action;
-      if (end !== null) {
-        const dateStart = dayjs(start);
-        const dateEnd = dayjs(end);
-        minutes += dateEnd.diff(dateStart, "minute");
-      } else {
-        const dateStart = dayjs(start);
-        const dateEnd = dayjs();
-        minutes += dateEnd.diff(dateStart, "minute");
-      }
-    });
-  }
-  return minutes;
+  return Math.floor(billingMinutes / 60);
 };
 
-export const updateUserBalance = async (userName: string) => {
+export const updateUserBalance = async (
+  currentUserId: number,
+  isForce: boolean = false,
+) => {
   const userBalance = localStorage.getItem("userBalance");
-  if (userBalance === null) {
-    const result = await fetcher(`/api/account/${userName}/balance`);
-    localStorage.setItem("userBalance", JSON.stringify(result));
+
+  if (isEmpty(userBalance) || isForce) {
+    const result = await fetcher(
+      `/api/accounts/${currentUserId}/balance_changes`,
+    );
+    const resultSorted = result.results.sort(
+      (a: any, b: any) =>
+        dayjs(b.change_date).valueOf() - dayjs(a.change_date).valueOf(),
+    );
+    localStorage.setItem("userBalance", JSON.stringify(resultSorted));
     window.location.reload();
   }
 };

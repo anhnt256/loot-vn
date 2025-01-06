@@ -8,6 +8,7 @@ import dayjs from "@/lib/dayjs";
 
 export const useUserInfo = () => {
   const [currentUserId, setCurrentUserId] = useState<number | undefined>();
+  const [activeUser, setActiveUser] = useState<number | undefined>();
   const [userName, setUserName] = useState<string | undefined>();
   const [userBalance, setUserBalance] = useState<any[]>([]);
   const [isNewUser, setIsNewUser] = useState<boolean | undefined>(false);
@@ -16,7 +17,9 @@ export const useUserInfo = () => {
     const currentUser = localStorage.getItem(CURRENT_USER) || "";
     const userBalanceString = localStorage.getItem("userBalance");
     if (currentUser) {
-      const { id, login, create_date } = JSON.parse(currentUser);
+      const { id, login, create_date, active_account } =
+        JSON.parse(currentUser);
+      setActiveUser(active_account?.id);
       setCurrentUserId(id);
       setUserName(login);
 
@@ -37,7 +40,13 @@ export const useUserInfo = () => {
   const { data: userCheckIn } = useQuery<[any]>({
     queryKey: ["check-in-result", currentUserId],
     enabled: !!userName,
-    queryFn: () => fetcher(`/api/check-in-result/${currentUserId}`),
+    queryFn: () => fetcher(`/api/check-in-result/${currentUserId}/${branch}`),
+  });
+
+  const { data: checkInItem } = useQuery<[any]>({
+    queryKey: ["check-in-item"],
+    enabled: !!userName,
+    queryFn: () => fetcher(`/api/check-in-item`),
   });
 
   return {
@@ -46,6 +55,8 @@ export const useUserInfo = () => {
     userData,
     userCheckIn,
     userBalance,
+    checkInItem,
     isNewUser,
+    activeUser,
   };
 };

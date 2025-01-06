@@ -5,7 +5,7 @@ import { createSafeAction } from "@/lib/create-safe-action";
 
 import { UpdateUser } from "./schema";
 import { InputType, ReturnType } from "./type";
-import dayjs, { nowUtc } from "@/lib/dayjs";
+import dayjs, { currentTimeVN } from "@/lib/dayjs";
 import apiClient from "@/lib/apiClient";
 import { MIN_LOGIN_TIME } from "@/constants/constant";
 import { checkReward } from "@/lib/utils";
@@ -70,7 +70,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         stars,
         magicStone,
         userName,
-        updatedAt: nowUtc,
+        updatedAt: currentTimeVN,
       },
     });
   } catch (error) {

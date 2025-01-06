@@ -5,7 +5,7 @@ import { createSafeAction } from "@/lib/create-safe-action";
 
 import { CreateUserRewardMap } from "./schema";
 import { InputType } from "./type";
-import { nowUtc } from "@/lib/dayjs";
+import { currentTimeVN } from "@/lib/dayjs";
 
 const handler = async (data: InputType): Promise<any> => {
   const {
@@ -46,7 +46,7 @@ const handler = async (data: InputType): Promise<any> => {
           },
           data: {
             isUsed: true,
-            updatedAt: nowUtc,
+            updatedAt: currentTimeVN,
           },
         });
 
@@ -58,7 +58,7 @@ const handler = async (data: InputType): Promise<any> => {
             duration,
             isUsed,
             branch,
-            createdAt: nowUtc,
+            createdAt: currentTimeVN,
           },
         });
 
@@ -69,7 +69,7 @@ const handler = async (data: InputType): Promise<any> => {
             },
             data: {
               stars: newStars,
-              updatedAt: nowUtc,
+              updatedAt: currentTimeVN,
             },
           });
 
@@ -80,7 +80,8 @@ const handler = async (data: InputType): Promise<any> => {
               oldStars,
               newStars,
               targetId: rewardId,
-              createdAt: nowUtc,
+              createdAt: currentTimeVN,
+              branch,
             },
           });
         }

@@ -1,16 +1,12 @@
 import React, { useEffect } from "react";
-import { Mission, User } from "@prisma/client";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useAction } from "@/hooks/use-action";
 import { updateUserMissionMap } from "@/actions/update-user-mission-map";
 import { toast } from "sonner";
-import dayjs, { nowUtc } from "@/lib/dayjs";
-import { updateUser } from "@/actions/update-user";
+import { currentTimeVN } from "@/lib/dayjs";
 import { useUserInfo } from "@/hooks/use-user-info";
-import { fetcher } from "@/lib/fetcher";
 import { checkReward, cn } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
 
 interface CardProps {
   data: any;
@@ -60,7 +56,7 @@ const Card: React.FC<CardProps> = ({ data, canClaimItems }) => {
           currentUserId,
           reward,
           isDone: true,
-          updatedAt: nowUtc,
+          updatedAt: currentTimeVN,
         });
         window.location.reload();
       } else {

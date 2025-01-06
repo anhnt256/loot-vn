@@ -67,6 +67,18 @@ const Missions = () => {
       <div className="bg-white shadow-lg rounded-lg p-4 w-full">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold mb-2 mr-4">
+            Tính năng đang được cập nhật sẽ sớm mở lại sau!
+          </h2>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col p-5 gap-4">
+      <div className="bg-white shadow-lg rounded-lg p-4 w-full">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold mb-2 mr-4">
             Trung tâm nhiệm vụ
           </h2>
 

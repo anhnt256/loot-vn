@@ -5,8 +5,7 @@ import { useUserInfo } from "@/hooks/use-user-info";
 import { useAction } from "@/hooks/use-action";
 import { toast } from "sonner";
 import { createUserRewardMap } from "@/actions/create-user-reward-map";
-import { nowUtc } from "@/lib/dayjs";
-import { updateUser } from "@/actions/update-user";
+import { currentTimeVN } from "@/lib/dayjs";
 import { getCookie } from "cookies-next";
 import { BRANCH } from "@/constants/enum.constant";
 
@@ -59,7 +58,7 @@ const RewardCard: React.FC<CardProps> = ({ data }) => {
             branch,
             oldStars: stars,
             newStars,
-            createdAt: nowUtc,
+            createdAt: currentTimeVN,
           });
           window.location.reload();
         } else {

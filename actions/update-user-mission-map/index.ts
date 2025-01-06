@@ -5,16 +5,17 @@ import { createSafeAction } from "@/lib/create-safe-action";
 
 import { UpdateUserMissionMap } from "./schema";
 import { InputType, ReturnType } from "./type";
-import { nowUtc, startUtc } from "@/lib/dayjs";
+import { currentTimeVN } from "@/lib/dayjs";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
   const {
     id,
     isDone = true,
-    updatedAt = nowUtc,
+    updatedAt = currentTimeVN,
     userId,
     currentUserId,
     reward,
+    branch,
   } = data;
   let updateUserMissionMap;
   let updateUser;
@@ -41,7 +42,9 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         },
       });
       if (updateUserMissionMap) {
-        const user = await tx.user.findUnique({ where: { id: currentUserId } });
+        const user = await tx.user.findUnique({
+          where: { id: currentUserId, branch },
+        });
 
         if (user) {
           const { stars: oldStars } = user;
@@ -65,7 +68,8 @@ const handler = async (data: InputType): Promise<ReturnType> => {
               oldStars,
               newStars,
               targetId: id,
-              createdAt: nowUtc,
+              createdAt: currentTimeVN,
+              branch,
             },
           });
         }

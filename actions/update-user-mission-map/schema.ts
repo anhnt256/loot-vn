@@ -7,4 +7,5 @@ export const UpdateUserMissionMap = z.object({
   reward: z.number(),
   isDone: z.boolean(),
   updatedAt: z.string(),
+  branch: z.string(),
 });

@@ -50,6 +50,12 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        "dark-gray": "#333333",
+        "light-pink": "#FFB6C1",
+        "pale-green": "#98FB98",
+        lavender: "#E6E6FA",
+        moccasin: "#FFE4B5",
+        gold: "#FFD700",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -65,6 +71,9 @@ module.exports = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: 0 },
         },
+      },
+      boxShadow: {
+        card: "0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)",
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
