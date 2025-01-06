@@ -18,6 +18,22 @@ const CheckInCard = () => {
   const { userBalance, userData, userCheckIn, checkInItem, activeUser } =
     useUserInfo();
 
+  const claim = useMemo(() => {
+    const date = dayjs().utc().format("YYYY-MM-DD");
+
+    const currentResults = userCheckIn?.filter((item: UserStarHistory) => {
+      return dayjs(item.createdAt).utc().format("YYYY-MM-DD") === date;
+    });
+
+    if (isEmpty(currentResults)) {
+      return 0;
+    }
+
+    return currentResults?.reduce((sum, item) => {
+      return sum + (item.newStars - item.oldStars);
+    }, 0);
+  }, [userCheckIn]);
+
   const { execute: executeCheckIn } = useAction(createCheckInResult, {
     onSuccess: () => {
       toast.success("Check-in thành công!");
@@ -46,22 +62,6 @@ const CheckInCard = () => {
       }
     }
   }, [isChecking, userCheckIn, userData, executeCheckIn, rewards, claim]);
-
-  const claim = useMemo(() => {
-    const date = dayjs().utc().format("YYYY-MM-DD");
-
-    const currentResults = userCheckIn?.filter((item: UserStarHistory) => {
-      return dayjs(item.createdAt).utc().format("YYYY-MM-DD") === date;
-    });
-
-    if (isEmpty(currentResults)) {
-      return 0;
-    }
-
-    return currentResults?.reduce((sum, item) => {
-      return sum + (item.newStars - item.oldStars);
-    }, 0);
-  }, [userCheckIn]);
 
   useEffect(() => {
     if (checkInItem && userBalance) {
