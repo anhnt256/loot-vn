@@ -45,7 +45,7 @@ const CheckInCard = () => {
         setIsChecking(false);
       }
     }
-  }, [isChecking, userCheckIn, userData, executeCheckIn, rewards]);
+  }, [isChecking, userCheckIn, userData, executeCheckIn, rewards, claim]);
 
   const claim = useMemo(() => {
     const date = dayjs().utc().format("YYYY-MM-DD");
