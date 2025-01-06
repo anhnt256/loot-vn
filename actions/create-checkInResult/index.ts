@@ -13,65 +13,75 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   const { userId, branch, currentUserId, addedStar } = data;
   let checkIn;
 
-  const startDate = dayjs()
-    .tz("Asia/Ho_Chi_Minh")
-    .startOf("day")
-    .format("YYYY-MM-DDTHH:mm:ss.SSSZ");
-  const endDate = dayjs()
-    .tz("Asia/Ho_Chi_Minh")
-    .endOf("day")
-    .format("YYYY-MM-DDTHH:mm:ss.SSSZ");
-
-  // const startDate = "2025-01-04T00:00:00.000+07:00";
-  // const endDate = "2025-01-04T23:59:59.999+07:00";
-
-  const url = `/accounts/${userId}/balance_changes/?from_date=${encodeURIComponent(
-    startDate,
-  )}&to_date=${encodeURIComponent(endDate)}&limit=4000`;
-
-  const result = await apiClient({
-    method: "get",
-    url,
-    headers: {
-      "Content-Type": "application/json",
-      Cookie: branch,
-    },
-  });
-
-  const checkInItems = await db.checkInItem.findMany();
-
-  const checkInResults = result.data.results;
-
-  const totalPlayTime = checkTodaySpentTime(checkInResults);
-
-  const today = dayjs().format("ddd");
-  const todayCheckIn = checkInItems.find((item) => item.dayName === today);
-  const starsPerHour = todayCheckIn ? todayCheckIn.stars : 1000;
-
-  const canClaim = totalPlayTime * starsPerHour;
-
-  const userClaim = await db.userStarHistory.findMany({
-    where: {
-      userId: userId,
-      branch: branch,
-      type: "CHECK_IN",
-      createdAt: {
-        gte: startOfDayVN, // Check if createdAt is greater than or equal to today at 00:00:00
-      },
-    },
-  });
-
-  const totalClaimed = userClaim.reduce((acc, item) => {
-    const difference = (item.newStars ?? 0) - (item.oldStars ?? 0);
-    return acc + difference;
-  }, 0);
-
-  if (totalClaimed >= canClaim) {
-    return {
-      error:
-        "Bạn chưa có sao để nhận, hãy chơi thêm để nhận sao nhé!",
-    };
-  }
+  // TODO: verify this code
+  // const startDate = dayjs()
+  //   .tz("Asia/Ho_Chi_Minh")
+  //   .startOf("day")
+  //   .format("YYYY-MM-DDTHH:mm:ss.SSSZ");
+  // const endDate = dayjs()
+  //   .tz("Asia/Ho_Chi_Minh")
+  //   .endOf("day")
+  //   .format("YYYY-MM-DDTHH:mm:ss.SSSZ");
+  //
+  // // const startDate = "2025-01-04T00:00:00.000+07:00";
+  // // const endDate = "2025-01-04T23:59:59.999+07:00";
+  //
+  // const url = `/accounts/${userId}/balance_changes/?from_date=${encodeURIComponent(
+  //   startDate,
+  // )}&to_date=${encodeURIComponent(endDate)}&limit=4000`;
+  //
+  // const result = await apiClient({
+  //   method: "get",
+  //   url,
+  //   headers: {
+  //     "Content-Type": "application/json",
+  //     Cookie: branch,
+  //   },
+  // });
+  //
+  // console.log("url", url);
+  // console.log("branch", branch);
+  //
+  // const checkInItems = await db.checkInItem.findMany();
+  //
+  // console.log("result", result.data);
+  //
+  // const checkInResults = result.data.results;
+  //
+  // console.log("checkInResults", checkInResults);
+  //
+  // const totalPlayTime = checkTodaySpentTime(checkInResults);
+  //
+  // const today = dayjs().format("ddd");
+  // const todayCheckIn = checkInItems.find((item) => item.dayName === today);
+  // const starsPerHour = todayCheckIn ? todayCheckIn.stars : 1000;
+  //
+  // const canClaim = totalPlayTime * starsPerHour;
+  //
+  // const userClaim = await db.userStarHistory.findMany({
+  //   where: {
+  //     userId: userId,
+  //     branch: branch,
+  //     type: "CHECK_IN",
+  //     createdAt: {
+  //       gte: startOfDayVN, // Check if createdAt is greater than or equal to today at 00:00:00
+  //     },
+  //   },
+  // });
+  //
+  // const totalClaimed = userClaim.reduce((acc, item) => {
+  //   const difference = (item.newStars ?? 0) - (item.oldStars ?? 0);
+  //   return acc + difference;
+  // }, 0);
+  //
+  // console.log("totalClaimed", totalClaimed);
+  // console.log("canClaim", canClaim);
+  //
+  // if (totalClaimed >= canClaim) {
+  //   return {
+  //     error: "Bạn chưa có sao để nhận, hãy chơi thêm để nhận sao nhé!",
+  //   };
+  // }
 
   try {
     await db.$transaction(async (tx) => {

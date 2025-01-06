@@ -10,6 +10,7 @@ import { UserStarHistory } from ".prisma/client";
 import isEmpty from "lodash/isEmpty";
 import { StarFilled, StarOutlined } from "@ant-design/icons";
 import Image from "next/image";
+import { Spin } from "antd";
 
 const CheckInCard = () => {
   const [isChecking, setIsChecking] = useState<boolean | undefined>(false);
@@ -45,18 +46,19 @@ const CheckInCard = () => {
   });
 
   const handleCheckIn = useCallback(async () => {
-    if (isChecking) {
+    const canClaim = rewards - claim;
+    if (isChecking || canClaim <= 0) {
       return;
     }
     if (!isChecking && userCheckIn) {
       if (userData) {
         const { id, userId, branch } = userData;
         setIsChecking(true);
-        const result = await executeCheckIn({
+        await executeCheckIn({
           userId,
           currentUserId: id,
           branch,
-          addedStar: rewards - claim,
+          addedStar: canClaim,
         });
         setIsChecking(false);
       }
@@ -85,6 +87,11 @@ const CheckInCard = () => {
 
   return (
     <div className="border-2 p-8 border-gray-400 shadow-card rounded-lg">
+      {isChecking && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <Spin size="large" />
+        </div>
+      )}
       {/* Title with date */}
       <div className="text-center mb-6">
         <h2 className="text-yellow-500 font-bold text-xl">Điểm danh ngày</h2>
