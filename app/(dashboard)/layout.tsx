@@ -39,7 +39,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
       };
       executeUpdateUser(data);
     }
-  }, [userName, userData, executeUpdateUser]);
+  }, [userName, userData]);
 
   const handleLogout = async () => {
     const result = await loginMutation.mutateAsync();
