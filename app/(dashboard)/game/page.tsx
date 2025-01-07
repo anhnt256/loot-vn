@@ -119,30 +119,30 @@ const Game = () => {
     );
   };
 
-  // return (
-  //   <div className="flex flex-col p-5 gap-4">
-  //     <div className="bg-white shadow-lg rounded-lg p-4 w-full">
-  //       <div className="flex flex-col">
-  //         <h2 className="text-xl font-semibold mb-4">
-  //           Tính năng mới sẽ dự kiến ra mắt vào ngày 10/01/2025. Hãy cùng đón
-  //           chờ nhé!
-  //         </h2>
-  //
-  //         <div className="flex justify-center items-center">
-  //           <Image
-  //             src="/game.png"
-  //             width={800}
-  //             height={550}
-  //             alt="stars"
-  //             className="object-cover"
-  //             priority
-  //             quality={100}
-  //           />
-  //         </div>
-  //       </div>
-  //     </div>
-  //   </div>
-  // );
+  return (
+    <div className="flex flex-col p-5 gap-4">
+      <div className="bg-white shadow-lg rounded-lg p-4 w-full">
+        <div className="flex flex-col">
+          <h2 className="text-xl font-semibold mb-4">
+            Tính năng mới sẽ dự kiến ra mắt vào ngày 10/01/2025. Hãy cùng đón
+            chờ nhé!
+          </h2>
+
+          <div className="flex justify-center items-center">
+            <Image
+              src="/game.png"
+              width={800}
+              height={550}
+              alt="stars"
+              className="object-cover"
+              priority
+              quality={100}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex flex-col p-5 gap-4">
