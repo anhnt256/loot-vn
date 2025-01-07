@@ -144,6 +144,8 @@ const Game = () => {
     </div>
   );
 
+  
+
   return (
     <div className="flex flex-col p-5 gap-4">
       <div className="shadow-lg rounded-lg w-full overflow-auto max-h-[89vh] relative">
