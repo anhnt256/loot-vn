@@ -24,6 +24,13 @@ const Dashboard = () => {
           <div className="w-[26rem] mx-auto">
             <CheckInCard />
           </div>
+          <div className="w-[1000px] mx-auto mt-4 flex justify-center">
+            <p className="text-gray-400 text-sm">
+              Hiện tại tính năng điểm danh không áp dụng khi sử dụng combo. Mong
+              các bạn thông cảm!
+            </p>
+          </div>
+
           <CheckInCalendar />
         </div>
       </div>
