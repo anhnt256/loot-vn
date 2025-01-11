@@ -47,7 +47,13 @@ const CheckInCard = () => {
 
   const handleCheckIn = useCallback(async () => {
     const canClaim = rewards - claim;
+    if (rewards || claim < 0) {
+      toast.error("Lỗi hệ thống. Vui lòng liên hệ nhân viên để được hỗ trợ!");
+      return;
+    }
+
     if (isChecking || canClaim <= 0) {
+      toast.error("Bạn không có phần thưởng để nhận");
       return;
     }
     if (!isChecking && userCheckIn) {

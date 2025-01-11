@@ -18,10 +18,11 @@ export async function GET(
       where: {
         userId: parseInt(userId, 10),
         branch,
-        // createdAt: {
-        //   gte: startOfMonth.toISOString(),
-        //   lte: endOfMonth.toISOString(),
-        // },
+        type: "CHECK_IN",
+        createdAt: {
+          gte: startOfMonth.toISOString(),
+          lte: endOfMonth.toISOString(),
+        },
       },
       orderBy: {
         createdAt: "desc",

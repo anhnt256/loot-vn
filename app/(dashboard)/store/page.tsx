@@ -19,14 +19,6 @@ const Store = () => {
   return (
     <div className="flex flex-col p-5 gap-4">
       <div className="bg-white shadow-lg rounded-lg p-4 w-full overflow-auto max-h-[89vh]">
-        Tính năng bảo trì
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="flex flex-col p-5 gap-4">
-      <div className="bg-white shadow-lg rounded-lg p-4 w-full overflow-auto max-h-[89vh]">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold mb-2 mr-4">
             Trung tâm quà tặng
