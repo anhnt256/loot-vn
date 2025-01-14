@@ -10,8 +10,6 @@ export async function GET(
 ) {
   const cookie = getCookie("branch", { req });
 
-  console.log("cookie", cookie);
-
   const { currentUserId } = params;
 
   const startDate = dayjs()

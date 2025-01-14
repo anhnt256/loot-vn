@@ -16,8 +16,14 @@ const CheckInCard = () => {
   const [isChecking, setIsChecking] = useState<boolean | undefined>(false);
   const [playTime, setPlayTime] = useState<number>(0);
   const [rewards, setRewards] = useState<number>(0);
-  const { userBalance, userData, userCheckIn, checkInItem, activeUser } =
-    useUserInfo();
+  const {
+    userBalance,
+    userData,
+    userCheckIn,
+    checkInItem,
+    activeUser,
+    currentUserId,
+  } = useUserInfo();
 
   const claim = useMemo(() => {
     const date = dayjs().utc().format("YYYY-MM-DD");
@@ -57,19 +63,27 @@ const CheckInCard = () => {
       return;
     }
     if (!isChecking && userCheckIn) {
-      if (userData) {
-        const { id, userId, branch } = userData;
+      if (userData && currentUserId) {
+        const { userId, branch } = userData;
         setIsChecking(true);
         await executeCheckIn({
           userId,
-          currentUserId: id,
+          currentUserId,
           branch,
           addedStar: canClaim,
         });
         setIsChecking(false);
       }
     }
-  }, [isChecking, userCheckIn, userData, executeCheckIn, rewards, claim]);
+  }, [
+    rewards,
+    claim,
+    isChecking,
+    userCheckIn,
+    userData,
+    currentUserId,
+    executeCheckIn,
+  ]);
 
   useEffect(() => {
     if (checkInItem && userBalance) {

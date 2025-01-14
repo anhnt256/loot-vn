@@ -87,7 +87,6 @@ const handler = async (data: InputType): Promise<any> => {
         }
       });
     } catch (error) {
-      console.log("error", error);
       return {
         error: "Failed to create.",
       };
