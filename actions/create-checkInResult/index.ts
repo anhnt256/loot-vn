@@ -87,7 +87,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         const { id } = checkIn;
 
         const user = await tx.user.findFirst({
-          where: { userId: currentUserId, branch },
+          where: { userId, branch },
         });
 
         if (user) {
@@ -97,7 +97,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
 
           await tx.userStarHistory.create({
             data: {
-              userId: currentUserId,
+              userId,
               type: "CHECK_IN",
               oldStars,
               newStars,

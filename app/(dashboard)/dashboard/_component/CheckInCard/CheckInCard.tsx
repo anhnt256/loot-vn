@@ -63,13 +63,13 @@ const CheckInCard = () => {
       return;
     }
     if (!isChecking && userCheckIn) {
-      if (userData && currentUserId) {
+      if (userData && activeUser) {
         const { userId, branch } = userData;
         setIsChecking(true);
         await executeCheckIn({
           userId,
-          currentUserId,
           branch,
+          currentUserId: activeUser,
           addedStar: canClaim,
         });
         setIsChecking(false);
