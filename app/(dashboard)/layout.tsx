@@ -16,7 +16,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   const loginMutation = useLogout();
 
   const { userName, userData, isNewUser } = useUserInfo();
-  const { stars } = userData || {};
+  const { stars, magicStone } = userData || {};
   const pathname = usePathname();
 
   const { execute: executeUpdateUser } = useAction(updateUser, {
@@ -63,11 +63,12 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
                   <Image src="/star.png" width="24" height="24" alt="stars" />
                 </span>
               </div>
-
-              <div className="flex items-center gap-2 bg-gray-600/80 rounded-full px-3 py-1.5">
-                <span className="text-white font-semibold">25</span>
-                <Image src={"/rock.png"} alt="wish" width="24" height="24" />
-              </div>
+              {/*<div className="flex items-center gap-2 bg-gray-600/80 rounded-full px-3 py-1.5">*/}
+              {/*  <span className="text-white font-semibold">*/}
+              {/*    {magicStone?.toLocaleString()}*/}
+              {/*  </span>*/}
+              {/*  <Image src={"/rock.png"} alt="wish" width="24" height="24" />*/}
+              {/*</div>*/}
             </div>
             {/*<div className="flex justify-center items-center">*/}
             {/*  <div className="mr-1 cursor-default">*/}
@@ -143,8 +144,8 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
       </div>
 
       <div className="flex-1 p-10 text-2xl font-bold bg-gray-400">
-        {children}
-        {/*<h1>Website bảo trì để sửa lỗi. Dự kiến hoàn thành ngày 05/09/2024. Rất mong các bạn thông cảm.</h1>*/}
+        {/*{children}*/}
+        <h1>Website bảo trì để nâng cấp phần mềm mới. Chúng tôi sẽ quay trở lại sớm. Rất mong các bạn thông cảm.</h1>
       </div>
     </div>
   );
