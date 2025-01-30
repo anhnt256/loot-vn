@@ -21,7 +21,7 @@ const Login = () => {
   const router = useRouter();
   const { fingerprint, loading, error } = useEnhancedFingerprint();
 
-  console.lof("fingerprint", fingerprint);
+  console.log("fingerprint", fingerprint);
 
   const { execute } = useAction(createUser, {
     onSuccess: async (data) => {
