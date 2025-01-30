@@ -26,6 +26,8 @@ export function useFingerprint(options: UseFingerprintOptions = {}) {
       // Lấy visitor id
       const result = await fp.get();
 
+      console.log("Fingerprint:", result);
+
       // Cập nhật state và gọi callback
       setVisitorId(result.visitorId);
       onSuccess?.(result.visitorId);
