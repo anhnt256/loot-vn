@@ -45,33 +45,61 @@ export function useEnhancedFingerprint() {
   });
 
   // Lấy địa chỉ IP local thông qua WebRTC
-  const getLocalIp = async (): Promise<string | undefined> => {
-    try {
-      const pc = new RTCPeerConnection({
-        iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-      });
+  const getLocalIp = async () => {
+    new Promise((resolve, reject) => {
+      window.RTCPeerConnection =
+        window.RTCPeerConnection ||
+        window.mozRTCPeerConnection ||
+        window.webkitRTCPeerConnection;
+
+      if (typeof window.RTCPeerConnection == "undefined")
+        return reject("WebRTC not supported by browser");
+
+      const pc = new RTCPeerConnection();
+      const ips: any[] = [];
 
       pc.createDataChannel("");
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
+      pc.createOffer()
+        .then((offer) => pc.setLocalDescription(offer))
+        .catch((err) => reject(err));
+      pc.onicecandidate = (event) => {
+        if (!event || !event.candidate) {
+          // All ICE candidates have been sent.
+          if (ips.length == 0)
+            return reject("WebRTC disabled or restricted by browser");
 
-      return new Promise((resolve) => {
-        pc.onicecandidate = (ice) => {
-          if (!ice.candidate) return;
+          return resolve(ips);
+        }
 
-          // Tìm địa chỉ IP local từ ICE candidate
-          const matches = ice.candidate.candidate.match(/([\d.]+)(?!.*[\d.])/g);
-          if (matches && matches[0].match(/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/)) {
-            resolve(matches[0]);
-          }
+        const parts = event.candidate.candidate.split(" ");
+        const [
+          base,
+          componentId,
+          protocol,
+          priority,
+          ip,
+          port,
+          ,
+          type,
+          ...attr
+        ] = parts;
+        const component = ["rtp", "rtpc"];
 
-          pc.close();
-        };
-      });
-    } catch (error) {
-      console.error("Failed to get local IP:", error);
-      return undefined;
-    }
+        // if (!ips.some((e) => e === ip)) ips.push('4090310242'); //4090310242
+        ips.push(ip);
+        // ips.push("192.168.1.119");
+
+        console.group("computer statistic");
+        console.log(" candidate: " + base.split(":")[1]);
+        console.log(" component: " + component[componentId - 1]);
+        console.log("  protocol: " + protocol);
+        console.log("  priority: " + priority);
+        console.log("        ip: " + ip);
+        console.log("      port: " + port);
+        console.log("      type: " + type);
+        console.groupEnd();
+      };
+    });
   };
 
   // Hash tất cả thông tin thành một chuỗi duy nhất
@@ -91,37 +119,49 @@ export function useEnhancedFingerprint() {
       const fp = await FingerprintJS.load();
       const { visitorId } = await fp.get();
 
+      console.log("visitorId", visitorId);
+
       // 2. Lấy thông tin hệ thống
       const systemInfo = getSystemInfo();
 
+      console.log("systemInfo", systemInfo);
+
       // 3. Lấy địa chỉ IP local
       const localIp = await getLocalIp();
-      const networkInfo = localIp
-        ? {
-            localIp,
-            subnet: localIp.split(".").slice(0, 3).join("."), // Lấy subnet
-          }
-        : undefined;
+
+      console.log("localIp", localIp);
+
+      // const networkInfo = localIp[0]
+      //   ? {
+      //       localIp,
+      //       subnet: localIp.split(".").slice(0, 3).join("."), // Lấy subnet
+      //     }
+      //   : undefined;
+      //
+      // console.log("networkInfo", networkInfo);
 
       // 4. Kết hợp tất cả thông tin để tạo hash duy nhất
-      const combinedData = JSON.stringify({
-        visitorId,
-        systemInfo,
-        networkInfo,
-        timestamp: Date.now(), // Thêm timestamp để tăng độ chính xác
-      });
-
-      const combinedHash = await hashData(combinedData);
-
-      const enhancedFp: EnhancedFingerprint = {
-        visitorId,
-        systemInfo,
-        networkInfo,
-        combinedHash,
-      };
-
-      setFingerprint(enhancedFp);
-      return enhancedFp;
+      // const combinedData = JSON.stringify({
+      //   visitorId,
+      //   systemInfo,
+      //   networkInfo,
+      //   timestamp: Date.now(), // Thêm timestamp để tăng độ chính xác
+      // });
+      //
+      // console.log("combinedData", combinedData);
+      //
+      // const combinedHash = await hashData(combinedData);
+      // console.log("combinedHash", combinedHash);
+      //
+      // const enhancedFp: EnhancedFingerprint = {
+      //   visitorId,
+      //   systemInfo,
+      // {localIp: "192.168.1.119"; subnet: "1"}
+      //   1,
+      // };
+      //
+      // setFingerprint(enhancedFp);
+      // return enhancedFp;
     } catch (err) {
       const error =
         err instanceof Error
