@@ -47,11 +47,6 @@ export function useEnhancedFingerprint() {
   // Lấy địa chỉ IP local thông qua WebRTC
   const getLocalIp = async () => {
     new Promise((resolve, reject) => {
-      window.RTCPeerConnection =
-        window.RTCPeerConnection ||
-        window.mozRTCPeerConnection ||
-        window.webkitRTCPeerConnection;
-
       if (typeof window.RTCPeerConnection == "undefined")
         return reject("WebRTC not supported by browser");
 
@@ -91,6 +86,7 @@ export function useEnhancedFingerprint() {
 
         console.group("computer statistic");
         console.log(" candidate: " + base.split(":")[1]);
+        // @ts-ignore
         console.log(" component: " + component[componentId - 1]);
         console.log("  protocol: " + protocol);
         console.log("  priority: " + priority);
