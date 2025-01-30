@@ -12,22 +12,16 @@ import { Input } from "@/components/ui/input";
 import { createUser } from "@/actions/create-user";
 import { BRANCH } from "@/constants/enum.constant";
 import { currentTimeVN } from "@/lib/dayjs";
-import { useFingerprint } from "@/hooks/useFingerprint";
+import { useEnhancedFingerprint } from "@/hooks/useFingerprint";
 
 const Login = () => {
   const [login, setLogin] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const loginMutation = useLogin();
   const router = useRouter();
-  const { visitorId, loading, error } = useFingerprint({
-    onSuccess: (id) => {
-      console.log("Got fingerprint:", id);
-      // Gửi id lên server hoặc xử lý logic khác
-    },
-    onError: (error) => {
-      console.error("Failed to get fingerprint:", error);
-    },
-  });
+  const { fingerprint, loading, error } = useEnhancedFingerprint();
+
+  console.lof("fingerprint", fingerprint);
 
   const { execute } = useAction(createUser, {
     onSuccess: async (data) => {

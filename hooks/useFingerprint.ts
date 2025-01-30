@@ -1,60 +1,147 @@
-// hooks/useFingerprint.ts
+// hooks/useEnhancedFingerprint.ts
 import { useState, useEffect } from "react";
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
 
-interface UseFingerprintOptions {
-  immediate?: boolean; // Có lấy fingerprint ngay khi mount không
-  onSuccess?: (id: string) => void; // Callback khi lấy fingerprint thành công
-  onError?: (error: Error) => void; // Callback khi có lỗi
+interface SystemInfo {
+  cores: number;
+  memory: number;
+  platform: string;
+  userAgent: string;
+  screenResolution: string;
+  timeZone: string;
+  language: string;
+  doNotTrack: string | null;
+  localIp?: string;
+  macAddress?: string;
 }
 
-export function useFingerprint(options: UseFingerprintOptions = {}) {
-  const { immediate = true, onSuccess, onError } = options;
-  const [visitorId, setVisitorId] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
+interface EnhancedFingerprint {
+  visitorId: string;
+  systemInfo: SystemInfo;
+  networkInfo?: {
+    localIp: string;
+    subnet: string;
+  };
+  combinedHash: string;
+}
+
+export function useEnhancedFingerprint() {
+  const [fingerprint, setFingerprint] = useState<EnhancedFingerprint | null>(
+    null,
+  );
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  // Hàm lấy fingerprint
-  const getFingerprint = async () => {
+  // Lấy thông tin hệ thống cơ bản
+  const getSystemInfo = (): SystemInfo => ({
+    cores: navigator.hardwareConcurrency,
+    memory: (navigator as any).deviceMemory || 0,
+    platform: navigator.platform,
+    userAgent: navigator.userAgent,
+    screenResolution: `${screen.width}x${screen.height}x${screen.colorDepth}`,
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    language: navigator.language,
+    doNotTrack: navigator.doNotTrack,
+  });
+
+  // Lấy địa chỉ IP local thông qua WebRTC
+  const getLocalIp = async (): Promise<string | undefined> => {
+    try {
+      const pc = new RTCPeerConnection({
+        iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+      });
+
+      pc.createDataChannel("");
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      return new Promise((resolve) => {
+        pc.onicecandidate = (ice) => {
+          if (!ice.candidate) return;
+
+          // Tìm địa chỉ IP local từ ICE candidate
+          const matches = ice.candidate.candidate.match(/([\d.]+)(?!.*[\d.])/g);
+          if (matches && matches[0].match(/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/)) {
+            resolve(matches[0]);
+          }
+
+          pc.close();
+        };
+      });
+    } catch (error) {
+      console.error("Failed to get local IP:", error);
+      return undefined;
+    }
+  };
+
+  // Hash tất cả thông tin thành một chuỗi duy nhất
+  const hashData = async (data: string): Promise<string> => {
+    const msgBuffer = new TextEncoder().encode(data);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  };
+
+  const getEnhancedFingerprint = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Khởi tạo FingerprintJS
+      // 1. Lấy fingerprint cơ bản
       const fp = await FingerprintJS.load();
+      const { visitorId } = await fp.get();
 
-      // Lấy visitor id
-      const result = await fp.get();
+      // 2. Lấy thông tin hệ thống
+      const systemInfo = getSystemInfo();
 
-      console.log("Fingerprint:", result);
+      // 3. Lấy địa chỉ IP local
+      const localIp = await getLocalIp();
+      const networkInfo = localIp
+        ? {
+            localIp,
+            subnet: localIp.split(".").slice(0, 3).join("."), // Lấy subnet
+          }
+        : undefined;
 
-      // Cập nhật state và gọi callback
-      setVisitorId(result.visitorId);
-      onSuccess?.(result.visitorId);
+      // 4. Kết hợp tất cả thông tin để tạo hash duy nhất
+      const combinedData = JSON.stringify({
+        visitorId,
+        systemInfo,
+        networkInfo,
+        timestamp: Date.now(), // Thêm timestamp để tăng độ chính xác
+      });
 
-      return result.visitorId;
+      const combinedHash = await hashData(combinedData);
+
+      const enhancedFp: EnhancedFingerprint = {
+        visitorId,
+        systemInfo,
+        networkInfo,
+        combinedHash,
+      };
+
+      setFingerprint(enhancedFp);
+      return enhancedFp;
     } catch (err) {
       const error =
-        err instanceof Error ? err : new Error("Failed to get fingerprint");
+        err instanceof Error
+          ? err
+          : new Error("Failed to get enhanced fingerprint");
       setError(error);
-      onError?.(error);
       throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  // Tự động lấy fingerprint khi mount nếu immediate = true
   useEffect(() => {
-    if (immediate) {
-      getFingerprint();
-    }
-  }, [immediate]);
+    getEnhancedFingerprint();
+  }, []);
 
   return {
-    visitorId,
+    fingerprint,
     loading,
     error,
-    getFingerprint,
+    refresh: getEnhancedFingerprint,
   };
 }
