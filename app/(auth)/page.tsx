@@ -2,7 +2,7 @@
 import Image from "next/image";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useLogin } from "@/queries/auth.query";
@@ -12,12 +12,22 @@ import { Input } from "@/components/ui/input";
 import { createUser } from "@/actions/create-user";
 import { BRANCH } from "@/constants/enum.constant";
 import { currentTimeVN } from "@/lib/dayjs";
+import { useFingerprint } from "@/hooks/useFingerprint";
 
 const Login = () => {
   const [login, setLogin] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const loginMutation = useLogin();
   const router = useRouter();
+  const { visitorId, loading, error } = useFingerprint({
+    onSuccess: (id) => {
+      console.log("Got fingerprint:", id);
+      // Gửi id lên server hoặc xử lý logic khác
+    },
+    onError: (error) => {
+      console.error("Failed to get fingerprint:", error);
+    },
+  });
 
   const { execute } = useAction(createUser, {
     onSuccess: async (data) => {
