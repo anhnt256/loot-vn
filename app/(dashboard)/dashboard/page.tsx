@@ -1,22 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
-import { useUserInfo } from "@/hooks/use-user-info";
-import { updateUserBalance } from "@/lib/utils";
 import CheckInCard from "@/app/(dashboard)/dashboard/_component/CheckInCard/CheckInCard";
 import CheckInCalendar from "./_component/CheckInCalendar/CheckInCalendar";
 
 const Dashboard = () => {
-  const { activeUser } = useUserInfo();
-
-  useEffect(() => {
-    if (activeUser) {
-      (async () => {
-        await updateUserBalance(activeUser);
-      })();
-    }
-  }, [activeUser]);
-
   return (
     <div className="flex flex-col p-5 gap-4">
       <div className="shadow-lg rounded-lg w-full overflow-auto max-h-[89vh] relative">

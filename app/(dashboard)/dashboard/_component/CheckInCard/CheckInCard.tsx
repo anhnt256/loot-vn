@@ -11,19 +11,16 @@ import isEmpty from "lodash/isEmpty";
 import { StarFilled, StarOutlined } from "@ant-design/icons";
 import Image from "next/image";
 import { Spin } from "antd";
+import { useQuery } from "@tanstack/react-query";
+import { fetcher } from "@/lib/fetcher";
 
 const CheckInCard = () => {
   const [isChecking, setIsChecking] = useState<boolean | undefined>(false);
   const [playTime, setPlayTime] = useState<number>(0);
   const [rewards, setRewards] = useState<number>(0);
-  const {
-    userBalance,
-    userData,
-    userCheckIn,
-    checkInItem,
-    activeUser,
-    currentUserId,
-  } = useUserInfo();
+  const { userData, userCheckIn, checkInItem, currentUserId } = useUserInfo();
+
+  const { userId, branch } = userData || {};
 
   const claim = useMemo(() => {
     const date = dayjs().utc().format("YYYY-MM-DD");
@@ -40,6 +37,12 @@ const CheckInCard = () => {
       return sum + (item.newStars - item.oldStars);
     }, 0);
   }, [userCheckIn]);
+
+  const { data: totalHours } = useQuery<[any]>({
+    queryKey: ["user-spend"],
+    enabled: !!userId && !!branch,
+    queryFn: () => fetcher(`/api/spend/${userId}/${branch}`),
+  });
 
   const { execute: executeCheckIn } = useAction(createCheckInResult, {
     onSuccess: () => {
@@ -63,13 +66,12 @@ const CheckInCard = () => {
       return;
     }
     if (!isChecking && userCheckIn) {
-      if (userData && activeUser) {
+      if (userData) {
         const { userId, branch } = userData;
         setIsChecking(true);
         await executeCheckIn({
           userId,
           branch,
-          currentUserId: activeUser,
           addedStar: canClaim,
         });
         setIsChecking(false);
@@ -86,8 +88,8 @@ const CheckInCard = () => {
   ]);
 
   useEffect(() => {
-    if (checkInItem && userBalance) {
-      const currentTime = checkTodaySpentTime(userBalance);
+    if (checkInItem) {
+      const currentTime = totalHours as unknown as number;
       const today = dayjs().format("ddd");
 
       setPlayTime(currentTime);
@@ -97,13 +99,11 @@ const CheckInCard = () => {
 
       setRewards(currentTime * starsPerHour);
     }
-  }, [checkInItem, userBalance]);
+  }, [totalHours, checkInItem]);
 
   const handleUpdate = useCallback(() => {
-    if (activeUser) {
-      updateUserBalance(activeUser, true);
-    }
-  }, [activeUser]);
+    window.location.reload();
+  }, []);
 
   return (
     <div className="border-2 p-8 border-gray-400 shadow-card rounded-lg">

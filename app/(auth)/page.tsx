@@ -10,18 +10,27 @@ import { useAction } from "@/hooks/use-action";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { createUser } from "@/actions/create-user";
+import { useEnhancedFingerprint } from "@/hooks/useFingerprint";
+import { getCookie, setCookie } from "cookies-next";
+import dayjs from "dayjs";
+import isEmpty from "lodash/isEmpty";
 import { BRANCH } from "@/constants/enum.constant";
 import { currentTimeVN } from "@/lib/dayjs";
-import { useEnhancedFingerprint } from "@/hooks/useFingerprint";
+import { Spin } from "antd";
+
+const expirationDuration = 1;
+const expirationDate = dayjs().add(expirationDuration, "day").format();
 
 const Login = () => {
   const [login, setLogin] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
+  const [pageLoading, setPageLoading] = useState<boolean>(false);
   const loginMutation = useLogin();
   const router = useRouter();
-  const { fingerprint, loading, error } = useEnhancedFingerprint();
+  const { fingerprint } = useEnhancedFingerprint();
 
-  console.log("fingerprint", fingerprint);
+  setCookie("fingerprint", fingerprint, {
+    expires: new Date(expirationDate),
+  });
 
   const { execute } = useAction(createUser, {
     onSuccess: async (data) => {
@@ -38,79 +47,99 @@ const Login = () => {
     },
   });
 
-  const onLogin = async (branch: BRANCH) => {
-    const result = await loginMutation.mutateAsync({ login, password, branch });
+  const onLogin = async () => {
+    if (pageLoading) {
+      return;
+    }
+
+    setPageLoading(true);
+    const result = await loginMutation.mutateAsync(login);
+    setPageLoading(false);
     const { statusCode, data, message } = result || {};
     if (statusCode === 200) {
       await execute({
         userId: data,
-        branch,
+        branch: getCookie("branch") || BRANCH.GOVAP,
         stars: 0,
         createdAt: currentTimeVN,
         rankId: 1,
       });
     } else if (statusCode === 500) {
       toast.error(message);
+    } else if (statusCode === 700) {
+      await execute({
+        userId: data,
+        branch: getCookie("branch") || BRANCH.GOVAP,
+        stars: 0,
+        createdAt: currentTimeVN,
+        rankId: 1,
+      });
+      return;
     }
   };
 
-  return (
-    <>
-      <div className="flex justify-center mb-2">
-        <Image
-          src="/logo.png"
-          alt="Logo"
-          className="rounded-full"
-          width={100}
-          height={100}
-        />
-      </div>
+  useEffect(() => {
+    if (!isEmpty(fingerprint)) {
+      onLogin();
+    }
+  }, [fingerprint]);
 
-      <div className="mb-4">
-        <Label htmlFor="email" className="block text-sm font-bold mb-2">
-          Tên đăng nhập
-        </Label>
-        <Input
-          id="email"
-          className="w-full p-2 rounded bg-gray-700 text-white"
-          value={login}
-          onChange={(e) => setLogin(e.target.value)}
-        />
+  if (pageLoading) {
+    return (
+      <div className="flex justify-center items-center">
+        <Spin size="large" tip="Loading..." spinning={true} />
       </div>
+    );
+  }
 
-      <div className="mb-6">
-        <Label htmlFor="password" className="block text-sm font-bold mb-2">
-          Mật khẩu
-        </Label>
-        <Input
-          type="password"
-          id="password"
-          className="w-full p-2 rounded bg-gray-700 text-white"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-      </div>
+  if (!isEmpty(fingerprint)) {
+    return (
+      <>
+        <div className="flex justify-center mb-2">
+          <Image
+            src="/logo.png"
+            alt="Logo"
+            className="rounded-full"
+            width={100}
+            height={100}
+          />
+        </div>
 
-      <div className="flex justify-end">
-        <Button
-          onClick={() => onLogin(BRANCH.GOVAP)}
-          variant="default"
-          className="w-full justify-start mr-4 bg-red-400"
-          size="default"
-        >
-          Đăng nhập Gò Vấp
-        </Button>
-        <Button
-          onClick={() => onLogin(BRANCH.TANPHU)}
-          variant="default"
-          className="w-full justify-start bg-blue-400"
-          size="default"
-        >
-          Đăng nhập Tân Phú
-        </Button>
+        <h3 className="text-red-500 mb-[20px]">
+          Vui lòng nhập đúng tên tài khoản đang sử dụng. GateWay sẽ trao thưởng
+          dựa trên thông tin này.
+        </h3>
+
+        <div className="mb-4">
+          <Label htmlFor="email" className="block text-sm font-bold mb-2">
+            Tên đăng nhập
+          </Label>
+          <Input
+            id="email"
+            className="w-full p-2 rounded bg-gray-700 text-white"
+            value={login}
+            onChange={(e) => setLogin(e.target.value)}
+          />
+        </div>
+        <div className="flex justify-end">
+          <Button
+            onClick={() => onLogin()}
+            variant="default"
+            className="w-full justify-start bg-orange-400"
+            size="default"
+          >
+            Đăng nhập
+          </Button>
+        </div>
+      </>
+    );
+  } else {
+    return (
+      <div className="flex justify-center items-center">
+        <Spin size="large" tip="Loading..." spinning={true} />
       </div>
-    </>
-  );
+    );
+  }
 };
 
 export default Login;

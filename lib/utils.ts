@@ -148,9 +148,9 @@ export const checkReward = (actions: any[], mission: any) => {
 };
 
 export const checkTodaySpentTime = (actions: any[]) => {
-  const billingMinutes = actions.filter((action) =>
-    action.change_details.some(
-      (detail: any) => detail.change_item_type === "billing",
+  const billingMinutes = actions?.filter((action) =>
+    action?.change_details?.some(
+      (detail: any) => detail?.change_item_type === "billing",
     ),
   ).length;
 

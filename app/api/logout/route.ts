@@ -5,18 +5,11 @@ import { ACCESS_TOKEN_KEY } from "@/constants/token.constant";
 
 export async function POST(req: Request, res: Response): Promise<any> {
   try {
-    const cookie = getCookie("branch", { req, res });
-    const token = getCookie(ACCESS_TOKEN_KEY, { req, res });
-    const result = await apiClient({
-      method: "post",
-      url: `/logout/`,
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: cookie,
-        Token: token,
-      },
-    });
-    return NextResponse.json(result.data);
+    const response = NextResponse.json({ success: true }, { status: 200 });
+
+    response.cookies.delete("token");
+
+    return response;
   } catch (error) {
     return new NextResponse("Internal Error", { status: 500 });
   }

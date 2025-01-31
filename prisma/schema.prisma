@@ -59,13 +59,16 @@ model CheckInPromotion {
 }
 
 model Item {
-  id        Int       @id @default(autoincrement())
-  name      String    @db.VarChar(255)
-  image_url String    @db.VarChar(255)
-  rating    Float     @db.Float
-  value     Float     @db.Float
-  createdAt DateTime? @default(now()) @db.DateTime(0)
-  updatedAt DateTime? @default(now()) @updatedAt @db.DateTime(0)
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(255)
+  image_url  String    @db.VarChar(255)
+  rating     Float     @db.Float
+  value      Float     @db.Float
+  createdAt  DateTime? @default(now()) @db.DateTime(0)
+  updatedAt  DateTime? @default(now()) @updatedAt @db.DateTime(0)
+  title      String    @db.VarChar(500)
+  background String?   @db.VarChar(7)
+  textColor  String?   @db.VarChar(7)
 }
 
 model GameItemMap {
@@ -77,14 +80,15 @@ model GameItemMap {
 }
 
 model GameResult {
-  id        Int      @id @default(autoincrement())
-  voucher   String   @default(uuid())
-  userId    Int
-  itemId    Int
-  startDate DateTime @default(now())
-  endDate   DateTime
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              Int               @id @default(autoincrement())
+  userId          Int
+  itemId          Int
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  userStarHistory UserStarHistory[]
+  users           User              @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }
 
 model UserMissionMap {
@@ -114,6 +118,7 @@ model User {
   branch         String
   UserRewardMap  UserRewardMap[]
   UserMissionMap UserMissionMap[]
+  GameResults    GameResult[]
 }
 
 model Mission {
@@ -173,14 +178,19 @@ model PromotionCode {
 }
 
 model UserStarHistory {
-  id        Int                   @id @default(autoincrement())
-  userId    Int?
-  oldStars  Int?
-  newStars  Int?
-  type      UserStarHistory_type?
-  createdAt DateTime?             @default(now())
-  targetId  Int?
-  branch    String?               @db.VarChar(45)
+  id           Int                   @id @default(autoincrement())
+  userId       Int?
+  oldStars     Int?
+  newStars     Int?
+  type         UserStarHistory_type?
+  createdAt    DateTime?             @default(now())
+  targetId     Int?
+  branch       String?               @db.VarChar(45)
+  gameResultId Int?
+  gameResult   GameResult?           @relation(fields: [gameResultId], references: [id])
+
+  @@index([userId])
+  @@index([gameResultId])
 }
 
 model SavingPlan {
@@ -190,6 +200,16 @@ model SavingPlan {
   price       Int
   description String?  @db.LongText
   isDelete    Boolean? @db.Bit(1)
+}
+
+model Computer {
+  id            Int     @id @default(autoincrement())
+  fingerprintId String
+  ip            String?
+  name          String  @db.VarChar(45)
+  branch        String  @db.VarChar(45)
+  status        Int
+  localIp       String?
 }
 
 model FundHistory {

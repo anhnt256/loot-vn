@@ -28,7 +28,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (userData && userName) {
-      const { id, rankId, userId, stars, branch } = userData;
+      const { id, rankId, userId, stars } = userData;
 
       const data = {
         id,
@@ -36,6 +36,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
         userId,
         stars,
         userName,
+        magicStone,
       };
       executeUpdateUser(data);
     }
@@ -45,7 +46,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
     const result = await loginMutation.mutateAsync();
     const { statusCode, data, message } = result || {};
     if (statusCode === 200) {
-      router.push("/");
+      router.push("/thank-you");
     } else if (statusCode === 500) {
       toast.error(message);
     }
@@ -144,8 +145,11 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
       </div>
 
       <div className="flex-1 p-10 text-2xl font-bold bg-gray-400">
-        {/*{children}*/}
-        <h1>Website bảo trì để nâng cấp phần mềm mới. Chúng tôi sẽ quay trở lại sớm. Rất mong các bạn thông cảm.</h1>
+        {children}
+        {/*<h1>*/}
+        {/*  Website bảo trì để nâng cấp phần mềm mới. Chúng tôi sẽ quay trở lại*/}
+        {/*  sớm. Rất mong các bạn thông cảm.*/}
+        {/*</h1>*/}
       </div>
     </div>
   );

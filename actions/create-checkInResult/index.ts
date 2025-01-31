@@ -1,50 +1,46 @@
 "use server";
 
-import { db } from "@/lib/db";
+import { db, getFnetDB } from "@/lib/db";
 import { createSafeAction } from "@/lib/create-safe-action";
 
 import { CreateCheckInResult } from "./schema";
 import { InputType, ReturnType } from "./type";
 import dayjs, { currentTimeVN, startOfDayVN } from "@/lib/dayjs";
-import apiClient from "@/lib/apiClient";
 import { checkTodaySpentTime } from "@/lib/utils";
+import { Prisma, systemlogtb } from "@/prisma/generated/fnet-gv-client";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
-  const { userId, branch, currentUserId, addedStar } = data;
+  const { userId, branch, addedStar } = data;
   let checkIn;
 
+  const fnetDB = getFnetDB();
+
   try {
-    // TODO: verify this code
-    const startDate = dayjs()
-      .tz("Asia/Ho_Chi_Minh")
-      .startOf("day")
-      .format("YYYY-MM-DDTHH:mm:ss.SSSZ");
-    const endDate = dayjs()
-      .tz("Asia/Ho_Chi_Minh")
-      .endOf("day")
-      .format("YYYY-MM-DDTHH:mm:ss.SSSZ");
+    const query = Prisma.sql`
+      SELECT *
+      FROM fnet.systemlogtb AS t1
+      WHERE t1.UserId = ${userId.toString()}
+        AND t1.status = 3
+        AND DATE(STR_TO_DATE(CONCAT(t1.EnterDate, ' ', t1.EnterTime), '%Y-%m-%d %H:%i:%s')) = CURDATE()
 
-    // const startDate = "2025-01-04T00:00:00.000+07:00";
-    // const endDate = "2025-01-04T23:59:59.999+07:00";
+      UNION ALL
 
-    const url = `/accounts/${currentUserId}/balance_changes/?from_date=${encodeURIComponent(
-      startDate,
-    )}&to_date=${encodeURIComponent(endDate)}&limit=4000`;
+      SELECT *
+      FROM (
+             SELECT *
+             FROM fnet.systemlogtb AS t1
+             WHERE t1.UserId = ${userId.toString()}
+               AND t1.status = 3
+               AND DATE(STR_TO_DATE(CONCAT(t1.EnterDate, ' ', t1.EnterTime), '%Y-%m-%d %H:%i:%s')) < CURDATE()
+      ORDER BY STR_TO_DATE(CONCAT(t1.EnterDate, ' ', t1.EnterTime), '%Y-%m-%d %H:%i:%s') DESC
+        LIMIT 1
+        ) AS t2`;
+    const result = await fnetDB.$queryRaw<any[]>(query);
 
-    const result = await apiClient({
-      method: "get",
-      url,
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: branch,
-      },
-    });
+    const totalTimeUsed = result.reduce((sum, item) => sum + item.TimeUsed, 0);
+    const totalPlayTime = Math.floor(totalTimeUsed / 60);
 
     const checkInItems = await db.checkInItem.findMany();
-
-    const checkInResults = result.data.results;
-
-    const totalPlayTime = checkTodaySpentTime(checkInResults);
 
     const today = dayjs().format("ddd");
     const todayCheckIn = checkInItems.find((item) => item.dayName === today);
