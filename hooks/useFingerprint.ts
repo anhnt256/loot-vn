@@ -52,8 +52,8 @@ export function useEnhancedFingerprint() {
       const fp = await FingerprintJS.load();
       const { visitorId } = await fp.get();
 
-      // const localIp = await getLocalIp();
-      const localIp = "e9b949a9-0697-44c4-90fd-81b6396d7099.local";
+      const localIp = await getLocalIp();
+      // const localIp = "e9b949a9-0697-44c4-90fd-81b6396d7099.local";
 
       const enhancedFp = {
         visitorId,
