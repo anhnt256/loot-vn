@@ -15,7 +15,6 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     rankId = 1,
     branch = BRANCH.GOVAP,
     stars = 0,
-    userName,
   } = data;
 
   let createUser;
@@ -42,7 +41,6 @@ const handler = async (data: InputType): Promise<ReturnType> => {
       data: {
         userId,
         branch,
-        userName,
         rankId,
         stars,
         createdAt: currentTimeVN,
