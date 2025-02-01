@@ -28,6 +28,8 @@ const Login = () => {
   const router = useRouter();
   const { fingerprint } = useEnhancedFingerprint();
 
+  console.log("fingerprint", fingerprint);
+
   setCookie("fingerprint", fingerprint, {
     expires: new Date(expirationDate),
   });
