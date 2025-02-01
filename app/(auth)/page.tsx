@@ -30,6 +30,8 @@ const Login = () => {
 
   console.log("fingerprint", fingerprint);
 
+  console.log("check render fingerprint");
+
   setCookie("fingerprint", fingerprint, {
     expires: new Date(expirationDate),
   });
