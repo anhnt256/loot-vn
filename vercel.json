@@ -1,0 +1,21 @@
+{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "x-real-ip",
+          "value": "True-Client-IP"
+        },
+        {
+          "key": "x-vercel-forwarded-for",
+          "value": "True-Client-IP"
+        },
+        {
+          "key": "x-forwarded-for",
+          "value": "True-Client-IP"
+        }
+      ]
+    }
+  ]
+}

@@ -4,10 +4,21 @@ import type { NextRequest } from "next/server";
 import { verifyJWT } from "@/lib/jwt";
 
 export function middleware(request: NextRequest) {
+  const response = NextResponse.next();
+  const ip =
+    request.ip ?? // Vercel specific
+    request.headers.get("x-real-ip") ??
+    request.headers.get("x-forwarded-for");
+
+  // Add the IP to response headers
+  if (ip != null) {
+    response.headers.set("x-real-ip", ip);
+  }
+
   const publicPaths = ["/", "/api/login", "/thank-you"];
 
   if (publicPaths.includes(request.nextUrl.pathname)) {
-    return NextResponse.next();
+    return response;
   }
 
   // Verify token cho tất cả API routes
