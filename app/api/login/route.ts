@@ -8,6 +8,7 @@ import isEmpty from "lodash/isEmpty";
 import { BRANCH } from "@/constants/enum.constant";
 import { currentTimeVN } from "@/lib/dayjs";
 import dayjs from "dayjs";
+import { Computer } from "@prisma/client";
 
 const expirationDuration = 1;
 const expirationDate = dayjs().add(expirationDuration, "day").format();
@@ -22,7 +23,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
     if (macAddress) {
       const result = await db.computer.findFirst({
         where: {
-          localIp: macAddress.toUpperCase(),
+          localIp: macAddress.replaceAll(":", "-").toUpperCase(),
         },
         select: {
           ip: true,

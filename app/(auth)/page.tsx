@@ -63,10 +63,10 @@ const Login = () => {
           console.error("Failed to get MAC addresses:", error);
         }
       } else {
-        setCookie("macAddress", "dc:1b:a1:2d:e7:77", {
-          expires: new Date(expirationDate),
-        });
-        onLogin();
+        // setCookie("macAddress", "00:cf:e0:46:c1:81", {
+        //   expires: new Date(expirationDate),
+        // });
+        // onLogin();
       }
     };
 
