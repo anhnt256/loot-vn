@@ -17,6 +17,7 @@ import isEmpty from "lodash/isEmpty";
 import { BRANCH } from "@/constants/enum.constant";
 import { currentTimeVN } from "@/lib/dayjs";
 import { Spin } from "antd";
+import { isElectron } from "@/lib/electron";
 
 const expirationDuration = 1;
 const expirationDate = dayjs().add(expirationDuration, "day").format();
@@ -50,6 +51,26 @@ const Login = () => {
       }
     },
   });
+
+  const [macAddresses, setMacAddresses] = useState([]);
+  const [isDesktopApp, setIsDesktopApp] = useState(false);
+
+  useEffect(() => {
+    const checkPlatform = async () => {
+      setIsDesktopApp(isElectron());
+
+      if (isElectron()) {
+        try {
+          const addresses = await window.electron.getMacAddresses();
+          setMacAddresses(addresses);
+        } catch (error) {
+          console.error("Failed to get MAC addresses:", error);
+        }
+      }
+    };
+
+    checkPlatform();
+  }, []);
 
   const onLogin = async () => {
     if (pageLoading) {
@@ -113,6 +134,25 @@ const Login = () => {
           Vui lòng nhập đúng tên tài khoản đang sử dụng. GateWay sẽ trao thưởng
           dựa trên thông tin này.
         </h3>
+
+        {isDesktopApp ? (
+          <div>
+            <h2>MAC Addresses:</h2>
+            {macAddresses.map((mac: any, index) => (
+              <div key={index}>
+                <p>Interface: {mac.name}</p>
+                <p>Address: {mac.address}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div>
+            <p>MAC addresses are only available in the desktop app.</p>
+            <p>
+              Please download our desktop application to access this feature.
+            </p>
+          </div>
+        )}
 
         <div className="mb-4">
           <Label htmlFor="email" className="block text-sm font-bold mb-2">
