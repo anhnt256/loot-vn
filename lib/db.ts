@@ -1,5 +1,5 @@
-import { PrismaClient } from "@prisma/client";
-import { PrismaClient as FnetPrismaClient } from "./../prisma/generated/fnet-gv-client";
+import { PrismaClient } from "@/prisma/generated/prisma-client";
+import { PrismaClient as FnetPrismaClient } from "@/prisma/generated/fnet-gv-client";
 import { BRANCH } from "@/constants/enum.constant";
 import { cookies } from "next/headers";
 
