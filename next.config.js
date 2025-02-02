@@ -24,6 +24,13 @@ const nextConfig = {
     }
     return config;
   },
+  experimental: {
+    outputFileTracingIncludes: {
+      "*": [
+        "node_modules/.prisma/client/libquery_engine-rhel-openssl-1.0.x.so.node",
+      ],
+    },
+  },
 };
 
 module.exports = nextConfig;
