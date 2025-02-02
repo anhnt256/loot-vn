@@ -22,7 +22,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
     if (macAddress) {
       const result = await db.computer.findFirst({
         where: {
-          localIp: macAddress,
+          localIp: macAddress.toUpperCase(),
         },
         select: {
           ip: true,
