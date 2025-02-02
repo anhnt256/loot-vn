@@ -18,6 +18,7 @@ import { BRANCH } from "@/constants/enum.constant";
 import { currentTimeVN } from "@/lib/dayjs";
 import { Spin } from "antd";
 import { isElectron } from "@/lib/electron";
+import { getMacAddresses } from "@/lib/mac";
 
 const expirationDuration = 1;
 const expirationDate = dayjs().add(expirationDuration, "day").format();
@@ -30,8 +31,6 @@ const Login = () => {
   const { fingerprint } = useEnhancedFingerprint();
 
   console.log("fingerprint", fingerprint);
-
-  console.log("check render fingerprint");
 
   setCookie("fingerprint", fingerprint, {
     expires: new Date(expirationDate),
@@ -52,7 +51,7 @@ const Login = () => {
     },
   });
 
-  const [macAddresses, setMacAddresses] = useState([]);
+  const [macAddresses, setMacAddresses] = useState<any>([]);
   const [isDesktopApp, setIsDesktopApp] = useState(false);
 
   useEffect(() => {
@@ -61,7 +60,7 @@ const Login = () => {
 
       if (isElectron()) {
         try {
-          const addresses = await window.electron.getMacAddresses();
+          const addresses = await getMacAddresses();
           setMacAddresses(addresses);
         } catch (error) {
           console.error("Failed to get MAC addresses:", error);
@@ -138,7 +137,7 @@ const Login = () => {
         {isDesktopApp ? (
           <div>
             <h2>MAC Addresses:</h2>
-            {macAddresses.map((mac: any, index) => (
+            {macAddresses.map((mac: any, index: number) => (
               <div key={index}>
                 <p>Interface: {mac.name}</p>
                 <p>Address: {mac.address}</p>
