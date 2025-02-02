@@ -112,6 +112,13 @@ export async function POST(req: Request, res: Response): Promise<any> {
     }
     return NextResponse.json("Login Fail", { status: 401 });
   } catch (error) {
-    return new NextResponse("Internal Error", { status: 500 });
+    const errorMessage =
+      error instanceof Error ? error.message : "Internal Error";
+    return new NextResponse(JSON.stringify({ error: errorMessage }), {
+      status: 500,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 }
