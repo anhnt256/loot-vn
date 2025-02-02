@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { db, getFnetDB } from "@/lib/db";
-import { Prisma, systemlogtb } from "@/prisma/generated/fnet-gv-client";
+import { getFnetDB } from "@/lib/db";
 
 export async function GET(
   req: Request,
@@ -10,28 +9,35 @@ export async function GET(
   try {
     const fnetDB = getFnetDB();
     const [userId, branch] = params.slug;
-    const query = Prisma.sql`
-                            SELECT *
-                            FROM fnet.systemlogtb AS t1
-                            WHERE t1.UserId = ${userId.toString()}
-                              AND t1.status = 3
-                              AND DATE(STR_TO_DATE(CONCAT(t1.EnterDate, ' ', t1.EnterTime), '%Y-%m-%d %H:%i:%s')) = CURDATE()
+    const status = 3;
 
-                            UNION ALL
+    let result: any;
 
-                            SELECT *
-                            FROM (
-                              SELECT *
-                              FROM fnet.systemlogtb AS t1
-                              WHERE t1.UserId = ${userId.toString()}
-                                AND t1.status = 3
-                                AND DATE(STR_TO_DATE(CONCAT(t1.EnterDate, ' ', t1.EnterTime), '%Y-%m-%d %H:%i:%s')) < CURDATE()
-                              ORDER BY STR_TO_DATE(CONCAT(t1.EnterDate, ' ', t1.EnterTime), '%Y-%m-%d %H:%i:%s') DESC
-                              LIMIT 1
-                            ) AS t2`;
-    const result = await fnetDB.$queryRaw<any[]>(query);
+    if (userId) {
+      const todayData: any = await fnetDB.$queryRaw`
+      SELECT *
+      FROM fnet.systemlogtb
+      WHERE UserId = ${userId} AND status = ${status} AND DATE(STR_TO_DATE(CONCAT(EnterDate, ' ', EnterTime), '%Y-%m-%d %H:%i:%s')) = CURDATE()
+    `;
+      if (todayData.length > 0) {
+        result = todayData;
+      } else {
+        result = await fnetDB.$queryRaw`
+          SELECT *
+          FROM fnet.systemlogtb
+          WHERE UserId = ${userId}
+            AND status = ${status}
+            AND (EnterDate IS NULL OR EnterTime IS NULL OR DATE(STR_TO_DATE(CONCAT(EnterDate, ' ', EnterTime), '%Y-%m-%d %H:%i:%s')) < CURDATE())
+          ORDER BY STR_TO_DATE(CONCAT(EnterDate, ' ', EnterTime), '%Y-%m-%d %H:%i:%s') DESC
+            LIMIT 1
+      `;
+      }
+    }
 
-    const totalTimeUsed = result.reduce((sum, item) => sum + item.TimeUsed, 0);
+    const totalTimeUsed = result.reduce(
+      (sum: any, item: any) => sum + item.TimeUsed,
+      0,
+    );
     const totalHours = Math.floor(totalTimeUsed / 60);
 
     return NextResponse.json(totalHours);

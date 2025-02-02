@@ -14,18 +14,15 @@ const expirationDate = dayjs().add(expirationDuration, "day").format();
 
 export async function POST(req: Request, res: Response): Promise<any> {
   try {
-    const fingerPrint = getCookie("fingerprint", { req, res });
+    const macAddress = getCookie("macAddress", { req, res });
     const body = await req.text();
 
     const { userName } = JSON.parse(body);
 
-    if (fingerPrint) {
-      const jsonFingerPrint = JSON.parse(fingerPrint);
-      const { localIp } = jsonFingerPrint || {};
-
+    if (macAddress) {
       const result = await db.computer.findFirst({
         where: {
-          localIp,
+          localIp: macAddress,
         },
         select: {
           ip: true,
@@ -50,7 +47,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
         const user: any = await fnetDB.$queryRaw<systemlogtb>(query);
 
         const userId = user[0]?.userId ?? null;
-        // const userId = 13191;
+        // const userId = 8859;
 
         const currentUser = await db.user.findFirst({
           where: {

@@ -10,7 +10,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@fingerprintjs/fingerprintjs": "^4.5.1",
     "@prisma/client": "^5.7.1",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-label": "^2.0.2",
