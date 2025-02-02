@@ -42,7 +42,7 @@ const Login = () => {
     },
   });
 
-  const [macAddresses, setMacAddresses] = useState<any>([]);
+  const [macAddresses, setMacAddresses] = useState<string>();
   const [isDesktopApp, setIsDesktopApp] = useState(false);
 
   useEffect(() => {
@@ -52,7 +52,7 @@ const Login = () => {
       if (isElectron()) {
         try {
           const addresses = (await getMacAddresses()) as any;
-          setMacAddresses(addresses);
+          setMacAddresses(addresses[0]?.address);
 
           setCookie("macAddress", addresses[0]?.address, {
             expires: new Date(expirationDate),
@@ -123,7 +123,18 @@ const Login = () => {
           height={100}
         />
       </div>
-
+      {isDesktopApp ? (
+        <div>
+          <h2>
+            MAC Addresses: <p>Address: {macAddresses}</p>
+          </h2>
+        </div>
+      ) : (
+        <div>
+          <p>MAC addresses are only available in the desktop app.</p>
+          <p>Please download our desktop application to access this feature.</p>
+        </div>
+      )}
       <h3 className="text-red-500 mb-[20px]">
         Vui lòng nhập đúng tên tài khoản đang sử dụng. GateWay sẽ trao thưởng
         dựa trên thông tin này.
