@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { CURRENT_USER } from "@/constants/token.constant";
 import { User } from "@prisma/client";
 import { fetcher } from "@/lib/fetcher";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCookie } from "cookies-next";
 import dayjs from "@/lib/dayjs";
 
@@ -11,6 +11,8 @@ export const useUserInfo = () => {
   const [userName, setUserName] = useState<string | undefined>();
   const [userBalance, setUserBalance] = useState<any[]>([]);
   const [isNewUser, setIsNewUser] = useState<boolean | undefined>(false);
+
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const currentUser = localStorage.getItem(CURRENT_USER) || "";
@@ -49,6 +51,18 @@ export const useUserInfo = () => {
     queryFn: () => fetcher(`/api/check-in-item`),
   });
 
+  const refreshAllData = () => {
+    queryClient.invalidateQueries({ queryKey: ["user", currentUserId] });
+    queryClient.invalidateQueries({
+      queryKey: ["check-in-result", currentUserId],
+    });
+    queryClient.invalidateQueries({ queryKey: ["check-in-item"] });
+  };
+
+  useEffect(() => {
+    refreshAllData();
+  }, []);
+
   return {
     currentUserId,
     userName,
@@ -57,5 +71,6 @@ export const useUserInfo = () => {
     userBalance,
     checkInItem,
     isNewUser,
+    refreshAllData,
   };
 };

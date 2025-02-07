@@ -4,7 +4,6 @@ import dayjs from "@/lib/dayjs";
 import { useAction } from "@/hooks/use-action";
 import { createCheckInResult } from "@/actions/create-checkInResult";
 import { toast } from "sonner";
-import { checkTodaySpentTime, updateUserBalance } from "@/lib/utils";
 import { useUserInfo } from "@/hooks/use-user-info";
 import { UserStarHistory } from ".prisma/client";
 import isEmpty from "lodash/isEmpty";

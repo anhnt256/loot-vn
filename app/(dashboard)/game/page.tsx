@@ -1,22 +1,17 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import MeteorEffect from "@/app/(dashboard)/game/_component/MeteorEffect/MeteorEffect";
 import { WishResult } from "@/app/(dashboard)/game/_component/WishResult/WishResult";
 import { useUserInfo } from "@/hooks/use-user-info";
 import { Rules } from "@/app/(dashboard)/game/_component/Rules/Rules";
-import { usePolling } from "@/hooks/usePolling";
-import AnimatedCounter from "@/app/(dashboard)/game/_component/AnimatedCounter/AnimatedCounter";
+import CircleSegments from "@/app/(dashboard)/game/_component/CirclePrize/CirclePrize";
 import { useQuery } from "@tanstack/react-query";
 import { fetcher } from "@/lib/fetcher";
-import ResultCard from "@/app/(dashboard)/game/_component/ResultCard/ResultCard";
-
-interface ApiData {
-  id: number;
-  value: string;
-  timestamp: string;
-}
+import { useAction } from "@/hooks/use-action";
+import { toast } from "sonner";
+import { createGameResult } from "@/actions/create-gameResult";
 
 const Game = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -25,9 +20,15 @@ const Game = () => {
   const [single, setSingle] = useState<boolean>(false);
   const [isRuleModalOpen, setIsRuleModalOpen] = useState(false);
 
-  const [count, setCount] = useState(0);
-  const { userName, userData } = useUserInfo();
-  const { stars } = userData || {};
+  const { userData, refreshAllData } = useUserInfo();
+
+  const {
+    stars,
+    userId,
+    branch,
+    id: currentUserId,
+    magicStone,
+  } = userData || {};
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -35,73 +36,53 @@ const Game = () => {
   const openRuleModal = () => setIsRuleModalOpen(true);
   const closeRuleModal = () => setIsRuleModalOpen(false);
 
-  const handleSuccess = useCallback(() => {
-    setCount((prevCount) => prevCount + 1);
-  }, []);
+  const { data: segments } = useQuery<[any]>({
+    queryKey: ["game-items"],
+    queryFn: () => fetcher(`/api/game/items`),
+  });
 
-  const { data, error, isLoading, lastUpdated, refetch } = usePolling<
-    ApiData[]
-  >("/api/game/wish/calc-fund", {
-    interval: 10000, // 30 seconds
+  const { data: rounds, isSuccess } = useQuery<[any]>({
+    queryKey: ["calc-round"],
+    enabled: !!userId && !!branch,
+    queryFn: () => fetcher(`/api/game/${userId}/calc-round`),
+  });
+
+  useEffect(() => {
+    if (isSuccess) {
+      refreshAllData();
+    }
+  }, [isSuccess]);
+
+  const { execute: executeRoll, data } = useAction(createGameResult, {
     onSuccess: (data) => {
-      handleSuccess();
-      console.error("Success fetching data:", data);
+      handleMeteorAnimation(data);
     },
     onError: (error) => {
-      console.error("Error fetching data:", error);
+      toast.error(error);
     },
   });
 
-  // const { data: infos } = useQuery<[any]>({
-  //   queryKey: ["calc-user-roll"],
-  //   queryFn: () => fetcher(`/api/jobs/calc-user-roll`),
-  // });
-
-  const result = [
-    {
-      itemID: 14430,
-      name: "waveriding-whirl",
-      rarity: 3,
-      weaponType: "catalyst",
-      limited: true,
-      origin: "natlan",
-    },
-    {
-      itemID: 15430,
-      name: "flower-wreathed-feathers",
-      rarity: 3,
-      weaponType: "bow",
-      limited: true,
-      origin: "natlan",
-    },
-    {
-      itemID: 15514,
-      name: "astral-vultures-crimson-plumage",
-      rarity: 3,
-      weaponType: "bow",
-      limited: true,
-      origin: "natlan",
-      offset: {
-        button: { t: 10, w: 75, l: 30 },
-      },
-    },
-  ];
-
-  const handleMeteorAnimation = () => {
-    const stars = result.map(({ rarity }) => rarity);
-    const isSingle = stars.length === 1;
+  const handleMeteorAnimation = (data: any) => {
+    const ids = data.map((item: any) => item.id);
+    const isSingle = ids.length === 1;
     setSingle(isSingle);
 
     let starLevel = 3;
-    if (stars.includes(4)) starLevel = 4;
-    if (stars.includes(5)) starLevel = 5;
+    if (ids.includes(4) || ids.includes(5)) starLevel = 4;
+    if (ids.includes(6) || ids.includes(7) || ids.includes(8)) starLevel = 5;
     setMeteorStar(starLevel);
 
     setShowMeteor(true);
+    refreshAllData();
   };
 
-  const handleRoll = (rolls: number) => {
-    handleMeteorAnimation();
+  const handleRoll = async (rolls: number) => {
+    await executeRoll({
+      userId: Number(userId),
+      currentUserId: Number(currentUserId),
+      branch: String(branch),
+      rolls,
+    });
   };
 
   const WishButton = ({ count }: { count: number }) => {
@@ -121,64 +102,23 @@ const Game = () => {
 
   return (
     <div className="flex flex-col p-5 gap-4">
-      <div className="bg-white shadow-lg rounded-lg p-4 w-full">
-        <div className="flex flex-col">
-          <h2 className="text-xl font-semibold mb-4">
-            Tính năng mới sẽ dự kiến ra mắt vào ngày 10/01/2025. Hãy cùng đón
-            chờ nhé!
-          </h2>
-
-          <div className="flex justify-center items-center">
-            <Image
-              src="/game.png"
-              width={800}
-              height={550}
-              alt="stars"
-              className="object-cover"
-              priority
-              quality={100}
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  
-
-  return (
-    <div className="flex flex-col p-5 gap-4">
       <div className="shadow-lg rounded-lg w-full overflow-auto max-h-[89vh] relative">
         <div className="flex justify-between p-4 bg-blue-600 text-white">
           <h2>Đền Nguyện Ước</h2>
-          <AnimatedCounter
-            from={count}
-            to={count + 1000}
-            className="text-2xl font-bold text-white"
-          />
 
           <div className="flex gap-2">
-            <div className="flex items-center bg-gray-600/80 rounded-full px-3 py-1.5">
-              <span className="text-white font-semibold flex items-center gap-2">
-                {stars?.toLocaleString()}
-                <Image src="/star.png" width="24" height="24" alt="stars" />
-              </span>
-            </div>
-
             <div className="flex items-center gap-2 bg-gray-600/80 rounded-full px-3 py-1.5">
-              <span className="text-white font-semibold">25</span>
+              <span className="text-white font-semibold">
+                {magicStone?.toLocaleString()}
+              </span>
               <Image src={"/rock.png"} alt="wish" width="24" height="24" />
             </div>
           </div>
         </div>
 
-        <div className="flex justify-center items-center pt-24 pb-44 bg-gray-200">
-          <Image
-            className="max-w-full max-h-80 object-contain rounded-lg"
-            src="/temp.webp"
-            width="600"
-            height="800"
-            alt="banner"
+        <div className="flex justify-center items-center bg-gray-200">
+          <CircleSegments
+            segments={Array.isArray(segments) ? [...segments].slice(0, 7) : []}
           />
         </div>
 
@@ -224,10 +164,6 @@ const Game = () => {
         {isRuleModalOpen && (
           <Rules isModalOpen={isRuleModalOpen} closeModal={closeRuleModal} />
         )}
-
-        <div className="flex justify-center items-center mt-4">
-          <ResultCard rarity="Jackpot" prize="1,000,000" />
-        </div>
       </div>
     </div>
   );

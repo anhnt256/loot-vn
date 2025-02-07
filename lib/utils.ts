@@ -156,22 +156,3 @@ export const checkTodaySpentTime = (actions: any[]) => {
 
   return Math.floor(billingMinutes / 60);
 };
-
-export const updateUserBalance = async (
-  currentUserId: number,
-  isForce: boolean = false,
-) => {
-  const userBalance = localStorage.getItem("userBalance");
-
-  if (isEmpty(userBalance) || isForce) {
-    const result = await fetcher(
-      `/api/accounts/${currentUserId}/balance_changes`,
-    );
-    const resultSorted = result.results.sort(
-      (a: any, b: any) =>
-        dayjs(b.change_date).valueOf() - dayjs(a.change_date).valueOf(),
-    );
-    localStorage.setItem("userBalance", JSON.stringify(resultSorted));
-    window.location.reload();
-  }
-};

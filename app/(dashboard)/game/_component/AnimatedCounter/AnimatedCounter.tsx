@@ -13,7 +13,9 @@ export default function AnimatedCounter({
   className = "",
 }: AnimatedCounterProps) {
   const count = useMotionValue(from);
-  const rounded = useTransform(count, (latest: any) => Math.round(latest));
+  const rounded = useTransform(count, (latest: number) => {
+    return new Intl.NumberFormat("en-US").format(Math.round(latest));
+  });
 
   useEffect(() => {
     const controls = animate(count, to, {

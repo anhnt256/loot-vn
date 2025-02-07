@@ -12,7 +12,6 @@ import { useAction } from "@/hooks/use-action";
 import { updateUser } from "@/actions/update-user";
 
 const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
-  const router = useRouter();
   const loginMutation = useLogout();
 
   const { userName, userData, isNewUser } = useUserInfo();
@@ -67,19 +66,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
                   <Image src="/star.png" width="24" height="24" alt="stars" />
                 </span>
               </div>
-              {/*<div className="flex items-center gap-2 bg-gray-600/80 rounded-full px-3 py-1.5">*/}
-              {/*  <span className="text-white font-semibold">*/}
-              {/*    {magicStone?.toLocaleString()}*/}
-              {/*  </span>*/}
-              {/*  <Image src={"/rock.png"} alt="wish" width="24" height="24" />*/}
-              {/*</div>*/}
             </div>
-            {/*<div className="flex justify-center items-center">*/}
-            {/*  <div className="mr-1 cursor-default">*/}
-            {/*    {stars?.toLocaleString()}*/}
-            {/*  </div>*/}
-            {/*  <Image src="/rock.png" width="22" height="22" alt="stars" />*/}
-            {/*</div>*/}
           </div>
           {/*{isNewUser && (*/}
           {/*  <Link*/}
