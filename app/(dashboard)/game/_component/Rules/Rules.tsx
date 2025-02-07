@@ -21,7 +21,7 @@ export function Rules({ isModalOpen, closeModal }: RulesProps) {
     return (
       <div className="max-w-3xl mx-auto p-6 bg-white shadow-lg rounded-lg">
         <h1 className="text-2xl font-bold text-center mb-4">
-          🎮 Thể Lệ Chơi Game "Đền Nguyện Ước"
+          🎮 Thể Lệ Chơi Game Đền Nguyện Ước
         </h1>
         <p className="mb-4 text-gray-700">
           🔹 Tổng tiền nạp trong 30 ngày gần nhất, cứ mỗi{" "}
