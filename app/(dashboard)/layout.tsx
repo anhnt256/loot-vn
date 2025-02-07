@@ -46,7 +46,10 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
     const result = await loginMutation.mutateAsync();
     const { statusCode, data, message } = result || {};
     if (statusCode === 200) {
-      router.push("/thank-you");
+      if (typeof window !== "undefined" && window.electron) {
+        // @ts-ignore
+        window.electron.send("close-app");
+      }
     } else if (statusCode === 500) {
       toast.error(message);
     }

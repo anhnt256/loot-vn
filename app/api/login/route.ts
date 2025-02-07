@@ -8,7 +8,6 @@ import isEmpty from "lodash/isEmpty";
 import { BRANCH } from "@/constants/enum.constant";
 import { currentTimeVN } from "@/lib/dayjs";
 import dayjs from "dayjs";
-import { Computer } from "@prisma/client";
 
 const expirationDuration = 1;
 const expirationDate = dayjs().add(expirationDuration, "day").format();
@@ -16,6 +15,7 @@ const expirationDate = dayjs().add(expirationDuration, "day").format();
 export async function POST(req: Request, res: Response): Promise<any> {
   try {
     const macAddress = getCookie("macAddress", { req, res });
+    // const macAddress = "A4:0C:66:0B:E8:6D";
     const body = await req.text();
 
     const { userName } = JSON.parse(body);
@@ -30,6 +30,8 @@ export async function POST(req: Request, res: Response): Promise<any> {
           branch: true,
         },
       });
+
+      // console.log("result", result);
 
       const cookieStore = cookies();
       // @ts-ignore
@@ -48,13 +50,18 @@ export async function POST(req: Request, res: Response): Promise<any> {
         const user: any = await fnetDB.$queryRaw<systemlogtb>(query);
 
         const userId = user[0]?.userId ?? null;
-        // const userId = 8859;
+
+        // console.log("user", userId);
+
+        // const userId = 8503;
 
         const currentUser = await db.user.findFirst({
           where: {
             userId,
           },
         });
+
+        // console.log("currentUser", currentUser);
 
         const { id, userName: currentUserName } = currentUser || {};
 
@@ -73,6 +80,8 @@ export async function POST(req: Request, res: Response): Promise<any> {
             data,
           });
         }
+
+        // console.log("updateUser", updateUser);
 
         if (updateUser) {
           if (isEmpty(currentUserName) && !isEmpty(userName)) {
