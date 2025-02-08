@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "postinstall": "prisma generate",
-    "build": "next build",
+    "build": "prisma generate && prisma generate --schema=./prisma/schemaFnet.prisma && next build",
     "start": "next start",
     "lint": "next lint"
   },
