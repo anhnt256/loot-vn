@@ -26,26 +26,7 @@ const nextConfig = {
       // Modifying the output filename for client-side bundles
       config.output.filename = `static/chunks/[name].${Timestamp}.js`;
       config.output.chunkFilename = `static/chunks/[name].${Timestamp}.js`;
-    } else {
-      config.externals = [
-        ...config.externals,
-        require("webpack-node-externals")(),
-      ];
     }
-    config.plugins.push(
-      new CopyPlugin({
-        patterns: [
-          {
-            from: "./node_modules/.prisma/client/schema.prisma",
-            to: "./prisma/generated/prisma-client",
-          },
-          {
-            from: "./node_modules/.prisma/client/schema.prisma",
-            to: "./prisma/generated/fnet-gv-client",
-          },
-        ],
-      }),
-    );
     return config;
   },
   experimental: {
