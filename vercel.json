@@ -2,10 +2,7 @@
   "functions": {
     "api/*": {
       "runtime": "nodejs18.x",
-      "includeFiles": [
-        "node_modules/.prisma/client/*",
-        "prisma/generated/fnet-gv-client/*"
-      ]
+      "includeFiles": "node_modules/.prisma/client/*, prisma/generated/fnet-gv-client/*"
     }
   }
 }
