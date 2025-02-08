@@ -5,7 +5,7 @@ import { CheckInDay } from "@/type/checkin";
 import dayjs from "@/lib/dayjs";
 import isEmpty from "lodash/isEmpty";
 import { useQuery } from "@tanstack/react-query";
-import { CheckInItem, UserStarHistory } from ".prisma/client";
+import { CheckInItem, UserStarHistory } from ".@/prisma/generated/prisma-client";
 import { fetcher } from "@/lib/fetcher";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";

@@ -5,7 +5,7 @@ import { useAction } from "@/hooks/use-action";
 import { createCheckInResult } from "@/actions/create-checkInResult";
 import { toast } from "sonner";
 import { useUserInfo } from "@/hooks/use-user-info";
-import { UserStarHistory } from ".prisma/client";
+import { UserStarHistory } from ".@/prisma/generated/prisma-client";
 import isEmpty from "lodash/isEmpty";
 import { StarFilled, StarOutlined } from "@ant-design/icons";
 import Image from "next/image";
