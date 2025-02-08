@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { UserMissionMap } from "@prisma/client";
+import { UserMissionMap } from "@/prisma/generated/prisma-client";
 
 import { ActionState } from "@/lib/create-safe-action";
 

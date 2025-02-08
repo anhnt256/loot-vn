@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CheckInResult } from "@prisma/client";
+import { CheckInResult } from "@/prisma/generated/prisma-client";
 
 import { ActionState } from "@/lib/create-safe-action";
 

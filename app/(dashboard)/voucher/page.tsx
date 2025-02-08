@@ -1,6 +1,6 @@
 "use client";
 
-import { Reward } from "@prisma/client";
+import { Reward } from "@/prisma/generated/prisma-client";
 import { fetcher } from "@/lib/fetcher";
 import { useQuery } from "@tanstack/react-query";
 import React, { useMemo } from "react";

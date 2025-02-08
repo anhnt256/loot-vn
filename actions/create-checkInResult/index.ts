@@ -6,8 +6,7 @@ import { createSafeAction } from "@/lib/create-safe-action";
 import { CreateCheckInResult } from "./schema";
 import { InputType, ReturnType } from "./type";
 import dayjs, { currentTimeVN, startOfDayVN } from "@/lib/dayjs";
-import { checkTodaySpentTime } from "@/lib/utils";
-import { Prisma, systemlogtb } from "@/prisma/generated/fnet-gv-client";
+import { Prisma } from "@/prisma/generated/fnet-gv-client";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
   const { userId, branch, addedStar } = data;

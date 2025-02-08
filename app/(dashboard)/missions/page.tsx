@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import MissionList from "./_component/MissionList/MissionList";
-import { Mission } from "@prisma/client";
+import { Mission } from "@/prisma/generated/prisma-client";
 import { fetcher } from "@/lib/fetcher";
 import { useQuery } from "@tanstack/react-query";
 import { useUserInfo } from "@/hooks/use-user-info";

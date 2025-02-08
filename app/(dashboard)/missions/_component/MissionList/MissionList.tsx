@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import MissionCard from "../MissionCard/MissionCard";
-import { Mission } from "@prisma/client";
+import { Mission } from "@/prisma/generated/prisma-client";
 import { useAction } from "@/hooks/use-action";
 import { createUserMissionMap } from "@/actions/create-user-mission-map";
 import { toast } from "sonner";

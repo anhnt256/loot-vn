@@ -5,7 +5,7 @@ import { createSafeAction } from "@/lib/create-safe-action";
 
 import { GameItemResults, InputType, ReturnType } from "./type";
 import { CreateGameResult } from "@/actions/create-gameResult/schema";
-import { Item } from "@prisma/client";
+import { Item } from "@/prisma/generated/prisma-client";
 import { currentTimeVN } from "@/lib/dayjs";
 import { patchConsoleError } from "next/dist/client/components/react-dev-overlay/internal/helpers/hydration-error-info";
 

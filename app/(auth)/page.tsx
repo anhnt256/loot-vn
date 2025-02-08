@@ -123,13 +123,7 @@ const Login = () => {
           height={100}
         />
       </div>
-      {isDesktopApp ? (
-        <div>
-          <h2>
-            MAC Addresses: <p>Address: {macAddresses}</p>
-          </h2>
-        </div>
-      ) : (
+      {!isDesktopApp && (
         <div>
           <p>MAC addresses are only available in the desktop app.</p>
           <p>Please download our desktop application to access this feature.</p>

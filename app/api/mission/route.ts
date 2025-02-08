@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { MISSION_TYPE } from "@/constants/enum.constant";
-import { Mission } from "@prisma/client";
+import { Mission } from "@/prisma/generated/prisma-client";
 import { getRandomItem } from "@/lib/utils";
 
 const MAX_HOURS_MISSION = 3; // sáng 1, chiều 1, tối 1

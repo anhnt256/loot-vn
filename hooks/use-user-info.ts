@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { CURRENT_USER } from "@/constants/token.constant";
-import { User } from "@prisma/client";
+import { User } from "@/prisma/generated/prisma-client";
 import { fetcher } from "@/lib/fetcher";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCookie } from "cookies-next";
