@@ -5,6 +5,10 @@ const Timestamp = new Date().getTime();
 const nextConfig = {
   compress: false,
   reactStrictMode: true,
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+  swcMinify: true,
   headers: () => [
     {
       source: "/:path*",

@@ -2,12 +2,13 @@
   "builds": [
     {
       "src": "package.json",
-      "use": "@vercel/node",
+      "use": "@vercel/next",
       "config": {
         "prisma": {
           "generate": true
         }
       }
     }
-  ]
+  ],
+  "buildCommand": "npm run build"
 }
