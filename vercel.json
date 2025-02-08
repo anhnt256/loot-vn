@@ -1,21 +1,11 @@
 {
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "x-real-ip",
-          "value": "True-Client-IP"
-        },
-        {
-          "key": "x-vercel-forwarded-for",
-          "value": "True-Client-IP"
-        },
-        {
-          "key": "x-forwarded-for",
-          "value": "True-Client-IP"
-        }
+  "functions": {
+    "api/*": {
+      "runtime": "nodejs18.x",
+      "includeFiles": [
+        "node_modules/.prisma/client/*",
+        "prisma/generated/fnet-gv-client/*"
       ]
     }
-  ]
+  }
 }
