@@ -18,7 +18,7 @@ export async function GET(
     const fnetDB = getFnetDB();
 
     const fnetQuery = FnetPrisma.sql`
-      SELECT SUM(AutoAmount) as total
+      SELECT CAST(SUM(AutoAmount) AS DECIMAL(18,2)) as total
       FROM fnet.paymenttb
       WHERE
         PaymentType = 4
@@ -28,9 +28,9 @@ export async function GET(
         AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) >= DATE_SUB(CURDATE() + INTERVAL CURTIME() HOUR_SECOND, INTERVAL 30 DAY)
     `;
 
-    const result = await fnetDB.$queryRaw<{ total: any }[]>(fnetQuery);
+    const result = await fnetDB.$queryRaw<[{ total: number }]>(fnetQuery);
 
-    const userTopUp = parseFloat(result[0]?.total?.toString() || "0");
+    const userTopUp = parseFloat(result[0].total.toString());
 
     // const userTopUp = 500000;
 
@@ -48,8 +48,7 @@ export async function GET(
                       AND gr.createdAt >= DATE_SUB(CURDATE(), INTERVAL 30 DAY);
                     `;
 
-    const userRound =
-      await db.$queryRaw<[{ count: bigint; id: bigint }]>(query);
+    const userRound = await db.$queryRaw<[{ count: bigint }]>(query);
 
     const count = Number(userRound[0].count);
 

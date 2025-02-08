@@ -24,45 +24,6 @@ export function getFnetDB() {
 
   const fnetGV = new FnetPrismaClient();
 
-  const bigIntMiddleware: Parameters<typeof fnetGV.$use>[0] = async (
-    params,
-    next,
-  ) => {
-    const result = await next(params);
-
-    // Format BigInt to string for serialization
-    const formatBigInt = (obj: any): any => {
-      if (obj === null || typeof obj !== "object") return obj;
-
-      if (Array.isArray(obj)) {
-        return obj.map(formatBigInt);
-      }
-
-      if (obj instanceof Date) {
-        return obj; // Giữ nguyên Date object
-      }
-
-      const formatted: Record<string, any> = {};
-      for (const [key, value] of Object.entries(obj)) {
-        if (value instanceof Date) {
-          formatted[key] = value; // Giữ nguyên Date
-        } else if (typeof value === "bigint") {
-          formatted[key] = value.toString();
-        } else if (typeof value === "object" && value !== null) {
-          formatted[key] = formatBigInt(value);
-        } else {
-          formatted[key] = value;
-        }
-      }
-      return formatted;
-    };
-
-    // Return formatted result
-    return formatBigInt(result);
-  };
-
-  fnetGV.$use(bigIntMiddleware);
-
   switch (branchFromCookie) {
     case BRANCH.GOVAP:
       return fnetGV;
