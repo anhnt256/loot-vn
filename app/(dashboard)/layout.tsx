@@ -89,15 +89,15 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
           >
             Điểm danh
           </Link>
-          <Link
-            className={cn(
-              "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
-              pathname === "/missions" ? "bg-gray-700" : "transparent",
-            )}
-            href="/missions"
-          >
-            Nhiệm vụ
-          </Link>
+          {/*<Link*/}
+          {/*  className={cn(*/}
+          {/*    "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",*/}
+          {/*    pathname === "/missions" ? "bg-gray-700" : "transparent",*/}
+          {/*  )}*/}
+          {/*  href="/missions"*/}
+          {/*>*/}
+          {/*  Nhiệm vụ*/}
+          {/*</Link>*/}
           <Link
             className={cn(
               "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
@@ -107,29 +107,29 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
           >
             Trò chơi
           </Link>
-          <Link
-            className={cn(
-              "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
-              pathname === "/store" ? "bg-gray-700" : "transparent",
-            )}
-            href="/store"
-          >
-            Đổi thưởng
-          </Link>
-          <Link
-            className={cn(
-              "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
-              pathname === "/voucher" ? "bg-gray-700" : "transparent",
-            )}
-            href="/voucher"
-          >
-            Voucher
-          </Link>
+          {/*<Link*/}
+          {/*  className={cn(*/}
+          {/*    "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",*/}
+          {/*    pathname === "/store" ? "bg-gray-700" : "transparent",*/}
+          {/*  )}*/}
+          {/*  href="/store"*/}
+          {/*>*/}
+          {/*  Đổi thưởng*/}
+          {/*</Link>*/}
+          {/*<Link*/}
+          {/*  className={cn(*/}
+          {/*    "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",*/}
+          {/*    pathname === "/voucher" ? "bg-gray-700" : "transparent",*/}
+          {/*  )}*/}
+          {/*  href="/voucher"*/}
+          {/*>*/}
+          {/*  Voucher*/}
+          {/*</Link>*/}
           <div
             onClick={handleLogout}
             className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 cursor-pointer"
           >
-            Đăng xuất
+            Thoát
           </div>
         </nav>
       </div>
