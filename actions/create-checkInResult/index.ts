@@ -113,9 +113,9 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         }
       }
     });
-  } catch (error) {
+  } catch (error: any) {
     return {
-      error: error ? error : "Something went wrong",
+      error: error?.message || "Something went wrong",
     };
   }
 
