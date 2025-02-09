@@ -101,7 +101,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
         }
 
         if (updateUser) {
-          const token = signJWT({ userId: updateUser?.userId });
+          const token = await signJWT({ userId: updateUser?.userId });
           const response = NextResponse.json(updateUser);
 
           // @ts-ignore
