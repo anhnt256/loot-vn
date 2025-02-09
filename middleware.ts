@@ -5,15 +5,6 @@ import { verifyJWT } from "@/lib/jwt";
 
 export function middleware(request: NextRequest) {
   const response = NextResponse.next();
-  const ip =
-    request.ip ?? // Vercel specific
-    request.headers.get("x-real-ip") ??
-    request.headers.get("x-forwarded-for");
-
-  // Add the IP to response headers
-  if (ip != null) {
-    response.headers.set("x-real-ip", ip);
-  }
 
   const publicPaths = ["/", "/api/login", "/thank-you"];
 

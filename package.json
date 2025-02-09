@@ -5,9 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "npm run prisma:generate && next build",
-    "vercel-build": "npm run prisma:generate && next build",
-    "prisma:generate": "prisma generate --schema=./prisma/schema.prisma && prisma generate --schema=./prisma/schemaFnet.prisma",
-    "postinstall": "prisma generate --schema=./prisma/schema.prisma && prisma generate --schema=./prisma/schemaFnet.prisma",
+    "postinstall": "prisma generate && npm run fix-prisma",
+    "fix-prisma": "node node_modules/@prisma/client/generator-build/index.js",
+    "vercel-build": "prisma generate && npm run fix-prisma && next build",
     "start": "next start",
     "lint": "next lint"
   },
