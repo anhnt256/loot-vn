@@ -8,9 +8,8 @@
     "generate:global": "prisma generate --schema=./prisma/schema.prisma",
     "generate:govap": "prisma generate --schema=./prisma/schemaFnet.prisma",
     "generate": "npm run generate:global && npm run generate:govap",
-    "fix-prisma": "node node_modules/@prisma/client/generator-build/index.js",
-    "postinstall": "npm run generate && npm run fix-prisma",
-    "vercel-build": "npm run generate && npm run fix-prisma && next build",
+    "postinstall": "npm run generate",
+    "vercel-build": "npm run generate && next build",
     "start": "next start",
     "lint": "next lint"
   },
