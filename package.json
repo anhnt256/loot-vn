@@ -5,9 +5,12 @@
   "scripts": {
     "dev": "next dev",
     "build": "npm run prisma:generate && next build",
-    "postinstall": "prisma generate && npm run fix-prisma",
+    "generate:global": "prisma generate --schema=./prisma/schema.prisma",
+    "generate:govap": "prisma generate --schema=./prisma/schemaFnet.prisma",
+    "generate": "npm run generate:global && npm run generate:govap",
     "fix-prisma": "node node_modules/@prisma/client/generator-build/index.js",
-    "vercel-build": "prisma generate && npm run fix-prisma && next build",
+    "postinstall": "npm run generate && npm run fix-prisma",
+    "vercel-build": "npm run generate && npm run fix-prisma && next build",
     "start": "next start",
     "lint": "next lint"
   },
