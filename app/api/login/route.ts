@@ -26,7 +26,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
           localIp: macAddress.replaceAll(":", "-").toUpperCase(),
         },
         select: {
-          ip: true,
+          name: true,
           branch: true,
         },
       });
@@ -41,10 +41,10 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
       const fnetDB = getFnetDB();
 
-      if (result?.ip) {
+      if (result?.name) {
         const query = Prisma.sql`SELECT userId
                                  FROM fnet.systemlogtb AS t1
-                                 WHERE t1.IPAddress = ${result?.ip}
+                                 WHERE t1.MachineName = ${result?.name}
                                  ORDER BY STR_TO_DATE(CONCAT(t1.EnterDate, ' ', t1.EnterTime), '%Y-%m-%d %H:%i:%s') DESC
                                    LIMIT 1`;
         const user: any = await fnetDB.$queryRaw<systemlogtb>(query);
