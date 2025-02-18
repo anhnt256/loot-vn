@@ -60,6 +60,7 @@ const Game = () => {
       handleMeteorAnimation(data);
     },
     onError: (error) => {
+      setIsRolling(false);
       toast.error(error);
     },
   });
