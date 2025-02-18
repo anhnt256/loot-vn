@@ -1,17 +1,9 @@
-name: Deploy to Railway
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Deploy to Railway
-        uses: railwayapp/cli-action@v1
-        with:
-          railwayToken: ${{ secrets.RAILWAY_TOKEN }}
-          serviceId: ${{ secrets.RAILWAY_SERVICE_ID }}
+deploy-job:
+  runs-on: ubuntu-latest
+  container: ghcr.io/railwayapp/cli:latest
+  env:
+    SVC_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
+    RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+  steps:
+    - uses: actions/checkout@v3
+    - run: railway up --service=${{ env.SVC_ID }}
