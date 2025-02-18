@@ -12,7 +12,7 @@ import { patchConsoleError } from "next/dist/client/components/react-dev-overlay
 const UP_RATE = 0.5;
 const ROUND_COST = 30000; // 30000 một vòng quay
 const RATE = 0.015; // 1.5%
-const UP_RATE_AMOUNT = 1000;
+const UP_RATE_AMOUNT = 500000;
 const JACKPOT_ID = 8;
 
 const ITEM_RATE_DEFAULT = [
