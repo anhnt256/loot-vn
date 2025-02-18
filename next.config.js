@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 
 const Timestamp = new Date().getTime();
-const CopyPlugin = require("copy-webpack-plugin");
 
 const nextConfig = {
   compress: false,
@@ -28,14 +27,6 @@ const nextConfig = {
       config.output.chunkFilename = `static/chunks/[name].${Timestamp}.js`;
     }
     return config;
-  },
-  experimental: {
-    outputFileTracingIncludes: {
-      "*": [
-        "node_modules/.prisma/client/libquery_engine-rhel-openssl-1.0.x.so.node",
-      ],
-    },
-    serverActions: true,
   },
 };
 
