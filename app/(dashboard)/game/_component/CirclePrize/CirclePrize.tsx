@@ -32,7 +32,6 @@ const CircleSegments: React.FC<CircleSegmentsProps> = ({ segments }) => {
     onSuccess: (data) => {
       setFund(data);
       setCountdown(60);
-      console.error("Success fetching data:", data);
     },
     onError: (error) => {
       console.error("Error fetching data:", error);

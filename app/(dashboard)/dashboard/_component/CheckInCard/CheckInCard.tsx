@@ -22,10 +22,13 @@ const CheckInCard = () => {
   const { userId, branch } = userData || {};
 
   const claim = useMemo(() => {
-    const date = dayjs().utc().format("YYYY-MM-DD");
+    const date = dayjs().utc().add(7, "hours").format("YYYY-MM-DD");
 
     const currentResults = userCheckIn?.filter((item: UserStarHistory) => {
-      return dayjs(item.createdAt).utc().format("YYYY-MM-DD") === date;
+      return (
+        dayjs(item.createdAt).utc().add(7, "hours").format("YYYY-MM-DD") ===
+        date
+      );
     });
 
     if (isEmpty(currentResults)) {

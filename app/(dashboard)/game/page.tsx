@@ -19,6 +19,7 @@ const Game = () => {
   const [meteorStar, setMeteorStar] = useState<number>(3);
   const [single, setSingle] = useState<boolean>(false);
   const [isRuleModalOpen, setIsRuleModalOpen] = useState(false);
+  const [isRolling, setIsRolling] = useState(false);
 
   const { userData, refreshAllData } = useUserInfo();
 
@@ -55,6 +56,7 @@ const Game = () => {
 
   const { execute: executeRoll, data } = useAction(createGameResult, {
     onSuccess: (data) => {
+      setIsRolling(false);
       handleMeteorAnimation(data);
     },
     onError: (error) => {
@@ -77,6 +79,12 @@ const Game = () => {
   };
 
   const handleRoll = async (rolls: number) => {
+
+    if (isRolling) {
+      return;
+    }
+
+    setIsRolling(true);
     await executeRoll({
       userId: Number(userId),
       currentUserId: Number(currentUserId),

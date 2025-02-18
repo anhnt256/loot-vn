@@ -60,6 +60,11 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
         <nav>
           <div className="flex justify-end mb-4">
             <div className="flex gap-2">
+              <div className="flex items-center  px-3 py-1.5">
+                <span className="text-orange-500 uppercase font-semibold flex items-center gap-2">
+                  {userName}
+                </span>
+              </div>
               <div className="flex items-center bg-gray-600/80 rounded-full px-3 py-1.5">
                 <span className="text-white font-semibold flex items-center gap-2">
                   {stars?.toLocaleString()}

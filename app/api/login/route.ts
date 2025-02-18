@@ -15,7 +15,7 @@ const expirationDate = dayjs().add(expirationDuration, "day").format();
 export async function POST(req: Request, res: Response): Promise<any> {
   try {
     const macAddress = getCookie("macAddress", { req, res });
-    // const macAddress = "A4-0C-66-0B-E8-6B";
+    // const macAddress = "A4-0C-66-0B-E6-DE";
     const body = await req.text();
 
     const { userName } = JSON.parse(body);
@@ -50,8 +50,6 @@ export async function POST(req: Request, res: Response): Promise<any> {
         const user: any = await fnetDB.$queryRaw<systemlogtb>(query);
 
         const userId = user[0]?.userId ?? null;
-
-        // console.log("user", userId);
 
         // const userId = 8503;
 
