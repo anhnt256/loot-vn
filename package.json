@@ -1,5 +1,5 @@
 {
-  "name": "trello-vn",
+  "name": "gateway-gaming",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -7,7 +7,8 @@
     "build": "npm run generate && next build",
     "generate:global": "prisma generate --schema=./prisma/schema.prisma",
     "generate:govap": "prisma generate --schema=./prisma/schemaFnet.prisma",
-    "generate": "npm run generate:global && npm run generate:govap",
+    "generate:tanphu": "prisma generate --schema=./prisma/schemaFnetTP.prisma",
+    "generate": "npm run generate:global && npm run generate:govap && npm run generate:tanphu",
     "postinstall": "npm run generate",
     "start": "next start",
     "lint": "next lint"

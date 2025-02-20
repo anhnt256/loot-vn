@@ -214,22 +214,12 @@ model Computer {
   localIp       String?
 }
 
-model FundHistory {
-  id           Int       @id @default(autoincrement())
-  date         DateTime? @db.DateTime(0)
-  startValue   Float?    @db.Float
-  currentValue Float?    @db.Float
-  endValue     Float?    @db.Float
-  createdAt    DateTime? @default(now()) @db.DateTime(0)
-  updatedAt    Float?    @default(dbgenerated("(current_timestamp())")) @db.Float
-}
-
 model UserSpendMap {
   id         Int       @id @default(autoincrement())
   userId     Int?
   branch     String?   @db.VarChar(45)
   totalSpend Float?    @db.Float
-  date       DateTime? @default(now()) @db.Date
+  date       DateTime? @db.Date
   createdAt  DateTime? @default(now()) @db.DateTime(0)
   updatedAt  DateTime? @default(now()) @db.DateTime(0)
 }

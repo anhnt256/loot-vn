@@ -1,5 +1,6 @@
 import { PrismaClient } from "@/prisma/generated/prisma-client";
-import { PrismaClient as FnetPrismaClient } from "@/prisma/generated/fnet-gv-client";
+import { PrismaClient as FnetGVPrismaClient } from "@/prisma/generated/fnet-gv-client";
+import { PrismaClient as FnetTPPrismaClient } from "@/prisma/generated/fnet-tp-client";
 import { BRANCH } from "@/constants/enum.constant";
 import { cookies } from "next/headers";
 
@@ -22,11 +23,14 @@ export function getFnetDB() {
     throw new Error("Branch cookie is required but not found");
   }
 
-  const fnetGV = new FnetPrismaClient();
+  const fnetGV = new FnetGVPrismaClient();
+  const fnetTP = new FnetTPPrismaClient();
 
   switch (branchFromCookie) {
     case BRANCH.GOVAP:
       return fnetGV;
+    case BRANCH.TANPHU:
+      return fnetTP;
     default:
       return fnetGV;
   }
