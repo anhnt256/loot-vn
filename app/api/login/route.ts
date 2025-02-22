@@ -58,8 +58,6 @@ export async function POST(req: Request, res: Response): Promise<any> {
           },
         });
 
-        // console.log("currentUser", currentUser);
-
         const { id, userName: currentUserName } = currentUser || {};
 
         let updateUser = null;
