@@ -1,6 +1,6 @@
 "use server";
 
-import { db, getFnetDB } from "@/lib/db";
+import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
 import { createSafeAction } from "@/lib/create-safe-action";
 
 import { CreateCheckInResult } from "./schema";
@@ -12,9 +12,10 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   let checkIn;
 
   const fnetDB = getFnetDB();
+  const fnetPrisma = getFnetPrisma();
 
   try {
-    const query = fnetDB.sql`
+    const query = fnetPrisma.sql`
       SELECT *
       FROM fnet.systemlogtb AS t1
       WHERE t1.UserId = ${userId.toString()}
