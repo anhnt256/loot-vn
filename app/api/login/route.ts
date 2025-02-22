@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { getCookie } from "cookies-next";
 import { cookies, headers } from "next/headers";
 import { db, getFnetDB } from "@/lib/db";
-import { Prisma } from "@/prisma/generated/fnet-gv-client";
 import { signJWT } from "@/lib/jwt";
 import isEmpty from "lodash/isEmpty";
 import { BRANCH } from "@/constants/enum.constant";
@@ -40,7 +39,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
       const fnetDB = getFnetDB();
 
       if (result?.name) {
-        const query = Prisma.sql`SELECT userId
+        const query = fnetDB.sql`SELECT userId
                                  FROM fnet.systemlogtb AS t1
                                  WHERE t1.MachineName = ${result?.name}
                                  ORDER BY STR_TO_DATE(CONCAT(t1.EnterDate, ' ', t1.EnterTime), '%Y-%m-%d %H:%i:%s') DESC

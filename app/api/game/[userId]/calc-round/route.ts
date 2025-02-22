@@ -2,10 +2,6 @@ import { NextResponse } from "next/server";
 
 import { getCookie } from "cookies-next";
 import { db, getFnetDB } from "@/lib/db";
-import {
-  paymenttb,
-  Prisma as FnetPrisma,
-} from "@/prisma/generated/fnet-gv-client";
 import { Prisma } from "@/prisma/generated/prisma-client";
 
 export async function GET(
@@ -17,7 +13,7 @@ export async function GET(
 
     const fnetDB = getFnetDB();
 
-    const fnetQuery = FnetPrisma.sql`
+    const fnetQuery = fnetDB.sql`
       SELECT CAST(SUM(AutoAmount) AS DECIMAL(18,2)) as total
       FROM fnet.paymenttb
       WHERE

@@ -6,7 +6,6 @@ import { createSafeAction } from "@/lib/create-safe-action";
 import { CreateCheckInResult } from "./schema";
 import { InputType, ReturnType } from "./type";
 import dayjs, { currentTimeVN, startOfDayVN } from "@/lib/dayjs";
-import { Prisma } from "@/prisma/generated/fnet-gv-client";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
   const { userId, branch, addedStar } = data;
@@ -15,7 +14,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   const fnetDB = getFnetDB();
 
   try {
-    const query = Prisma.sql`
+    const query = fnetDB.sql`
       SELECT *
       FROM fnet.systemlogtb AS t1
       WHERE t1.UserId = ${userId.toString()}
