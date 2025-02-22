@@ -20,8 +20,8 @@ export async function GET(
         PaymentType = 4
         AND UserId = ${parseInt(userId, 10)}
         AND Note = N'Thời gian phí'
-        AND ServeDate >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-        AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) >= DATE_SUB(CURDATE() + INTERVAL CURTIME() HOUR_SECOND, INTERVAL 30 DAY)
+        AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) <=
+            CONVERT_TZ(NOW(), 'UTC', '+07:00') - INTERVAL 30 DAY
     `;
 
     const result = await fnetDB.$queryRaw<[{ total: number }]>(fnetQuery);
