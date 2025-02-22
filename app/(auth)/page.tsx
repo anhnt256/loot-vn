@@ -46,31 +46,39 @@ const Login = () => {
   const [isDesktopApp, setIsDesktopApp] = useState(false);
 
   useEffect(() => {
-    const checkPlatform = async () => {
-      setIsDesktopApp(isElectron());
+    let mounted = true;
 
+    const checkPlatform = async () => {
+      if (!mounted) return;
+
+      setIsDesktopApp(isElectron());
       if (isElectron()) {
         try {
           const addresses = (await getMacAddresses()) as any;
-          setMacAddresses(addresses[0]?.address);
-
-          setCookie("macAddress", addresses[0]?.address, {
-            expires: new Date(expirationDate),
-          });
-
-          onLogin();
+          if (mounted) {
+            setMacAddresses(addresses[0]?.address);
+            setCookie("macAddress", addresses[0]?.address, {
+              expires: new Date(expirationDate),
+            });
+            onLogin();
+          }
         } catch (error) {
           console.error("Failed to get MAC addresses:", error);
         }
       } else {
-        setCookie("macAddress", "00:cf:e0:46:c1:81", {
-          expires: new Date(expirationDate),
-        });
-        onLogin();
+        if (mounted) {
+          setCookie("macAddress", "00:cf:e0:46:c1:81", {
+            expires: new Date(expirationDate),
+          });
+          onLogin();
+        }
       }
     };
 
     checkPlatform();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const onLogin = async () => {
@@ -82,6 +90,7 @@ const Login = () => {
     const result = await loginMutation.mutateAsync(login);
     setPageLoading(false);
     const { statusCode, data, message } = result || {};
+
     if (statusCode === 200) {
       await execute({
         userId: data,
@@ -92,15 +101,6 @@ const Login = () => {
       });
     } else if (statusCode === 500) {
       toast.error(message);
-    } else if (statusCode === 700) {
-      await execute({
-        userId: data,
-        branch: getCookie("branch") || BRANCH.GOVAP,
-        stars: 0,
-        createdAt: currentTimeVN,
-        rankId: 1,
-      });
-      return;
     }
   };
 
@@ -147,6 +147,7 @@ const Login = () => {
       </div>
       <div className="flex justify-end">
         <Button
+          disabled={pageLoading}
           onClick={() => onLogin()}
           variant="default"
           className="w-full justify-start bg-orange-400"
