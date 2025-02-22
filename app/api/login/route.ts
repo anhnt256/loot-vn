@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCookie } from "cookies-next";
 import { cookies, headers } from "next/headers";
 import { db, getFnetDB } from "@/lib/db";
-import { Prisma, systemlogtb } from "@/prisma/generated/fnet-gv-client";
+import { Prisma } from "@/prisma/generated/fnet-gv-client";
 import { signJWT } from "@/lib/jwt";
 import isEmpty from "lodash/isEmpty";
 import { BRANCH } from "@/constants/enum.constant";
@@ -15,7 +15,7 @@ const expirationDate = dayjs().add(expirationDuration, "day").format();
 export async function POST(req: Request, res: Response): Promise<any> {
   try {
     const macAddress = getCookie("macAddress", { req, res });
-    // const macAddress = "A4-0C-66-0B-E6-DE";
+    // const macAddress = "EC-D6-8A-DE-89-49";
     const body = await req.text();
 
     const { userName } = JSON.parse(body);
@@ -31,8 +31,6 @@ export async function POST(req: Request, res: Response): Promise<any> {
         },
       });
 
-      // console.log("result", result);
-
       const cookieStore = cookies();
       // @ts-ignore
       cookieStore.set("branch", result?.branch, {
@@ -47,11 +45,11 @@ export async function POST(req: Request, res: Response): Promise<any> {
                                  WHERE t1.MachineName = ${result?.name}
                                  ORDER BY STR_TO_DATE(CONCAT(t1.EnterDate, ' ', t1.EnterTime), '%Y-%m-%d %H:%i:%s') DESC
                                    LIMIT 1`;
-        const user: any = await fnetDB.$queryRaw<systemlogtb>(query);
+        const user: any = await fnetDB.$queryRaw<any>(query);
 
         const userId = user[0]?.userId ?? null;
 
-        // const userId = 8503;
+        // const userId = 1076;
 
         const currentUser = await db.user.findFirst({
           where: {
