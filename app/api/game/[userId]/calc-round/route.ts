@@ -39,7 +39,8 @@ export async function GET(
                       SELECT COUNT(*) as count
                       FROM GameResult gr
                       WHERE gr.userId = ${parseInt(userId, 10)}
-                      AND gr.createdAt >= DATE_SUB(CURDATE(), INTERVAL 30 DAY);
+                      AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) >= DATE(NOW()) - INTERVAL 30 DAY
+                      AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) <= NOW();
                     `;
 
     const userRound = await db.$queryRaw<[{ count: bigint }]>(query);
