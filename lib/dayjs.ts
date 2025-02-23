@@ -9,13 +9,24 @@ dayjs.extend(isToday);
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-export const startOfDayVN = dayjs().tz("Asia/Ho_Chi_Minh").startOf("day").toISOString();
-export const endOfDayVN = dayjs().tz("Asia/Ho_Chi_Minh").endOf("day").toISOString();
-export const currentTimeVN = dayjs().tz("Asia/Ho_Chi_Minh").toISOString();
+export const startOfDayVN = dayjs()
+  .tz("Asia/Ho_Chi_Minh")
+  .startOf("day")
+  .add(7, "hours")
+  .toISOString();
+export const endOfDayVN = dayjs()
+  .tz("Asia/Ho_Chi_Minh")
+  .endOf("day")
+  .add(7, "hours")
+  .toISOString();
+export const currentTimeVN = dayjs()
+  .tz("Asia/Ho_Chi_Minh")
+  .add(7, "hours")
+  .toISOString();
 
 export function isNextDay(inputTime: string) {
   const vietnamTime = dayjs.utc(inputTime).tz("Asia/Ho_Chi_Minh");
-  const currentDayVN = dayjs().tz("Asia/Ho_Chi_Minh");
+  const currentDayVN = dayjs().tz("Asia/Ho_Chi_Minh").add(7, "hours");
   return vietnamTime.isAfter(currentDayVN.startOf("day").add(1, "day"));
 }
 
