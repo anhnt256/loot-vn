@@ -5,9 +5,9 @@ import { useUserInfo } from "@/hooks/use-user-info";
 import { useAction } from "@/hooks/use-action";
 import { toast } from "sonner";
 import { createUserRewardMap } from "@/actions/create-user-reward-map";
-import { currentTimeVN } from "@/lib/dayjs";
 import { getCookie } from "cookies-next";
 import { BRANCH } from "@/constants/enum.constant";
+import dayjs from "dayjs";
 
 interface CardProps {
   data: any;
@@ -58,7 +58,10 @@ const RewardCard: React.FC<CardProps> = ({ data }) => {
             branch,
             oldStars: stars,
             newStars,
-            createdAt: currentTimeVN,
+            createdAt: dayjs()
+              .tz("Asia/Ho_Chi_Minh")
+              .add(7, "hours")
+              .toISOString(),
           });
           window.location.reload();
         } else {

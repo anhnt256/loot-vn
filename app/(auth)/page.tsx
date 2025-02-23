@@ -13,7 +13,6 @@ import { createUser } from "@/actions/create-user";
 import { getCookie, setCookie } from "cookies-next";
 import dayjs from "dayjs";
 import { BRANCH } from "@/constants/enum.constant";
-import { currentTimeVN } from "@/lib/dayjs";
 import { Spin } from "antd";
 import { isElectron } from "@/lib/electron";
 import { getMacAddresses } from "@/lib/mac";
@@ -96,7 +95,10 @@ const Login = () => {
         userId: data,
         branch: getCookie("branch") || BRANCH.GOVAP,
         stars: 0,
-        createdAt: currentTimeVN,
+        createdAt: dayjs()
+          .tz("Asia/Ho_Chi_Minh")
+          .add(7, "hours")
+          .toISOString(),
         rankId: 1,
       });
     } else if (statusCode === 500) {

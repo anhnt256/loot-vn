@@ -5,7 +5,7 @@ import { createSafeAction } from "@/lib/create-safe-action";
 
 import { CreateUserRewardMap } from "./schema";
 import { InputType } from "./type";
-import { currentTimeVN } from "@/lib/dayjs";
+import dayjs from "dayjs";
 
 const handler = async (data: InputType): Promise<any> => {
   const {
@@ -46,7 +46,10 @@ const handler = async (data: InputType): Promise<any> => {
           },
           data: {
             isUsed: true,
-            updatedAt: currentTimeVN,
+            updatedAt: dayjs()
+              .tz("Asia/Ho_Chi_Minh")
+              .add(7, "hours")
+              .toISOString(),
           },
         });
 
@@ -58,7 +61,10 @@ const handler = async (data: InputType): Promise<any> => {
             duration,
             isUsed,
             branch,
-            createdAt: currentTimeVN,
+            createdAt: dayjs()
+              .tz("Asia/Ho_Chi_Minh")
+              .add(7, "hours")
+              .toISOString(),
           },
         });
 
@@ -69,7 +75,10 @@ const handler = async (data: InputType): Promise<any> => {
             },
             data: {
               stars: newStars,
-              updatedAt: currentTimeVN,
+              updatedAt: dayjs()
+                .tz("Asia/Ho_Chi_Minh")
+                .add(7, "hours")
+                .toISOString(),
             },
           });
 
@@ -80,7 +89,10 @@ const handler = async (data: InputType): Promise<any> => {
               oldStars,
               newStars,
               targetId: rewardId,
-              createdAt: currentTimeVN,
+              createdAt: dayjs()
+                .tz("Asia/Ho_Chi_Minh")
+                .add(7, "hours")
+                .toISOString(),
               branch,
             },
           });

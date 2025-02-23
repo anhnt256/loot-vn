@@ -5,7 +5,6 @@ import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
 import { signJWT } from "@/lib/jwt";
 import isEmpty from "lodash/isEmpty";
 import { BRANCH } from "@/constants/enum.constant";
-import { currentTimeVN } from "@/lib/dayjs";
 import dayjs from "dayjs";
 
 const expirationDuration = 1;
@@ -68,7 +67,10 @@ export async function POST(req: Request, res: Response): Promise<any> {
             userId: userId,
             branch: getCookie("branch", { req, res }) || BRANCH.GOVAP,
             stars: 0,
-            createdAt: currentTimeVN,
+            createdAt: dayjs()
+              .tz("Asia/Ho_Chi_Minh")
+              .add(7, "hours")
+              .toISOString(),
             rankId: 1,
           };
           updateUser = await db.user.create({

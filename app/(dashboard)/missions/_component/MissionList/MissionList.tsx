@@ -9,8 +9,8 @@ import { toast } from "sonner";
 import { useUserInfo } from "@/hooks/use-user-info";
 import { getCookie } from "cookies-next";
 import { BRANCH } from "@/constants/enum.constant";
-import { currentTimeVN } from "@/lib/dayjs";
 import { Skeleton } from "@/components/ui/skeleton";
+import dayjs from "dayjs";
 
 const List = ({
   cards,
@@ -47,7 +47,10 @@ const List = ({
               branch,
               userId: userData.userId,
               missionId: card.id,
-              createdAt: currentTimeVN,
+              createdAt: dayjs()
+                .tz("Asia/Ho_Chi_Minh")
+                .add(7, "hours")
+                .toISOString(),
             });
           });
           executeCreateUserMissionMap(data);

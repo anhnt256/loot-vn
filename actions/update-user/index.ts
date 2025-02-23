@@ -5,10 +5,10 @@ import { createSafeAction } from "@/lib/create-safe-action";
 
 import { UpdateUser } from "./schema";
 import { InputType, ReturnType } from "./type";
-import dayjs, { currentTimeVN } from "@/lib/dayjs";
 import apiClient from "@/lib/apiClient";
 import { MIN_LOGIN_TIME } from "@/constants/constant";
 import { checkReward } from "@/lib/utils";
+import dayjs from "dayjs";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
   const {
@@ -70,7 +70,10 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         stars,
         magicStone,
         userName,
-        updatedAt: currentTimeVN,
+        updatedAt: dayjs()
+          .tz("Asia/Ho_Chi_Minh")
+          .add(7, "hours")
+          .toISOString(),
       },
     });
   } catch (error) {

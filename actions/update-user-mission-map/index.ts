@@ -5,13 +5,16 @@ import { createSafeAction } from "@/lib/create-safe-action";
 
 import { UpdateUserMissionMap } from "./schema";
 import { InputType, ReturnType } from "./type";
-import { currentTimeVN } from "@/lib/dayjs";
+import dayjs from "dayjs";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
   const {
     id,
     isDone = true,
-    updatedAt = currentTimeVN,
+    updatedAt = dayjs()
+      .tz("Asia/Ho_Chi_Minh")
+      .add(7, "hours")
+      .toISOString(),
     userId,
     currentUserId,
     reward,
@@ -68,7 +71,10 @@ const handler = async (data: InputType): Promise<ReturnType> => {
               oldStars,
               newStars,
               targetId: id,
-              createdAt: currentTimeVN,
+              createdAt: dayjs()
+                .tz("Asia/Ho_Chi_Minh")
+                .add(7, "hours")
+                .toISOString(),
               branch,
             },
           });

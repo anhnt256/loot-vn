@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { useAction } from "@/hooks/use-action";
 import { updateUserMissionMap } from "@/actions/update-user-mission-map";
 import { toast } from "sonner";
-import { currentTimeVN } from "@/lib/dayjs";
 import { useUserInfo } from "@/hooks/use-user-info";
 import { checkReward, cn } from "@/lib/utils";
+import dayjs from "dayjs";
 
 interface CardProps {
   data: any;
@@ -56,7 +56,10 @@ const Card: React.FC<CardProps> = ({ data, canClaimItems }) => {
           currentUserId,
           reward,
           isDone: true,
-          updatedAt: currentTimeVN,
+          updatedAt: dayjs()
+            .tz("Asia/Ho_Chi_Minh")
+            .add(7, "hours")
+            .toISOString(),
           branch,
         });
         window.location.reload();

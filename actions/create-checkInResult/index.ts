@@ -5,7 +5,7 @@ import { createSafeAction } from "@/lib/create-safe-action";
 
 import { CreateCheckInResult } from "./schema";
 import { InputType, ReturnType } from "./type";
-import dayjs, { currentTimeVN, startOfDayVN } from "@/lib/dayjs";
+import dayjs, { startOfDayVN } from "@/lib/dayjs";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
   const { userId, branch, addedStar } = data;
@@ -74,7 +74,10 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         data: {
           userId,
           branch,
-          createdAt: currentTimeVN,
+          createdAt: dayjs()
+            .tz("Asia/Ho_Chi_Minh")
+            .add(7, "hours")
+            .toISOString(),
         },
       });
 
@@ -97,7 +100,10 @@ const handler = async (data: InputType): Promise<ReturnType> => {
               oldStars,
               newStars,
               targetId: id,
-              createdAt: currentTimeVN,
+              createdAt: dayjs()
+                .tz("Asia/Ho_Chi_Minh")
+                .add(7, "hours")
+                .toISOString(),
               branch,
             },
           });
@@ -106,7 +112,10 @@ const handler = async (data: InputType): Promise<ReturnType> => {
             where: { id: user.id },
             data: {
               stars: newStars,
-              updatedAt: currentTimeVN,
+              updatedAt: dayjs()
+                .tz("Asia/Ho_Chi_Minh")
+                .add(7, "hours")
+                .toISOString(),
             },
           });
         }

@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 
 import apiClient from "@/lib/apiClient";
 import { getCookie } from "cookies-next";
-import dayjs, { currentTimeVN } from "@/lib/dayjs";
 import { db } from "@/lib/db";
+import dayjs from "dayjs";
 
 export async function GET(req: Request) {
   const cookie = getCookie("branch", { req }) || "";
@@ -69,7 +69,10 @@ export async function GET(req: Request) {
     //     };
     //   }
     // }
-    return NextResponse.json({ data: currentTimeVN });
+    return NextResponse.json({ data: dayjs()
+        .tz("Asia/Ho_Chi_Minh")
+        .add(7, "hours")
+        .toISOString() });
   } catch (error) {
     return new NextResponse("Internal Error", { status: 500 });
   }

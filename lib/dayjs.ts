@@ -19,10 +19,6 @@ export const endOfDayVN = dayjs()
   .endOf("day")
   .add(7, "hours")
   .toISOString();
-export const currentTimeVN = dayjs()
-  .tz("Asia/Ho_Chi_Minh")
-  .add(7, "hours")
-  .toISOString();
 
 export function isNextDay(inputTime: string) {
   const vietnamTime = dayjs.utc(inputTime).tz("Asia/Ho_Chi_Minh");

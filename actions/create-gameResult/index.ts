@@ -6,8 +6,8 @@ import { createSafeAction } from "@/lib/create-safe-action";
 import { GameItemResults, InputType, ReturnType } from "./type";
 import { CreateGameResult } from "@/actions/create-gameResult/schema";
 import { Item } from "@/prisma/generated/prisma-client";
-import { currentTimeVN } from "@/lib/dayjs";
 import { patchConsoleError } from "next/dist/client/components/react-dev-overlay/internal/helpers/hydration-error-info";
+import dayjs from "dayjs";
 
 const UP_RATE = 0.5;
 const ROUND_COST = 30000; // 30000 một vòng quay
@@ -210,7 +210,10 @@ async function saveResult(
       data: {
         userId,
         itemId: id,
-        createdAt: currentTimeVN,
+        createdAt: dayjs()
+          .tz("Asia/Ho_Chi_Minh")
+          .add(7, "hours")
+          .toISOString(),
       },
     });
 
@@ -221,7 +224,10 @@ async function saveResult(
         oldStars,
         newStars,
         targetId: gameResultId,
-        createdAt: currentTimeVN,
+        createdAt: dayjs()
+          .tz("Asia/Ho_Chi_Minh")
+          .add(7, "hours")
+          .toISOString(),
         branch,
       },
     });
@@ -230,7 +236,10 @@ async function saveResult(
       where: { id: user.id },
       data: {
         stars: newStars,
-        updatedAt: currentTimeVN,
+        updatedAt: dayjs()
+          .tz("Asia/Ho_Chi_Minh")
+          .add(7, "hours")
+          .toISOString(),
         magicStone: magicStone - 1,
       },
     });
