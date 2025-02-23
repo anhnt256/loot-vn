@@ -14,12 +14,13 @@ export async function GET(
     const fnetPrisma = getFnetPrisma();
 
     const fnetQuery = fnetPrisma.sql`
-      SELECT CAST(SUM(AutoAmount) AS DECIMAL(18,2)) AS total
+      SELECT COALESCE(CAST(SUM(AutoAmount) AS DECIMAL(18,2)), 0) AS total
       FROM fnet.paymenttb
       WHERE PaymentType = 4
         AND UserId = ${parseInt(userId, 10)}
         AND Note = N'Thời gian phí'
-        AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) <= NOW() - INTERVAL 30 DAY;
+        AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) >= DATE(NOW()) - INTERVAL 30 DAY
+        AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) <= NOW()
     `;
 
     const result = await fnetDB.$queryRaw<[{ total: number }]>(fnetQuery);
@@ -39,8 +40,8 @@ export async function GET(
                       SELECT COUNT(*) as count
                       FROM GameResult gr
                       WHERE gr.userId = ${parseInt(userId, 10)}
-                      AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) >= DATE(NOW()) - INTERVAL 30 DAY
-                      AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) <= NOW();
+                      AND CreatedAt >= DATE(NOW()) - INTERVAL 30 DAY
+                      AND CreatedAt <= NOW();
                     `;
 
     const userRound = await db.$queryRaw<[{ count: bigint }]>(query);
