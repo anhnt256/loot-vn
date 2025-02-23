@@ -16,10 +16,10 @@ const UP_RATE_AMOUNT = 500000;
 const JACKPOT_ID = 8;
 
 const ITEM_RATE_DEFAULT = [
-  { id: 1, rating: 35.0 },
-  { id: 2, rating: 25.0 },
-  { id: 3, rating: 20.0 },
-  { id: 4, rating: 10.0 },
+  { id: 1, rating: 53.0 },
+  { id: 2, rating: 20.0 },
+  { id: 3, rating: 10.0 },
+  { id: 4, rating: 7.0 },
   { id: 5, rating: 5.0 },
   { id: 6, rating: 3.0 },
   { id: 7, rating: 2.0 },
