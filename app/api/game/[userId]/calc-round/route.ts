@@ -14,14 +14,12 @@ export async function GET(
     const fnetPrisma = getFnetPrisma();
 
     const fnetQuery = fnetPrisma.sql`
-      SELECT CAST(SUM(AutoAmount) AS DECIMAL(18,2)) as total
+      SELECT CAST(SUM(AutoAmount) AS DECIMAL(18,2)) AS total
       FROM fnet.paymenttb
-      WHERE
-        PaymentType = 4
+      WHERE PaymentType = 4
         AND UserId = ${parseInt(userId, 10)}
         AND Note = N'Thời gian phí'
-        AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) <=
-            CONVERT_TZ(NOW(), 'UTC', '+07:00') - INTERVAL 30 DAY
+        AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) <= NOW() - INTERVAL 30 DAY;
     `;
 
     const result = await fnetDB.$queryRaw<[{ total: number }]>(fnetQuery);
