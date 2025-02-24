@@ -23,6 +23,7 @@ const expirationDate = dayjs().add(expirationDuration, "day").format();
 const Login = () => {
   const [login, setLogin] = useState<string>("");
   const [pageLoading, setPageLoading] = useState<boolean>(false);
+  const [initializing, setInitializing] = useState(true);
   const loginMutation = useLogin();
   const router = useRouter();
 
@@ -59,7 +60,7 @@ const Login = () => {
             setCookie("macAddress", addresses[0]?.address, {
               expires: new Date(expirationDate),
             });
-            onLogin();
+            await onLogin();
           }
         } catch (error) {
           console.error("Failed to get MAC addresses:", error);
@@ -69,8 +70,11 @@ const Login = () => {
           setCookie("macAddress", "00:cf:e0:46:c1:81", {
             expires: new Date(expirationDate),
           });
-          onLogin();
+          await onLogin();
         }
+      }
+      if (mounted) {
+        setInitializing(false);
       }
     };
 
@@ -95,10 +99,7 @@ const Login = () => {
         userId: data,
         branch: getCookie("branch") || BRANCH.GOVAP,
         stars: 0,
-        createdAt: dayjs()
-          .tz("Asia/Ho_Chi_Minh")
-          .add(7, "hours")
-          .toISOString(),
+        createdAt: dayjs().tz("Asia/Ho_Chi_Minh").add(7, "hours").toISOString(),
         rankId: 1,
       });
     } else if (statusCode === 500) {
@@ -106,7 +107,7 @@ const Login = () => {
     }
   };
 
-  if (pageLoading) {
+  if (initializing || pageLoading) {
     return (
       <div className="flex justify-center items-center">
         <Spin size="large" tip="Loading..." spinning={true} />
@@ -149,7 +150,7 @@ const Login = () => {
       </div>
       <div className="flex justify-end">
         <Button
-          disabled={pageLoading}
+          disabled={initializing}
           onClick={() => onLogin()}
           variant="default"
           className="w-full justify-start bg-orange-400"
