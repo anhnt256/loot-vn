@@ -54,6 +54,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
         const currentUser = await db.user.findFirst({
           where: {
             userId,
+            branch: result?.branch,
           },
         });
 
