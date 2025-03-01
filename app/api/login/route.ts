@@ -13,7 +13,7 @@ const expirationDate = dayjs().add(expirationDuration, "day").format();
 export async function POST(req: Request, res: Response): Promise<any> {
   try {
     const macAddress = getCookie("macAddress", { req, res });
-    // const macAddress = "EC-D6-8A-DE-85-7E";
+    // const macAddress = "A4-0C-66-0B-E8-7B";
     const body = await req.text();
 
     const { userName } = JSON.parse(body);
@@ -49,58 +49,114 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
         const userId = user[0]?.userId ?? null;
 
-        // const userId = 1076;
+        // const userId = 9200;
 
-        const currentUser = await db.user.findFirst({
+        let userUpdated;
+
+        const currentUsers = await db.user.findMany({
           where: {
-            userId,
+            userId: Number(userId),
             branch: result?.branch,
           },
         });
 
-        const { id, userName: currentUserName } = currentUser || {};
+        // Lấy danh sách userName hợp lệ (loại bỏ userName rỗng)
+        const validUserNames = currentUsers
+          .map((user) => user.userName)
+          .filter((userName) => userName && userName.trim() !== "");
 
-        let updateUser = null;
-        if (currentUser) {
-          updateUser = currentUser;
-        } else {
-          const data = {
-            userId: userId,
-            branch: getCookie("branch", { req, res }) || BRANCH.GOVAP,
-            stars: 0,
-            createdAt: dayjs()
-              .tz("Asia/Ho_Chi_Minh")
-              .add(7, "hours")
-              .toISOString(),
-            rankId: 1,
-          };
-          updateUser = await db.user.create({
-            data,
+        if (validUserNames.length > 0) {
+          // Truy vấn thêm theo username để đảm bảo lấy hết user trùng
+          const usersByUsername = await db.user.findMany({
+            where: {
+              userName: { in: validUserNames },
+            },
           });
-        }
 
-        // console.log("updateUser", updateUser);
+          const uniqueBranches = new Set(
+            usersByUsername.map((user) => user.branch),
+          );
 
-        if (updateUser) {
-          if (isEmpty(currentUserName) && !isEmpty(userName)) {
-            const updatedUser = await db.user.update({
-              where: {
-                id,
-              },
-              data: {
-                userName: userName.trim().toLowerCase(),
-              },
-            });
+          if (uniqueBranches.size > 1) {
+            return NextResponse.json("Duplicate account", { status: 499 });
+          }
 
-            if (updatedUser) {
-              updateUser = updatedUser;
+          // Gộp cả hai danh sách lại
+          const allUsers = [...new Set([...currentUsers, ...usersByUsername])];
+
+          // Nhóm theo `userName`
+          const groupedUsers = allUsers.reduce(
+            (acc, user) => {
+              if (!acc[user.userName]) acc[user.userName] = [];
+              acc[user.userName].push(user);
+              return acc;
+            },
+            {} as Record<string, typeof allUsers>,
+          );
+
+          console.log("groupedUsers", groupedUsers);
+
+          for (const userName in groupedUsers) {
+            const users = groupedUsers[userName];
+
+            if (users.length > 1) {
+              users.sort(
+                (a, b) =>
+                  new Date(b.updatedAt).getTime() -
+                  new Date(a.updatedAt).getTime(),
+              );
+              const latestUser = users[0];
+              const totalStars = users.reduce((sum, u) => sum + u.stars, 0);
+              const totalMagicStones = users.reduce(
+                (sum, u) => sum + u.magicStone,
+                0,
+              );
+
+              console.log("latestUser.id", latestUser.id);
+
+              userUpdated = await db.user.update({
+                where: { id: latestUser.id },
+                data: {
+                  stars: totalStars,
+                  magicStone: totalMagicStones,
+                  userId: userId, // Cập nhật userId hợp lệ
+                },
+              });
+
+              console.log("userUpdated", userUpdated);
+
+              const deleteIds = users
+                .slice(1)
+                .map((u) => u.id)
+                .filter((id) => id !== latestUser.id);
+
+              console.log("deleteIds", deleteIds);
+
+              await db.userMissionMap.deleteMany({
+                where: { userId: { in: deleteIds } },
+              });
+
+              await db.user.deleteMany({
+                where: { id: { in: deleteIds } },
+              });
+
+              console.log("delete many");
+            } else {
+              userUpdated = await db.user.update({
+                where: { id: users[0].id },
+                data: {
+                  userId: userId, // Cập nhật userId hợp lệ
+                },
+              });
             }
           }
         }
 
-        if (updateUser) {
-          const token = await signJWT({ userId: updateUser?.userId });
-          const response = NextResponse.json(updateUser);
+        console.log("userUpdated", userUpdated);
+
+        if (userUpdated) {
+          const token = await signJWT({ userId: userUpdated?.userId });
+          const response = NextResponse.json(userUpdated);
 
           // @ts-ignore
           response.cookies.set({

@@ -102,7 +102,7 @@ const Login = () => {
         createdAt: dayjs().tz("Asia/Ho_Chi_Minh").add(7, "hours").toISOString(),
         rankId: 1,
       });
-    } else if (statusCode === 500) {
+    } else if (statusCode === 500 || statusCode === 499) {
       toast.error(message);
     }
   };

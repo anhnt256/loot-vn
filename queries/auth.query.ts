@@ -19,6 +19,15 @@ export const postLogin = async (userName: string): Promise<any> => {
 
   const resultText = await result.text();
 
+  if (resultText.includes("Duplicate account")) {
+    return {
+      statusCode: 499,
+      data: null,
+      message:
+        "Bạn có tài khoản tại 2 chi nhánh, để tránh nhầm lẫn, vui lòng liên hệ nhân viên để được xử lý chính xác. Xin cảm ơn.",
+    };
+  }
+
   if (resultText !== "Internal Error") {
     const data = JSON.parse(resultText);
 
@@ -28,19 +37,12 @@ export const postLogin = async (userName: string): Promise<any> => {
         statusCode: 700,
         data: null,
       };
+
     }
-
-    // const tokenFormat = {
-    //   ...token,
-    //   expiration_date: new Date(expirationDate),
-    // };
-    // setCookie(ACCESS_TOKEN_KEY, tokenFormat, {
-    //   expires: new Date(expirationDate),
-    // });
     localStorage.setItem(CURRENT_USER, JSON.stringify(data));
-
     return { statusCode: 200, data: userId, message: "Login Success" };
   }
+
   return {
     statusCode: 500,
     data: null,
