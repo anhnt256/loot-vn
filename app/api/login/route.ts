@@ -49,8 +49,6 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
         const userId = user[0]?.userId ?? null;
 
-        // const userId = 9200;
-
         let userUpdated;
 
         const currentUsers = await db.user.findMany({
@@ -60,13 +58,14 @@ export async function POST(req: Request, res: Response): Promise<any> {
           },
         });
 
-        // Lấy danh sách userName hợp lệ (loại bỏ userName rỗng)
         const validUserNames = currentUsers
           .map((user) => user.userName)
-          .filter((userName) => userName && userName.trim() !== "");
+          .filter(
+            (userName): userName is string =>
+              userName !== null && userName.trim() !== "",
+          );
 
         if (validUserNames.length > 0) {
-          // Truy vấn thêm theo username để đảm bảo lấy hết user trùng
           const usersByUsername = await db.user.findMany({
             where: {
               userName: { in: validUserNames },
@@ -81,17 +80,15 @@ export async function POST(req: Request, res: Response): Promise<any> {
             return NextResponse.json("Duplicate account", { status: 499 });
           }
 
-          // Gộp cả hai danh sách lại
           const allUsers = [...new Set([...currentUsers, ...usersByUsername])];
 
-          // Nhóm theo `userName`
-          const groupedUsers = allUsers.reduce(
+          const groupedUsers = allUsers.reduce<Record<string, typeof allUsers>>(
             (acc, user) => {
-              if (!acc[user.userName]) acc[user.userName] = [];
-              acc[user.userName].push(user);
+              if (!acc[user.userName ?? ""]) acc[user.userName ?? ""] = [];
+              acc[user.userName ?? ""].push(user);
               return acc;
             },
-            {} as Record<string, typeof allUsers>,
+            {},
           );
 
           console.log("groupedUsers", groupedUsers);
@@ -101,14 +98,17 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
             if (users.length > 1) {
               users.sort(
-                (a, b) =>
+                (a: { updatedAt: Date }, b: { updatedAt: Date }) =>
                   new Date(b.updatedAt).getTime() -
                   new Date(a.updatedAt).getTime(),
               );
               const latestUser = users[0];
-              const totalStars = users.reduce((sum, u) => sum + u.stars, 0);
+              const totalStars = users.reduce(
+                (sum: number, u: { stars: number }) => sum + u.stars,
+                0,
+              );
               const totalMagicStones = users.reduce(
-                (sum, u) => sum + u.magicStone,
+                (sum: number, u: { magicStone: number }) => sum + u.magicStone,
                 0,
               );
 
@@ -119,7 +119,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
                 data: {
                   stars: totalStars,
                   magicStone: totalMagicStones,
-                  userId: userId, // Cập nhật userId hợp lệ
+                  userId: userId,
                 },
               });
 
@@ -127,8 +127,8 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
               const deleteIds = users
                 .slice(1)
-                .map((u) => u.id)
-                .filter((id) => id !== latestUser.id);
+                .map((u: { id: number }) => u.id)
+                .filter((id: number) => id !== latestUser.id);
 
               console.log("deleteIds", deleteIds);
 
@@ -145,7 +145,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
               userUpdated = await db.user.update({
                 where: { id: users[0].id },
                 data: {
-                  userId: userId, // Cập nhật userId hợp lệ
+                  userId: userId,
                 },
               });
             }
@@ -158,11 +158,10 @@ export async function POST(req: Request, res: Response): Promise<any> {
           const token = await signJWT({ userId: userUpdated?.userId });
           const response = NextResponse.json(userUpdated);
 
-          // @ts-ignore
           response.cookies.set({
             name: "token",
             value: token,
-            maxAge: 86400, // 1 day
+            maxAge: 86400,
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "strict",
