@@ -12,8 +12,8 @@ const expirationDate = dayjs().add(expirationDuration, "day").format();
 
 export async function POST(req: Request, res: Response): Promise<any> {
   try {
-    // const macAddress = getCookie("macAddress", { req, res });
-    const macAddress = "A4-0C-66-0B-E3-AD";
+    const macAddress = getCookie("macAddress", { req, res });
+    // const macAddress = "A4-0C-66-0B-E3-AD";
     const body = await req.text();
 
     const { userName } = JSON.parse(body);
