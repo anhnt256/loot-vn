@@ -12,8 +12,8 @@ const expirationDate = dayjs().add(expirationDuration, "day").format();
 
 export async function POST(req: Request, res: Response): Promise<any> {
   try {
-    const macAddress = getCookie("macAddress", { req, res });
-    // const macAddress = "A4-0C-66-0B-E8-7B";
+    // const macAddress = getCookie("macAddress", { req, res });
+    const macAddress = "A4-0C-66-0B-E3-AD";
     const body = await req.text();
 
     const { userName } = JSON.parse(body);
@@ -65,6 +65,8 @@ export async function POST(req: Request, res: Response): Promise<any> {
               userName !== null && userName.trim() !== "",
           );
 
+        console.log("validUserNames", validUserNames);
+
         if (validUserNames.length > 0) {
           const usersByUsername = await db.user.findMany({
             where: {
@@ -80,7 +82,10 @@ export async function POST(req: Request, res: Response): Promise<any> {
             return NextResponse.json("Duplicate account", { status: 499 });
           }
 
-          const allUsers = [...new Set([...currentUsers, ...usersByUsername])];
+          const thisUsers = [...currentUsers, ...usersByUsername];
+          const allUsers = [
+            ...new Map(thisUsers.map((user) => [user.id, user])).values(),
+          ];
 
           const groupedUsers = allUsers.reduce<Record<string, typeof allUsers>>(
             (acc, user) => {
@@ -91,68 +96,67 @@ export async function POST(req: Request, res: Response): Promise<any> {
             {},
           );
 
-          console.log("groupedUsers", groupedUsers);
+          if (groupedUsers?.length > 1) {
+            for (const userName in groupedUsers) {
+              const users = groupedUsers[userName];
 
-          for (const userName in groupedUsers) {
-            const users = groupedUsers[userName];
+              if (users.length > 1) {
+                users.sort(
+                  (a: { updatedAt: Date }, b: { updatedAt: Date }) =>
+                    new Date(b.updatedAt).getTime() -
+                    new Date(a.updatedAt).getTime(),
+                );
+                const latestUser = users[0];
+                const totalStars = users.reduce(
+                  (sum: number, u: { stars: number }) => sum + u.stars,
+                  0,
+                );
+                const totalMagicStones = users.reduce(
+                  (sum: number, u: { magicStone: number }) =>
+                    sum + u.magicStone,
+                  0,
+                );
 
-            if (users.length > 1) {
-              users.sort(
-                (a: { updatedAt: Date }, b: { updatedAt: Date }) =>
-                  new Date(b.updatedAt).getTime() -
-                  new Date(a.updatedAt).getTime(),
-              );
-              const latestUser = users[0];
-              const totalStars = users.reduce(
-                (sum: number, u: { stars: number }) => sum + u.stars,
-                0,
-              );
-              const totalMagicStones = users.reduce(
-                (sum: number, u: { magicStone: number }) => sum + u.magicStone,
-                0,
-              );
+                console.log("latestUser.id", latestUser.id);
 
-              console.log("latestUser.id", latestUser.id);
+                // userUpdated = await db.user.update({
+                //   where: { id: latestUser.id },
+                //   data: {
+                //     stars: totalStars,
+                //     magicStone: totalMagicStones,
+                //     userId: userId,
+                //   },
+                // });
 
-              userUpdated = await db.user.update({
-                where: { id: latestUser.id },
-                data: {
-                  stars: totalStars,
-                  magicStone: totalMagicStones,
-                  userId: userId,
-                },
-              });
+                const deleteIds = users
+                  .slice(1)
+                  .map((u: { id: number }) => u.id)
+                  .filter((id: number) => id !== latestUser.id);
 
-              console.log("userUpdated", userUpdated);
+                console.log("deleteIds", deleteIds);
 
-              const deleteIds = users
-                .slice(1)
-                .map((u: { id: number }) => u.id)
-                .filter((id: number) => id !== latestUser.id);
+                // await db.userMissionMap.deleteMany({
+                //   where: { userId: { in: deleteIds } },
+                // });
 
-              console.log("deleteIds", deleteIds);
+                await db.user.deleteMany({
+                  where: { id: { in: deleteIds } },
+                });
 
-              await db.userMissionMap.deleteMany({
-                where: { userId: { in: deleteIds } },
-              });
-
-              await db.user.deleteMany({
-                where: { id: { in: deleteIds } },
-              });
-
-              console.log("delete many");
-            } else {
-              userUpdated = await db.user.update({
-                where: { id: users[0].id },
-                data: {
-                  userId: userId,
-                },
-              });
+                console.log("delete many");
+              } else {
+                userUpdated = await db.user.update({
+                  where: { id: users[0].id },
+                  data: {
+                    userId: userId,
+                  },
+                });
+              }
             }
+          } else {
+            userUpdated = groupedUsers[userName][0];
           }
         }
-
-        console.log("userUpdated", userUpdated);
 
         if (userUpdated) {
           const token = await signJWT({ userId: userUpdated?.userId });
