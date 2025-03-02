@@ -96,7 +96,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
             {},
           );
 
-          if (groupedUsers?.length > 1) {
+          if (Object.keys(groupedUsers).length > 1) {
             for (const userName in groupedUsers) {
               const users = groupedUsers[userName];
 
