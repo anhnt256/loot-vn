@@ -1,13 +1,20 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { startOfDayVN } from "@/lib/dayjs";
+import dayjs from "@/lib/dayjs";
 
 export async function GET(
   req: Request,
   { params }: { params: { slug: string[] } },
 ) {
   const [userId, branch] = params.slug;
+
+  const startOfDayVN = dayjs()
+    .tz("Asia/Ho_Chi_Minh")
+    .startOf("day")
+    .add(7, "hours")
+    .toISOString();
+
   try {
     if (userId && branch) {
       const currentUserMissionMap = await db.userMissionMap.findMany({

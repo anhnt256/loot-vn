@@ -12,8 +12,8 @@ const expirationDate = dayjs().add(expirationDuration, "day").format();
 
 export async function POST(req: Request, res: Response): Promise<any> {
   try {
-    const macAddress = getCookie("macAddress", { req, res });
-    // const macAddress = "EC-D6-8A-DE-89-55";
+    // const macAddress = getCookie("macAddress", { req, res });
+    const macAddress = "EC-D6-8A-DE-89-55";
     const body = await req.text();
 
     const { userName } = JSON.parse(body);
@@ -47,9 +47,9 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
         const user: any = await fnetDB.$queryRaw<any>(query);
 
-        const userId = user[0]?.userId ?? null;
+        // const userId = user[0]?.userId ?? null;
 
-        // const userId = 2147;
+        const userId = 2147;
 
         let userUpdated;
 
@@ -88,61 +88,52 @@ export async function POST(req: Request, res: Response): Promise<any> {
           ];
 
           if (allUsers.length > 1) {
-            for (const userName in allUsers) {
-              const users = groupedUsers[userName];
+            allUsers.sort(
+              (a: { updatedAt: Date }, b: { updatedAt: Date }) =>
+                new Date(b.updatedAt).getTime() -
+                new Date(a.updatedAt).getTime(),
+            );
 
-              if (users.length > 1) {
-                users.sort(
-                  (a: { updatedAt: Date }, b: { updatedAt: Date }) =>
-                    new Date(b.updatedAt).getTime() -
-                    new Date(a.updatedAt).getTime(),
-                );
+            const latestUser = allUsers[0];
+            const totalStars = allUsers.reduce(
+              (sum: number, u: { stars: number }) => sum + u.stars,
+              0,
+            );
+            const totalMagicStones = allUsers.reduce(
+              (sum: number, u: { magicStone: number }) => sum + u.magicStone,
+              0,
+            );
 
-                const latestUser = users[0];
-                const totalStars = users.reduce(
-                  (sum: number, u: { stars: number }) => sum + u.stars,
-                  0,
-                );
-                const totalMagicStones = users.reduce(
-                  (sum: number, u: { magicStone: number }) =>
-                    sum + u.magicStone,
-                  0,
-                );
+            userUpdated = await db.user.update({
+              where: { id: latestUser.id },
+              data: {
+                stars: totalStars,
+                magicStone: totalMagicStones,
+                userId: userId,
+              },
+            });
 
-                userUpdated = await db.user.update({
-                  where: { id: latestUser.id },
-                  data: {
-                    stars: totalStars,
-                    magicStone: totalMagicStones,
-                    userId: userId,
-                  },
-                });
+            const deleteIds = allUsers
+              .slice(1)
+              .map((u: { id: number }) => u.id)
+              .filter((id: number) => id !== latestUser.id);
 
-                const deleteIds = users
-                  .slice(1)
-                  .map((u: { id: number }) => u.id)
-                  .filter((id: number) => id !== latestUser.id);
-
-                if (deleteIds.length > 0) {
-                  await db.userMissionMap.deleteMany({
-                    where: { userId: { in: deleteIds } },
-                  });
-                }
-
-                await db.user.deleteMany({
-                  where: { id: { in: deleteIds } },
-                });
-              } else {
-                userUpdated = await db.user.update({
-                  where: { id: users[0].id },
-                  data: {
-                    userId: userId,
-                  },
-                });
-              }
+            if (deleteIds.length > 0) {
+              await db.userMissionMap.deleteMany({
+                where: { userId: { in: deleteIds } },
+              });
             }
-          } else if (allUsers.length === 1) {
-            userUpdated = allUsers[0];
+
+            await db.user.deleteMany({
+              where: { id: { in: deleteIds } },
+            });
+          } else {
+            userUpdated = await db.user.update({
+              where: { id: allUsers[0].id },
+              data: {
+                userId: userId,
+              },
+            });
           }
         }
 
