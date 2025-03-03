@@ -5,7 +5,13 @@ import { createSafeAction } from "@/lib/create-safe-action";
 
 import { CreateUserMissionMap } from "./schema";
 import { InputType } from "./type";
-import dayjs, { startOfDayVN } from "@/lib/dayjs";
+import dayjs from "@/lib/dayjs";
+
+const startOfDayVN = dayjs()
+  .tz("Asia/Ho_Chi_Minh")
+  .startOf("day")
+  .add(7, "hours")
+  .toISOString();
 
 const handler = async (data: InputType): Promise<any> => {
   let createUserMissionMap;

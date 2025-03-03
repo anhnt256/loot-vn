@@ -2,7 +2,19 @@ import { NextResponse } from "next/server";
 
 import apiClient from "@/lib/apiClient";
 import { getCookie } from "cookies-next";
-import dayjs, { endOfDayVN, startOfDayVN } from "@/lib/dayjs";
+import dayjs from "@/lib/dayjs";
+
+const startOfDayVN = dayjs()
+  .tz("Asia/Ho_Chi_Minh")
+  .startOf("day")
+  .add(7, "hours")
+  .toISOString();
+
+const endOfDayVN = dayjs()
+  .tz("Asia/Ho_Chi_Minh")
+  .endOf("day")
+  .add(7, "hours")
+  .toISOString();
 
 export async function GET(
   req: Request,

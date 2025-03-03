@@ -13,7 +13,7 @@ const expirationDate = dayjs().add(expirationDuration, "day").format();
 export async function POST(req: Request, res: Response): Promise<any> {
   try {
     const macAddress = getCookie("macAddress", { req, res });
-    // const macAddress = "A4-0C-66-0B-E3-AD";
+    // const macAddress = "EC-D6-8A-DE-89-55";
     const body = await req.text();
 
     const { userName } = JSON.parse(body);
@@ -49,6 +49,8 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
         const userId = user[0]?.userId ?? null;
 
+        // const userId = 2147;
+
         let userUpdated;
 
         const currentUsers = await db.user.findMany({
@@ -64,8 +66,6 @@ export async function POST(req: Request, res: Response): Promise<any> {
             (userName): userName is string =>
               userName !== null && userName.trim() !== "",
           );
-
-        console.log("validUserNames", validUserNames);
 
         if (validUserNames.length > 0) {
           const usersByUsername = await db.user.findMany({
@@ -87,17 +87,8 @@ export async function POST(req: Request, res: Response): Promise<any> {
             ...new Map(thisUsers.map((user) => [user.id, user])).values(),
           ];
 
-          const groupedUsers = allUsers.reduce<Record<string, typeof allUsers>>(
-            (acc, user) => {
-              if (!acc[user.userName ?? ""]) acc[user.userName ?? ""] = [];
-              acc[user.userName ?? ""].push(user);
-              return acc;
-            },
-            {},
-          );
-
-          if (Object.keys(groupedUsers).length > 1) {
-            for (const userName in groupedUsers) {
+          if (allUsers.length > 1) {
+            for (const userName in allUsers) {
               const users = groupedUsers[userName];
 
               if (users.length > 1) {
@@ -106,6 +97,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
                     new Date(b.updatedAt).getTime() -
                     new Date(a.updatedAt).getTime(),
                 );
+
                 const latestUser = users[0];
                 const totalStars = users.reduce(
                   (sum: number, u: { stars: number }) => sum + u.stars,
@@ -117,33 +109,29 @@ export async function POST(req: Request, res: Response): Promise<any> {
                   0,
                 );
 
-                console.log("latestUser.id", latestUser.id);
-
-                // userUpdated = await db.user.update({
-                //   where: { id: latestUser.id },
-                //   data: {
-                //     stars: totalStars,
-                //     magicStone: totalMagicStones,
-                //     userId: userId,
-                //   },
-                // });
+                userUpdated = await db.user.update({
+                  where: { id: latestUser.id },
+                  data: {
+                    stars: totalStars,
+                    magicStone: totalMagicStones,
+                    userId: userId,
+                  },
+                });
 
                 const deleteIds = users
                   .slice(1)
                   .map((u: { id: number }) => u.id)
                   .filter((id: number) => id !== latestUser.id);
 
-                console.log("deleteIds", deleteIds);
-
-                // await db.userMissionMap.deleteMany({
-                //   where: { userId: { in: deleteIds } },
-                // });
+                if (deleteIds.length > 0) {
+                  await db.userMissionMap.deleteMany({
+                    where: { userId: { in: deleteIds } },
+                  });
+                }
 
                 await db.user.deleteMany({
                   where: { id: { in: deleteIds } },
                 });
-
-                console.log("delete many");
               } else {
                 userUpdated = await db.user.update({
                   where: { id: users[0].id },
@@ -153,8 +141,8 @@ export async function POST(req: Request, res: Response): Promise<any> {
                 });
               }
             }
-          } else {
-            userUpdated = groupedUsers[userName][0];
+          } else if (allUsers.length === 1) {
+            userUpdated = allUsers[0];
           }
         }
 

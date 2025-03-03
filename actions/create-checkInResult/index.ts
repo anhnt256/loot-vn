@@ -5,7 +5,7 @@ import { createSafeAction } from "@/lib/create-safe-action";
 
 import { CreateCheckInResult } from "./schema";
 import { InputType, ReturnType } from "./type";
-import dayjs, { startOfDayVN } from "@/lib/dayjs";
+import dayjs from "@/lib/dayjs";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
   const { userId, branch, addedStar } = data;
@@ -13,6 +13,12 @@ const handler = async (data: InputType): Promise<ReturnType> => {
 
   const fnetDB = getFnetDB();
   const fnetPrisma = getFnetPrisma();
+
+  const startOfDayVN = dayjs()
+    .tz("Asia/Ho_Chi_Minh")
+    .startOf("day")
+    .add(7, "hours")
+    .toISOString();
 
   try {
     const query = fnetPrisma.sql`
