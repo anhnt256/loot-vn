@@ -7,10 +7,13 @@ import isEmpty from "lodash/isEmpty";
 const expirationDuration = 1;
 const expirationDate = dayjs().add(expirationDuration, "day").format();
 
-export const postLogin = async (
-  userName: string,
-  machineName: string,
-): Promise<any> => {
+export const postLogin = async ({
+  userName,
+  machineName,
+}: {
+  userName: string;
+  machineName: string;
+}): Promise<any> => {
   const result = await fetch("api/login", {
     method: "POST",
     headers: {

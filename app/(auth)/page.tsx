@@ -23,7 +23,7 @@ const expirationDuration = 1;
 const expirationDate = dayjs().add(expirationDuration, "day").format();
 
 const Login = () => {
-  const [login, setLogin] = useState<string>("");
+  const [userName, setUsername] = useState<string>("");
   const [pageLoading, setPageLoading] = useState<boolean>(false);
   const [initializing, setInitializing] = useState(true);
   const loginMutation = useLogin();
@@ -98,7 +98,7 @@ const Login = () => {
     if (machineData) {
       setPageLoading(true);
       const result = await loginMutation.mutateAsync({
-        login,
+        userName,
         machineName: machineData?.machineName,
       });
       setPageLoading(false);
@@ -158,8 +158,8 @@ const Login = () => {
         <Input
           id="email"
           className="w-full p-2 rounded bg-gray-700 text-white"
-          value={login}
-          onChange={(e) => setLogin(e.target.value)}
+          value={userName}
+          onChange={(e) => setUsername(e.target.value)}
         />
       </div>
       <div className="flex justify-end">
