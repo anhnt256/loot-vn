@@ -7,14 +7,17 @@ import isEmpty from "lodash/isEmpty";
 const expirationDuration = 1;
 const expirationDate = dayjs().add(expirationDuration, "day").format();
 
-export const postLogin = async (userName: string): Promise<any> => {
+export const postLogin = async (
+  userName: string,
+  machineName: string,
+): Promise<any> => {
   const result = await fetch("api/login", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     credentials: "include",
-    body: JSON.stringify({ userName }),
+    body: JSON.stringify({ userName, machineName }),
   });
 
   const resultText = await result.text();
@@ -37,7 +40,6 @@ export const postLogin = async (userName: string): Promise<any> => {
         statusCode: 700,
         data: null,
       };
-
     }
     localStorage.setItem(CURRENT_USER, JSON.stringify(data));
     return { statusCode: 200, data: userId, message: "Login Success" };

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CURRENT_USER } from "@/constants/token.constant";
 import { User } from "@/prisma/generated/prisma-client";
 import { fetcher } from "@/lib/fetcher";
@@ -31,7 +31,9 @@ export const useUserInfo = () => {
     }
   }, []);
 
-  const branch = getCookie("branch");
+  const branch = useMemo(() => {
+    return getCookie("branch");
+  }, []);
 
   const { data: userData } = useQuery<User>({
     queryKey: ["user", currentUserId],

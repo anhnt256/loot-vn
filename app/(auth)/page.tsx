@@ -16,6 +16,8 @@ import { BRANCH } from "@/constants/enum.constant";
 import { Spin } from "antd";
 import { isElectron } from "@/lib/electron";
 import { getMacAddresses } from "@/lib/mac";
+import { useQuery } from "@tanstack/react-query";
+import { fetcher } from "@/lib/fetcher";
 
 const expirationDuration = 1;
 const expirationDate = dayjs().add(expirationDuration, "day").format();
@@ -45,6 +47,12 @@ const Login = () => {
   const [macAddresses, setMacAddresses] = useState<string>();
   const [isDesktopApp, setIsDesktopApp] = useState(false);
 
+  const { data: machineData } = useQuery<[any]>({
+    queryKey: ["check-branch"],
+    enabled: !!macAddresses,
+    queryFn: () => fetcher(`/api/check-branch`),
+  });
+
   useEffect(() => {
     let mounted = true;
 
@@ -60,17 +68,9 @@ const Login = () => {
             setCookie("macAddress", addresses[0]?.address, {
               expires: new Date(expirationDate),
             });
-            await onLogin();
           }
         } catch (error) {
           console.error("Failed to get MAC addresses:", error);
-        }
-      } else {
-        if (mounted) {
-          setCookie("macAddress", "00:cf:e0:46:c1:81", {
-            expires: new Date(expirationDate),
-          });
-          await onLogin();
         }
       }
       if (mounted) {
@@ -84,26 +84,40 @@ const Login = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (machineData !== undefined) {
+      onLogin();
+    }
+  }, [machineData]);
+
   const onLogin = async () => {
     if (pageLoading) {
       return;
     }
 
-    setPageLoading(true);
-    const result = await loginMutation.mutateAsync(login);
-    setPageLoading(false);
-    const { statusCode, data, message } = result || {};
-
-    if (statusCode === 200) {
-      await execute({
-        userId: data,
-        branch: getCookie("branch") || BRANCH.GOVAP,
-        stars: 0,
-        createdAt: dayjs().tz("Asia/Ho_Chi_Minh").add(7, "hours").toISOString(),
-        rankId: 1,
+    if (machineData) {
+      setPageLoading(true);
+      const result = await loginMutation.mutateAsync({
+        login,
+        machineName: machineData?.machineName,
       });
-    } else if (statusCode === 500 || statusCode === 499) {
-      toast.error(message);
+      setPageLoading(false);
+      const { statusCode, data, message } = result || {};
+
+      if (statusCode === 200) {
+        await execute({
+          userId: data,
+          branch: getCookie("branch") || BRANCH.GOVAP,
+          stars: 0,
+          createdAt: dayjs()
+            .tz("Asia/Ho_Chi_Minh")
+            .add(7, "hours")
+            .toISOString(),
+          rankId: 1,
+        });
+      } else if (statusCode === 500 || statusCode === 499) {
+        toast.error(message);
+      }
     }
   };
 
