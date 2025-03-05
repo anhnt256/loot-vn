@@ -23,6 +23,7 @@ export async function GET(req: Request, res: Response): Promise<any> {
         machineName: result?.name,
       });
 
+      // @ts-ignore
       response.cookies.set({
         name: "branch",
         value: result?.branch,

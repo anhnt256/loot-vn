@@ -51,7 +51,7 @@ const Login = () => {
     queryKey: ["check-branch"],
     enabled: !!macAddresses,
     queryFn: () => fetcher(`/api/check-branch`),
-  });
+  }) as any;
 
   useEffect(() => {
     let mounted = true;
@@ -97,6 +97,7 @@ const Login = () => {
 
     if (machineData) {
       setPageLoading(true);
+      // @ts-ignore
       const result = await loginMutation.mutateAsync({
         userName,
         machineName: machineData?.machineName,
