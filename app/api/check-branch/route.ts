@@ -33,7 +33,7 @@ export async function GET(req: Request, res: Response): Promise<any> {
     }
   } catch (error) {
     return NextResponse.json({
-      status: "error",
+      status: error,
     });
   }
 }
