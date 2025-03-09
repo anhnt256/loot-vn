@@ -44,7 +44,7 @@ const Login = () => {
     },
   });
 
-  const [macAddresses, setMacAddresses] = useState<string>();
+  const [macAddresses, setMacAddresses] = useState<string>("A4-0C-66-0B-E6-DE");
   const [isDesktopApp, setIsDesktopApp] = useState(false);
 
   const { data: machineData } = useQuery({
@@ -53,36 +53,36 @@ const Login = () => {
     queryFn: () => fetch("/api/check-branch").then((res) => res.json()),
   });
 
-  useEffect(() => {
-    let mounted = true;
-
-    const checkPlatform = async () => {
-      if (!mounted) return;
-
-      setIsDesktopApp(isElectron());
-      if (isElectron()) {
-        try {
-          const addresses = (await getMacAddresses()) as any;
-          if (mounted) {
-            setMacAddresses(addresses[0]?.address);
-            setCookie("macAddress", addresses[0]?.address, {
-              expires: new Date(expirationDate),
-            });
-          }
-        } catch (error) {
-          console.error("Failed to get MAC addresses:", error);
-        }
-      }
-      if (mounted) {
-        setInitializing(false);
-      }
-    };
-
-    checkPlatform();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  // useEffect(() => {
+  //   let mounted = true;
+  //
+  //   const checkPlatform = async () => {
+  //     if (!mounted) return;
+  //
+  //     setIsDesktopApp(isElectron());
+  //     if (isElectron()) {
+  //       try {
+  //         const addresses = (await getMacAddresses()) as any;
+  //         if (mounted) {
+  //           setMacAddresses(addresses[0]?.address);
+  //           setCookie("macAddress", addresses[0]?.address, {
+  //             expires: new Date(expirationDate),
+  //           });
+  //         }
+  //       } catch (error) {
+  //         console.error("Failed to get MAC addresses:", error);
+  //       }
+  //     }
+  //     if (mounted) {
+  //       setInitializing(false);
+  //     }
+  //   };
+  //
+  //   checkPlatform();
+  //   return () => {
+  //     mounted = false;
+  //   };
+  // }, []);
 
   // useEffect(() => {
   //   if (machineData) {
