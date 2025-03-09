@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-
 import { PrismaClient } from "@/prisma/generated/prisma-client";
 import {
   PrismaClient as FnetGVPrismaClient,
