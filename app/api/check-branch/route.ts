@@ -29,6 +29,7 @@ export async function GET(req: Request, res: Response): Promise<any> {
         value: result?.branch,
         maxAge: 86400,
       });
+
       return response;
     }
   } catch (error) {
