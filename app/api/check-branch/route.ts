@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
+import { getCookie } from "cookies-next";
 
 export async function GET(req: Request, res: Response): Promise<any> {
   try {

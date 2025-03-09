@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 const LoginLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="flex h-screen justify-center items-center text-gray-200 bg-no-repeat bg-cover bg-[url('/bg_galaxy.png')]">
