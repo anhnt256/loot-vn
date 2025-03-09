@@ -19,12 +19,12 @@ declare global {
 export const db = globalThis.prisma || new PrismaClient();
 
 // Create a factory function that gets called for each request
-export function getFnetDB() {
+export async function getFnetDB() {
   if (typeof window !== "undefined") {
     throw new Error("This code must be run on the server side");
   }
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const branchFromCookie = cookieStore.get("branch")?.value;
 
   if (!branchFromCookie) {

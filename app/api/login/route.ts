@@ -15,7 +15,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
     const { userName, machineName } = JSON.parse(body);
 
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const branchFromCookie = cookieStore.get("branch")?.value;
 
     const fnetDB = getFnetDB();
