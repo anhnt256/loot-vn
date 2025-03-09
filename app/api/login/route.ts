@@ -8,13 +8,13 @@ const expirationDuration = 1;
 const expirationDate = dayjs().add(expirationDuration, "day").format();
 
 export async function POST(req: Request, res: Response): Promise<any> {
+  const cookieStore = await cookies();
+  const branchFromCookie = cookieStore.get("branch")?.value;
+
   try {
     const body = await req.text();
 
     const { userName, machineName } = JSON.parse(body);
-
-    const cookieStore = await cookies();
-    const branchFromCookie = cookieStore.get("branch")?.value;
 
     const fnetDB = await getFnetDB();
     const fnetPrisma = await getFnetPrisma();

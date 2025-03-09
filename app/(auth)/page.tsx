@@ -44,7 +44,7 @@ const Login = () => {
     },
   });
 
-  const [macAddresses, setMacAddresses] = useState<string>("A4-0C-66-0B-E6-DE");
+  const [macAddresses, setMacAddresses] = useState<string>();
   const [isDesktopApp, setIsDesktopApp] = useState(false);
 
   const { data: machineData } = useQuery({
@@ -53,73 +53,73 @@ const Login = () => {
     queryFn: () => fetch("/api/check-branch").then((res) => res.json()),
   });
 
-  // useEffect(() => {
-  //   let mounted = true;
-  //
-  //   const checkPlatform = async () => {
-  //     if (!mounted) return;
-  //
-  //     setIsDesktopApp(isElectron());
-  //     if (isElectron()) {
-  //       try {
-  //         const addresses = (await getMacAddresses()) as any;
-  //         if (mounted) {
-  //           setMacAddresses(addresses[0]?.address);
-  //           setCookie("macAddress", addresses[0]?.address, {
-  //             expires: new Date(expirationDate),
-  //           });
-  //         }
-  //       } catch (error) {
-  //         console.error("Failed to get MAC addresses:", error);
-  //       }
-  //     }
-  //     if (mounted) {
-  //       setInitializing(false);
-  //     }
-  //   };
-  //
-  //   checkPlatform();
-  //   return () => {
-  //     mounted = false;
-  //   };
-  // }, []);
+  useEffect(() => {
+    let mounted = true;
 
-  // useEffect(() => {
-  //   if (machineData) {
-  //     onLogin();
-  //   }
-  // }, [machineData]);
+    const checkPlatform = async () => {
+      if (!mounted) return;
+
+      setIsDesktopApp(isElectron());
+      if (isElectron()) {
+        try {
+          const addresses = (await getMacAddresses()) as any;
+          if (mounted) {
+            setMacAddresses(addresses[0]?.address);
+            setCookie("macAddress", addresses[0]?.address, {
+              expires: new Date(expirationDate),
+            });
+          }
+        } catch (error) {
+          console.error("Failed to get MAC addresses:", error);
+        }
+      }
+      if (mounted) {
+        setInitializing(false);
+      }
+    };
+
+    checkPlatform();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (machineData) {
+      onLogin();
+    }
+  }, [machineData]);
 
   const onLogin = async () => {
     if (pageLoading) {
       return;
     }
 
-    // if (machineData) {
-    //   setPageLoading(true);
-    //   // @ts-ignore
-    //   const result = await loginMutation.mutateAsync({
-    //     userName,
-    //     machineName: machineData?.machineName,
-    //   });
-    //   setPageLoading(false);
-    //   const { statusCode, data, message } = result || {};
-    //
-    //   if (statusCode === 200) {
-    //     await execute({
-    //       userId: data,
-    //       branch: getCookie("branch") || BRANCH.GOVAP,
-    //       stars: 0,
-    //       createdAt: dayjs()
-    //         .tz("Asia/Ho_Chi_Minh")
-    //         .add(7, "hours")
-    //         .toISOString(),
-    //       rankId: 1,
-    //     });
-    //   } else if (statusCode === 500 || statusCode === 499) {
-    //     toast.error(message);
-    //   }
-    // }
+    if (machineData) {
+      setPageLoading(true);
+      // @ts-ignore
+      const result = await loginMutation.mutateAsync({
+        userName,
+        machineName: machineData?.machineName,
+      });
+      setPageLoading(false);
+      const { statusCode, data, message } = result || {};
+
+      if (statusCode === 200) {
+        await execute({
+          userId: data,
+          branch: getCookie("branch") || BRANCH.GOVAP,
+          stars: 0,
+          createdAt: dayjs()
+            .tz("Asia/Ho_Chi_Minh")
+            .add(7, "hours")
+            .toISOString(),
+          rankId: 1,
+        });
+      } else if (statusCode === 500 || statusCode === 499) {
+        toast.error(message);
+      }
+    }
   };
 
   if (initializing || pageLoading) {
