@@ -95,31 +95,31 @@ const Login = () => {
       return;
     }
 
-    if (machineData) {
-      setPageLoading(true);
-      // @ts-ignore
-      const result = await loginMutation.mutateAsync({
-        userName,
-        machineName: machineData?.machineName,
-      });
-      setPageLoading(false);
-      const { statusCode, data, message } = result || {};
-
-      if (statusCode === 200) {
-        await execute({
-          userId: data,
-          branch: getCookie("branch") || BRANCH.GOVAP,
-          stars: 0,
-          createdAt: dayjs()
-            .tz("Asia/Ho_Chi_Minh")
-            .add(7, "hours")
-            .toISOString(),
-          rankId: 1,
-        });
-      } else if (statusCode === 500 || statusCode === 499) {
-        toast.error(message);
-      }
-    }
+    // if (machineData) {
+    //   setPageLoading(true);
+    //   // @ts-ignore
+    //   const result = await loginMutation.mutateAsync({
+    //     userName,
+    //     machineName: machineData?.machineName,
+    //   });
+    //   setPageLoading(false);
+    //   const { statusCode, data, message } = result || {};
+    //
+    //   if (statusCode === 200) {
+    //     await execute({
+    //       userId: data,
+    //       branch: getCookie("branch") || BRANCH.GOVAP,
+    //       stars: 0,
+    //       createdAt: dayjs()
+    //         .tz("Asia/Ho_Chi_Minh")
+    //         .add(7, "hours")
+    //         .toISOString(),
+    //       rankId: 1,
+    //     });
+    //   } else if (statusCode === 500 || statusCode === 499) {
+    //     toast.error(message);
+    //   }
+    // }
   };
 
   if (initializing || pageLoading) {
