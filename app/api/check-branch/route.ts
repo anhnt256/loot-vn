@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 
 export async function GET(req: Request, res: Response): Promise<any> {
   try {
-    // const macAddress = getCookie("macAddress", { req, res });
-    const macAddress = "A4-0C-66-0B-E6-DE";
+    const macAddress = getCookie("macAddress", { req, res });
+    // const macAddress = "A4-0C-66-0B-E6-DE";
 
     if (macAddress) {
       const result = await db.computer.findFirst({
