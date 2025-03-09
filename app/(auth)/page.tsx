@@ -84,11 +84,11 @@ const Login = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (machineData !== undefined) {
-      onLogin();
-    }
-  }, [machineData]);
+  // useEffect(() => {
+  //   if (machineData !== undefined) {
+  //     onLogin();
+  //   }
+  // }, [machineData]);
 
   const onLogin = async () => {
     if (pageLoading) {
