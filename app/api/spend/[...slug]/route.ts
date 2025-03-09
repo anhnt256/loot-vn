@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: { slug: string[] } },
 ) {
   try {
-    const fnetDB = getFnetDB();
+    const fnetDB = await getFnetDB();
     const [userId, branch] = params.slug;
     const status = 3;
 

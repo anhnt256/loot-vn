@@ -11,8 +11,8 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   const { userId, branch, addedStar } = data;
   let checkIn;
 
-  const fnetDB = getFnetDB();
-  const fnetPrisma = getFnetPrisma();
+  const fnetDB = await getFnetDB();
+  const fnetPrisma = await getFnetPrisma();
 
   const startOfDayVN = dayjs()
     .tz("Asia/Ho_Chi_Minh")

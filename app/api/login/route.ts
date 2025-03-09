@@ -18,8 +18,8 @@ export async function POST(req: Request, res: Response): Promise<any> {
     const cookieStore = await cookies();
     const branchFromCookie = cookieStore.get("branch")?.value;
 
-    const fnetDB = getFnetDB();
-    const fnetPrisma = getFnetPrisma();
+    const fnetDB = await getFnetDB();
+    const fnetPrisma = await getFnetPrisma();
 
     const query = fnetPrisma.sql`SELECT userId
                                  FROM fnet.systemlogtb AS t1

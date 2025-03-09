@@ -44,12 +44,12 @@ export async function getFnetDB() {
   }
 }
 
-export function getFnetPrisma() {
+export async function getFnetPrisma() {
   if (typeof window !== "undefined") {
     throw new Error("This code must be run on the server side");
   }
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const branchFromCookie = cookieStore.get("branch")?.value;
 
   if (!branchFromCookie) {

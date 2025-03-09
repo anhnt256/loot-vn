@@ -10,8 +10,8 @@ export async function GET(
   try {
     const { userId } = params;
 
-    const fnetDB = getFnetDB();
-    const fnetPrisma = getFnetPrisma();
+    const fnetDB = await getFnetDB();
+    const fnetPrisma = await getFnetPrisma();
 
     const fnetQuery = fnetPrisma.sql`
       SELECT COALESCE(CAST(SUM(AutoAmount) AS DECIMAL(18,2)), 0) AS total
