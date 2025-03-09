@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = "force-dynamic";
 import Image from "next/image";
 
 import { useRouter } from "next/navigation";
@@ -84,11 +85,11 @@ const Login = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (machineData) {
-      onLogin();
-    }
-  }, [machineData]);
+  // useEffect(() => {
+  //   if (machineData) {
+  //     onLogin();
+  //   }
+  // }, [machineData]);
 
   const onLogin = async () => {
     if (pageLoading) {
