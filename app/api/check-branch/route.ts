@@ -1,11 +1,11 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
-import { getCookie } from "cookies-next";
+// import { getCookie } from "cookies-next";
 
 export async function GET(req: Request, res: Response): Promise<any> {
   try {
-    const macAddress = getCookie("macAddress", { req, res });
-    // const macAddress = "A4-0C-66-0B-E6-DE";
+    // const macAddress = getCookie("macAddress", { req, res });
+    const macAddress = "A4-0C-66-0B-E6-DE";
 
     console.log("macAddress", macAddress);
 
