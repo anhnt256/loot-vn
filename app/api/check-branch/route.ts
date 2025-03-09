@@ -24,11 +24,11 @@ export async function GET(req: Request, res: Response): Promise<any> {
       });
 
       // @ts-ignore
-      response.cookies.set({
-        name: "branch",
-        value: result?.branch,
-        maxAge: 86400,
-      });
+      // response.cookies.set({
+      //   name: "branch",
+      //   value: result?.branch,
+      //   maxAge: 86400,
+      // });
 
       return response;
     }
