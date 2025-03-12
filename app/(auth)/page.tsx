@@ -48,7 +48,7 @@ const Login = () => {
   const [isDesktopApp, setIsDesktopApp] = useState(false);
 
   const { data: machineData } = useQuery({
-    queryKey: ["check-branch", macAddresses],
+    queryKey: ["check-branch"],
     enabled: !!macAddresses,
     queryFn: () => fetch("/api/check-branch").then((res) => res.json()),
   });
