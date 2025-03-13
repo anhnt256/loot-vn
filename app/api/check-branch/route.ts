@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 import { getCookie } from "cookies-next";
 
 export async function GET(req: Request, res: Response): Promise<any> {
-  // const macAddress = getCookie("macAddress", { req, res });
-  const macAddress = "A4-0C-66-0B-E6-AC";
+  const macAddress = getCookie("macAddress", { req, res });
+  // const macAddress = "A4-0C-66-0B-E6-AC";
 
   try {
     console.log("macAddress", macAddress);
