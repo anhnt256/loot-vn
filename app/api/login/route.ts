@@ -115,20 +115,22 @@ export async function POST(req: Request, res: Response): Promise<any> {
         });
       }
     } else {
-      userUpdated = await db.user.create({
-        data: {
-          userName: userName.trim(),
-          userId,
-          branch: branchFromCookie,
-          rankId: 1,
-          stars: 0,
-          magicStone: 0,
-          createdAt: dayjs()
-            .tz("Asia/Ho_Chi_Minh")
-            .add(7, "hours")
-            .toISOString(),
-        },
-      });
+      if (branchFromCookie) {
+        userUpdated = await db.user.create({
+          data: {
+            userName: userName.trim(),
+            userId,
+            branch: branchFromCookie,
+            rankId: 1,
+            stars: 0,
+            magicStone: 0,
+            createdAt: dayjs()
+              .tz("Asia/Ho_Chi_Minh")
+              .add(7, "hours")
+              .toISOString(),
+          },
+        });
+      }
     }
 
     if (userUpdated) {
