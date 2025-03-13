@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
 import { signJWT } from "@/lib/jwt";
-import dayjs from "dayjs";
 import { cookies } from "next/headers";
+import dayjs from "@/lib/dayjs";
 
 const expirationDuration = 1;
 const expirationDate = dayjs().add(expirationDuration, "day").format();
@@ -114,6 +114,21 @@ export async function POST(req: Request, res: Response): Promise<any> {
           },
         });
       }
+    } else {
+      userUpdated = await db.user.create({
+        data: {
+          userName: userName.trim(),
+          userId,
+          branch: branchFromCookie,
+          rankId: 1,
+          stars: 0,
+          magicStone: 0,
+          createdAt: dayjs()
+            .tz("Asia/Ho_Chi_Minh")
+            .add(7, "hours")
+            .toISOString(),
+        },
+      });
     }
 
     if (userUpdated) {
