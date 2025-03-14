@@ -4,11 +4,9 @@ import { getCookie } from "cookies-next";
 
 export async function GET(req: Request, res: Response): Promise<any> {
   const macAddress = getCookie("macAddress", { req, res });
-  // const macAddress = "A4-0C-66-0B-E6-AC";
+  // const macAddress = "EC-D6-8A-DE-87-6D";
 
   try {
-    console.log("macAddress", macAddress);
-
     if (macAddress) {
       const result = await db.computer.findFirst({
         where: {
@@ -19,8 +17,6 @@ export async function GET(req: Request, res: Response): Promise<any> {
           branch: true,
         },
       });
-
-      console.log("result", result);
 
       const response = NextResponse.json({
         status: "success",

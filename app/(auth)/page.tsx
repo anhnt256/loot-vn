@@ -165,7 +165,7 @@ const Login = () => {
       </div>
       <div className="flex justify-end">
         <Button
-          disabled={initializing}
+          disabled={initializing || !machineData}
           onClick={() => onLogin()}
           variant="default"
           className="w-full justify-start bg-orange-400"

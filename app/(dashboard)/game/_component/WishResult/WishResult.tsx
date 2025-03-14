@@ -92,11 +92,15 @@ export function WishResult({ isModalOpen, closeModal }: WishResultProps) {
       title: "Phần thưởng",
       dataIndex: "value",
       key: "value",
-      render: (text: string, record: any) => (
-        <span className={getRarityStyle(record.itemId)}>
-          {text.toLocaleString()}
-        </span>
-      ),
+      render: (text: string, record: any) => {
+        const { oldStars, newStars } = record;
+        const value = newStars - oldStars;
+        return (
+          <span className={getRarityStyle(record.itemId)}>
+            {value.toLocaleString()}
+          </span>
+        );
+      },
     },
     ...(activeTab === "1"
       ? [
