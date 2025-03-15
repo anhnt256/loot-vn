@@ -29,21 +29,6 @@ const Login = () => {
   const loginMutation = useLogin();
   const router = useRouter();
 
-  const { execute } = useAction(createUser, {
-    onSuccess: async (data) => {
-      toast.success("Chào mừng đến với The GateWay!");
-      router.push("/dashboard");
-    },
-    onError: (error) => {
-      if (error === "User has exist.") {
-        toast.success("Chào mừng đến với The GateWay!");
-        router.push("/dashboard");
-      } else {
-        toast.error(error);
-      }
-    },
-  });
-
   const [macAddresses, setMacAddresses] = useState<string>();
   const [isDesktopApp, setIsDesktopApp] = useState(false);
 
@@ -106,16 +91,8 @@ const Login = () => {
       const { statusCode, data, message } = result || {};
 
       if (statusCode === 200) {
-        await execute({
-          userId: data,
-          branch: getCookie("branch") || BRANCH.GOVAP,
-          stars: 0,
-          createdAt: dayjs()
-            .tz("Asia/Ho_Chi_Minh")
-            .add(7, "hours")
-            .toISOString(),
-          rankId: 1,
-        });
+        toast.success("Chào mừng đến với The GateWay!");
+        router.push("/dashboard");
       } else if (statusCode === 500 || statusCode === 499) {
         toast.error(message);
       }
