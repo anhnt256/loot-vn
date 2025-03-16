@@ -29,6 +29,7 @@ const Game = () => {
     branch,
     id: currentUserId,
     magicStone,
+    totalPayment,
   } = userData || {};
 
   const openModal = () => setIsModalOpen(true);
@@ -80,7 +81,6 @@ const Game = () => {
   };
 
   const handleRoll = async (rolls: number) => {
-
     if (isRolling) {
       return;
     }
@@ -114,8 +114,12 @@ const Game = () => {
       <div className="shadow-lg rounded-lg w-full overflow-auto max-h-[89vh] relative">
         <div className="flex justify-between p-4 bg-blue-600 text-white">
           <h2>Đền Nguyện Ước</h2>
-
           <div className="flex gap-2">
+            <div className="flex items-center gap-2 bg-orange-600/80 rounded-full px-3 py-1.5">
+              <span className="text-white font-semibold">
+                {`Tổng tiền nạp: ${totalPayment?.toLocaleString()}`}
+              </span>
+            </div>
             <div className="flex items-center gap-2 bg-gray-600/80 rounded-full px-3 py-1.5">
               <span className="text-white font-semibold">
                 {magicStone?.toLocaleString()}
@@ -125,6 +129,12 @@ const Game = () => {
           </div>
         </div>
 
+        <div className="bg-red-200">
+          <span className="text-sm p-4">
+            Số lượt quay được tính theo tổng tiền nạp trong tuần, và reset vào
+            0h mỗi thứ 2 hàng tuần. Vui lòng sử dụng sớm để tránh mất lượt.
+          </span>
+        </div>
         <div className="flex justify-center items-center bg-gray-200">
           <CircleSegments
             segments={Array.isArray(segments) ? [...segments].slice(0, 7) : []}

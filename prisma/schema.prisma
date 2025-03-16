@@ -117,6 +117,7 @@ model User {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   magicStone     Int              @default(0)
+  totalPayment   Float?           @db.Float
   branch         String
   UserRewardMap  UserRewardMap[]
   UserMissionMap UserMissionMap[]
@@ -222,6 +223,17 @@ model UserSpendMap {
   date       DateTime? @db.Date
   createdAt  DateTime? @default(now()) @db.DateTime(0)
   updatedAt  DateTime? @default(now()) @db.DateTime(0)
+}
+
+model Staff {
+  id        Int      @id @default(autoincrement())
+  userName  String
+  password  String
+  isDeleted Boolean  @default(false)
+  isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  branch    String   @default("GO_VAP")
 }
 
 enum Mission_type {

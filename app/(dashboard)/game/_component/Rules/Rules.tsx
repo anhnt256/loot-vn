@@ -24,8 +24,8 @@ export function Rules({ isModalOpen, closeModal }: RulesProps) {
           🎮 Thể Lệ Chơi Game Đền Nguyện Ước
         </h1>
         <p className="mb-4 text-gray-700">
-          🔹 Tổng tiền nạp trong 30 ngày gần nhất, cứ mỗi{" "}
-          <strong>30.000 VNĐ</strong> sẽ nhận được 1 lượt quay.
+          🔹 Tổng tiền nạp trong tuần (<strong>tính từ thứ Hai đến Chủ Nhật</strong>,
+          cứ mỗi <strong>30.000 VNĐ</strong> sẽ nhận được 1 lượt quay.
         </p>
         <h2 className="text-xl font-semibold mb-3">🎁 Giải Thưởng</h2>
         <table className="w-full border border-gray-300 rounded-lg overflow-hidden">
@@ -53,7 +53,7 @@ export function Rules({ isModalOpen, closeModal }: RulesProps) {
         <p className="mt-4 text-gray-700">
           🔹 Mỗi lượt quay sẽ trích ra một phần vào quỹ chung lên đến 500,000
           VNĐ (<strong>Jackpot</strong>), và mỗi lượt quay đều có tỉ lệ trúng
-          <strong>Jackpot</strong>.
+          <strong> Jackpot</strong>.
         </p>
         <p className="mt-4 text-gray-700">
           🔹 Giải thưởng sẽ chỉ được sử dụng để đổi lấy giờ chơi hoặc các sản
