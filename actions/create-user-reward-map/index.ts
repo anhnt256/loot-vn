@@ -75,7 +75,7 @@ const handler = async (data: InputType): Promise<any> => {
             data: {
               RemainMoney: fnetUser.RemainMoney + value,
               Birthdate:
-                fnetUser.Birthdate === "0000-00-00" ? null : fnetUser.Birthdate,
+                        fnetUser.Birthdate === null || fnetUser.Birthdate === new Date('0000-00-00') ? null : fnetUser.Birthdate,
               ExpiryDate: fnetUser.ExpiryDate || null,
             },
           });
