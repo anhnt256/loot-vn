@@ -14,7 +14,7 @@ import { updateUser } from "@/actions/update-user";
 const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   const loginMutation = useLogout();
 
-  const { userName, userData, isNewUser } = useUserInfo();
+  const { userName, userData } = useUserInfo();
   const { stars, magicStone } = userData || {};
   const pathname = usePathname();
 
@@ -112,15 +112,15 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
           >
             Trò chơi
           </Link>
-          {/*<Link*/}
-          {/*  className={cn(*/}
-          {/*    "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",*/}
-          {/*    pathname === "/store" ? "bg-gray-700" : "transparent",*/}
-          {/*  )}*/}
-          {/*  href="/store"*/}
-          {/*>*/}
-          {/*  Đổi thưởng*/}
-          {/*</Link>*/}
+          <Link
+            className={cn(
+              "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
+              pathname === "/store" ? "bg-gray-700" : "transparent",
+            )}
+            href="/store"
+          >
+            Đổi thưởng
+          </Link>
           {/*<Link*/}
           {/*  className={cn(*/}
           {/*    "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",*/}

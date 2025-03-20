@@ -1,8 +1,7 @@
 "use server";
 
-import { db } from "@/lib/db";
+import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
 import { createSafeAction } from "@/lib/create-safe-action";
-
 import { CreateUserRewardMap } from "./schema";
 import { InputType } from "./type";
 import dayjs from "dayjs";
@@ -37,21 +36,50 @@ const handler = async (data: InputType): Promise<any> => {
       };
     }
 
+    const fnetDB = await getFnetDB();
+
     try {
       await db.$transaction(async (tx) => {
         const { id } = promotion;
+
         await tx.promotionCode.update({
           where: {
             id,
           },
           data: {
-            isUsed: true,
+            isUsed: false,
             updatedAt: dayjs()
               .tz("Asia/Ho_Chi_Minh")
               .add(7, "hours")
               .toISOString(),
           },
         });
+
+        const fnetUser = await fnetDB.usertb.findFirst({
+          where: {
+            UserId: userId,
+          },
+          select: {
+            UserId: true,
+            RemainMoney: true,
+            Birthdate: true,
+            ExpiryDate: true,
+          },
+        });
+
+        if (fnetUser) {
+          await fnetDB.usertb.update({
+            where: {
+              UserId: userId,
+            },
+            data: {
+              RemainMoney: fnetUser.RemainMoney + value,
+              Birthdate:
+                fnetUser.Birthdate === "0000-00-00" ? null : fnetUser.Birthdate,
+              ExpiryDate: fnetUser.ExpiryDate || null,
+            },
+          });
+        }
 
         createUserRewardMap = await tx.userRewardMap.create({
           data: {
@@ -99,6 +127,7 @@ const handler = async (data: InputType): Promise<any> => {
         }
       });
     } catch (error) {
+      console.log("error", error);
       return {
         error: "Failed to create.",
       };

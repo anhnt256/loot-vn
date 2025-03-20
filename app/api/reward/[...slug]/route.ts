@@ -8,15 +8,14 @@ export async function GET(
   { params }: { params: { slug: string[] } },
 ) {
   try {
-
     const [userId, branch] = params.slug;
 
     if (userId) {
       const rewards = await db.userRewardMap.findMany({
-        where: { userId: parseInt(userId, 10), branch },
+        where: { userId: parseInt(userId, 10), branch, isUsed: false },
         include: {
           promotionCode: {
-            select: { code: true, name: true },
+            select: { code: true, name: true, createdAt: true },
             where: { isUsed: true },
           },
         },

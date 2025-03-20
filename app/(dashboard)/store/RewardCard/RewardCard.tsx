@@ -19,6 +19,8 @@ const RewardCard: React.FC<CardProps> = ({ data }) => {
   const { id, name, value, totalPromotion } = data;
   const branch = getCookie("branch") || BRANCH.GOVAP;
 
+  const { refreshAllData } = useUserInfo();
+
   let bgColor = "";
   if (stars && stars >= value) {
     bgColor =
@@ -28,7 +30,9 @@ const RewardCard: React.FC<CardProps> = ({ data }) => {
   const { execute: executeCreateUserRewardMap, isLoading } = useAction(
     createUserRewardMap,
     {
-      onSuccess: async () => {},
+      onSuccess: async () => {
+        refreshAllData();
+      },
       onError: (error) => {
         if (error === "Reward has claim.") {
           toast.error(error);
