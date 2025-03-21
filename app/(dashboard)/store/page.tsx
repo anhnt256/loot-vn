@@ -35,6 +35,12 @@ const Store = () => {
           </div>
         </div>
 
+        <div className="flex justify-between items-center">
+          <span className="text-xs text-black p-1 font-semibold mb-2 mr-4 bg-orange-300 w-full">
+            Sau khi đổi thưởng, phần thưởng sẽ được cộng trực tiếp vào số dư tài khoản. Vui lòng đăng nhập lại để cập nhật số giờ chơi chính xác. Xin cảm ơn.
+          </span>
+        </div>
+
         <div id="calendar" className="overflow-y-auto">
           <RewardList rewards={rewards} />
         </div>
