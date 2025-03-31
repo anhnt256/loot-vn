@@ -33,9 +33,12 @@ const Login = () => {
   const [isDesktopApp, setIsDesktopApp] = useState(false);
 
   const { data: machineData } = useQuery({
-    queryKey: ["check-branch"],
+    queryKey: ["check-branch", macAddresses], // Add macAddresses to queryKey
     enabled: !!macAddresses,
-    queryFn: () => fetch("/api/check-branch").then((res) => res.json()),
+    queryFn: () => {
+      console.log("Fetching with macAddress:", macAddresses);
+      return fetch("/api/check-branch").then((res) => res.json());
+    },
   });
 
   useEffect(() => {
@@ -68,6 +71,10 @@ const Login = () => {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    console.log("macAddresses changed:", macAddresses);
+  }, [macAddresses]);
 
   useEffect(() => {
     if (machineData) {
