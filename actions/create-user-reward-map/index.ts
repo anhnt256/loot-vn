@@ -71,6 +71,10 @@ const handler = async (data: InputType): Promise<any> => {
         if (fnetUser) {
           const today = new Date();
           const todayFormatted = today.toISOString().split('T')[0] + 'T00:00:00.000Z';
+          
+          const expiryDate = new Date();
+          expiryDate.setFullYear(expiryDate.getFullYear() + 10);
+          const expiryDateFormatted = expiryDate.toISOString().split('T')[0] + 'T00:00:00.000Z';
 
           await fnetDB.usertb.update({
             where: {
@@ -79,7 +83,7 @@ const handler = async (data: InputType): Promise<any> => {
             data: {
               RemainMoney: Number(fnetUser.RemainMoney) + Number(value),
               Birthdate: todayFormatted,
-              ExpiryDate: todayFormatted
+              ExpiryDate: expiryDateFormatted
             },
           });
         }
