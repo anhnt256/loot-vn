@@ -34,6 +34,22 @@ const handler = async (data: InputType): Promise<any> => {
     where: { userId, branch },
   });
 
+  // Check last claim time
+  const lastClaim = await db.userRewardMap.findFirst({
+    where: { userId },
+    orderBy: { createdAt: 'desc' }
+  });
+  if (lastClaim && lastClaim.createdAt) {
+    const lastClaimTime = new Date(lastClaim.createdAt).getTime();
+    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+    
+    if (lastClaimTime > fiveMinutesAgo) {
+      return {
+        error: "Please wait 5 minutes between claims.",
+      };
+    }
+  }
+
   if (promotion && user) {
     const { stars } = user;
     if (stars - value < 0) {
@@ -70,8 +86,9 @@ const handler = async (data: InputType): Promise<any> => {
 
         if (fnetUser) {
           const today = new Date();
+          today.setFullYear(today.getFullYear() - 20);
           const todayFormatted = today.toISOString().split('T')[0] + 'T00:00:00.000Z';
-          
+
           const expiryDate = new Date();
           expiryDate.setFullYear(expiryDate.getFullYear() + 10);
           const expiryDateFormatted = expiryDate.toISOString().split('T')[0] + 'T00:00:00.000Z';
