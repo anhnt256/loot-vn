@@ -126,7 +126,6 @@ export async function POST(req: Request, res: Response): Promise<any> {
             magicStone: 0,
             createdAt: dayjs()
               .tz("Asia/Ho_Chi_Minh")
-              .add(7, "hours")
               .toISOString(),
           },
         });

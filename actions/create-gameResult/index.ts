@@ -212,7 +212,6 @@ async function saveResult(
         itemId: id,
         createdAt: dayjs()
           .tz("Asia/Ho_Chi_Minh")
-          .add(7, "hours")
           .toISOString(),
       },
     });
@@ -226,7 +225,6 @@ async function saveResult(
         targetId: gameResultId,
         createdAt: dayjs()
           .tz("Asia/Ho_Chi_Minh")
-          .add(7, "hours")
           .toISOString(),
         branch,
       },
@@ -238,7 +236,6 @@ async function saveResult(
         stars: newStars,
         updatedAt: dayjs()
           .tz("Asia/Ho_Chi_Minh")
-          .add(7, "hours")
           .toISOString(),
         magicStone: magicStone - 1,
       },

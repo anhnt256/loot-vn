@@ -12,7 +12,6 @@ export async function GET(
   const startOfDayVN = dayjs()
     .tz("Asia/Ho_Chi_Minh")
     .startOf("day")
-    .add(7, "hours")
     .toISOString();
 
   try {

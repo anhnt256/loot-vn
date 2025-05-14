@@ -71,7 +71,6 @@ export async function GET(req: Request) {
     // }
     return NextResponse.json({ data: dayjs()
         .tz("Asia/Ho_Chi_Minh")
-        .add(7, "hours")
         .toISOString() });
   } catch (error) {
     return new NextResponse("Internal Error", { status: 500 });

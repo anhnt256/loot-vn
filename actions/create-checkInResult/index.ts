@@ -17,8 +17,22 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   const startOfDayVN = dayjs()
     .tz("Asia/Ho_Chi_Minh")
     .startOf("day")
-    .add(7, "hours")
     .toISOString();
+
+  // Anti-spam: Prevent check-in if last check-in was less than 10 minutes ago
+  const lastCheckIn = await db.checkInResult.findFirst({
+    where: { userId, branch },
+    orderBy: { createdAt: "desc" },
+  });
+  if (lastCheckIn) {
+    const now = dayjs();
+    const last = dayjs(lastCheckIn.createdAt);
+    if (now.diff(last, "minute") < 10) {
+      return {
+        error: "Bạn vừa check-in xong, vui lòng chờ 10 phút trước khi check-in tiếp!",
+      };
+    }
+  }
 
   try {
     const query = fnetPrisma.sql`
@@ -82,7 +96,6 @@ const handler = async (data: InputType): Promise<ReturnType> => {
           branch,
           createdAt: dayjs()
             .tz("Asia/Ho_Chi_Minh")
-            .add(7, "hours")
             .toISOString(),
         },
       });
@@ -108,7 +121,6 @@ const handler = async (data: InputType): Promise<ReturnType> => {
               targetId: id,
               createdAt: dayjs()
                 .tz("Asia/Ho_Chi_Minh")
-                .add(7, "hours")
                 .toISOString(),
               branch,
             },
@@ -120,7 +132,6 @@ const handler = async (data: InputType): Promise<ReturnType> => {
               stars: newStars,
               updatedAt: dayjs()
                 .tz("Asia/Ho_Chi_Minh")
-                .add(7, "hours")
                 .toISOString(),
             },
           });

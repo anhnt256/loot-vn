@@ -40,7 +40,6 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         stars,
         createdAt: dayjs()
           .tz("Asia/Ho_Chi_Minh")
-          .add(7, "hours")
           .toISOString(),
       },
     });

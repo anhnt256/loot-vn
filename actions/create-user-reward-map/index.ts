@@ -70,7 +70,7 @@ const handler = async (data: InputType): Promise<any> => {
           },
           data: {
             isUsed: false,
-            updatedAt: dayjs().add(7, "hours").toISOString(),
+            updatedAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
           },
         });
 
@@ -113,7 +113,7 @@ const handler = async (data: InputType): Promise<any> => {
             duration,
             isUsed,
             branch,
-            createdAt: dayjs().add(7, "hours").toISOString(),
+            createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
           },
         });
 
@@ -124,7 +124,7 @@ const handler = async (data: InputType): Promise<any> => {
             },
             data: {
               stars: newStars,
-              updatedAt: dayjs().add(7, "hours").toISOString(),
+              updatedAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
             },
           });
 
@@ -135,7 +135,7 @@ const handler = async (data: InputType): Promise<any> => {
               oldStars,
               newStars,
               targetId: rewardId,
-              createdAt: dayjs().add(7, "hours").toISOString(),
+              createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
               branch,
             },
           });
@@ -274,7 +274,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
             rankId: 1,
             stars: 0,
             magicStone: 0,
-            createdAt: dayjs().add(7, "hours").toISOString(),
+            createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
           },
         });
       }

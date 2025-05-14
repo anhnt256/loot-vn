@@ -13,7 +13,6 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     isDone = true,
     updatedAt = dayjs()
       .tz("Asia/Ho_Chi_Minh")
-      .add(7, "hours")
       .toISOString(),
     userId,
     currentUserId,
@@ -73,7 +72,6 @@ const handler = async (data: InputType): Promise<ReturnType> => {
               targetId: id,
               createdAt: dayjs()
                 .tz("Asia/Ho_Chi_Minh")
-                .add(7, "hours")
                 .toISOString(),
               branch,
             },
