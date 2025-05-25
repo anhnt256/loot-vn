@@ -19,7 +19,7 @@ export async function GET(
       WHERE PaymentType = 4
         AND UserId = ${parseInt(userId, 10)}
         AND Note = N'Thời gian phí'
-        AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) >= DATE_SUB(DATE(NOW()), INTERVAL (WEEKDAY(NOW()) + 6) % 7 DAY)
+        AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) >= DATE(DATE_SUB(NOW(), INTERVAL WEEKDAY(NOW()) DAY))
         AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) <= NOW();
     `;
 
@@ -40,9 +40,9 @@ export async function GET(
       SELECT COUNT(*) as count
       FROM GameResult gr
       WHERE gr.userId = ${parseInt(userId, 10)}
-        AND CreatedAt >= DATE_SUB(DATE(NOW()), INTERVAL (WEEKDAY(NOW()) + 6) % 7 DAY)
+        AND CreatedAt >= DATE(DATE_SUB(NOW(), INTERVAL WEEKDAY(NOW()) DAY))  -- Start of current week (Monday)
         AND CreatedAt <= NOW();
-                    `;
+    `;
 
     const userRound = await db.$queryRaw<[{ count: bigint }]>(query);
 
