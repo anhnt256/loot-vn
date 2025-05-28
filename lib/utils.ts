@@ -10,6 +10,7 @@ import isEmpty from "lodash/isEmpty";
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
 export const getRandomItem = (arr: any) => {
   if (arr.length === 0) {
     throw new Error("Cannot get a random item from an empty array.");

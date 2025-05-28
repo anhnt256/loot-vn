@@ -16,6 +16,7 @@ const AdminDashboard = () => {
   const [computers, setComputers] = useState<any[]>([]);
   const [countdown, setCountdown] = useState(60);
   const [selectedBranch, setSelectedBranch] = useState(Cookies.get('branch') || 'GO_VAP');
+  const [loginType, setLoginType] = useState(Cookies.get('loginType') || 'username');
 
   useEffect(() => {
     // Set initial branch cookie if not exists
@@ -59,12 +60,21 @@ const AdminDashboard = () => {
             <Select
               value={selectedBranch}
               onChange={handleBranchChange}
-              className="w-40 dark"
+              className="w-40 dark [&_.ant-select-selection-item]:text-white [&_.ant-select-disabled_.ant-select-selection-item]:text-white"
+              disabled={loginType === 'mac'}
               options={[
                 { value: 'GO_VAP', label: 'Gò Vấp' },
                 { value: 'TAN_PHU', label: 'Tân Phú' },
               ]}
-              style={{ backgroundColor: '#1f2937', color: 'white', borderColor: '#374151' }}
+              style={{ 
+                backgroundColor: '#1f2937', 
+                color: 'white', 
+                borderColor: '#374151'
+              }}
+              dropdownStyle={{
+                backgroundColor: '#1f2937',
+                color: 'white'
+              }}
             />
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
