@@ -15,7 +15,7 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-900">
       {/* Sidebar */}
       <AdminSidebar />
 
@@ -24,7 +24,7 @@ export default async function AdminLayout({
         <AdminHeader />
         
         {/* Main Content Area */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-900 p-6">
           {children}
         </main>
       </div>

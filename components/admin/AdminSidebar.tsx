@@ -35,9 +35,9 @@ export function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 bg-white shadow-md">
+    <aside className="w-64 bg-gray-800 shadow-xl border-r border-gray-700">
       <div className="p-4">
-        <h2 className="text-2xl font-bold text-gray-800">Admin Panel</h2>
+        <h2 className="text-2xl font-bold text-gray-100">Admin Panel</h2>
       </div>
       <nav className="mt-4">
         {menuItems.map((item) => {
@@ -46,8 +46,8 @@ export function AdminSidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 ${
-                isActive ? "bg-gray-100" : ""
+              className={`flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200 ${
+                isActive ? "bg-gray-700 text-white" : ""
               }`}
             >
               <span className="mr-3">{item.icon}</span>
