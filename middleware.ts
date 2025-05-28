@@ -55,10 +55,15 @@ export async function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith("/admin")) {
     console.log("Middleware - Admin route detected");
     
+    // Skip authentication check for admin login page
+    if (request.nextUrl.pathname === "/admin-login") {
+      return NextResponse.next();
+    }
+
     // Nếu không có token, chuyển hướng về trang login
     if (!token) {
       console.log("Middleware - No token, redirecting to login");
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.redirect(new URL("/admin-login", request.url));
     }
 
     try {
