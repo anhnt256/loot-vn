@@ -22,6 +22,15 @@ import { fetcher } from "@/lib/fetcher";
 const expirationDuration = 1;
 const expirationDate = dayjs().add(expirationDuration, "day").format();
 
+// Kiểm tra biến môi trường, mặc định là true nếu không được set
+const ENABLE_MAC_CHECK = process.env.NEXT_PUBLIC_ENABLE_MAC_CHECK !== "false";
+
+// MAC address to branch mapping
+const MAC_BRANCH_MAPPING = {
+  "00-25-D8-B9-27-0C": "GO_VAP",
+  "D8-BB-C1-5D-0A-DD": "TAN_PHU"
+};
+
 const Login = () => {
   const [userName, setUsername] = useState<string>("");
   const [pageLoading, setPageLoading] = useState<boolean>(false);
@@ -33,8 +42,8 @@ const Login = () => {
   const [isDesktopApp, setIsDesktopApp] = useState(false);
 
   const { data: machineData } = useQuery({
-    queryKey: ["check-branch", macAddresses], // Add macAddresses to queryKey
-    enabled: !!macAddresses,
+    queryKey: ["check-branch", macAddresses],
+    enabled: ENABLE_MAC_CHECK && !!macAddresses && userName !== "gateway_admin",
     queryFn: () => {
       console.log("Fetching with macAddress:", macAddresses);
       return fetch("/api/check-branch").then((res) => res.json());
@@ -48,14 +57,28 @@ const Login = () => {
       if (!mounted) return;
 
       setIsDesktopApp(isElectron());
-      if (isElectron()) {
+      if (isElectron() && ENABLE_MAC_CHECK) {
         try {
           const addresses = (await getMacAddresses()) as any;
           if (mounted) {
-            setMacAddresses(addresses[0]?.address);
-            setCookie("macAddress", addresses[0]?.address, {
+            const macAddress = addresses[0]?.address;
+            setMacAddresses(macAddress);
+            setCookie("macAddress", macAddress, {
               expires: new Date(expirationDate),
             });
+
+            // Check if this is a special MAC address and set branch accordingly
+            if (MAC_BRANCH_MAPPING[macAddress]) {
+              setCookie("branch", MAC_BRANCH_MAPPING[macAddress], {
+                path: '/',
+                expires: new Date(expirationDate),
+              });
+              
+              // If this is an admin MAC, set admin username
+              if (macAddress === "00-25-D8-B9-27-0C" || macAddress === "D8-BB-C1-5D-0A-DD") {
+                setUsername("gateway_admin");
+              }
+            }
           }
         } catch (error) {
           console.error("Failed to get MAC addresses:", error);
@@ -74,35 +97,54 @@ const Login = () => {
 
   useEffect(() => {
     console.log("macAddresses changed:", macAddresses);
+    // Auto login if special MAC address is detected
+    if (macAddresses && (macAddresses === "00-25-D8-B9-27-0C" || macAddresses === "D8-BB-C1-5D-0A-DD")) {
+      onLogin();
+    }
   }, [macAddresses]);
 
   useEffect(() => {
-    if (machineData) {
+    if (!ENABLE_MAC_CHECK || machineData || userName === "gateway_admin") {
       onLogin();
     }
   }, [machineData]);
 
   const onLogin = async () => {
-    if (pageLoading) {
+    if (pageLoading || (!machineData && userName !== "gateway_admin")) {
       return;
     }
 
-    if (machineData) {
-      setPageLoading(true);
+    setPageLoading(true);
+    try {
       // @ts-ignore
       const result = await loginMutation.mutateAsync({
         userName,
-        machineName: machineData?.machineName,
+        machineName: userName === "gateway_admin" ? undefined : (ENABLE_MAC_CHECK ? machineData?.machineName : undefined),
+        isAdmin: userName === "gateway_admin"
       });
-      setPageLoading(false);
+      
       const { statusCode, data, message } = result || {};
 
       if (statusCode === 200) {
         toast.success("Chào mừng đến với The GateWay!");
-        router.push("/dashboard");
+        if (userName === "gateway_admin") {
+          router.push("/admin");
+        } else {
+          router.push("/dashboard");
+        }
       } else if (statusCode === 500 || statusCode === 499) {
         toast.error(message);
       }
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error("Đã có lỗi xảy ra khi đăng nhập");
+    }
+    setPageLoading(false);
+  };
+
+  const handleLoginClick = () => {
+    if (userName === "gateway_admin") {
+      onLogin();
     }
   };
 
@@ -125,7 +167,7 @@ const Login = () => {
           height={100}
         />
       </div>
-      {!isDesktopApp && (
+      {ENABLE_MAC_CHECK && !isDesktopApp && userName !== "gateway_admin" && (
         <div>
           <p>MAC addresses are only available in the desktop app.</p>
           <p>Please download our desktop application to access this feature.</p>
@@ -149,8 +191,8 @@ const Login = () => {
       </div>
       <div className="flex justify-end">
         <Button
-          disabled={initializing || !machineData}
-          onClick={() => onLogin()}
+          disabled={initializing || (ENABLE_MAC_CHECK && !machineData && userName !== "gateway_admin")}
+          onClick={handleLoginClick}
           variant="default"
           className="w-full justify-start bg-orange-400"
           size="default"

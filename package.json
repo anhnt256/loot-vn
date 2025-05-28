@@ -9,9 +9,10 @@
     "generate:govap": "prisma generate --schema=./prisma/schemaFnet.prisma",
     "generate:tanphu": "prisma generate --schema=./prisma/schemaFnetTP.prisma",
     "generate": "npm run generate:global && npm run generate:govap && npm run generate:tanphu",
-    "postinstall": "npm run generate",
+    "postinstall": "prisma generate",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "generate:prisma": "prisma generate && prisma generate --schema=./prisma/schemaFnet.prisma && prisma generate --schema=./prisma/schemaFnetTP.prisma"
   },
   "dependencies": {
     "@prisma/client": "^5.7.1",
@@ -20,6 +21,7 @@
     "@radix-ui/react-slot": "^1.0.2",
     "@tailwindcss/line-clamp": "^0.4.4",
     "@tanstack/react-query": "^5.14.2",
+    "@types/js-cookie": "^3.0.6",
     "@types/jsonwebtoken": "^9.0.8",
     "@types/lodash": "^4.17.14",
     "@typescript-eslint/eslint-plugin": "^6.15.0",
@@ -37,10 +39,12 @@
     "eslint-plugin-prettier": "^5.1.1",
     "framer-motion": "^11.15.0",
     "jose": "^5.9.6",
+    "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
     "lucide-react": "^0.298.0",
     "next": "14.0.4",
+    "next-auth": "^4.24.11",
     "prettier": "^3.1.1",
     "prettier-plugin-prisma": "^5.0.0",
     "prisma": "^5.7.1",

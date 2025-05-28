@@ -7,20 +7,24 @@ import isEmpty from "lodash/isEmpty";
 const expirationDuration = 1;
 const expirationDate = dayjs().add(expirationDuration, "day").format();
 
+interface LoginParams {
+  userName: string;
+  machineName?: string;
+  isAdmin?: boolean;
+}
+
 export const postLogin = async ({
   userName,
   machineName,
-}: {
-  userName: string;
-  machineName: string;
-}): Promise<any> => {
+  isAdmin,
+}: LoginParams): Promise<any> => {
   const result = await fetch("api/login", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     credentials: "include",
-    body: JSON.stringify({ userName, machineName }),
+    body: JSON.stringify({ userName, machineName, isAdmin }),
   });
 
   const resultText = await result.text();
@@ -38,7 +42,7 @@ export const postLogin = async ({
     const data = JSON.parse(resultText);
 
     const { userId, userName } = data || {};
-    if (isEmpty(userName)) {
+    if (isEmpty(userName) && !isAdmin) {
       return {
         statusCode: 700,
         data: null,

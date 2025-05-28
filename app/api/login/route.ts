@@ -13,8 +13,39 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
   try {
     const body = await req.text();
+    console.log("Login request body:", body);
 
-    const { userName, machineName } = JSON.parse(body);
+    const { userName, machineName, isAdmin } = JSON.parse(body);
+
+    // Xử lý đăng nhập admin
+    if (isAdmin && userName === "gateway_admin") {
+      console.log("Processing admin login");
+      const adminData = {
+        userId: "admin",
+        userName: "gateway_admin",
+        role: "admin"
+      };
+
+      const token = await signJWT(adminData);
+      const response = NextResponse.json({
+        ...adminData,
+        statusCode: 200,
+        message: "Login Success"
+      });
+
+      response.cookies.set({
+        name: "token",
+        value: token,
+        maxAge: 86400,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        path: "/",
+      });
+
+      console.log("Admin login successful");
+      return response;
+    }
 
     const fnetDB = await getFnetDB();
     const fnetPrisma = await getFnetPrisma();
@@ -134,7 +165,11 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
     if (userUpdated) {
       const token = await signJWT({ userId: userUpdated?.userId });
-      const response = NextResponse.json(userUpdated);
+      const response = NextResponse.json({
+        ...userUpdated,
+        statusCode: 200,
+        message: "Login Success"
+      });
 
       response.cookies.set({
         name: "token",
@@ -148,15 +183,19 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
       return response;
     }
-    return NextResponse.json("Login Fail", { status: 401 });
+    return NextResponse.json({ 
+      statusCode: 401,
+      message: "Login Failed",
+      data: null
+    }, { status: 401 });
   } catch (error) {
+    console.error("Login error:", error);
     const errorMessage =
       error instanceof Error ? error.message : "Internal Error";
-    return new NextResponse(JSON.stringify({ error: errorMessage }), {
-      status: 500,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    return NextResponse.json({ 
+      statusCode: 500,
+      message: errorMessage,
+      data: null
+    }, { status: 500 });
   }
 }
