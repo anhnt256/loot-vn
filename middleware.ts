@@ -7,7 +7,12 @@ export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
   console.log("Middleware - Request path:", request.nextUrl.pathname);
 
-  const publicPaths = ["/", "/api/login", "/api/check-branch"];
+  const publicPaths = [
+    "/",
+    "/api/login",
+    "/api/check-branch",
+    "/admin-login"
+  ];
 
   if (publicPaths.includes(request.nextUrl.pathname)) {
     console.log("Middleware - Public path, allowing access");
@@ -58,6 +63,15 @@ export async function middleware(request: NextRequest) {
     // Skip authentication check for admin login page
     if (request.nextUrl.pathname === "/admin-login") {
       return NextResponse.next();
+    }
+
+    // Kiểm tra quyền truy cập trang gift-rounds
+    if (request.nextUrl.pathname === "/admin/gift-rounds") {
+      const loginType = request.cookies.get("loginType")?.value;
+      if (loginType !== "username") {
+        console.log("Middleware - Unauthorized access to gift-rounds page");
+        return NextResponse.redirect(new URL("/admin", request.url));
+      }
     }
 
     // Nếu không có token, chuyển hướng về trang login

@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { Toaster } from "sonner";
 
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
@@ -16,6 +17,7 @@ export default async function AdminLayout({
 }) {
   return (
     <div className="flex h-screen bg-gray-900">
+      <Toaster richColors position="top-right" />
       {/* Sidebar */}
       <AdminSidebar />
 

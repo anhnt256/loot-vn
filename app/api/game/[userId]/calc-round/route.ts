@@ -27,13 +27,36 @@ export async function GET(
 
     const userTopUp = parseFloat(result[0].total.toString());
 
-    // const userTopUp = 500000;
-
+    // Calculate rounds from top-up
     const round = Math.floor(
       userTopUp
         ? userTopUp / Number(process.env.NEXT_PUBLIC_SPEND_PER_ROUND)
         : 0,
     );
+
+    // Get user record first
+    const user = await db.user.findFirst({
+      where: { userId: parseInt(userId, 10) },
+    });
+
+    if (!user?.id) {
+      return NextResponse.json("User not found", { status: 404 });
+    }
+
+    // Get active gift rounds
+    const activeGiftRounds = await db.giftRound.findMany({
+      where: {
+        userId: user.id,
+        isUsed: false,
+        OR: [
+          { expiredAt: null },
+          { expiredAt: { gt: new Date() } },
+        ],
+      },
+    });
+
+    // Calculate total gift rounds
+    const totalGiftRounds = activeGiftRounds.reduce((sum, gr) => sum + gr.amount, 0);
 
     // Số lượt đã sử dụng
     const query = Prisma.sql`
@@ -45,28 +68,33 @@ export async function GET(
     `;
 
     const userRound = await db.$queryRaw<[{ count: bigint }]>(query);
+    const usedRounds = Number(userRound[0].count);
 
-    const count = Number(userRound[0].count);
+    // Calculate total available rounds (paid rounds + gift rounds)
+    const totalAvailableRounds = round + totalGiftRounds;
+    const remainingRounds = Math.max(0, totalAvailableRounds - usedRounds);
 
-    const user = await db.user.findFirst({
-      where: { userId: parseInt(userId, 10) },
+    // Update user
+    await db.user.update({
+      where: { id: user.id },
+      data: {
+        magicStone: remainingRounds,
+        totalPayment: userTopUp || 0,
+      },
     });
 
-    const { id } = user || {};
+    return NextResponse.json({
+      success: true,
+      data: {
+        paidRounds: round,
+        giftRounds: totalGiftRounds,
+        usedRounds,
+        remainingRounds,
+      }
+    }, { status: 200 });
 
-    if (id) {
-      await db.user.update({
-        where: { id },
-        data: {
-          magicStone: round - count >= 0 ? round - count : 0,
-          totalPayment: userTopUp || 0,
-        },
-      });
-
-      return NextResponse.json("Success", { status: 200 });
-    }
-    return NextResponse.json("Internal Error", { status: 404 });
   } catch (error) {
+    console.error("Error calculating rounds:", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

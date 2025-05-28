@@ -60,7 +60,7 @@ const AdminDashboard = () => {
             <Select
               value={selectedBranch}
               onChange={handleBranchChange}
-              className="w-40 dark [&_.ant-select-selection-item]:text-white [&_.ant-select-disabled_.ant-select-selection-item]:text-white"
+              className="w-40 dark [&_.ant-select-disabled_.ant-select-selection-item]:text-white"
               disabled={loginType === 'mac'}
               options={[
                 { value: 'GO_VAP', label: 'Gò Vấp' },
@@ -68,7 +68,6 @@ const AdminDashboard = () => {
               ]}
               style={{ 
                 backgroundColor: '#1f2937', 
-                color: 'white', 
                 borderColor: '#374151'
               }}
               dropdownStyle={{
