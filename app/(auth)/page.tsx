@@ -25,10 +25,15 @@ const expirationDate = dayjs().add(expirationDuration, "day").format();
 // Kiểm tra biến môi trường, mặc định là true nếu không được set
 const ENABLE_MAC_CHECK = process.env.NEXT_PUBLIC_ENABLE_MAC_CHECK !== "false";
 
-// MAC address to branch mapping
-const MAC_BRANCH_MAPPING = {
+// MAC address to branch mapping with type safety
+const MAC_BRANCH_MAPPING: Record<string, string> = {
   "00-25-D8-B9-27-0C": "GO_VAP",
   "D8-BB-C1-5D-0A-DD": "TAN_PHU"
+} as const;
+
+// Type guard for MAC addresses
+const isKnownMacAddress = (mac: string): mac is keyof typeof MAC_BRANCH_MAPPING => {
+  return mac in MAC_BRANCH_MAPPING;
 };
 
 const Login = () => {
@@ -61,23 +66,21 @@ const Login = () => {
         try {
           const addresses = (await getMacAddresses()) as any;
           if (mounted) {
-            const macAddress = addresses[0]?.address;
-            setMacAddresses(macAddress);
-            setCookie("macAddress", macAddress, {
+            const currentMacAddress = addresses[0]?.address as string;
+            setMacAddresses(currentMacAddress);
+            setCookie("macAddress", currentMacAddress, {
               expires: new Date(expirationDate),
             });
 
             // Check if this is a special MAC address and set branch accordingly
-            if (MAC_BRANCH_MAPPING[macAddress]) {
-              setCookie("branch", MAC_BRANCH_MAPPING[macAddress], {
+            if (currentMacAddress && isKnownMacAddress(currentMacAddress)) {
+              setCookie("branch", MAC_BRANCH_MAPPING[currentMacAddress], {
                 path: '/',
                 expires: new Date(expirationDate),
               });
               
               // If this is an admin MAC, set admin username
-              if (macAddress === "00-25-D8-B9-27-0C" || macAddress === "D8-BB-C1-5D-0A-DD") {
-                setUsername("gateway_admin");
-              }
+              setUsername("gateway_admin");
             }
           }
         } catch (error) {
@@ -98,7 +101,7 @@ const Login = () => {
   useEffect(() => {
     console.log("macAddresses changed:", macAddresses);
     // Auto login if special MAC address is detected
-    if (macAddresses && (macAddresses === "00-25-D8-B9-27-0C" || macAddresses === "D8-BB-C1-5D-0A-DD")) {
+    if (macAddresses && isKnownMacAddress(macAddresses)) {
       onLogin();
     }
   }, [macAddresses]);
