@@ -8,17 +8,12 @@ import debounce from "lodash/debounce";
 
 const giftRoundSchema = z.object({
   userId: z.number(),
-  amount: z.string().transform((val) => parseInt(val)),
+  amount: z.number().min(1),
   reason: z.string().min(1, "Vui lòng nhập lý do"),
   expiredAt: z.string().optional(),
 });
 
-type FormData = {
-  userId: number;
-  amount: string;
-  reason: string;
-  expiredAt?: string;
-};
+type GiftRoundInput = z.infer<typeof giftRoundSchema>;
 
 interface GiftRoundFormProps {
   initialData?: {
@@ -50,12 +45,12 @@ export function GiftRoundForm({
     handleSubmit,
     control,
     formState: { errors },
-  } = useForm<FormData>({
+  } = useForm<GiftRoundInput>({
     resolver: zodResolver(giftRoundSchema),
     defaultValues: initialData
       ? {
           userId: initialData.userId,
-          amount: initialData.amount.toString(),
+          amount: initialData.amount,
           reason: initialData.reason,
           expiredAt: initialData.expiredAt || undefined,
         }
@@ -87,7 +82,7 @@ export function GiftRoundForm({
 
   const debouncedSearch = debounce(searchUsers, 300);
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: GiftRoundInput) => {
     try {
       setIsLoading(true);
       const url = initialData
@@ -100,10 +95,7 @@ export function GiftRoundForm({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...data,
-          amount: parseInt(data.amount),
-        }),
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) {
@@ -163,7 +155,7 @@ export function GiftRoundForm({
         <input
           type="number"
           id="amount"
-          {...register("amount")}
+          {...register("amount", { valueAsNumber: true })}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           disabled={isLoading}
         />
@@ -216,7 +208,7 @@ export function GiftRoundForm({
         )}
       </div>
 
-      <div className="flex justify-end space-x-2">
+      <div className="flex justify-end space-x-3">
         {onCancel && (
           <button
             type="button"
