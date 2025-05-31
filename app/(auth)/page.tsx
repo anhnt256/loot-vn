@@ -22,9 +22,6 @@ import { fetcher } from "@/lib/fetcher";
 const expirationDuration = 1;
 const expirationDate = dayjs().add(expirationDuration, "day").format();
 
-// Kiểm tra biến môi trường, mặc định là true nếu không được set
-const ENABLE_MAC_CHECK = process.env.NEXT_PUBLIC_ENABLE_MAC_CHECK !== "false";
-
 // MAC address to branch mapping with type safety
 const MAC_BRANCH_MAPPING: Record<string, string> = {
   "00-25-D8-B9-27-0C": "GO_VAP",
@@ -48,7 +45,7 @@ const Login = () => {
 
   const { data: machineData } = useQuery({
     queryKey: ["check-branch", macAddresses],
-    enabled: ENABLE_MAC_CHECK && !!macAddresses,
+    enabled: !!macAddresses,
     queryFn: () => {
       console.log("Fetching with macAddress:", macAddresses);
       return fetch("/api/check-branch").then((res) => res.json());
@@ -62,7 +59,7 @@ const Login = () => {
       if (!mounted) return;
 
       setIsDesktopApp(isElectron());
-      if (isElectron() && ENABLE_MAC_CHECK) {
+      if (isElectron()) {
         try {
           const addresses = (await getMacAddresses()) as any;
           if (mounted) {
@@ -96,13 +93,13 @@ const Login = () => {
   }, []);
 
   useEffect(() => {
-    if (!ENABLE_MAC_CHECK || machineData) {
+    if (machineData) {
       onLogin();
     }
   }, [machineData]);
 
   const onLogin = async () => {
-    if (pageLoading || (!machineData && ENABLE_MAC_CHECK)) {
+    if (pageLoading || !machineData) {
       return;
     }
 
@@ -110,7 +107,7 @@ const Login = () => {
     try {
       const result = await loginMutation.mutateAsync({
         userName,
-        machineName: ENABLE_MAC_CHECK ? machineData?.machineName : undefined,
+        machineName: machineData?.machineName,
         isAdmin: false
       });
       
@@ -148,7 +145,7 @@ const Login = () => {
           height={100}
         />
       </div>
-      {ENABLE_MAC_CHECK && !isDesktopApp && (
+      {!isDesktopApp && (
         <div>
           <p>MAC addresses are only available in the desktop app.</p>
           <p>Please download our desktop application to access this feature.</p>
@@ -172,7 +169,7 @@ const Login = () => {
       </div>
       <div className="flex justify-end">
         <Button
-          disabled={initializing || (ENABLE_MAC_CHECK && !machineData)}
+          disabled={initializing || !machineData}
           onClick={onLogin}
           variant="default"
           className="w-full justify-start bg-orange-400"

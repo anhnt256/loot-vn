@@ -63,8 +63,8 @@ export async function GET(
       SELECT COUNT(*) as count
       FROM GameResult gr
       WHERE gr.userId = ${parseInt(userId, 10)}
-        AND CreatedAt >= DATE(DATE_SUB(NOW(), INTERVAL WEEKDAY(NOW()) DAY))  -- Start of current week (Monday)
-        AND CreatedAt <= NOW();
+      AND CreatedAt >= DATE(DATE_SUB(NOW(), INTERVAL WEEKDAY(NOW()) DAY))
+      AND CreatedAt <= NOW();
     `;
 
     const userRound = await db.$queryRaw<[{ count: bigint }]>(query);

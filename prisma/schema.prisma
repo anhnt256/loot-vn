@@ -207,13 +207,15 @@ model SavingPlan {
 }
 
 model Computer {
-  id            Int     @id @default(autoincrement())
+  id            Int             @id @default(autoincrement())
   fingerprintId String
   ip            String?
-  name          String  @db.VarChar(45)
-  branch        String  @db.VarChar(45)
+  name          String          @db.VarChar(45)
+  branch        String          @db.VarChar(45)
   status        Int
   localIp       String?
+  devices       Device[]
+  histories     DeviceHistory[]
 }
 
 model UserSpendMap {
@@ -238,15 +240,15 @@ model Staff {
 }
 
 model GiftRound {
-  id          Int       @id @default(autoincrement())
-  userId      Int      
-  amount      Int      // Số lượt tặng
-  reason      String   @db.VarChar(255) // Lý do tặng lượt
-  staffId     Int      // ID nhân viên thực hiện
-  createdAt   DateTime @default(now())
-  expiredAt   DateTime? // Thời gian hết hạn của lượt tặng (nếu có)
-  isUsed      Boolean  @default(false)
-  user        User     @relation(fields: [userId], references: [id])
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  amount    Int // Số lượt tặng
+  reason    String    @db.VarChar(255) // Lý do tặng lượt
+  staffId   Int // ID nhân viên thực hiện
+  createdAt DateTime  @default(now())
+  expiredAt DateTime? // Thời gian hết hạn của lượt tặng (nếu có)
+  isUsed    Boolean   @default(false)
+  user      User      @relation(fields: [userId], references: [id])
 
   @@index([userId])
 }
@@ -264,4 +266,59 @@ enum UserStarHistory_type {
   REWARD
   GAME
   RETURN_GIFT
+}
+
+enum DeviceStatus {
+  GOOD
+  DAMAGED_BUT_USABLE
+  COMPLETELY_DAMAGED
+}
+
+enum DeviceSolution {
+  REPLACE_NEW // Thay mới
+  REPAIR // Sửa chữa
+  CLEAN // Vệ sinh
+  REINSTALL // Cài đặt lại
+  REPLACE_USED // Thay thế bằng thiết bị cũ
+  OTHER // Khác
+}
+
+model Device {
+  id              Int             @id @default(autoincrement())
+  computerId      Int
+  monitorStatus   DeviceStatus    @default(GOOD)
+  keyboardStatus  DeviceStatus    @default(GOOD)
+  mouseStatus     DeviceStatus    @default(GOOD)
+  headphoneStatus DeviceStatus    @default(GOOD)
+  chairStatus     DeviceStatus    @default(GOOD)
+  networkStatus   DeviceStatus    @default(GOOD)
+  computerStatus  DeviceStatus    @default(GOOD)
+  note            String?         @db.Text
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  computer        Computer        @relation(fields: [computerId], references: [id])
+  histories       DeviceHistory[]
+
+  @@index([computerId])
+}
+
+model DeviceHistory {
+  id              Int          @id @default(autoincrement())
+  computerId      Int
+  type            String // 'REPORT' or 'REPAIR'
+  issue           String?
+  status          String // 'PENDING', 'IN_PROGRESS', 'RESOLVED'
+  technician      String
+  createdAt       DateTime     @default(now())
+  monitorStatus   DeviceStatus @default(GOOD)
+  keyboardStatus  DeviceStatus @default(GOOD)
+  mouseStatus     DeviceStatus @default(GOOD)
+  headphoneStatus DeviceStatus @default(GOOD)
+  chairStatus     DeviceStatus @default(GOOD)
+  networkStatus   DeviceStatus @default(GOOD)
+  computer        Computer     @relation(fields: [computerId], references: [id])
+  Device          Device?      @relation(fields: [deviceId], references: [id])
+  deviceId        Int?
+
+  @@map("device_history")
 }

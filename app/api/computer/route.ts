@@ -9,11 +9,7 @@ export async function GET() {
   const cookieStore = await cookies();
   const branchFromCookie = cookieStore.get("branch")?.value;
 
-  const startOfDayVN = dayjs()
-    .tz("Asia/Ho_Chi_Minh")
-    .startOf("day")
-    .add(7, "hours")
-    .toISOString();
+  const startOfDayVN = dayjs().startOf("day").toISOString();
 
   const today = dayjs().format("ddd");
 
@@ -27,7 +23,19 @@ export async function GET() {
       where: {
         branch: branchFromCookie,
         name: {
-          not: 'ADMIN'
+          not: "ADMIN",
+        },
+      },
+      include: {
+        devices: {
+          include: {
+            histories: {
+              orderBy: {
+                createdAt: "desc",
+              },
+              take: 5,
+            },
+          },
         },
       },
     });
@@ -67,9 +75,10 @@ export async function GET() {
 
       const { UserId, Status } = computerStatusData || {};
 
-      let user;
       let checkIn = 0;
       let totalRound = 0;
+      let userData = null;
+
       if (UserId) {
         const query = fnetPrisma.sql`
       SELECT *
@@ -113,7 +122,7 @@ export async function GET() {
             branch: branchFromCookie,
             type: "CHECK_IN",
             createdAt: {
-              gte: startOfDayVN, // Check if createdAt is greater than or equal to today at 00:00:00
+              gte: startOfDayVN,
             },
           },
         });
@@ -125,7 +134,7 @@ export async function GET() {
 
         checkIn = canClaim - totalClaimed;
 
-        user = await db.user.findFirst({
+        userData = await db.user.findFirst({
           where: {
             userId: UserId,
             branch: branchFromCookie,
@@ -139,7 +148,7 @@ export async function GET() {
       WHERE PaymentType = 4
         AND UserId = ${parseInt(UserId, 10)}
         AND Note = N'Thời gian phí'
-        AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) >= DATE_SUB(DATE(NOW()), INTERVAL (WEEKDAY(NOW()) + 6) % 7 DAY)
+        AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) >= DATE(DATE_SUB(NOW(), INTERVAL WEEKDAY(NOW()) DAY))
         AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) <= NOW();
     `;
 
@@ -154,33 +163,62 @@ export async function GET() {
             : 0,
         );
 
-        // Số lượt đã sử dụng
-        const queryRound = Prisma.sql`
+        if (userData?.id) {
+          // Get active gift rounds
+          const activeGiftRounds = await db.giftRound.findMany({
+            where: {
+              userId: userData.id,
+              isUsed: false,
+              OR: [{ expiredAt: null }, { expiredAt: { gt: new Date() } }],
+            },
+          });
+
+          // Calculate total gift rounds
+          const totalGiftRounds = activeGiftRounds.reduce(
+            (sum, gr) => sum + gr.amount,
+            0,
+          );
+
+          // Số lượt đã sử dụng
+          const queryRound = Prisma.sql`
                       SELECT COUNT(*) as count
                       FROM GameResult gr
                       WHERE gr.userId = ${parseInt(UserId, 10)}
-                      AND CreatedAt >= DATE_SUB(DATE(NOW()), INTERVAL (WEEKDAY(NOW()) + 6) % 7 DAY)
+                      AND CreatedAt >= DATE(DATE_SUB(NOW(), INTERVAL WEEKDAY(NOW()) DAY))
                       AND CreatedAt <= NOW();
                     `;
 
-        const userRound = await db.$queryRaw<[{ count: bigint }]>(queryRound);
+          const userRound = await db.$queryRaw<[{ count: bigint }]>(queryRound);
 
-        totalRound = round - Number(userRound[0].count);
+          totalRound = round + totalGiftRounds - Number(userRound[0].count);
+        }
       }
 
       results.push({
-        name,
+        id: computer.id,
+        name: computer.name,
         status: Status,
         userId: UserId,
-        userName: user?.userName,
+        userName: userData?.userName,
         canClaim: checkIn,
         round: totalRound,
+        devices: computer.devices.map((device) => ({
+          id: device.id,
+          monitorStatus: device.monitorStatus,
+          keyboardStatus: device.keyboardStatus,
+          mouseStatus: device.mouseStatus,
+          headphoneStatus: device.headphoneStatus,
+          chairStatus: device.chairStatus,
+          networkStatus: device.networkStatus,
+          computerStatus: device.computerStatus,
+          note: device.note,
+        })),
       });
     }
 
     return NextResponse.json(results);
   } catch (error) {
-    console.log('error', error)
+    console.log("error", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
