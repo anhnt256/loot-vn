@@ -274,15 +274,6 @@ enum DeviceStatus {
   COMPLETELY_DAMAGED
 }
 
-enum DeviceSolution {
-  REPLACE_NEW // Thay mới
-  REPAIR // Sửa chữa
-  CLEAN // Vệ sinh
-  REINSTALL // Cài đặt lại
-  REPLACE_USED // Thay thế bằng thiết bị cũ
-  OTHER // Khác
-}
-
 model Device {
   id              Int             @id @default(autoincrement())
   computerId      Int
