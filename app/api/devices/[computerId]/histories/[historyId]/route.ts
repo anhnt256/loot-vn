@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { DeviceStatus, DeviceSolution } from "@prisma/client";
+import { DeviceSolution } from "@prisma/client";
+
+type DeviceStatus = "GOOD" | "DAMAGED_BUT_USABLE" | "COMPLETELY_DAMAGED";
 
 // GET /api/devices/[deviceId]/histories/[historyId] - Lấy chi tiết một lịch sử
 export async function GET(
