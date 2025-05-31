@@ -10,13 +10,19 @@ import { useLogout } from "@/queries/auth.query";
 import { toast } from "sonner";
 import { useAction } from "@/hooks/use-action";
 import { updateUser } from "@/actions/update-user";
+import { useActivityMonitor } from "@/hooks/use-activity-monitor";
 
 const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   const loginMutation = useLogout();
-
   const { userName, userData } = useUserInfo();
   const { stars, magicStone } = userData || {};
   const pathname = usePathname();
+
+  // Add activity monitoring
+  useEffect(() => {
+    console.log('Dashboard layout mounted');
+    useActivityMonitor();
+  }, []);
 
   const { execute: executeUpdateUser } = useAction(updateUser, {
     onSuccess: async () => {},
@@ -55,97 +61,58 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-200">
-      <div className="bg-gray-800 text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out">
-        <nav>
-          <div className="flex justify-end mb-4">
-            <div className="flex gap-2">
-              <div className="flex items-center  px-3 py-1.5">
-                <span className="text-orange-500 uppercase font-semibold flex items-center gap-2">
-                  {userName}
-                </span>
+    <div className="min-h-screen bg-gray-900">
+      <header className="bg-gray-800 border-b border-gray-700">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <Image
+                src="/logo.png"
+                alt="Logo"
+                width={40}
+                height={40}
+                className="rounded-full"
+              />
+              <nav className="flex space-x-4">
+                <Link
+                  href="/dashboard"
+                  className={cn(
+                    "text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium",
+                    pathname === "/dashboard" && "bg-gray-700 text-white"
+                  )}
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href="/dashboard/history"
+                  className={cn(
+                    "text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium",
+                    pathname === "/dashboard/history" && "bg-gray-700 text-white"
+                  )}
+                >
+                  Lịch sử
+                </Link>
+              </nav>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="text-gray-300">
+                <span className="font-medium">{userName}</span>
+                <div className="flex items-center space-x-2 text-sm">
+                  <span>⭐ {stars}</span>
+                  <span>💎 {magicStone}</span>
+                </div>
               </div>
-              <div className="flex items-center bg-gray-600/80 rounded-full px-3 py-1.5">
-                <span className="text-white font-semibold flex items-center gap-2">
-                  {stars?.toLocaleString()}
-                  <Image src="/star.png" width="24" height="24" alt="stars" />
-                </span>
-              </div>
+              <button
+                onClick={handleLogout}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+              >
+                Đăng xuất
+              </button>
             </div>
           </div>
-          {/*{isNewUser && (*/}
-          {/*  <Link*/}
-          {/*    className={cn(*/}
-          {/*      "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",*/}
-          {/*      pathname === "/welcome" ? "bg-gray-700" : "transparent",*/}
-          {/*    )}*/}
-          {/*    href="/welcome"*/}
-          {/*  >*/}
-          {/*    Quà chào mừng*/}
-          {/*  </Link>*/}
-          {/*)}*/}
-
-          <Link
-            className={cn(
-              "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
-              pathname === "/dashboard" ? "bg-gray-700" : "transparent",
-            )}
-            href="/dashboard"
-          >
-            Điểm danh
-          </Link>
-          {/*<Link*/}
-          {/*  className={cn(*/}
-          {/*    "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",*/}
-          {/*    pathname === "/missions" ? "bg-gray-700" : "transparent",*/}
-          {/*  )}*/}
-          {/*  href="/missions"*/}
-          {/*>*/}
-          {/*  Nhiệm vụ*/}
-          {/*</Link>*/}
-          <Link
-            className={cn(
-              "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
-              pathname === "/game" ? "bg-gray-700" : "transparent",
-            )}
-            href="/game"
-          >
-            Trò chơi
-          </Link>
-          <Link
-            className={cn(
-              "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
-              pathname === "/store" ? "bg-gray-700" : "transparent",
-            )}
-            href="/store"
-          >
-            Đổi thưởng
-          </Link>
-          {/*<Link*/}
-          {/*  className={cn(*/}
-          {/*    "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",*/}
-          {/*    pathname === "/voucher" ? "bg-gray-700" : "transparent",*/}
-          {/*  )}*/}
-          {/*  href="/voucher"*/}
-          {/*>*/}
-          {/*  Voucher*/}
-          {/*</Link>*/}
-          <div
-            onClick={handleLogout}
-            className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 cursor-pointer"
-          >
-            Thoát
-          </div>
-        </nav>
-      </div>
-
-      <div className="flex-1 p-10 text-2xl font-bold bg-gray-400">
-        {children}
-        {/*<h1>*/}
-        {/*  Website bảo trì để nâng cấp phần mềm mới. Chúng tôi sẽ quay trở lại*/}
-        {/*  sớm. Rất mong các bạn thông cảm.*/}
-        {/*</h1>*/}
-      </div>
+        </div>
+      </header>
+      <main className="container mx-auto px-4 py-8">{children}</main>
     </div>
   );
 };

@@ -308,7 +308,6 @@ model DeviceHistory {
   type            String // 'REPORT' or 'REPAIR'
   issue           String?
   status          String // 'PENDING', 'IN_PROGRESS', 'RESOLVED'
-  technician      String
   createdAt       DateTime     @default(now())
   monitorStatus   DeviceStatus @default(GOOD)
   keyboardStatus  DeviceStatus @default(GOOD)
@@ -319,6 +318,4 @@ model DeviceHistory {
   computer        Computer     @relation(fields: [computerId], references: [id])
   Device          Device?      @relation(fields: [deviceId], references: [id])
   deviceId        Int?
-
-  @@map("device_history")
 }

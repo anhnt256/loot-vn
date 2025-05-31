@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Cookies from "js-cookie";
 
 const menuItems = [
   {
@@ -9,30 +10,37 @@ const menuItems = [
     href: "/admin",
     icon: "📊",
   },
-  {
-    title: "Quản lý người dùng",
-    href: "/admin/users",
-    icon: "👥",
-  },
+  // {
+  //   title: "Quản lý người dùng",
+  //   href: "/admin/users",
+  //   icon: "👥",
+  // },
   {
     title: "Tặng lượt chơi",
     href: "/admin/gift-rounds",
     icon: "🎮",
   },
-  {
-    title: "Lịch sử giao dịch",
-    href: "/admin/transactions",
-    icon: "📝",
-  },
-  {
-    title: "Cài đặt",
-    href: "/admin/settings",
-    icon: "⚙️",
-  },
+  // {
+  //   title: "Lịch sử giao dịch",
+  //   href: "/admin/transactions",
+  //   icon: "📝",
+  // },
+  // {
+  //   title: "Cài đặt",
+  //   href: "/admin/settings",
+  //   icon: "⚙️",
+  // },
 ];
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const loginType = Cookies.get("loginType");
+
+  // Filter menu items based on login type
+  const filteredMenuItems = menuItems.filter(
+    (item) =>
+      !(item.href === "/admin/gift-rounds" && loginType === "macAddress")
+  );
 
   return (
     <aside className="w-64 bg-gray-800 shadow-xl border-r border-gray-700">
@@ -40,7 +48,7 @@ export function AdminSidebar() {
         <h2 className="text-2xl font-bold text-gray-100">Admin Panel</h2>
       </div>
       <nav className="mt-4">
-        {menuItems.map((item) => {
+        {filteredMenuItems.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link

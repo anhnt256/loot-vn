@@ -1,5 +1,5 @@
 // hooks/usePolling.ts
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface PollingOptions {
   interval?: number;
@@ -32,6 +32,9 @@ export function usePolling<T>(
     isLoading: false,
     lastUpdated: null
   });
+
+  const isInitialMount = useRef(true);
+  const intervalRef = useRef<NodeJS.Timeout>();
 
   const fetchData = async () => {
     try {
@@ -67,17 +70,31 @@ export function usePolling<T>(
   };
 
   useEffect(() => {
+    console.log('usePolling effect running with:', { url, interval, enabled });
+    
     if (!enabled) return;
 
-    // Initial fetch
-    fetchData();
+    // Chỉ gọi fetchData lần đầu tiên khi component mount
+    if (isInitialMount.current) {
+      console.log('Initial fetch');
+      fetchData();
+      isInitialMount.current = false;
+    }
 
     // Set up polling interval
-    const intervalId = setInterval(fetchData, interval);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+    
+    intervalRef.current = setInterval(fetchData, interval);
+    console.log('New interval set up:', intervalRef.current);
 
     // Cleanup on unmount or when enabled changes
     return () => {
-      clearInterval(intervalId);
+      console.log('Cleaning up interval:', intervalRef.current);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
     };
   }, [url, interval, enabled]);
 

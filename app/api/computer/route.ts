@@ -5,6 +5,26 @@ import { cookies } from "next/headers";
 import dayjs from "@/lib/dayjs";
 import { Prisma } from "@/prisma/generated/prisma-client";
 
+// Hàm chuyển BigInt về string để tránh lỗi serialize
+function convertBigIntToString(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(convertBigIntToString);
+  } else if (obj && typeof obj === "object") {
+    const newObj: any = {};
+    for (const key in obj) {
+      if (typeof obj[key] === "bigint") {
+        newObj[key] = obj[key].toString();
+      } else if (typeof obj[key] === "object") {
+        newObj[key] = convertBigIntToString(obj[key]);
+      } else {
+        newObj[key] = obj[key];
+      }
+    }
+    return newObj;
+  }
+  return obj;
+}
+
 export async function GET() {
   const cookieStore = await cookies();
   const branchFromCookie = cookieStore.get("branch")?.value;
@@ -18,27 +38,6 @@ export async function GET() {
     const fnetPrisma = await getFnetPrisma();
 
     const results = [];
-
-    const computers = await db.computer.findMany({
-      where: {
-        branch: branchFromCookie,
-        name: {
-          not: "ADMIN",
-        },
-      },
-      include: {
-        devices: {
-          include: {
-            histories: {
-              orderBy: {
-                createdAt: "desc",
-              },
-              take: 5,
-            },
-          },
-        },
-      },
-    });
 
     const query = fnetPrisma.sql`
       SELECT s.MachineName, s.EnterDate, s.EnterTime, s.Status, s.UserId
@@ -65,6 +64,46 @@ export async function GET() {
     `;
 
     const computerStatus = await fnetDB.$queryRaw<any[]>(query);
+
+    // Lấy thông tin histories mới nhất cho mỗi device (REPORT và REPAIR)
+    const deviceHistoriesRaw = (await db.$queryRaw`
+      SELECT h.*
+      FROM (
+        SELECT *,
+               ROW_NUMBER() OVER (PARTITION BY deviceId, type ORDER BY createdAt DESC) as rn
+        FROM DeviceHistory
+        WHERE type IN ('REPORT', 'REPAIR')
+      ) h
+      WHERE h.rn = 1
+    `) as any[];
+
+    // Lấy danh sách máy tính và thiết bị như cũ, nhưng không lấy histories qua Prisma nữa
+    const computers = await db.computer.findMany({
+      where: {
+        branch: branchFromCookie,
+        name: {
+          not: "ADMIN",
+        },
+      },
+      include: {
+        devices: true, // Không include histories ở đây nữa
+      },
+    });
+
+    // Map histories vào từng device, luôn trả về 2 phần tử (REPORT, REPAIR)
+    const deviceIdToHistories: { [key: number]: { REPORT: any; REPAIR: any } } =
+      {};
+    for (const h of deviceHistoriesRaw) {
+      if (!deviceIdToHistories[h.deviceId]) {
+        deviceIdToHistories[h.deviceId] = { REPORT: null, REPAIR: null };
+      }
+      if (h.type === "REPORT" && !deviceIdToHistories[h.deviceId].REPORT) {
+        deviceIdToHistories[h.deviceId].REPORT = h;
+      }
+      if (h.type === "REPAIR" && !deviceIdToHistories[h.deviceId].REPAIR) {
+        deviceIdToHistories[h.deviceId].REPAIR = h;
+      }
+    }
 
     for (const computer of computers) {
       const { name } = computer || {};
@@ -212,11 +251,15 @@ export async function GET() {
           networkStatus: device.networkStatus,
           computerStatus: device.computerStatus,
           note: device.note,
+          histories: [
+            deviceIdToHistories[device.id]?.REPORT || null,
+            deviceIdToHistories[device.id]?.REPAIR || null,
+          ],
         })),
       });
     }
 
-    return NextResponse.json(results);
+    return NextResponse.json(convertBigIntToString(results));
   } catch (error) {
     console.log("error", error);
     return new NextResponse("Internal Error", { status: 500 });

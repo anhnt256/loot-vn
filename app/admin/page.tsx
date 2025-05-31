@@ -12,7 +12,7 @@ import {
   Input,
   message,
 } from "antd";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import dynamic from "next/dynamic";
 import _, { isEmpty } from "lodash";
 import { EnumComputerStatus } from "@/constants/enum";
@@ -28,34 +28,46 @@ import {
   FaWifi,
 } from "react-icons/fa";
 
-interface DeviceStatus {
-  id?: number;
+interface DeviceHistory {
+  id: number;
+  createdAt: string;
+  type: "REPORT" | "REPAIR";
+  issue?: string;
+  status: "PENDING" | "IN_PROGRESS" | "RESOLVED";
+  technician?: string;
+  note?: string | null;
   monitorStatus: "GOOD" | "DAMAGED_BUT_USABLE" | "COMPLETELY_DAMAGED";
   keyboardStatus: "GOOD" | "DAMAGED_BUT_USABLE" | "COMPLETELY_DAMAGED";
   mouseStatus: "GOOD" | "DAMAGED_BUT_USABLE" | "COMPLETELY_DAMAGED";
   headphoneStatus: "GOOD" | "DAMAGED_BUT_USABLE" | "COMPLETELY_DAMAGED";
   chairStatus: "GOOD" | "DAMAGED_BUT_USABLE" | "COMPLETELY_DAMAGED";
   networkStatus: "GOOD" | "DAMAGED_BUT_USABLE" | "COMPLETELY_DAMAGED";
+  computerStatus: "GOOD" | "DAMAGED_BUT_USABLE" | "COMPLETELY_DAMAGED";
+  // Add other fields if needed
 }
 
-interface RepairHistory {
+interface DeviceStatus {
   id: number;
-  date: string;
-  issue: string;
-  status: "PENDING" | "IN_PROGRESS" | "RESOLVED";
-  technician: string;
-  type: "REPORT" | "REPAIR";
+  monitorStatus: "GOOD" | "DAMAGED_BUT_USABLE" | "COMPLETELY_DAMAGED";
+  keyboardStatus: "GOOD" | "DAMAGED_BUT_USABLE" | "COMPLETELY_DAMAGED";
+  mouseStatus: "GOOD" | "DAMAGED_BUT_USABLE" | "COMPLETELY_DAMAGED";
+  headphoneStatus: "GOOD" | "DAMAGED_BUT_USABLE" | "COMPLETELY_DAMAGED";
+  chairStatus: "GOOD" | "DAMAGED_BUT_USABLE" | "COMPLETELY_DAMAGED";
+  networkStatus: "GOOD" | "DAMAGED_BUT_USABLE" | "COMPLETELY_DAMAGED";
+  computerStatus: "GOOD" | "DAMAGED_BUT_USABLE" | "COMPLETELY_DAMAGED";
+  note?: string | null;
+  histories: DeviceHistory[];
 }
 
 interface Computer {
+  id: number;
   name: string;
   status: number;
-  userName: string;
   userId: number;
+  userName: string;
   round: number;
   canClaim: number;
-  device?: DeviceStatus;
-  repairHistory?: RepairHistory[];
+  devices: DeviceStatus[];
 }
 
 interface DeviceStatusOption {
@@ -69,11 +81,24 @@ const getStatusColor = (status: string) => {
     case "GOOD":
       return "text-green-500";
     case "DAMAGED_BUT_USABLE":
-      return "text-orange-500";
+      return "text-yellow-400";
     case "COMPLETELY_DAMAGED":
       return "text-red-500";
     default:
       return "text-gray-500";
+  }
+};
+
+const getStatusText = (status: string) => {
+  switch (status) {
+    case "GOOD":
+      return "Tốt";
+    case "DAMAGED_BUT_USABLE":
+      return "Xài tạm";
+    case "COMPLETELY_DAMAGED":
+      return "Hỏng";
+    default:
+      return status;
   }
 };
 
@@ -85,14 +110,14 @@ const AdminDashboard = () => {
   >();
   const [computers, setComputers] = useState<Computer[]>([]);
   const [countdown, setCountdown] = useState(60);
-  const [selectedBranch, setSelectedBranch] = useState(
-    Cookies.get("branch") || "GO_VAP",
-  );
+  const [selectedBranch, setSelectedBranch] = useState("GO_VAP");
   const [loginType, setLoginType] = useState(
     Cookies.get("loginType") || "username",
   );
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportForm] = Form.useForm();
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [updateForm] = Form.useForm();
 
   const deviceList = [
     {
@@ -120,7 +145,7 @@ const AdminDashboard = () => {
     {
       value: "DAMAGED_BUT_USABLE",
       label: "Hỏng nhưng có thể sử dụng",
-      color: "text-yellow-500",
+      color: "text-yellow-400",
     },
     {
       value: "COMPLETELY_DAMAGED",
@@ -130,23 +155,27 @@ const AdminDashboard = () => {
   ];
 
   useEffect(() => {
-    // Set initial branch cookie if not exists
-    if (!Cookies.get("branch")) {
-      Cookies.set("branch", "GO_VAP", { path: "/" });
-    }
+    const branch = Cookies.get("branch");
+    if (branch) setSelectedBranch(branch);
   }, []);
 
-  const { data, refetch } = usePolling<any[]>(`/api/computer`, {
-    interval: 60000, // 60 seconds
-    onSuccess: (data) => {
-      const computerSorted = _.sortBy(data, (o) => o.name);
-      setComputers(computerSorted);
-      setCountdown(60);
-    },
-    onError: (error) => {
-      console.error("Error fetching data:", error);
-    },
-  });
+  // Memoize the polling options
+  const pollingOptions = useMemo(
+    () => ({
+      interval: 60000, // 60 seconds
+      onSuccess: (data: any[]) => {
+        const computerSorted = _.sortBy(data, (o) => o.name);
+        setComputers(computerSorted);
+        setCountdown(60);
+      },
+      onError: (error: Error) => {
+        console.error("Error fetching data:", error);
+      },
+    }),
+    [],
+  ); // Empty dependency array since these functions don't depend on any props/state
+
+  const { data, refetch } = usePolling<any[]>(`/api/computer`, pollingOptions);
 
   const handleBranchChange = async (value: string) => {
     setSelectedBranch(value);
@@ -179,7 +208,9 @@ const AdminDashboard = () => {
           REPAIR: { text: "Sửa chữa", color: "text-blue-500" },
         } as const;
         return (
-          <span className={typeMap[type].color}>{typeMap[type].text}</span>
+          <span className={typeMap[type]?.color || "text-gray-400"}>
+            {typeMap[type]?.text || type}
+          </span>
         );
       },
     },
@@ -199,16 +230,11 @@ const AdminDashboard = () => {
           RESOLVED: { text: "Đã xử lý", color: "text-green-500" },
         } as const;
         return (
-          <span className={statusMap[status].color}>
-            {statusMap[status].text}
+          <span className={statusMap[status]?.color || "text-gray-400"}>
+            {statusMap[status]?.text || status}
           </span>
         );
       },
-    },
-    {
-      title: "Kỹ thuật viên",
-      dataIndex: "technician",
-      key: "technician",
     },
   ];
 
@@ -220,7 +246,7 @@ const AdminDashboard = () => {
     try {
       const computerId = currentComputer?.id;
 
-      const response = await fetch(`/api/devices/${computerId}/report`, {
+      const response = await fetch(`/api/devices/${computerId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -228,7 +254,6 @@ const AdminDashboard = () => {
         body: JSON.stringify({
           type: "REPORT",
           status: "PENDING",
-          technician: values.technician || "admin",
           issue: values.note,
           monitorStatus: values.monitorStatus,
           keyboardStatus: values.keyboardStatus,
@@ -236,27 +261,24 @@ const AdminDashboard = () => {
           headphoneStatus: values.headphoneStatus,
           chairStatus: values.chairStatus,
           networkStatus: values.networkStatus,
-          computerId: computerId,
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to submit report");
+        const error = await response.json();
+        throw new Error(error.message || "Failed to submit report");
       }
 
-      const updatedDevice = await response.json();
+      const result = await response.json();
       message.success("Báo cáo đã được gửi thành công");
 
       // Update the current computer's device status
-      if (currentComputer && updatedDevice) {
+      if (currentComputer && result.data) {
         setCurrentComputer((prev) => ({
           ...prev!,
-          device: updatedDevice,
+          devices: [result.data.device],
         }));
       }
-
-      // Refresh the data
-      refetch();
 
       setShowReportModal(false);
       reportForm.resetFields();
@@ -266,9 +288,50 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleUpdateDeviceStatus = () => {
-    // TODO: Implement update device status functionality
-    console.log("Update device status for computer:", currentComputer?.name);
+  const handleUpdateDeviceStatus = async (values: any) => {
+    try {
+      const computerId = currentComputer?.id;
+
+      const response = await fetch(`/api/devices/${computerId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "REPAIR",
+          status: "RESOLVED",
+          issue: values.note,
+          monitorStatus: values.monitorStatus,
+          keyboardStatus: values.keyboardStatus,
+          mouseStatus: values.mouseStatus,
+          headphoneStatus: values.headphoneStatus,
+          chairStatus: values.chairStatus,
+          networkStatus: values.networkStatus,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to update device status");
+      }
+
+      const result = await response.json();
+      message.success("Cập nhật trạng thái thiết bị thành công");
+
+      // Update the current computer's device status
+      if (currentComputer && result.data) {
+        setCurrentComputer((prev) => ({
+          ...prev!,
+          devices: [result.data.device],
+        }));
+      }
+
+      setShowUpdateModal(false);
+      updateForm.resetFields();
+    } catch (error) {
+      console.error("Error updating device status:", error);
+      message.error("Có lỗi xảy ra khi cập nhật trạng thái thiết bị");
+    }
   };
 
   return (
@@ -322,8 +385,16 @@ const AdminDashboard = () => {
                 userId,
                 round,
                 canClaim,
-                device,
+                devices,
               } = item || {};
+              const {
+                monitorStatus,
+                keyboardStatus,
+                mouseStatus,
+                headphoneStatus,
+                chairStatus,
+                networkStatus,
+              } = devices[0] || {};
               let bgColor = "bg-gray-600"; // Darker shade for off state
               if (status === EnumComputerStatus.ON.id) {
                 bgColor = "bg-blue-600"; // Darker green
@@ -371,35 +442,27 @@ const AdminDashboard = () => {
                   {/* Device Status Icons */}
                   <div className="absolute bottom-2 right-2 flex flex-col gap-1">
                     <FaDesktop
-                      className={getStatusColor(
-                        device?.monitorStatus || "GOOD",
-                      )}
+                      className={getStatusColor(monitorStatus || "GOOD")}
                       size={10}
                     />
                     <FaKeyboard
-                      className={getStatusColor(
-                        device?.keyboardStatus || "GOOD",
-                      )}
+                      className={getStatusColor(keyboardStatus || "GOOD")}
                       size={10}
                     />
                     <FaMouse
-                      className={getStatusColor(device?.mouseStatus || "GOOD")}
+                      className={getStatusColor(mouseStatus || "GOOD")}
                       size={10}
                     />
                     <FaHeadphones
-                      className={getStatusColor(
-                        device?.headphoneStatus || "GOOD",
-                      )}
+                      className={getStatusColor(headphoneStatus || "GOOD")}
                       size={10}
                     />
                     <FaChair
-                      className={getStatusColor(device?.chairStatus || "GOOD")}
+                      className={getStatusColor(chairStatus || "GOOD")}
                       size={10}
                     />
                     <FaWifi
-                      className={getStatusColor(
-                        device?.networkStatus || "GOOD",
-                      )}
+                      className={getStatusColor(networkStatus || "GOOD")}
                       size={10}
                     />
                   </div>
@@ -479,62 +542,62 @@ const AdminDashboard = () => {
                   <div className="flex items-center gap-2">
                     <FaDesktop
                       className={getStatusColor(
-                        currentComputer.device?.monitorStatus || "GOOD",
+                        currentComputer.devices[0]?.monitorStatus || "GOOD",
                       )}
                     />
                     <span>Màn hình</span>
                   </div>
-                  <div>{currentComputer.device?.monitorStatus || "GOOD"}</div>
+                  <div className={getStatusColor(currentComputer.devices[0]?.monitorStatus || "GOOD")}>{getStatusText(currentComputer.devices[0]?.monitorStatus || "GOOD")}</div>
 
                   <div className="flex items-center gap-2">
                     <FaKeyboard
                       className={getStatusColor(
-                        currentComputer.device?.keyboardStatus || "GOOD",
+                        currentComputer.devices[0]?.keyboardStatus || "GOOD",
                       )}
                     />
                     <span>Bàn phím</span>
                   </div>
-                  <div>{currentComputer.device?.keyboardStatus || "GOOD"}</div>
+                  <div className={getStatusColor(currentComputer.devices[0]?.keyboardStatus || "GOOD")}>{getStatusText(currentComputer.devices[0]?.keyboardStatus || "GOOD")}</div>
 
                   <div className="flex items-center gap-2">
                     <FaMouse
                       className={getStatusColor(
-                        currentComputer.device?.mouseStatus || "GOOD",
+                        currentComputer.devices[0]?.mouseStatus || "GOOD",
                       )}
                     />
                     <span>Chuột</span>
                   </div>
-                  <div>{currentComputer.device?.mouseStatus || "GOOD"}</div>
+                  <div className={getStatusColor(currentComputer.devices[0]?.mouseStatus || "GOOD")}>{getStatusText(currentComputer.devices[0]?.mouseStatus || "GOOD")}</div>
 
                   <div className="flex items-center gap-2">
                     <FaHeadphones
                       className={getStatusColor(
-                        currentComputer.device?.headphoneStatus || "GOOD",
+                        currentComputer.devices[0]?.headphoneStatus || "GOOD",
                       )}
                     />
                     <span>Tai nghe</span>
                   </div>
-                  <div>{currentComputer.device?.headphoneStatus || "GOOD"}</div>
+                  <div className={getStatusColor(currentComputer.devices[0]?.headphoneStatus || "GOOD")}>{getStatusText(currentComputer.devices[0]?.headphoneStatus || "GOOD")}</div>
 
                   <div className="flex items-center gap-2">
                     <FaChair
                       className={getStatusColor(
-                        currentComputer.device?.chairStatus || "GOOD",
+                        currentComputer.devices[0]?.chairStatus || "GOOD",
                       )}
                     />
                     <span>Ghế</span>
                   </div>
-                  <div>{currentComputer.device?.chairStatus || "GOOD"}</div>
+                  <div className={getStatusColor(currentComputer.devices[0]?.chairStatus || "GOOD")}>{getStatusText(currentComputer.devices[0]?.chairStatus || "GOOD")}</div>
 
                   <div className="flex items-center gap-2">
                     <FaWifi
                       className={getStatusColor(
-                        currentComputer.device?.networkStatus || "GOOD",
+                        currentComputer.devices[0]?.networkStatus || "GOOD",
                       )}
                     />
                     <span>Mạng</span>
                   </div>
-                  <div>{currentComputer.device?.networkStatus || "GOOD"}</div>
+                  <div className={getStatusColor(currentComputer.devices[0]?.networkStatus || "GOOD")}>{getStatusText(currentComputer.devices[0]?.networkStatus || "GOOD")}</div>
                 </div>
               </div>
 
@@ -545,7 +608,10 @@ const AdminDashboard = () => {
                 </Button>
                 <Button
                   type="primary"
-                  onClick={handleUpdateDeviceStatus}
+                  onClick={() => {
+                    setCurrentComputer(currentComputer);
+                    setShowUpdateModal(true);
+                  }}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
                   Cập nhật trạng thái thiết bị
@@ -558,18 +624,50 @@ const AdminDashboard = () => {
               <div className="text-lg font-bold text-white">
                 Lịch sử sửa chữa
               </div>
-              <Table
-                columns={repairHistoryColumns}
-                dataSource={currentComputer.repairHistory || []}
-                pagination={{ pageSize: 5 }}
-                size="small"
-                scroll={{ x: true }}
-                className="dark-table"
-                style={{
-                  background: "#1f2937",
-                  color: "white",
-                }}
-              />
+              {(() => {
+                const histories = (currentComputer.devices[0]?.histories || []).filter(Boolean);
+                const latestReport = [...histories].filter(h => h.type === "REPORT").sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).pop();
+                const latestRepair = [...histories].filter(h => h.type === "REPAIR").sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).pop();
+                const renderDeviceStatus = (history: DeviceHistory) => (
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <div className="flex items-center gap-2"><FaDesktop /> <span>Màn hình:</span> <span className={getStatusColor(history?.monitorStatus || "GOOD")}>{getStatusText(history?.monitorStatus || "GOOD")}</span></div>
+                    <div className="flex items-center gap-2"><FaKeyboard /> <span>Bàn phím:</span> <span className={getStatusColor(history?.keyboardStatus || "GOOD")}>{getStatusText(history?.keyboardStatus || "GOOD")}</span></div>
+                    <div className="flex items-center gap-2"><FaMouse /> <span>Chuột:</span> <span className={getStatusColor(history?.mouseStatus || "GOOD")}>{getStatusText(history?.mouseStatus || "GOOD")}</span></div>
+                    <div className="flex items-center gap-2"><FaHeadphones /> <span>Tai nghe:</span> <span className={getStatusColor(history?.headphoneStatus || "GOOD")}>{getStatusText(history?.headphoneStatus || "GOOD")}</span></div>
+                    <div className="flex items-center gap-2"><FaChair /> <span>Ghế:</span> <span className={getStatusColor(history?.chairStatus || "GOOD")}>{getStatusText(history?.chairStatus || "GOOD")}</span></div>
+                    <div className="flex items-center gap-2"><FaWifi /> <span>Mạng:</span> <span className={getStatusColor(history?.networkStatus || "GOOD")}>{getStatusText(history?.networkStatus || "GOOD")}</span></div>
+                    <div className="flex items-center gap-2"><FaDesktop /> <span>Máy tính:</span> <span className={getStatusColor(history?.computerStatus || "GOOD")}>{getStatusText(history?.computerStatus || "GOOD")}</span></div>
+                  </div>
+                );
+                return (
+                  <div className="flex flex-col gap-4 mb-4">
+                    <Card
+                      title={<span className="text-red-500 font-bold">Báo hỏng mới nhất</span>}
+                      bordered={false}
+                      className="bg-gray-800 border-l-4 border-red-500 shadow-lg text-white"
+                    >
+                      {latestReport ? (
+                        <>
+                          <div><b>Ngày:</b> {latestReport.createdAt ? new Date(latestReport.createdAt).toLocaleString() : "-"}</div>
+                          {renderDeviceStatus(latestReport)}
+                        </>
+                      ) : <div className="text-gray-400">Không có dữ liệu</div>}
+                    </Card>
+                    <Card
+                      title={<span className="text-blue-500 font-bold">Sửa chữa mới nhất</span>}
+                      bordered={false}
+                      className="bg-gray-800 border-l-4 border-blue-500 shadow-lg text-white"
+                    >
+                      {latestRepair ? (
+                        <>
+                          <div><b>Ngày:</b> {latestRepair.createdAt ? new Date(latestRepair.createdAt).toLocaleString() : "-"}</div>
+                          {renderDeviceStatus(latestRepair)}
+                        </>
+                      ) : <div className="text-gray-400">Không có dữ liệu</div>}
+                    </Card>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}
@@ -615,13 +713,12 @@ const AdminDashboard = () => {
           onFinish={handleReportSubmit}
           className="text-gray-200"
           initialValues={{
-            monitorStatus: currentComputer?.device?.monitorStatus || "GOOD",
-            keyboardStatus: currentComputer?.device?.keyboardStatus || "GOOD",
-            mouseStatus: currentComputer?.device?.mouseStatus || "GOOD",
-            headphoneStatus: currentComputer?.device?.headphoneStatus || "GOOD",
-            chairStatus: currentComputer?.device?.chairStatus || "GOOD",
-            networkStatus: currentComputer?.device?.networkStatus || "GOOD",
-            technician: "admin",
+            monitorStatus: currentComputer?.devices[0]?.monitorStatus || "GOOD",
+            keyboardStatus: currentComputer?.devices[0]?.keyboardStatus || "GOOD",
+            mouseStatus: currentComputer?.devices[0]?.mouseStatus || "GOOD",
+            headphoneStatus: currentComputer?.devices[0]?.headphoneStatus || "GOOD",
+            chairStatus: currentComputer?.devices[0]?.chairStatus || "GOOD",
+            networkStatus: currentComputer?.devices[0]?.networkStatus || "GOOD",
           }}
         >
           <div className="space-y-2">
@@ -682,6 +779,127 @@ const AdminDashboard = () => {
               onClick={() => {
                 setShowReportModal(false);
                 reportForm.resetFields();
+              }}
+            >
+              Hủy
+            </Button>
+            <Button
+              type="primary"
+              htmlType="submit"
+              className="bg-blue-600 hover:bg-blue-700 ml-2"
+            >
+              Xác nhận
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Update Device Status Modal */}
+      <Modal
+        title={<span className="text-white">Cập nhật trạng thái thiết bị</span>}
+        open={showUpdateModal}
+        onCancel={() => {
+          setShowUpdateModal(false);
+          updateForm.resetFields();
+        }}
+        footer={null}
+        className="dark-modal"
+        width={900}
+        styles={{
+          header: {
+            background: "#1f2937",
+            color: "white",
+            borderBottom: "1px solid #374151",
+            paddingBottom: "12px",
+          },
+          content: {
+            background: "#1f2937",
+          },
+          body: {
+            background: "#1f2937",
+            padding: "20px",
+          },
+          mask: {
+            background: "rgba(0, 0, 0, 0.6)",
+          },
+          footer: {
+            background: "#1f2937",
+            borderTop: "1px solid #374151",
+          },
+        }}
+      >
+        <Form
+          form={updateForm}
+          layout="vertical"
+          onFinish={handleUpdateDeviceStatus}
+          className="text-gray-200"
+          initialValues={{
+            monitorStatus: currentComputer?.devices[0]?.monitorStatus || "GOOD",
+            keyboardStatus: currentComputer?.devices[0]?.keyboardStatus || "GOOD",
+            mouseStatus: currentComputer?.devices[0]?.mouseStatus || "GOOD",
+            headphoneStatus: currentComputer?.devices[0]?.headphoneStatus || "GOOD",
+            chairStatus: currentComputer?.devices[0]?.chairStatus || "GOOD",
+            networkStatus: currentComputer?.devices[0]?.networkStatus || "GOOD",
+          }}
+        >
+          <div className="space-y-2">
+            {deviceList.map((device) => (
+              <div
+                key={device.key}
+                className="border-b border-gray-700 pb-2 last:border-b-0"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  {device.icon}
+                  <span className="text-lg font-medium">{device.label}</span>
+                </div>
+                <Form.Item
+                  name={`${device.key}Status`}
+                  className="mb-0"
+                  rules={[
+                    {
+                      required: true,
+                      message: `Vui lòng chọn trạng thái ${device.label.toLowerCase()}`,
+                    },
+                  ]}
+                >
+                  <Radio.Group className="w-full">
+                    <div className="grid grid-cols-3 gap-8">
+                      {deviceStatusOptions.map((status) => (
+                        <Radio key={status.value} value={status.value}>
+                          <div className={`${status.color} text-base`}>
+                            {status.label}
+                          </div>
+                        </Radio>
+                      ))}
+                    </div>
+                  </Radio.Group>
+                </Form.Item>
+              </div>
+            ))}
+          </div>
+
+          <Form.Item
+            label={<span className="text-gray-200">Ghi chú</span>}
+            name="note"
+            className="mb-0 mt-6"
+          >
+            <Input.TextArea
+              placeholder="Mô tả chi tiết vấn đề của thiết bị..."
+              className="dark-input"
+              style={{
+                backgroundColor: "#374151",
+                borderColor: "#4B5563",
+                color: "white",
+              }}
+              rows={4}
+            />
+          </Form.Item>
+
+          <Form.Item className="mb-0 flex justify-end gap-4 mt-8 pt-4 border-t border-gray-700">
+            <Button
+              onClick={() => {
+                setShowUpdateModal(false);
+                updateForm.resetFields();
               }}
             >
               Hủy
