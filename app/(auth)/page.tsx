@@ -6,32 +6,17 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useLogin } from "@/queries/auth.query";
-import { useAction } from "@/hooks/use-action";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { createUser } from "@/actions/create-user";
-import { getCookie, setCookie } from "cookies-next";
+import { setCookie } from "cookies-next";
 import dayjs from "dayjs";
-import { BRANCH } from "@/constants/enum.constant";
 import { Spin } from "antd";
 import { isElectron } from "@/lib/electron";
 import { getMacAddresses } from "@/lib/mac";
 import { useQuery } from "@tanstack/react-query";
-import { fetcher } from "@/lib/fetcher";
 
 const expirationDuration = 1;
 const expirationDate = dayjs().add(expirationDuration, "day").format();
-
-// MAC address to branch mapping with type safety
-const MAC_BRANCH_MAPPING: Record<string, string> = {
-  "00-25-D8-B9-27-0C": "GO_VAP",
-  "D8-BB-C1-5D-0A-DD": "TAN_PHU"
-} as const;
-
-// Type guard for MAC addresses
-const isKnownMacAddress = (mac: string): mac is keyof typeof MAC_BRANCH_MAPPING => {
-  return mac in MAC_BRANCH_MAPPING;
-};
 
 const Login = () => {
   const [userName, setUsername] = useState<string>("");
@@ -42,13 +27,24 @@ const Login = () => {
 
   const [macAddresses, setMacAddresses] = useState<string>();
   const [isDesktopApp, setIsDesktopApp] = useState(false);
+  const [cookiesSet, setCookiesSet] = useState(false);
 
   const { data: machineData } = useQuery({
     queryKey: ["check-branch", macAddresses],
-    enabled: !!macAddresses,
-    queryFn: () => {
+    enabled: !!macAddresses && cookiesSet,
+    queryFn: async () => {
       console.log("Fetching with macAddress:", macAddresses);
-      return fetch("/api/check-branch").then((res) => res.json());
+      const response = await fetch("/api/check-branch");
+      const data = await response.json();
+
+      if (data?.status !== 'success') {
+        toast.error(
+          "Máy tính này chưa được đăng ký trong hệ thống. Vui lòng liên hệ quản trị viên.",
+        );
+        throw new Error("Unauthorized machine");
+      }
+
+      return data;
     },
   });
 
@@ -68,18 +64,17 @@ const Login = () => {
             setCookie("macAddress", currentMacAddress, {
               expires: new Date(expirationDate),
             });
-
-            // Check if this is a special MAC address and set branch accordingly
-            if (currentMacAddress && isKnownMacAddress(currentMacAddress)) {
-              setCookie("branch", MAC_BRANCH_MAPPING[currentMacAddress], {
-                path: '/',
-                expires: new Date(expirationDate),
-              });
-            }
+            setCookiesSet(true);
           }
         } catch (error) {
           console.error("Failed to get MAC addresses:", error);
+          toast.error(
+            "Không thể lấy thông tin MAC address. Vui lòng thử lại sau.",
+          );
         }
+      } else {
+        toast.error("Vui lòng sử dụng ứng dụng desktop để đăng nhập.");
+        setCookiesSet(true);
       }
       if (mounted) {
         setInitializing(false);
@@ -108,9 +103,9 @@ const Login = () => {
       const result = await loginMutation.mutateAsync({
         userName,
         machineName: machineData?.machineName,
-        isAdmin: false
+        isAdmin: false,
       });
-      
+
       const { statusCode, message } = result || {};
 
       if (statusCode === 200) {
