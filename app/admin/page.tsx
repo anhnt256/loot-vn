@@ -293,7 +293,7 @@ const AdminDashboard = () => {
       const computerId = currentComputer?.id;
 
       const response = await fetch(`/api/devices/${computerId}`, {
-        method: "PATCH",
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
