@@ -90,7 +90,8 @@ export async function GET() {
     });
 
     // Map histories vào từng device, luôn trả về 2 phần tử (REPORT, REPAIR)
-    const deviceIdToHistories: { [key: number]: { REPORT: any; REPAIR: any } } = {};
+    const deviceIdToHistories: { [key: number]: { REPORT: any; REPAIR: any } } =
+      {};
     for (const h of deviceHistoriesRaw) {
       if (!deviceIdToHistories[h.deviceId]) {
         deviceIdToHistories[h.deviceId] = { REPORT: null, REPAIR: null };
@@ -138,10 +139,26 @@ export async function GET() {
         ) AS t2`;
         const result = await fnetDB.$queryRaw<any[]>(query);
 
-        const totalTimeUsed = result.reduce(
-          (sum, item) => sum + item.TimeUsed,
-          0,
-        );
+        // Tính tổng thời gian chơi trong ngày hiện tại
+        const todayStr = dayjs().format("YYYY-MM-DD");
+        const yesterdayStr = dayjs().subtract(1, "day").format("YYYY-MM-DD");
+        const now = dayjs();
+        let totalTimeUsed = 0;
+
+        for (const item of result) {
+          const enterDateStr = dayjs(item.EnterDate).format("YYYY-MM-DD");
+          if (enterDateStr === todayStr) {
+            totalTimeUsed += item.TimeUsed;
+          } else if (
+            enterDateStr === yesterdayStr &&
+            !item.EndDate // phiên kéo dài qua đêm, chưa kết thúc
+          ) {
+            const startOfToday = dayjs(todayStr + "T00:00:00");
+            const minutesPlayedToday = now.diff(startOfToday, "minute");
+            totalTimeUsed += minutesPlayedToday;
+          }
+        }
+
         const totalPlayTime = Math.floor(totalTimeUsed / 60);
 
         const checkInItems = await db.checkInItem.findMany();
@@ -254,10 +271,14 @@ export async function GET() {
               ? {
                   ...deviceIdToHistories[device.id].REPORT,
                   createdAt: deviceIdToHistories[device.id].REPORT.createdAt
-                    ? new Date(deviceIdToHistories[device.id].REPORT.createdAt).toISOString()
+                    ? new Date(
+                        deviceIdToHistories[device.id].REPORT.createdAt,
+                      ).toISOString()
                     : null,
                   updatedAt: deviceIdToHistories[device.id].REPORT.updatedAt
-                    ? new Date(deviceIdToHistories[device.id].REPORT.updatedAt).toISOString()
+                    ? new Date(
+                        deviceIdToHistories[device.id].REPORT.updatedAt,
+                      ).toISOString()
                     : null,
                 }
               : null,
@@ -265,10 +286,14 @@ export async function GET() {
               ? {
                   ...deviceIdToHistories[device.id].REPAIR,
                   createdAt: deviceIdToHistories[device.id].REPAIR.createdAt
-                    ? new Date(deviceIdToHistories[device.id].REPAIR.createdAt).toISOString()
+                    ? new Date(
+                        deviceIdToHistories[device.id].REPAIR.createdAt,
+                      ).toISOString()
                     : null,
                   updatedAt: deviceIdToHistories[device.id].REPAIR.updatedAt
-                    ? new Date(deviceIdToHistories[device.id].REPAIR.updatedAt).toISOString()
+                    ? new Date(
+                        deviceIdToHistories[device.id].REPAIR.updatedAt,
+                      ).toISOString()
                     : null,
                 }
               : null,
