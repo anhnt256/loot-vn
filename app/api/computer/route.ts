@@ -67,7 +67,7 @@ export async function GET() {
 
     // Lấy thông tin histories mới nhất cho mỗi device (REPORT và REPAIR)
     const deviceHistoriesRaw = (await db.$queryRaw`
-      SELECT h.*
+      SELECT h.*, h.createdAt
       FROM (
         SELECT *,
                ROW_NUMBER() OVER (PARTITION BY deviceId, type ORDER BY createdAt DESC) as rn
@@ -77,7 +77,6 @@ export async function GET() {
       WHERE h.rn = 1
     `) as any[];
 
-    // Lấy danh sách máy tính và thiết bị như cũ, nhưng không lấy histories qua Prisma nữa
     const computers = await db.computer.findMany({
       where: {
         branch: branchFromCookie,
@@ -86,13 +85,12 @@ export async function GET() {
         },
       },
       include: {
-        devices: true, // Không include histories ở đây nữa
+        devices: true,
       },
     });
 
     // Map histories vào từng device, luôn trả về 2 phần tử (REPORT, REPAIR)
-    const deviceIdToHistories: { [key: number]: { REPORT: any; REPAIR: any } } =
-      {};
+    const deviceIdToHistories: { [key: number]: { REPORT: any; REPAIR: any } } = {};
     for (const h of deviceHistoriesRaw) {
       if (!deviceIdToHistories[h.deviceId]) {
         deviceIdToHistories[h.deviceId] = { REPORT: null, REPAIR: null };
@@ -252,8 +250,28 @@ export async function GET() {
           computerStatus: device.computerStatus,
           note: device.note,
           histories: [
-            deviceIdToHistories[device.id]?.REPORT || null,
-            deviceIdToHistories[device.id]?.REPAIR || null,
+            deviceIdToHistories[device.id]?.REPORT
+              ? {
+                  ...deviceIdToHistories[device.id].REPORT,
+                  createdAt: deviceIdToHistories[device.id].REPORT.createdAt
+                    ? new Date(deviceIdToHistories[device.id].REPORT.createdAt).toISOString()
+                    : null,
+                  updatedAt: deviceIdToHistories[device.id].REPORT.updatedAt
+                    ? new Date(deviceIdToHistories[device.id].REPORT.updatedAt).toISOString()
+                    : null,
+                }
+              : null,
+            deviceIdToHistories[device.id]?.REPAIR
+              ? {
+                  ...deviceIdToHistories[device.id].REPAIR,
+                  createdAt: deviceIdToHistories[device.id].REPAIR.createdAt
+                    ? new Date(deviceIdToHistories[device.id].REPAIR.createdAt).toISOString()
+                    : null,
+                  updatedAt: deviceIdToHistories[device.id].REPAIR.updatedAt
+                    ? new Date(deviceIdToHistories[device.id].REPAIR.updatedAt).toISOString()
+                    : null,
+                }
+              : null,
           ],
         })),
       });
@@ -261,7 +279,6 @@ export async function GET() {
 
     return NextResponse.json(convertBigIntToString(results));
   } catch (error) {
-    console.log("error", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

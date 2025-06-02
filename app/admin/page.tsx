@@ -637,6 +637,7 @@ const AdminDashboard = () => {
                     <div className="flex items-center gap-2"><FaChair /> <span>Ghế:</span> <span className={getStatusColor(history?.chairStatus || "GOOD")}>{getStatusText(history?.chairStatus || "GOOD")}</span></div>
                     <div className="flex items-center gap-2"><FaWifi /> <span>Mạng:</span> <span className={getStatusColor(history?.networkStatus || "GOOD")}>{getStatusText(history?.networkStatus || "GOOD")}</span></div>
                     <div className="flex items-center gap-2"><FaDesktop /> <span>Máy tính:</span> <span className={getStatusColor(history?.computerStatus || "GOOD")}>{getStatusText(history?.computerStatus || "GOOD")}</span></div>
+                    <p className="col-span-2 mt-2 text-gray-300"><b>Mô tả:</b> {history?.issue || "Không có mô tả"}</p>
                   </div>
                 );
                 return (
@@ -648,7 +649,7 @@ const AdminDashboard = () => {
                     >
                       {latestReport ? (
                         <>
-                          <div><b>Ngày:</b> {latestReport.createdAt ? new Date(latestReport.createdAt).toLocaleString() : "-"}</div>
+                          <div><b>Thời gian:</b> {latestReport.createdAt ? new Date(latestReport.createdAt).toLocaleString() : "-"}</div>
                           {renderDeviceStatus(latestReport)}
                         </>
                       ) : <div className="text-gray-400">Không có dữ liệu</div>}
@@ -660,7 +661,7 @@ const AdminDashboard = () => {
                     >
                       {latestRepair ? (
                         <>
-                          <div><b>Ngày:</b> {latestRepair.createdAt ? new Date(latestRepair.createdAt).toLocaleString() : "-"}</div>
+                          <div><b>Thời gian:</b> {latestRepair.createdAt ? new Date(latestRepair.createdAt).toLocaleString() : "-"}</div>
                           {renderDeviceStatus(latestRepair)}
                         </>
                       ) : <div className="text-gray-400">Không có dữ liệu</div>}
