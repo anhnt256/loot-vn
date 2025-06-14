@@ -70,7 +70,9 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
     const userId = user[0]?.userId ?? null;
 
-    // const userId = 8503;
+    console.log("userId", userId);
+
+    // const userId = 785;
 
     let userUpdated;
 
