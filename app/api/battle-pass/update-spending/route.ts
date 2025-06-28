@@ -1,25 +1,26 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { db } from '@/lib/db';
 import { getFnetDB } from '@/lib/db';
-import dayjs from 'dayjs';
+import { calculateLevel } from '@/lib/battle-pass-utils';
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    // Get user info from headers (set by middleware)
+    const userHeader = request.headers.get('user');
+    if (!userHeader) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const decoded = JSON.parse(userHeader);
+    if (!decoded || !decoded.userId) {
+      return NextResponse.json({ error: 'Invalid user data' }, { status: 401 });
     }
 
     const fnetDB = await getFnetDB();
-    const userId = session.user.id;
+    const userId = decoded.userId;
 
     // Get current active season
-    const currentSeason = await prisma.battlePassSeason.findFirst({
+    const currentSeason = await db.battlePassSeason.findFirst({
       where: {
         isActive: true,
         startDate: {
@@ -38,44 +39,40 @@ export async function POST() {
       );
     }
 
-    // Get user's food and drink spending from systemlogtb
+    // Get user's spending from fnet database
     const query = `
-      SELECT 
-        SUM(CASE WHEN action_name = 'Số tiền thanh toán đơn hàng tại cửa hàng' THEN CAST(spent_sum AS DECIMAL(10,2)) ELSE 0 END) as total_spending
-      FROM fnet.systemlogtb
+      SELECT SUM(Amount) as totalSpending
+      FROM fnet.ordertb
       WHERE UserId = ${userId}
-        AND DATE(STR_TO_DATE(CONCAT(EnterDate, ' ', EnterTime), '%Y-%m-%d %H:%i:%s')) >= '${currentSeason.startDate.toISOString().split('T')[0]}'
-        AND DATE(STR_TO_DATE(CONCAT(EnterDate, ' ', EnterTime), '%Y-%m-%d %H:%i:%s')) <= '${currentSeason.endDate.toISOString().split('T')[0]}'
-    `;
+        AND DATE(OrderDate) = CURDATE()
+        AND Status = 1`;
 
     const result = await fnetDB.$queryRaw<any[]>(query);
-    const totalSpending = result[0]?.total_spending || 0;
+    const totalSpending = result[0]?.totalSpending || 0;
 
-    // For now, we'll split the spending 50/50 between food and drinks
-    // In a real implementation, you would want to categorize the spending based on item types
+    // Calculate food and drink spending (50/50 split for demo)
     const foodSpending = Math.floor(totalSpending * 0.5);
     const drinkSpending = Math.floor(totalSpending * 0.5);
 
     // Update or create user progress
-    const userProgress = await prisma.userBattlePassProgress.upsert({
+    const userProgress = await db.userBattlePass.upsert({
       where: {
         userId_seasonId: {
-          userId: session.user.id,
+          userId: decoded.userId,
           seasonId: currentSeason.id,
         },
       },
       update: {
-        totalFoodSpending: foodSpending,
-        totalDrinkSpending: drinkSpending,
+        totalSpent: totalSpending,
       },
       create: {
-        userId: session.user.id,
+        userId: decoded.userId,
         seasonId: currentSeason.id,
-        totalPlayTime: 0,
-        totalFoodSpending: foodSpending,
-        totalDrinkSpending: drinkSpending,
-        claimedRewards: [],
-        isVip: false,
+        level: calculateLevel(0, currentSeason.maxLevel), // Level 1 cho user mới (0 experience)
+        experience: 0,
+        isPremium: false,
+        totalSpent: totalSpending,
+        branch: 'GO_VAP',
       },
     });
 
@@ -83,6 +80,7 @@ export async function POST() {
       success: true,
       foodSpending,
       drinkSpending,
+      totalSpent: userProgress.totalSpent,
     });
   } catch (error) {
     console.error('Error updating battle pass spending:', error);

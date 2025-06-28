@@ -1,52 +1,51 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Trophy } from 'lucide-react';
-import { BattlePassProgress } from '@/components/battle-pass/BattlePassProgress';
-import { RewardCard } from '@/components/battle-pass/RewardCard';
+import { useRouter } from 'next/navigation';
+import { BattlePassProgress } from '@/app/components/battle-pass/BattlePassProgress';
 import { toast } from 'sonner';
+import { useUserInfo } from '@/hooks/use-user-info';
 
 interface Season {
   id: number;
   name: string;
+  description?: string;
   startDate: string;
   endDate: string;
-  rewards: Reward[];
+  maxLevel: number;
+  rewards: BattlePassReward[];
 }
 
-interface Reward {
+interface BattlePassReward {
   id: number;
+  level: number;
   name: string;
-  description: string;
-  requirements: {
-    type: 'PLAY_TIME' | 'FOOD_SPENDING' | 'DRINK_SPENDING';
-    amount: number;
-  };
-  rewards: {
-    type: string;
-    amount: number;
-  };
-  isVipOnly?: boolean;
+  description?: string;
+  type: 'free' | 'premium';
+  rewardType: string;
+  rewardValue?: number;
+  imageUrl?: string;
+  isBonus?: boolean;
 }
 
 interface UserProgress {
-  id: number;
-  userId: string;
   seasonId: number;
-  totalPlayTime: number;
-  totalFoodSpending: number;
-  totalDrinkSpending: number;
+  isPremium: boolean;
+  level: number;
+  experience: number;
+  totalSpent: number;
   claimedRewards: number[];
-  isVip: boolean;
+  rewards: BattlePassReward[];
+  availableRewards: BattlePassReward[];
+  maxLevel: number;
 }
 
 export default function BattlePassPage() {
-  const { data: session } = useSession();
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const { userData } = useUserInfo();
+  const { stars } = userData || {};
 
   const { data: currentSeason, isLoading: isLoadingSeason } = useQuery<Season>({
     queryKey: ['currentSeason'],
@@ -64,57 +63,40 @@ export default function BattlePassPage() {
       if (!response.ok) throw new Error('Failed to fetch user progress');
       return response.json();
     },
-    enabled: !!session?.user,
   });
 
-  const updatePlayTimeMutation = useMutation({
+  // Sync progress from database
+  const syncProgressMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch('/api/battle-pass/update-progress', {
+      const response = await fetch('/api/battle-pass/sync-progress', {
         method: 'POST',
       });
-      if (!response.ok) throw new Error('Failed to update playtime');
+      if (!response.ok) throw new Error('Failed to sync progress');
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userProgress'] });
     },
     onError: (error) => {
-      toast.error('Failed to update playtime');
-      console.error('Failed to update playtime:', error);
+      console.error('Failed to sync progress:', error);
     },
   });
 
-  const updateSpendingMutation = useMutation({
+  const purchasePremiumMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch('/api/battle-pass/update-spending', {
+      const response = await fetch('/api/battle-pass/purchase-vip', {
         method: 'POST',
       });
-      if (!response.ok) throw new Error('Failed to update spending');
+      if (!response.ok) throw new Error('Failed to purchase premium');
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userProgress'] });
+      toast.success('Premium pass purchased successfully!');
     },
     onError: (error) => {
-      toast.error('Failed to update spending');
-      console.error('Failed to update spending:', error);
-    },
-  });
-
-  const checkVipStatusMutation = useMutation({
-    mutationFn: async () => {
-      const response = await fetch('/api/battle-pass/check-vip-status', {
-        method: 'POST',
-      });
-      if (!response.ok) throw new Error('Failed to check VIP status');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['userProgress'] });
-    },
-    onError: (error) => {
-      toast.error('Failed to check VIP status');
-      console.error('Failed to check VIP status:', error);
+      toast.error('Failed to purchase premium pass');
+      console.error('Failed to purchase premium:', error);
     },
   });
 
@@ -136,13 +118,56 @@ export default function BattlePassPage() {
     },
   });
 
+  // Auto sync progress when page loads
   useEffect(() => {
-    if (session?.user) {
-      updatePlayTimeMutation.mutate();
-      updateSpendingMutation.mutate();
-      checkVipStatusMutation.mutate();
+    if (currentSeason && !isLoadingSeason) {
+      syncProgressMutation.mutate();
     }
-  }, [session?.user]);
+  }, [currentSeason, isLoadingSeason]);
+
+  const handleClaimReward = async (rewardId: number) => {
+    if (currentSeason && new Date() >= new Date(currentSeason.endDate)) {
+      toast.error('🚫 Mùa đã kết thúc - Không thể nhận thưởng');
+      return;
+    }
+    claimRewardMutation.mutate(rewardId);
+  };
+
+  const handleClaimAll = async (rewardIds: number[]) => {
+    if (currentSeason && new Date() >= new Date(currentSeason.endDate)) {
+      toast.error('🚫 Mùa đã kết thúc - Không thể nhận thưởng');
+      return;
+    }
+    const availableRewards = userProgress?.availableRewards || [];
+    const claimableRewardIds = availableRewards
+      .filter(reward => rewardIds.includes(reward.id))
+      .map(reward => reward.id);
+    if (claimableRewardIds.length > 0) {
+      for (const rewardId of claimableRewardIds) {
+        await claimRewardMutation.mutateAsync(rewardId);
+      }
+      const totalValue = availableRewards
+        .filter(reward => claimableRewardIds.includes(reward.id))
+        .reduce((sum, r) => sum + (r.rewardValue || 0), 0);
+      toast.success(`🎉 Claimed ${claimableRewardIds.length} rewards! Total: +${totalValue.toLocaleString()} points`);
+    }
+  };
+
+  const handlePurchasePremium = () => {
+    if (currentSeason && new Date() >= new Date(currentSeason.endDate)) {
+      toast.error('🚫 Mùa đã kết thúc - Không thể mua Premium');
+      return;
+    }
+    purchasePremiumMutation.mutate();
+  };
+
+  const handleBack = () => {
+    router.back();
+  };
+
+  const handleHome = () => {
+    router.push('/dashboard');
+  };
 
   if (isLoadingSeason || isLoadingProgress) {
     return <div>Loading...</div>;
@@ -152,59 +177,44 @@ export default function BattlePassPage() {
     return <div>No active season found</div>;
   }
 
+  if (!userProgress) {
+    return <div>Failed to load user progress</div>;
+  }
+
+  // XP cho lên cấp (giả định 1000 XP mỗi cấp)
+  const xpPerLevel = 1000;
+  const currentXP = userProgress.experience % xpPerLevel;
+  const maxXP = xpPerLevel;
+
+  // Đặt lại tên cho bonus rewards nếu có
+  const modifiedRewards = currentSeason.rewards.map((reward) => {
+    if (reward.isBonus) {
+      const bonusIndex = currentSeason.rewards.filter(r => r.isBonus).indexOf(reward);
+      return {
+        ...reward,
+        name: `Siêu cấp ${bonusIndex + 1}`
+      };
+    }
+    return reward;
+  });
+
   return (
-    <div className="container mx-auto py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">{currentSeason.name}</h1>
-        <p className="text-muted-foreground">
-          Season ends on {new Date(currentSeason.endDate).toLocaleDateString()}
-        </p>
-      </div>
-
-      {userProgress && (
-        <div className="grid gap-6 mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Your Progress</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <BattlePassProgress
-                playTime={userProgress.totalPlayTime}
-                foodSpending={userProgress.totalFoodSpending}
-                drinkSpending={userProgress.totalDrinkSpending}
-              />
-            </CardContent>
-          </Card>
-
-          {userProgress.isVip && (
-            <Card className="bg-yellow-500/10">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="h-5 w-5 text-yellow-500" />
-                  VIP Status Active
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  You have access to exclusive VIP rewards!
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {currentSeason.rewards.map((reward) => (
-          <RewardCard
-            key={reward.id}
-            reward={reward}
-            isClaimed={userProgress?.claimedRewards.includes(reward.id) ?? false}
-            isVip={userProgress?.isVip ?? false}
-            onClaim={claimRewardMutation.mutate}
-          />
-        ))}
-      </div>
-    </div>
+    <BattlePassProgress
+      currentLevel={userProgress?.level || 0}
+      currentXP={userProgress?.experience || 0}
+      maxXP={currentSeason?.maxLevel || 0}
+      rewards={userProgress?.rewards || []}
+      availableRewards={userProgress?.availableRewards || []}
+      claimedRewards={userProgress?.claimedRewards || []}
+      isPremium={userProgress?.isPremium}
+      seasonName={currentSeason?.name}
+      seasonEndDate={currentSeason?.endDate}
+      userStars={stars}
+      onClaimReward={handleClaimReward}
+      onClaimAll={handleClaimAll}
+      onPurchasePremium={handlePurchasePremium}
+      onBack={handleBack}
+      onHome={handleHome}
+    />
   );
 } 

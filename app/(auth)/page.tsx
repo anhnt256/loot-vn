@@ -48,6 +48,19 @@ const Login = () => {
     },
   });
 
+  // Query để check xem user đã tồn tại chưa
+  const { data: existingUser } = useQuery({
+    queryKey: ["check-existing-user", machineData?.machineName],
+    enabled: !!machineData?.machineName,
+    queryFn: async () => {
+      const response = await fetch(`/api/user/check-existing?machineName=${machineData.machineName}`);
+      if (response.ok) {
+        return await response.json();
+      }
+      return null;
+    },
+  });
+
   useEffect(() => {
     let mounted = true;
 
@@ -88,10 +101,41 @@ const Login = () => {
   }, []);
 
   useEffect(() => {
-    if (machineData) {
-      onLogin();
+    if (machineData && existingUser) {
+      // Auto-login chỉ khi user đã tồn tại trong DB
+      console.log("Auto-login for existing user:", existingUser);
+      setUsername(existingUser.userName || ""); // Set username từ DB
+      onLoginForExistingUser();
     }
-  }, [machineData]);
+  }, [machineData, existingUser]);
+
+  const onLoginForExistingUser = async () => {
+    if (pageLoading || !machineData || !existingUser) {
+      return;
+    }
+
+    setPageLoading(true);
+    try {
+      const result = await loginMutation.mutateAsync({
+        userName: existingUser.userName,
+        machineName: machineData?.machineName,
+        isAdmin: false,
+      });
+
+      const { statusCode, message } = result || {};
+
+      if (statusCode === 200) {
+        toast.success("Chào mừng trở lại The GateWay!");
+        router.push("/dashboard");
+      } else if (statusCode === 500 || statusCode === 499) {
+        toast.error(message);
+      }
+    } catch (error) {
+      console.error("Auto-login error:", error);
+      toast.error("Đã có lỗi xảy ra khi tự động đăng nhập");
+    }
+    setPageLoading(false);
+  };
 
   const onLogin = async () => {
     if (pageLoading || !machineData) {
@@ -124,7 +168,26 @@ const Login = () => {
   if (initializing || pageLoading) {
     return (
       <div className="flex justify-center items-center">
-        <Spin size="large" tip="Loading..." spinning={true} />
+        <Spin size="large" tip={existingUser ? "Đang tự động đăng nhập..." : "Loading..."} spinning={true} />
+      </div>
+    );
+  }
+
+  // Nếu có existingUser, ẩn form và chỉ hiển thị loading
+  if (existingUser && machineData) {
+    return (
+      <div className="flex flex-col items-center justify-center">
+        <div className="flex justify-center mb-4">
+          <Image
+            src="/logo.png"
+            alt="Logo"
+            className="rounded-full"
+            width={100}
+            height={100}
+          />
+        </div>
+        <Spin size="large" tip="Đang tự động đăng nhập..." spinning={true} />
+        <p className="mt-4 text-green-500">Chào mừng trở lại, {existingUser.userName}!</p>
       </div>
     );
   }

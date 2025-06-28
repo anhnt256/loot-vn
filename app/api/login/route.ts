@@ -22,25 +22,28 @@ export async function POST(req: Request, res: Response): Promise<any> {
       console.log("Processing admin login for user:", userName);
       if (userName !== "gateway_admin") {
         console.log("Admin login failed: Invalid username");
-        return NextResponse.json({ 
-          statusCode: 401,
-          message: "Invalid admin credentials",
-          data: null
-        }, { status: 401 });
+        return NextResponse.json(
+          {
+            statusCode: 401,
+            message: "Invalid admin credentials",
+            data: null,
+          },
+          { status: 401 },
+        );
       }
 
       const adminData = {
         userId: "admin",
         id: "admin",
         userName: "gateway_admin",
-        role: "admin"
+        role: "admin",
       };
 
       const token = await signJWT(adminData);
       const response = NextResponse.json({
         ...adminData,
         statusCode: 200,
-        message: "Login Success"
+        message: "Login Success",
       });
 
       response.cookies.set({
@@ -116,10 +119,13 @@ export async function POST(req: Request, res: Response): Promise<any> {
     console.error("Login error:", error);
     const errorMessage =
       error instanceof Error ? error.message : "Internal Error";
-    return NextResponse.json({ 
-      statusCode: 500,
-      message: errorMessage,
-      data: null
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        statusCode: 500,
+        message: errorMessage,
+        data: null,
+      },
+      { status: 500 },
+    );
   }
 }

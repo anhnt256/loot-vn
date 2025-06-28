@@ -20,6 +20,18 @@ const menuItems = [
     href: "/admin/gift-rounds",
     icon: "🎮",
   },
+  {
+    title: "Quản lý Battle Pass",
+    href: "/admin/battle-pass-seasons",
+    icon: "🎫",
+    adminOnly: true,
+  },
+  {
+    title: "Quản lý Premium Battle Pass",
+    href: "/admin/battle-pass-premium-packages",
+    icon: "💎",
+    adminOnly: true,
+  },
   // {
   //   title: "Lịch sử giao dịch",
   //   href: "/admin/transactions",
@@ -36,7 +48,7 @@ export function AdminSidebar() {
   const pathname = usePathname();
   const loginType = Cookies.get("loginType");
 
-  // Filter menu items based on login type
+  // Filter menu items based on login type and admin role
   const filteredMenuItems = menuItems.filter(
     (item) =>
       !(item.href === "/admin/gift-rounds" && loginType === "macAddress")

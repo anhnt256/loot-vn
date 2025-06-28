@@ -1,19 +1,20 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { db } from '@/lib/db';
 
 export async function POST(
   request: Request,
   { params }: { params: { rewardId: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    // Get user info from headers (set by middleware)
+    const userHeader = request.headers.get('user');
+    if (!userHeader) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const decoded = JSON.parse(userHeader);
+    if (!decoded || !decoded.userId) {
+      return NextResponse.json({ error: 'Invalid user data' }, { status: 401 });
     }
 
     const rewardId = parseInt(params.rewardId);
@@ -25,7 +26,7 @@ export async function POST(
     }
 
     // Get current active season
-    const currentSeason = await prisma.battlePassSeason.findFirst({
+    const currentSeason = await db.battlePassSeason.findFirst({
       where: {
         isActive: true,
         startDate: {
@@ -47,6 +48,14 @@ export async function POST(
       );
     }
 
+    // Double check - ensure season hasn't ended
+    if (new Date() >= new Date(currentSeason.endDate)) {
+      return NextResponse.json(
+        { error: 'Season has ended - cannot claim rewards' },
+        { status: 403 }
+      );
+    }
+
     // Get the reward
     const reward = currentSeason.rewards.find(r => r.id === rewardId);
     if (!reward) {
@@ -57,12 +66,10 @@ export async function POST(
     }
 
     // Get user progress
-    const userProgress = await prisma.userBattlePassProgress.findUnique({
+    const userProgress = await db.userBattlePass.findFirst({
       where: {
-        userId_seasonId: {
-          userId: session.user.id,
-          seasonId: currentSeason.id,
-        },
+        userId: decoded.userId,
+        seasonId: currentSeason.id,
       },
     });
 
@@ -74,54 +81,42 @@ export async function POST(
     }
 
     // Check if reward is already claimed
-    if (userProgress.claimedRewards.includes(rewardId)) {
+    const claimedReward = await db.userBattlePassReward.findFirst({
+      where: {
+        userId: decoded.userId,
+        rewardId: rewardId,
+      },
+    });
+
+    if (claimedReward) {
       return NextResponse.json(
         { error: 'Reward already claimed' },
         { status: 400 }
       );
     }
 
-    // Check if user meets requirements
-    const meetsRequirements = (() => {
-      switch (reward.requirements.type) {
-        case 'PLAY_TIME':
-          return userProgress.totalPlayTime >= reward.requirements.amount;
-        case 'FOOD_SPENDING':
-          return userProgress.totalFoodSpending >= reward.requirements.amount;
-        case 'DRINK_SPENDING':
-          return userProgress.totalDrinkSpending >= reward.requirements.amount;
-        default:
-          return false;
-      }
-    })();
-
-    if (!meetsRequirements) {
+    // Check if user meets XP requirement
+    if (userProgress.experience < reward.experience) {
       return NextResponse.json(
-        { error: 'Requirements not met' },
+        { error: `Not enough XP to claim this reward. Required: ${reward.experience}, Current: ${userProgress.experience}` },
         { status: 400 }
       );
     }
 
-    // Check if reward is VIP-only
-    if (reward.isVipOnly && !userProgress.isVip) {
+    // Check if reward is VIP-only (premium type)
+    if (reward.type === 'premium' && !userProgress.isPremium) {
       return NextResponse.json(
-        { error: 'VIP required for this reward' },
+        { error: 'Premium required for this reward' },
         { status: 403 }
       );
     }
 
-    // Update user progress with claimed reward
-    const updatedProgress = await prisma.userBattlePassProgress.update({
-      where: {
-        userId_seasonId: {
-          userId: session.user.id,
-          seasonId: currentSeason.id,
-        },
-      },
+    // Create claimed reward record
+    await db.userBattlePassReward.create({
       data: {
-        claimedRewards: {
-          push: rewardId,
-        },
+        userId: decoded.userId,
+        seasonId: currentSeason.id,
+        rewardId: rewardId,
       },
     });
 

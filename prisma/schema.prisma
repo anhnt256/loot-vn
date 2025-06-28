@@ -93,49 +93,33 @@ model GameResult {
   @@index([userId])
 }
 
-model UserMissionMap {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  missionId Int
-  branch    String
-  isDone    Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  users     User     @relation(fields: [userId], references: [id])
-  mission   Mission  @relation(fields: [missionId], references: [id])
-
-  @@index([missionId])
-  @@index([userId])
-}
-
 model User {
-  id             Int              @id @default(autoincrement())
-  userName       String?          @db.VarChar(45)
-  userId         Int
-  rankId         Int
-  stars          Int
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  magicStone     Int              @default(0)
-  totalPayment   Float?           @db.Float
-  branch         String
-  UserRewardMap  UserRewardMap[]
-  UserMissionMap UserMissionMap[]
-  GameResults    GameResult[]
-  GiftRounds     GiftRound[]
+  id            Int             @id @default(autoincrement())
+  userName      String?         @db.VarChar(45)
+  userId        Int
+  rankId        Int
+  stars         Int
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  magicStone    Int             @default(0)
+  branch        String
+  totalPayment  Float?          @db.Float
+  UserRewardMap UserRewardMap[]
+  GameResults   GameResult[]
+  GiftRounds    GiftRound[]
+  premiumOrders BattlePassPremiumOrder[]
 }
 
 model Mission {
-  id             Int              @id @default(autoincrement())
-  name           String
-  description    String
-  reward         Float
-  startHours     Int
-  endHours       Int
-  createdAt      DateTime         @default(now())
-  quantity       Int
-  type           Mission_type
-  UserMissionMap UserMissionMap[]
+  id          Int          @id @default(autoincrement())
+  name        String
+  description String
+  reward      Float
+  startHours  Int
+  endHours    Int
+  createdAt   DateTime     @default(now())
+  quantity    Int
+  type        Mission_type
 }
 
 model UserRewardMap {
@@ -218,16 +202,6 @@ model Computer {
   histories     DeviceHistory[]
 }
 
-model UserSpendMap {
-  id         Int       @id @default(autoincrement())
-  userId     Int?
-  branch     String?   @db.VarChar(45)
-  totalSpend Float?    @db.Float
-  date       DateTime? @db.Date
-  createdAt  DateTime? @default(now()) @db.DateTime(0)
-  updatedAt  DateTime? @default(now()) @db.DateTime(0)
-}
-
 model Staff {
   id        Int      @id @default(autoincrement())
   userName  String
@@ -242,36 +216,15 @@ model Staff {
 model GiftRound {
   id        Int       @id @default(autoincrement())
   userId    Int
-  amount    Int // Số lượt tặng
-  reason    String    @db.VarChar(255) // Lý do tặng lượt
-  staffId   Int // ID nhân viên thực hiện
+  amount    Int
+  reason    String    @db.VarChar(255)
+  staffId   Int
   createdAt DateTime  @default(now())
-  expiredAt DateTime? // Thời gian hết hạn của lượt tặng (nếu có)
+  expiredAt DateTime?
   isUsed    Boolean   @default(false)
   user      User      @relation(fields: [userId], references: [id])
 
   @@index([userId])
-}
-
-enum Mission_type {
-  HOURS
-  ORDER
-  COMBO
-  GAME
-}
-
-enum UserStarHistory_type {
-  CHECK_IN
-  MISSION
-  REWARD
-  GAME
-  RETURN_GIFT
-}
-
-enum DeviceStatus {
-  GOOD
-  DAMAGED_BUT_USABLE
-  COMPLETELY_DAMAGED
 }
 
 model Device {
@@ -296,18 +249,180 @@ model Device {
 model DeviceHistory {
   id              Int          @id @default(autoincrement())
   computerId      Int
-  type            String // 'REPORT' or 'REPAIR'
+  type            String
   issue           String?
-  status          String // 'PENDING', 'IN_PROGRESS', 'RESOLVED'
+  status          String
   createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt @default(now())
   monitorStatus   DeviceStatus @default(GOOD)
   keyboardStatus  DeviceStatus @default(GOOD)
   mouseStatus     DeviceStatus @default(GOOD)
   headphoneStatus DeviceStatus @default(GOOD)
   chairStatus     DeviceStatus @default(GOOD)
   networkStatus   DeviceStatus @default(GOOD)
+  deviceId        Int?
+  updatedAt       DateTime     @default(now()) @updatedAt
   computer        Computer     @relation(fields: [computerId], references: [id])
   Device          Device?      @relation(fields: [deviceId], references: [id])
-  deviceId        Int?
+
+  @@index([computerId])
+}
+
+model BattlePassSeason {
+  id             Int                @id @default(autoincrement())
+  name           String
+  description    String?
+  startDate      DateTime
+  endDate        DateTime
+  isActive       Boolean            @default(false)
+  maxLevel       Int                @default(100)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  rewards        BattlePassReward[]
+  userBattlePass UserBattlePass[]
+  premiumPackages BattlePassPremiumPackage[]
+
+  @@map("BattlePassSeason")
+}
+
+model BattlePassReward {
+  id          Int              @id @default(autoincrement())
+  seasonId    Int
+  level       Int
+  name        String
+  description String?
+  type        String
+  rewardType  String
+  rewardValue Int?
+  imageUrl    String?
+  isBonus     Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  season      BattlePassSeason @relation(fields: [seasonId], references: [id])
+  experience  Int              @default(0)
+
+  @@index([seasonId])
+  @@map("BattlePassReward")
+}
+
+model UserBattlePass {
+  id         Int              @id @default(autoincrement())
+  userId     Int
+  branch     String
+  seasonId   Int
+  level      Int              @default(0)
+  experience Int              @default(0)
+  isPremium  Boolean          @default(false)
+  totalSpent Float            @default(0)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  season     BattlePassSeason @relation(fields: [seasonId], references: [id])
+
+  @@unique([userId, seasonId])
+  @@index([userId])
+  @@index([seasonId])
+  @@map("UserBattlePass")
+}
+
+model UserBattlePassReward {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  seasonId  Int
+  rewardId  Int
+  claimedAt DateTime @default(now())
+
+  @@unique([userId, rewardId])
+  @@index([seasonId])
+  @@index([userId])
+}
+
+enum Mission_type {
+  HOURS
+  ORDER
+  TOPUP
+}
+
+enum DeviceStatus {
+  GOOD
+  DAMAGED_BUT_USABLE
+  COMPLETELY_DAMAGED
+}
+
+enum UserStarHistory_type {
+  CHECK_IN
+  MISSION
+  REWARD
+  GAME
+  RETURN_GIFT
+}
+
+enum PromotionType {
+  BATTLE_PASS
+  VOUCHER
+  TOPUP
+}
+
+enum DiscountType {
+  PERCENT
+  FIXED
+}
+
+enum OrderStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model BattlePassPremiumPackage {
+  id           Int      @id @default(autoincrement())
+  seasonId     Int
+  name         String
+  basePrice    Int
+  description  String?
+  benefits     String?
+  maxQuantity  Int?
+  sold         Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  season       BattlePassSeason @relation(fields: [seasonId], references: [id])
+  promotions   PromotionSetting[] @relation("PackagePromotions")
+  orders       BattlePassPremiumOrder[]
+}
+
+model PromotionSetting {
+  id           Int      @id @default(autoincrement())
+  name         String
+  type         PromotionType
+  targetId     Int?
+  discountType DiscountType
+  discountValue Float
+  startDate    DateTime
+  endDate      DateTime
+  maxQuantity  Int?
+  used         Int      @default(0)
+  isActive     Boolean  @default(true)
+  rule         Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  package      BattlePassPremiumPackage? @relation("PackagePromotions", fields: [targetId], references: [id])
+  orders       BattlePassPremiumOrder[]
+}
+
+model BattlePassPremiumOrder {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  packageId      Int
+  promotionId    Int?
+  price          Int
+  status         OrderStatus @default(PENDING)
+  createdAt      DateTime @default(now())
+  approvedAt     DateTime?
+  approvedBy     Int?
+  note           String?
+
+  user           User     @relation(fields: [userId], references: [id])
+  package        BattlePassPremiumPackage @relation(fields: [packageId], references: [id])
+  promotion      PromotionSetting? @relation(fields: [promotionId], references: [id])
 }

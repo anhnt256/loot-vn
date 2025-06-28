@@ -1,16 +1,18 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { db } from '@/lib/db';
+import { calculateLevel } from '@/lib/battle-pass-utils';
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    // Get user info from headers (set by middleware)
+    const userHeader = request.headers.get('user');
+    if (!userHeader) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const decoded = JSON.parse(userHeader);
+    if (!decoded || !decoded.userId) {
+      return NextResponse.json({ error: 'Invalid user data' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -23,7 +25,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const currentSeason = await prisma.battlePassSeason.findFirst({
+    const currentSeason = await db.battlePassSeason.findFirst({
       where: {
         isActive: true,
         startDate: {
@@ -47,24 +49,24 @@ export async function POST(request: Request) {
     expiryDate.setDate(expiryDate.getDate() + duration);
 
     // Update or create user progress
-    const userProgress = await prisma.userBattlePassProgress.upsert({
+    const userProgress = await db.userBattlePass.upsert({
       where: {
         userId_seasonId: {
-          userId: session.user.id,
+          userId: decoded.userId,
           seasonId: currentSeason.id,
         },
       },
       update: {
-        isVip: true,
+        isPremium: true,
       },
       create: {
-        userId: session.user.id,
+        userId: decoded.userId,
         seasonId: currentSeason.id,
-        isVip: true,
-        totalPlayTime: 0,
-        totalFoodSpending: 0,
-        totalDrinkSpending: 0,
-        claimedRewards: [],
+        level: calculateLevel(0, currentSeason.maxLevel), // Level 1 cho user mới (0 experience)
+        experience: 0,
+        isPremium: true,
+        totalSpent: 0,
+        branch: 'GO_VAP',
       },
     });
 
