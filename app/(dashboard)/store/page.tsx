@@ -17,6 +17,12 @@ const Store = () => {
   });
 
   return (
+    <div>
+      <h1>Tính năng đang bảo trì, vui lòng quay lại sau</h1>
+    </div>
+  )
+
+  return (
     <div className="flex flex-col p-5 gap-4">
       <div className="bg-white shadow-lg rounded-lg p-4 w-full overflow-auto max-h-[89vh]">
         <div className="flex justify-between items-center">
