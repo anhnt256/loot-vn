@@ -72,7 +72,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         userName,
         updatedAt: dayjs()
           .tz("Asia/Ho_Chi_Minh")
-          .toISOString(),
+          .toDate(),
       },
     });
   } catch (error) {
