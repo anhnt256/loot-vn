@@ -12,6 +12,7 @@ import Image from "next/image";
 import { Spin } from "antd";
 import { useQuery } from "@tanstack/react-query";
 import { fetcher } from "@/lib/fetcher";
+import { getCurrentDayOfWeekVN } from "@/lib/battle-pass-utils";
 
 const CheckInCard = () => {
   const [isChecking, setIsChecking] = useState<boolean | undefined>(false);
@@ -22,11 +23,11 @@ const CheckInCard = () => {
   const { userId, branch } = userData || {};
 
   const claim = useMemo(() => {
-    const date = dayjs().utc().add(7, "hours").format("YYYY-MM-DD");
+    const date = dayjs().tz("Asia/Ho_Chi_Minh").format("YYYY-MM-DD");
 
     const currentResults = userCheckIn?.filter((item: UserStarHistory) => {
       return (
-        dayjs(item.createdAt).utc().add(7, "hours").format("YYYY-MM-DD") ===
+        dayjs(item.createdAt).tz("Asia/Ho_Chi_Minh").format("YYYY-MM-DD") ===
         date
       );
     });
@@ -92,7 +93,7 @@ const CheckInCard = () => {
   useEffect(() => {
     if (checkInItem) {
       const currentTime = totalHours as unknown as number;
-      const today = dayjs().format("ddd");
+      const today = getCurrentDayOfWeekVN();
 
       setPlayTime(currentTime);
 

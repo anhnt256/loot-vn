@@ -6,6 +6,7 @@ import { createSafeAction } from "@/lib/create-safe-action";
 import { CreateCheckInResult } from "./schema";
 import { InputType, ReturnType } from "./type";
 import dayjs from "@/lib/dayjs";
+import { calculateDailyUsageTime, getCurrentDayOfWeekVN } from "@/lib/battle-pass-utils";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
   const { userId, branch, addedStar } = data;
@@ -56,12 +57,12 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         ) AS t2`;
     const result = await fnetDB.$queryRaw<any[]>(query);
 
-    const totalTimeUsed = result.reduce((sum, item) => sum + item.TimeUsed, 0);
-    const totalPlayTime = Math.floor(totalTimeUsed / 60);
+    // Sử dụng utility function để tính thời gian sử dụng
+    const totalPlayTime = calculateDailyUsageTime(result);
 
     const checkInItems = await db.checkInItem.findMany();
 
-    const today = dayjs().format("ddd");
+    const today = getCurrentDayOfWeekVN();
     const todayCheckIn = checkInItems.find((item) => item.dayName === today);
     const starsPerHour = todayCheckIn ? todayCheckIn.stars : 1000;
 

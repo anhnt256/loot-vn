@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import { useUserInfo } from "@/hooks/use-user-info";
 import Image from "next/image";
@@ -10,6 +10,25 @@ import { useLogout } from "@/queries/auth.query";
 import { toast } from "sonner";
 import { useAction } from "@/hooks/use-action";
 import { updateUser } from "@/actions/update-user";
+
+// Hook auto logout sau 5 phút không hoạt động
+function useAutoLogout(onLogout: () => void, timeout = 5 * 60 * 1000) {
+  const timer = useRef<NodeJS.Timeout>();
+
+  useEffect(() => {
+    const resetTimer = () => {
+      clearTimeout(timer.current);
+      timer.current = setTimeout(onLogout, timeout);
+    };
+    const events = ["mousemove", "keydown", "click", "touchstart"];
+    events.forEach(e => window.addEventListener(e, resetTimer));
+    resetTimer();
+    return () => {
+      clearTimeout(timer.current);
+      events.forEach(e => window.removeEventListener(e, resetTimer));
+    };
+  }, [onLogout, timeout]);
+}
 
 const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   const loginMutation = useLogout();
@@ -53,6 +72,14 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
       toast.error(message);
     }
   };
+
+  // Tích hợp auto logout
+  useAutoLogout(() => {
+    if (typeof window !== "undefined" && window.electron) {
+      // @ts-ignore
+      window.electron.send("close-app");
+    }
+  }, 5 * 60 * 1000);
 
   return (
     <div className="flex h-screen bg-gray-200">

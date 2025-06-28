@@ -22,25 +22,28 @@ export async function POST(req: Request, res: Response): Promise<any> {
       console.log("Processing admin login for user:", userName);
       if (userName !== "gateway_admin") {
         console.log("Admin login failed: Invalid username");
-        return NextResponse.json({ 
-          statusCode: 401,
-          message: "Invalid admin credentials",
-          data: null
-        }, { status: 401 });
+        return NextResponse.json(
+          {
+            statusCode: 401,
+            message: "Invalid admin credentials",
+            data: null,
+          },
+          { status: 401 },
+        );
       }
 
       const adminData = {
         userId: "admin",
         id: "admin",
         userName: "gateway_admin",
-        role: "admin"
+        role: "admin",
       };
 
       const token = await signJWT(adminData);
       const response = NextResponse.json({
         ...adminData,
         statusCode: 200,
-        message: "Login Success"
+        message: "Login Success",
       });
 
       response.cookies.set({
@@ -70,108 +73,72 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
     const userId = user[0]?.userId ?? null;
 
-    console.log("userId", userId);
-
-    // const userId = 785;
-
-    let userUpdated;
-
-    const currentUsers = await db.user.findMany({
+    // Tìm user theo userId (và branch nếu cần)
+    const existedUsers = await db.user.findMany({
       where: {
         userId: Number(userId),
-        branch: branchFromCookie,
+        branch: branchFromCookie || "",
       },
+      orderBy: { id: "asc" },
     });
 
-    const validUserNames = currentUsers
-      .map((user) => user.userName)
-      .filter(
-        (userName): userName is string =>
-          userName !== null && userName.trim() !== "",
-      );
+    let userUpdated;
+    let finalUserName;
 
-    if (validUserNames.length > 0) {
-      const usersByUsername = await db.user.findMany({
-        where: {
-          userName: { in: validUserNames },
-        },
+    if (existedUsers.length === 1) {
+      // Lấy userName từ DB
+      finalUserName = existedUsers[0].userName;
+      userUpdated = await db.user.update({
+        where: { id: existedUsers[0].id },
+        data: { updatedAt: new Date() },
       });
-
-      const uniqueBranches = new Set(
-        usersByUsername.map((user) => user.branch),
+    } else if (existedUsers.length > 1) {
+      // Có nhiều user trùng, return lỗi 499
+      return NextResponse.json(
+        {
+          statusCode: 499,
+          message: "Có nhiều hơn 1 tài khoản. Vui lòng liên hệ admin",
+          data: null,
+        },
+        { status: 499 },
       );
-
-      if (uniqueBranches.size > 1) {
-        return NextResponse.json("Duplicate account", { status: 499 });
-      }
-
-      const thisUsers = [...currentUsers, ...usersByUsername];
-      const allUsers = [
-        ...new Map(thisUsers.map((user) => [user.id, user])).values(),
-      ];
-
-      if (allUsers.length > 1) {
-        allUsers.sort(
-          (a: { updatedAt: Date }, b: { updatedAt: Date }) =>
-            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
-        );
-
-        const latestUser = allUsers[0];
-        const totalStars = allUsers.reduce(
-          (sum: number, u: { stars: number }) => sum + u.stars,
-          0,
-        );
-        const totalMagicStones = allUsers.reduce(
-          (sum: number, u: { magicStone: number }) => sum + u.magicStone,
-          0,
-        );
-
-        userUpdated = await db.user.update({
-          where: { id: latestUser.id },
-          data: {
-            stars: totalStars,
-            magicStone: totalMagicStones,
-            userId: userId,
-          },
-        });
-
-        const deleteIds = allUsers
-          .slice(1)
-          .map((u: { id: number }) => u.id)
-          .filter((id: number) => id !== latestUser.id);
-
-        if (deleteIds.length > 0) {
-          await db.userMissionMap.deleteMany({
-            where: { userId: { in: deleteIds } },
-          });
-        }
-
-        await db.user.deleteMany({
-          where: { id: { in: deleteIds } },
-        });
-      } else {
-        userUpdated = await db.user.update({
-          where: { id: allUsers[0].id },
-          data: {
-            userId: userId,
-          },
-        });
-      }
     } else {
-      if (branchFromCookie) {
+      // Lần đầu login, dùng userName client truyền vào
+      finalUserName = userName;
+      try {
         userUpdated = await db.user.create({
           data: {
-            userName: userName.trim(),
-            userId,
-            branch: branchFromCookie,
-            rankId: 1,
+            ...(finalUserName ? { userName: finalUserName } : {}),
+            userId: Number(userId),
+            branch: branchFromCookie || "",
             stars: 0,
             magicStone: 0,
-            createdAt: dayjs()
-              .tz("Asia/Ho_Chi_Minh")
-              .toISOString(),
+            rankId: 1,
+            updatedAt: new Date(),
           },
         });
+      } catch (error: any) {
+        // Nếu lỗi duplicate (có thể do race condition), thử tìm lại user
+        if (
+          error.code === "P2002" ||
+          error.message?.includes("Duplicate entry")
+        ) {
+          const retryUser = await db.user.findFirst({
+            where: {
+              userId: Number(userId),
+              branch: branchFromCookie || "",
+            },
+          });
+          if (retryUser) {
+            finalUserName = retryUser.userName;
+            userUpdated = await db.user.update({
+              where: { id: retryUser.id },
+              data: { updatedAt: new Date() },
+            });
+          }
+        } else {
+          throw error;
+        }
       }
     }
 
@@ -180,7 +147,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
       const response = NextResponse.json({
         ...userUpdated,
         statusCode: 200,
-        message: "Login Success"
+        message: "Login Success",
       });
 
       response.cookies.set({
@@ -195,19 +162,25 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
       return response;
     }
-    return NextResponse.json({ 
-      statusCode: 401,
-      message: "Login Failed",
-      data: null
-    }, { status: 401 });
+    return NextResponse.json(
+      {
+        statusCode: 401,
+        message: "Login Failed",
+        data: null,
+      },
+      { status: 401 },
+    );
   } catch (error) {
     console.error("Login error:", error);
     const errorMessage =
       error instanceof Error ? error.message : "Internal Error";
-    return NextResponse.json({ 
-      statusCode: 500,
-      message: errorMessage,
-      data: null
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        statusCode: 500,
+        message: errorMessage,
+        data: null,
+      },
+      { status: 500 },
+    );
   }
 }

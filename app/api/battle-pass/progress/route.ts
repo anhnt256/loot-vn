@@ -1,19 +1,21 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { db } from '@/lib/db';
+import { calculateLevel } from '@/lib/battle-pass-utils';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    // Get user info from headers (set by middleware)
+    const userHeader = request.headers.get('user');
+    if (!userHeader) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const currentSeason = await prisma.battlePassSeason.findFirst({
+    const decoded = JSON.parse(userHeader);
+    if (!decoded || !decoded.userId) {
+      return NextResponse.json({ error: 'Invalid user data' }, { status: 401 });
+    }
+
+    const currentSeason = await db.battlePassSeason.findFirst({
       where: {
         isActive: true,
         startDate: {
@@ -32,33 +34,67 @@ export async function GET() {
       );
     }
 
-    const userProgress = await prisma.userBattlePassProgress.findFirst({
+    // Tìm hoặc tạo user battle pass progress
+    let userProgress = await db.userBattlePass.findFirst({
       where: {
-        userId: session.user.id,
+        userId: decoded.userId,
         seasonId: currentSeason.id,
       },
     });
 
-    const availableRewards = await prisma.battlePassReward.findMany({
-      where: {
-        seasonId: currentSeason.id,
-        id: {
-          notIn: userProgress?.claimedRewards as number[] || [],
+    // Nếu chưa có progress, tạo mới với level được tính toán
+    if (!userProgress) {
+      // Tính toán level dựa trên experience (mặc định 0)
+      const experience = 0;
+      const calculatedLevel = calculateLevel(experience, currentSeason.maxLevel);
+      
+      userProgress = await db.userBattlePass.create({
+        data: {
+          userId: decoded.userId,
+          seasonId: currentSeason.id,
+          level: calculatedLevel,
+          experience: experience,
+          isPremium: false,
+          totalSpent: 0,
+          branch: 'GO_VAP', // Default branch
         },
+      });
+    }
+
+    // Lấy danh sách rewards đã claim
+    const claimedRewards = await db.userBattlePassReward.findMany({
+      where: {
+        userId: decoded.userId,
+        seasonId: currentSeason.id,
       },
-      orderBy: {
-        level: 'asc',
+      select: {
+        rewardId: true,
       },
     });
+
+    const claimedRewardIds = claimedRewards.map(r => r.rewardId);
+
+    // Lấy tất cả rewards của season
+    const allRewards = await db.battlePassReward.findMany({
+      where: { seasonId: currentSeason.id },
+      orderBy: { level: 'asc' },
+    });
+
+    // availableRewards: chưa nhận, đủ điều kiện
+    const availableRewards = allRewards.filter(
+      reward => !claimedRewardIds.includes(reward.id) && userProgress.experience >= reward.experience
+    );
 
     return NextResponse.json({
       seasonId: currentSeason.id,
-      isVip: userProgress?.isVip || false,
-      totalPlayTime: userProgress?.totalPlayTime || 0,
-      totalFoodSpending: userProgress?.totalFoodSpending || 0,
-      totalDrinkSpending: userProgress?.totalDrinkSpending || 0,
-      claimedRewards: userProgress?.claimedRewards || [],
+      isPremium: userProgress.isPremium,
+      level: userProgress.level,
+      experience: userProgress.experience,
+      totalSpent: userProgress.totalSpent,
+      claimedRewards: claimedRewardIds,
+      rewards: allRewards,
       availableRewards,
+      maxLevel: currentSeason.maxLevel,
     });
   } catch (error) {
     console.error('Error fetching user progress:', error);

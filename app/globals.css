@@ -74,3 +74,122 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Battle Pass Scroll Styles */
+.battle-pass-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #6366f1 #1e1b4b;
+}
+
+.battle-pass-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.battle-pass-scroll::-webkit-scrollbar-track {
+  background: #1e1b4b;
+  border-radius: 10px;
+}
+
+.battle-pass-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  border-radius: 10px;
+  border: 2px solid #1e1b4b;
+}
+
+.battle-pass-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, #4f46e5, #7c3aed);
+}
+
+/* Smooth animations */
+.reward-slot {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.reward-slot:hover {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+
+.level-progress {
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Missions Panel Scroll */
+.missions-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #4ade80 #1f2937;
+}
+
+.missions-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.missions-scroll::-webkit-scrollbar-track {
+  background: #1f2937;
+  border-radius: 10px;
+}
+
+.missions-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #4ade80, #22c55e);
+  border-radius: 10px;
+}
+
+.missions-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #22c55e, #16a34a);
+}
+
+/* Mission Card Animations */
+.mission-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.mission-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.mission-progress {
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .battle-pass-container {
+    flex-direction: column;
+    height: 100vh;
+  }
+  
+  .battle-pass-main-mobile {
+    flex: 1;
+  }
+}
+
+/* Custom branch select styles */
+.custom-branch-select .ant-select-selector {
+  background: #23272f !important;
+  color: #fff !important;
+  border: 1px solid #374151 !important;
+  font-weight: 600;
+  border-radius: 8px !important;
+}
+.custom-branch-select .ant-select-selection-item {
+  color: #fff !important;
+}
+.custom-branch-select .ant-select-arrow {
+  color: #fff !important;
+  font-weight: 600;
+}
+.custom-branch-select.ant-select-disabled .ant-select-selection-item {
+  color: #bfbfbf !important;
+  opacity: 1 !important;
+}
+.custom-branch-dropdown .ant-select-item {
+  color: #fff !important;
+  font-weight: 500;
+  padding: 10px 16px !important;
+}
+.custom-branch-dropdown .ant-select-item-option-selected,
+.custom-branch-dropdown .ant-select-item-option-active {
+  background: #2563eb !important;
+  color: #fff !important;
+}

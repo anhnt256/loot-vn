@@ -11,6 +11,9 @@ export async function middleware(request: NextRequest) {
     "/",
     "/api/login",
     "/api/check-branch",
+    "/api/user/check-existing",
+    "/api/battle-pass/test-progress",
+    "/api/battle-pass/test-sync",
     "/admin-login"
   ];
 

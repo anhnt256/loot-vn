@@ -1,25 +1,25 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { getFnetDB } from '@/lib/db';
-import dayjs from 'dayjs';
+import { db } from '@/lib/db';
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    // Get user info from headers (set by middleware)
+    const userHeader = request.headers.get('user');
+    if (!userHeader) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const fnetDB = await getFnetDB();
-    const userId = session.user.id;
+    const decoded = JSON.parse(userHeader);
+    if (!decoded || !decoded.userId) {
+      return NextResponse.json({ error: 'Invalid user data' }, { status: 401 });
+    }
+
+    // Get request body
+    const body = await request.json();
+    const { experience, totalSpent } = body;
 
     // Get current active season
-    const currentSeason = await prisma.battlePassSeason.findFirst({
+    const currentSeason = await db.battlePassSeason.findFirst({
       where: {
         isActive: true,
         startDate: {
@@ -38,58 +38,45 @@ export async function POST() {
       );
     }
 
-    // Get user's play time from systemlogtb
-    const query = `
-      SELECT *
-      FROM fnet.systemlogtb AS t1
-      WHERE t1.UserId = ${userId}
-        AND t1.status = 3
-        AND DATE(STR_TO_DATE(CONCAT(t1.EnterDate, ' ', t1.EnterTime), '%Y-%m-%d %H:%i:%s')) = CURDATE()
-
-      UNION ALL
-
-      SELECT *
-      FROM (
-        SELECT *
-        FROM fnet.systemlogtb AS t1
-        WHERE t1.UserId = ${userId}
-          AND t1.status = 3
-          AND DATE(STR_TO_DATE(CONCAT(t1.EnterDate, ' ', t1.EnterTime), '%Y-%m-%d %H:%i:%s')) < CURDATE()
-        ORDER BY STR_TO_DATE(CONCAT(t1.EnterDate, ' ', t1.EnterTime), '%Y-%m-%d %H:%i:%s') DESC
-        LIMIT 1
-      ) AS t2`;
-
-    const result = await fnetDB.$queryRaw<any[]>(query);
-
-    // Calculate total play time in minutes
-    const totalTimeUsed = result.reduce((sum, item) => sum + item.TimeUsed, 0);
-    const totalPlayTime = Math.floor(totalTimeUsed / 60);
-
-    // Update or create user progress
-    const userProgress = await prisma.userBattlePassProgress.upsert({
+    // Find or create user progress
+    let userProgress = await db.userBattlePass.findFirst({
       where: {
-        userId_seasonId: {
-          userId: session.user.id,
-          seasonId: currentSeason.id,
-        },
-      },
-      update: {
-        totalPlayTime,
-      },
-      create: {
-        userId: session.user.id,
+        userId: decoded.userId,
         seasonId: currentSeason.id,
-        totalPlayTime,
-        totalFoodSpending: 0,
-        totalDrinkSpending: 0,
-        claimedRewards: [],
-        isVip: false,
       },
     });
 
+    if (!userProgress) {
+      // Create new user progress
+      userProgress = await db.userBattlePass.create({
+        data: {
+          userId: decoded.userId,
+          seasonId: currentSeason.id,
+          level: 0,
+          experience: experience || 0,
+          isPremium: false,
+          totalSpent: totalSpent || 0,
+          branch: 'GO_VAP',
+        },
+      });
+    } else {
+      // Update existing progress
+      userProgress = await db.userBattlePass.update({
+        where: {
+          id: userProgress.id,
+        },
+        data: {
+          experience: experience !== undefined ? experience : userProgress.experience,
+          totalSpent: totalSpent !== undefined ? totalSpent : userProgress.totalSpent,
+        },
+      });
+    }
+
     return NextResponse.json({
       success: true,
-      totalPlayTime,
+      experience: userProgress.experience,
+      level: userProgress.level,
+      totalSpent: userProgress.totalSpent,
     });
   } catch (error) {
     console.error('Error updating battle pass progress:', error);
