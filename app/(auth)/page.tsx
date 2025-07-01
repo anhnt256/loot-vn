@@ -63,6 +63,34 @@ const Login = () => {
     },
   });
 
+  const onLoginForExistingUser = useCallback(async () => {
+    if (pageLoading || !machineData || !existingUser) {
+      return;
+    }
+
+    setPageLoading(true);
+    try {
+      const result = await loginMutation.mutateAsync({
+        userName: existingUser.userName,
+        machineName: machineData?.machineName,
+        isAdmin: false,
+      });
+
+      const { statusCode, message } = result || {};
+
+      if (statusCode === 200) {
+        toast.success("Chào mừng trở lại The GateWay!");
+        router.push("/dashboard");
+      } else if (statusCode === 500 || statusCode === 499) {
+        toast.error(message);
+      }
+    } catch (error) {
+      console.error("Auto-login error:", error);
+      toast.error("Đã có lỗi xảy ra khi tự động đăng nhập");
+    }
+    setPageLoading(false);
+  }, [pageLoading, machineData, existingUser, loginMutation, router]);
+
   useEffect(() => {
     let mounted = true;
 
@@ -110,34 +138,6 @@ const Login = () => {
       onLoginForExistingUser();
     }
   }, [machineData, existingUser, onLoginForExistingUser]);
-
-  const onLoginForExistingUser = useCallback(async () => {
-    if (pageLoading || !machineData || !existingUser) {
-      return;
-    }
-
-    setPageLoading(true);
-    try {
-      const result = await loginMutation.mutateAsync({
-        userName: existingUser.userName,
-        machineName: machineData?.machineName,
-        isAdmin: false,
-      });
-
-      const { statusCode, message } = result || {};
-
-      if (statusCode === 200) {
-        toast.success("Chào mừng trở lại The GateWay!");
-        router.push("/dashboard");
-      } else if (statusCode === 500 || statusCode === 499) {
-        toast.error(message);
-      }
-    } catch (error) {
-      console.error("Auto-login error:", error);
-      toast.error("Đã có lỗi xảy ra khi tự động đăng nhập");
-    }
-    setPageLoading(false);
-  }, [pageLoading, machineData, existingUser, loginMutation, router]);
 
   const onLogin = async () => {
     if (pageLoading || !machineData) {
