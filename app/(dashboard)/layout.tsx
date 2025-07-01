@@ -139,7 +139,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
           >
             Trò chơi
           </Link>
-          <Link
+          {/* <Link
             className={cn(
               "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
               pathname === "/store" ? "bg-gray-700" : "transparent",
@@ -156,7 +156,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
             href="/battle-pass"
           >
             Battle Pass
-          </Link>
+          </Link> */}
           {/*<Link*/}
           {/*  className={cn(*/}
           {/*    "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",*/}

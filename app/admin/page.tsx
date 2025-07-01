@@ -342,7 +342,11 @@ const AdminDashboard = () => {
 
   // Chuẩn bị base info
   const baseUserId = migrationInfo?.userId;
-  const baseUserName = (migrationInfo?.userName || searchUsers[0]?.userName || '').toLowerCase();
+  const baseUserName = (
+    migrationInfo?.userName ||
+    searchUsers[0]?.userName ||
+    ""
+  ).toLowerCase();
   const baseStars = migrationInfo?.starsCalculated;
 
   // Sort users theo mức độ tương đồng
@@ -379,7 +383,7 @@ const AdminDashboard = () => {
   });
 
   // Kiểm tra có user nào trùng userId không
-  const hasUserIdMatch = sortedUsers.some(u => u.userId === baseUserId);
+  const hasUserIdMatch = sortedUsers.some((u) => u.userId === baseUserId);
 
   return (
     <div className="flex flex-col p-5 gap-4">
@@ -508,11 +512,9 @@ const AdminDashboard = () => {
                       {userId}
                     </div>
 
-                    {!isEmpty(userName) && userId !== 0 && (
-                      <div className="text-[9px] truncate text-purple-300 font-bold">
-                        {`Điểm danh: ${canClaim.toLocaleString()}`}
-                      </div>
-                    )}
+                    <div className="text-[9px] truncate text-purple-300 font-bold">
+                      {`Điểm danh: ${canClaim.toLocaleString()}`}
+                    </div>
 
                     <div className="text-[9px] truncate text-blue-300 font-bold">
                       {`Lượt quay: ${round.toLocaleString()}`}
@@ -1293,14 +1295,17 @@ const AdminDashboard = () => {
               {/* List các user có thể Migrate */}
               <div className="grid grid-cols-1 gap-3">
                 {sortedUsers.map((user, idx) => {
-                  const selectedComputerId = checkLoginForm.getFieldValue("computerId");
-                  const selectedComputer = computers.find(c => c.id === selectedComputerId);
+                  const selectedComputerId =
+                    checkLoginForm.getFieldValue("computerId");
+                  const selectedComputer = computers.find(
+                    (c) => c.id === selectedComputerId,
+                  );
                   const isCurrent = user.userId === selectedComputer?.userId;
                   // Card nổi bật nếu là tương đồng nhất
                   const isBestMatch = hasUserIdMatch && idx === 0;
                   return (
                     <Card
-                      key={user.userId + '-' + user.stars}
+                      key={user.userId + "-" + user.stars}
                       className={
                         isBestMatch
                           ? "bg-gray-800 border-2 border-orange-500 text-white"
@@ -1311,16 +1316,26 @@ const AdminDashboard = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <div>
-                            <b className="text-blue-400 text-lg font-bold">UserId:</b>{' '}
-                            <span className="text-blue-300 text-lg font-bold">{user.userId}</span>
+                            <b className="text-blue-400 text-lg font-bold">
+                              UserId:
+                            </b>{" "}
+                            <span className="text-blue-300 text-lg font-bold">
+                              {user.userId}
+                            </span>
                           </div>
                           <div>
-                            <b className="text-gray-300">Username:</b>{' '}
-                            <span className="text-white">{user.userName || user.username}</span>
+                            <b className="text-gray-300">Username:</b>{" "}
+                            <span className="text-white">
+                              {user.userName || user.username}
+                            </span>
                           </div>
                           <div>
-                            <b className="text-yellow-400 text-lg font-bold">Stars:</b>{' '}
-                            <span className="text-yellow-300 text-lg font-bold">{user.stars?.toLocaleString() ?? 0}</span>
+                            <b className="text-yellow-400 text-lg font-bold">
+                              Stars:
+                            </b>{" "}
+                            <span className="text-yellow-300 text-lg font-bold">
+                              {user.stars?.toLocaleString() ?? 0}
+                            </span>
                           </div>
                         </div>
                         <Button
@@ -1363,11 +1378,14 @@ const AdminDashboard = () => {
               body: JSON.stringify({
                 keepId: migrateUser.id,
                 users: searchUsers,
+                starsCalculated: migrationInfo?.starsCalculated,
               }),
             });
             const data = await res.json();
             if (data.success) {
-              message.success("Đã giữ lại tài khoản và xóa các tài khoản còn lại!");
+              message.success(
+                "Đã giữ lại tài khoản và cập nhật số sao thành công!",
+              );
               setShowMigrateModal(false);
               setShowCheckLoginModal(false);
               setSearchUsers([]);
@@ -1406,7 +1424,13 @@ const AdminDashboard = () => {
             <b className="text-yellow-400">
               Stars: {migrateUser.stars?.toLocaleString() ?? 0}
             </b>{" "}
-            và các tài khoản khác sẽ bị{" "}
+            và cập nhật số sao thành{" "}
+            <b className="text-green-400">
+              {migrationInfo?.starsCalculated?.toLocaleString() ?? 0}
+            </b>
+            .
+            <br />
+            Các tài khoản khác sẽ bị{" "}
             <span className="text-red-400 font-bold">xóa</span>.<br />
             <span className="text-red-400 font-bold">
               Hãy cân nhắc kỹ vì các dữ liệu này sẽ không thể hoàn tác.

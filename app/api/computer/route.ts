@@ -4,7 +4,10 @@ import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
 import { cookies } from "next/headers";
 import dayjs from "@/lib/dayjs";
 import { Prisma } from "@/prisma/generated/prisma-client";
-import { calculateDailyUsageHours, getCurrentDayOfWeekVN } from "@/lib/battle-pass-utils";
+import {
+  calculateDailyUsageMinutes,
+  getCurrentDayOfWeekVN,
+} from "@/lib/battle-pass-utils";
 
 // Hàm chuyển BigInt về string để tránh lỗi serialize
 function convertBigIntToString(obj: any): any {
@@ -42,23 +45,15 @@ export async function GET() {
     const fnetPrisma = await getFnetPrisma();
 
     // Batch tất cả queries cần thiết
-    const [
-      computerStatus,
-      deviceHistoriesRaw,
-      computers,
-      checkInItems
-    ] = await Promise.all([
-      // 1. Computer status query (simplified)
-      fnetDB.$queryRaw<any[]>(fnetPrisma.sql`
+    const [computerStatus, deviceHistoriesRaw, computers, checkInItems] =
+      await Promise.all([
+        // 1. Computer status query (simplified)
+        fnetDB.$queryRaw<any[]>(fnetPrisma.sql`
         SELECT 
           s.MachineName,
           s.EnterDate,
           s.EnterTime,
-          CASE 
-            WHEN s.EnterDate = CURDATE() THEN s.Status
-            WHEN s.EnterDate = DATE_SUB(CURDATE(), INTERVAL 1 DAY) THEN 2
-            ELSE s.Status
-          END as Status,
+          s.Status,
           s.UserId,
           u.UserType
         FROM systemlogtb s
@@ -77,8 +72,8 @@ export async function GET() {
         ORDER BY s.MachineName ASC;
       `),
 
-      // 2. Device histories
-      db.$queryRaw`
+        // 2. Device histories
+        db.$queryRaw`
         SELECT h.*, h.createdAt
         FROM (
           SELECT *,
@@ -89,25 +84,26 @@ export async function GET() {
         WHERE h.rn = 1
       `,
 
-      // 3. Computers với devices
-      db.computer.findMany({
-        where: {
-          branch: branchFromCookie,
-          name: {
-            not: "ADMIN",
+        // 3. Computers với devices
+        db.computer.findMany({
+          where: {
+            branch: branchFromCookie,
+            name: {
+              not: "ADMIN",
+            },
           },
-        },
-        include: {
-          devices: true,
-        },
-      }),
+          include: {
+            devices: true,
+          },
+        }),
 
-      // 4. Check in items (cache lại)
-      db.checkInItem.findMany()
-    ]);
+        // 4. Check in items (cache lại)
+        db.checkInItem.findMany(),
+      ]);
 
     // Map histories vào từng device
-    const deviceIdToHistories: { [key: number]: { REPORT: any; REPAIR: any } } = {};
+    const deviceIdToHistories: { [key: number]: { REPORT: any; REPAIR: any } } =
+      {};
     for (const h of deviceHistoriesRaw as any[]) {
       if (!deviceIdToHistories[h.deviceId]) {
         deviceIdToHistories[h.deviceId] = { REPORT: null, REPAIR: null };
@@ -125,6 +121,8 @@ export async function GET() {
       .filter((status: any) => status.UserId)
       .map((status: any) => status.UserId);
 
+
+
     // Batch queries cho tất cả users
     const [
       userSessions,
@@ -132,78 +130,103 @@ export async function GET() {
       userData,
       userTopUps,
       userGiftRounds,
-      userGameRounds
+      userGameRounds,
     ] = await Promise.all([
       // 1. Tất cả user sessions trong 1 query
-      activeUserIds.length > 0 ? fnetDB.$queryRaw<any[]>(fnetPrisma.sql`
-        SELECT UserId, EnterDate, EndDate, EnterTime, EndTime
-        FROM fnet.systemlogtb
-        WHERE UserId IN (${Prisma.join(activeUserIds)})
-          AND status = 3
-          AND (
-            EnterDate = ${curDate} 
-            OR EndDate = ${curDate}
-            OR (EndDate IS NULL AND EnterDate = DATE_SUB(${curDate}, INTERVAL 1 DAY))
-          )
-      `) : [],
+      activeUserIds.length > 0
+        ? (async () => {
+            const userIdsStr = activeUserIds.join(",");
+            const queryString = `
+          SELECT UserId, EnterDate, EndDate, EnterTime, EndTime, status
+          FROM fnet.systemlogtb
+          WHERE UserId IN (${userIdsStr})
+            AND status = 3
+            AND (
+              EnterDate = '${curDate}' 
+              OR EndDate = '${curDate}'
+              OR (EndDate IS NULL AND EnterDate = DATE_SUB('${curDate}', INTERVAL 1 DAY))
+            )
+        `;
+
+                         const result = await fnetDB.$queryRawUnsafe(queryString);
+
+            return result;
+          })()
+        : [],
 
       // 2. Tất cả user claims trong 1 query
-      activeUserIds.length > 0 ? db.userStarHistory.findMany({
-        where: {
-          userId: { in: activeUserIds },
-          branch: branchFromCookie,
-          type: "CHECK_IN",
-          createdAt: { gte: startOfDayVN },
-        },
-      }) : [],
+      activeUserIds.length > 0
+        ? db.userStarHistory.findMany({
+            where: {
+              userId: { in: activeUserIds },
+              branch: branchFromCookie,
+              type: "CHECK_IN",
+              createdAt: { gte: startOfDayVN },
+            },
+          })
+        : [],
 
       // 3. Tất cả user data trong 1 query
-      activeUserIds.length > 0 ? db.user.findMany({
-        where: {
-          userId: { in: activeUserIds },
-          branch: branchFromCookie,
-        },
-      }) : [],
+      activeUserIds.length > 0
+        ? db.user.findMany({
+            where: {
+              userId: { in: activeUserIds },
+              branch: branchFromCookie,
+            },
+          })
+        : [],
 
       // 4. Tất cả user top ups trong 1 query
-      activeUserIds.length > 0 ? fnetDB.$queryRaw<any[]>(fnetPrisma.sql`
-        SELECT 
-          UserId,
-          COALESCE(CAST(SUM(AutoAmount) AS DECIMAL(18,2)), 0) AS total
-        FROM fnet.paymenttb
-        WHERE PaymentType = 4
-          AND UserId IN (${Prisma.join(activeUserIds)})
-          AND Note = N'Thời gian phí'
-          AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) >= DATE(DATE_SUB(NOW(), INTERVAL WEEKDAY(NOW()) DAY))
-          AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) <= NOW()
-        GROUP BY UserId
-      `) : [],
+      activeUserIds.length > 0
+        ? (async () => {
+            const userIdsStr = activeUserIds.join(",");
+            const queryString = `
+            SELECT 
+              UserId,
+              COALESCE(CAST(SUM(AutoAmount) AS DECIMAL(18,2)), 0) AS total
+            FROM fnet.paymenttb
+            WHERE PaymentType = 4
+              AND UserId IN (${userIdsStr})
+              AND Note = N'Thời gian phí'
+              AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) >= DATE(DATE_SUB(NOW(), INTERVAL WEEKDAY(NOW()) DAY))
+              AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) <= NOW()
+            GROUP BY UserId
+          `;
+            
+            const result = await fnetDB.$queryRawUnsafe(queryString);
+            return result;
+          })()
+        : [],
 
       // 5. Tất cả gift rounds trong 1 query
-      activeUserIds.length > 0 ? db.giftRound.findMany({
-        where: {
-          userId: { in: activeUserIds.map(id => parseInt(id, 10)) },
-          isUsed: false,
-          OR: [{ expiredAt: null }, { expiredAt: { gt: new Date() } }],
-        },
-      }) : [],
+      activeUserIds.length > 0
+        ? db.giftRound.findMany({
+            where: {
+              userId: { in: activeUserIds.map((id) => parseInt(id, 10)) },
+              isUsed: false,
+              OR: [{ expiredAt: null }, { expiredAt: { gt: new Date() } }],
+            },
+          })
+        : [],
 
       // 6. Tất cả game rounds trong 1 query
-      activeUserIds.length > 0 ? db.$queryRaw<any[]>(Prisma.sql`
+      activeUserIds.length > 0
+        ? db.$queryRaw<any[]>(Prisma.sql`
         SELECT 
           userId,
           COUNT(*) as count
         FROM GameResult gr
-        WHERE gr.userId IN (${Prisma.join(activeUserIds.map(id => parseInt(id, 10)))})
+        WHERE gr.userId IN (${Prisma.join(activeUserIds.map((id) => parseInt(id, 10)))})
         AND CreatedAt >= DATE(DATE_SUB(NOW(), INTERVAL WEEKDAY(NOW()) DAY))
         AND CreatedAt <= NOW()
         GROUP BY userId
-      `) : []
+      `)
+        : [],
     ]);
 
     // Tạo maps để lookup nhanh
     const userSessionsMap = new Map();
-    userSessions.forEach(session => {
+    (userSessions as any[]).forEach((session) => {
       if (!userSessionsMap.has(session.UserId)) {
         userSessionsMap.set(session.UserId, []);
       }
@@ -211,7 +234,7 @@ export async function GET() {
     });
 
     const userClaimsMap = new Map();
-    userClaims.forEach(claim => {
+    userClaims.forEach((claim) => {
       if (!userClaimsMap.has(claim.userId)) {
         userClaimsMap.set(claim.userId, []);
       }
@@ -219,17 +242,18 @@ export async function GET() {
     });
 
     const userDataMap = new Map();
-    userData.forEach(user => {
+    userData.forEach((user) => {
       userDataMap.set(user.userId, user);
     });
 
     const userTopUpsMap = new Map();
-    userTopUps.forEach(topUp => {
-      userTopUpsMap.set(topUp.UserId, parseFloat(topUp.total.toString()));
+    userTopUps.forEach((topUp) => {
+      const amount = parseFloat(topUp.total.toString());
+      userTopUpsMap.set(topUp.UserId, amount);
     });
 
     const userGiftRoundsMap = new Map();
-    userGiftRounds.forEach(gr => {
+    userGiftRounds.forEach((gr) => {
       if (!userGiftRoundsMap.has(gr.userId)) {
         userGiftRoundsMap.set(gr.userId, []);
       }
@@ -237,13 +261,15 @@ export async function GET() {
     });
 
     const userGameRoundsMap = new Map();
-    userGameRounds.forEach(round => {
+    userGameRounds.forEach((round) => {
       userGameRoundsMap.set(round.userId, Number(round.count));
     });
 
-    // Cache check in items
+    // Query real-time check in items
     const todayDayOfWeek = getCurrentDayOfWeekVN();
-    const todayCheckIn = checkInItems.find(item => item.dayName === todayDayOfWeek);
+    const todayCheckIn = await db.checkInItem.findFirst({
+      where: { dayName: todayDayOfWeek },
+    });
     const starsPerHour = todayCheckIn ? todayCheckIn.stars : 1000;
 
     const results = [];
@@ -262,8 +288,11 @@ export async function GET() {
       if (UserId) {
         // Tính check in từ cached data
         const sessions = userSessionsMap.get(UserId) || [];
-        const totalPlayTime = calculateDailyUsageHours(sessions);
-        const canClaim = totalPlayTime * starsPerHour;
+        const totalPlayTimeMinutes = calculateDailyUsageMinutes(sessions);
+        const totalPlayTimeHours = Math.floor(totalPlayTimeMinutes / 60);
+        const canClaim = Math.floor(totalPlayTimeHours * starsPerHour);
+
+
 
         const claims = userClaimsMap.get(UserId) || [];
         const totalClaimed = claims.reduce((acc: number, item: any) => {
@@ -271,22 +300,37 @@ export async function GET() {
           return acc + difference;
         }, 0);
 
-        checkIn = Math.max(0, canClaim - totalClaimed);
-
         // Lấy user data từ cache
         userData = userDataMap.get(UserId);
 
+        if (userData?.id) {
+          // User đã đăng nhập, tính check-in đã claim
+          checkIn = Math.max(0, canClaim - totalClaimed);
+        } else {
+          // User chưa đăng nhập, chưa claim check-in
+          checkIn = canClaim;
+        }
+
         // Tính rounds từ cached data
         const userTopUp = userTopUpsMap.get(UserId) || 0;
+        const spendPerRound = Number(process.env.NEXT_PUBLIC_SPEND_PER_ROUND);
         const round = Math.floor(
-          userTopUp ? userTopUp / Number(process.env.NEXT_PUBLIC_SPEND_PER_ROUND) : 0
+          userTopUp
+            ? userTopUp / spendPerRound
+            : 0,
         );
 
         if (userData?.id) {
           const giftRounds = userGiftRoundsMap.get(userData.id) || [];
-          const totalGiftRounds = giftRounds.reduce((sum: number, gr: any) => sum + gr.amount, 0);
+          const totalGiftRounds = giftRounds.reduce(
+            (sum: number, gr: any) => sum + gr.amount,
+            0,
+          );
           const usedRounds = userGameRoundsMap.get(parseInt(UserId, 10)) || 0;
           totalRound = round + totalGiftRounds - usedRounds;
+        } else {
+          // User chưa đăng nhập, chưa sử dụng lượt quay
+          totalRound = round;
         }
       }
 
@@ -316,10 +360,14 @@ export async function GET() {
               ? {
                   ...deviceIdToHistories[device.id].REPORT,
                   createdAt: deviceIdToHistories[device.id].REPORT.createdAt
-                    ? new Date(deviceIdToHistories[device.id].REPORT.createdAt).toISOString()
+                    ? new Date(
+                        deviceIdToHistories[device.id].REPORT.createdAt,
+                      ).toISOString()
                     : null,
                   updatedAt: deviceIdToHistories[device.id].REPORT.updatedAt
-                    ? new Date(deviceIdToHistories[device.id].REPORT.updatedAt).toISOString()
+                    ? new Date(
+                        deviceIdToHistories[device.id].REPORT.updatedAt,
+                      ).toISOString()
                     : null,
                 }
               : null,
@@ -327,10 +375,14 @@ export async function GET() {
               ? {
                   ...deviceIdToHistories[device.id].REPAIR,
                   createdAt: deviceIdToHistories[device.id].REPAIR.createdAt
-                    ? new Date(deviceIdToHistories[device.id].REPAIR.createdAt).toISOString()
+                    ? new Date(
+                        deviceIdToHistories[device.id].REPAIR.createdAt,
+                      ).toISOString()
                     : null,
                   updatedAt: deviceIdToHistories[device.id].REPAIR.updatedAt
-                    ? new Date(deviceIdToHistories[device.id].REPAIR.updatedAt).toISOString()
+                    ? new Date(
+                        deviceIdToHistories[device.id].REPAIR.updatedAt,
+                      ).toISOString()
                     : null,
                 }
               : null,

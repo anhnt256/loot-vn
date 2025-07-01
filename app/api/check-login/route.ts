@@ -52,8 +52,8 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
     console.log("user", user);
 
-    // const userId = user[0]?.userId ?? null;
-    const userId = 529;
+    const userId = user[0]?.userId ?? null;
+    // const userId = 2811;
 
 
     if (!userId) {

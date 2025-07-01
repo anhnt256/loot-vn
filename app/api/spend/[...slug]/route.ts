@@ -32,7 +32,6 @@ export async function GET(
             OR (EndDate IS NULL AND EnterDate = DATE_SUB(${curDate}, INTERVAL 1 DAY))
           )
       `;
-      console.log(query);
       const todaySessions: any = await fnetDB.$queryRaw`
         SELECT *
         FROM fnet.systemlogtb
@@ -54,12 +53,8 @@ export async function GET(
       return NextResponse.json(0);
     }
 
-    console.log("result", result);
-
     // Sử dụng utility function để tính thời gian sử dụng
     const totalHours = calculateDailyUsageHours(result);
-
-    console.log("totalHours", totalHours);
 
     return NextResponse.json(totalHours);
   } catch (error) {

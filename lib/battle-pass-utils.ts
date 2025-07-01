@@ -45,44 +45,56 @@ function parseSessionEndDateTime(endDate: any, endTime: any) {
 }
 
 /**
- * Tính tổng thời gian sử dụng trong ngày hiện tại với timezone Vietnam
+ * Kết hợp ngày (YYYY-MM-DD) và giờ (HH:mm:ss) thành dayjs object (không động đến timezone)
+ */
+function combineDateTime(dateVal: string | Date, timeVal: string | Date) {
+  // Convert về string ISO nếu là Date object
+  const dateStr = typeof dateVal === "string" ? dateVal : dateVal.toISOString();
+  const timeStr = typeof timeVal === "string" ? timeVal : timeVal.toISOString();
+
+  const a = dateStr.split("T")[0];
+  const b = timeStr.split("T")[1].replace("Z", ""); // loại bỏ Z nếu có
+
+  const fullDate = `${a}T${b}`;
+  return dayjs(fullDate);
+}
+
+/**
+ * Tính tổng thời gian sử dụng trong ngày targetDate (format: YYYY-MM-DD, timezone VN)
  * @param sessions - Danh sách session từ database
+ * @param targetDate - Chuỗi ngày cần tính (YYYY-MM-DD)
  * @returns Tổng thời gian sử dụng tính bằng phút
  */
-export const calculateDailyUsageMinutes = (sessions: any[]): number => {
-  const today = dayjs().tz('Asia/Ho_Chi_Minh').startOf('day');
-  const tomorrow = today.add(1, 'day');
+export const calculateDailyUsageMinutes = (sessions: any[], targetDate?: string): number => {
+  const day = targetDate ? dayjs.tz(targetDate, "Asia/Ho_Chi_Minh") : dayjs().tz('Asia/Ho_Chi_Minh').startOf('day');
+  const dayStart = day.startOf('day');
+  const dayEnd = day.endOf('day');
   let totalMinutes = 0;
+
   for (const session of sessions) {
-    try {
-      if (!session.EnterDate || !session.EnterTime) continue;
-      const enterDateTime = parseSessionDateTime(session.EnterDate, session.EnterTime);
-      if (!enterDateTime || !enterDateTime.isValid()) continue;
-      let endDateTime = parseSessionEndDateTime(session.EndDate, session.EndTime);
-      if (endDateTime.isBefore(enterDateTime)) endDateTime = dayjs().tz('Asia/Ho_Chi_Minh');
-      // Nếu session bắt đầu trước hôm nay và kết thúc hôm nay, set start = 0h hôm nay
-      let sessionStart = enterDateTime;
-      if (enterDateTime.isBefore(today) && endDateTime.isAfter(today) && endDateTime.isBefore(tomorrow)) {
-        sessionStart = today;
-      }
-      const sessionEnd = endDateTime.isAfter(tomorrow) ? tomorrow : endDateTime;
-      if (sessionEnd.isAfter(sessionStart)) {
-        totalMinutes += sessionEnd.diff(sessionStart, 'minute');
-      }
-    } catch (error) {
-      continue;
+    if (!session.EnterDate || !session.EnterTime) continue;
+
+    let enter = combineDateTime(session.EnterDate, session.EnterTime);
+    let end;
+    if (session.EndDate && session.EndTime) {
+      end = combineDateTime(session.EndDate, session.EndTime);
+    } else {
+      end = dayjs(); // now
+    }
+
+    const sessionStart = enter.isBefore(dayStart) ? dayStart : enter;
+    const sessionEnd = end.isAfter(dayEnd) ? dayEnd : end;
+
+    if (sessionEnd.isAfter(sessionStart)) {
+      totalMinutes += sessionEnd.diff(sessionStart, 'minute');
     }
   }
+
   return totalMinutes;
 };
 
-/**
- * Tính tổng thời gian sử dụng trong ngày hiện tại với timezone Vietnam
- * @param sessions - Danh sách session từ database
- * @returns Tổng thời gian sử dụng tính bằng giờ (số nguyên)
- */
-export const calculateDailyUsageHours = (sessions: any[]): number => {
-  return Math.round(calculateDailyUsageMinutes(sessions) / 60);
+export const calculateDailyUsageHours = (sessions: any[], targetDate?: string): number => {
+  return Math.floor(calculateDailyUsageMinutes(sessions, targetDate) / 60);
 };
 
 /**
