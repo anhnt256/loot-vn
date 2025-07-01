@@ -1,17 +1,17 @@
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
 
 export async function POST(request: Request) {
   try {
     // Get user info from headers (set by middleware)
-    const userHeader = request.headers.get('user');
+    const userHeader = request.headers.get("user");
     if (!userHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const decoded = JSON.parse(userHeader);
     if (!decoded || !decoded.userId) {
-      return NextResponse.json({ error: 'Invalid user data' }, { status: 401 });
+      return NextResponse.json({ error: "Invalid user data" }, { status: 401 });
     }
 
     // Get request body
@@ -33,8 +33,8 @@ export async function POST(request: Request) {
 
     if (!currentSeason) {
       return NextResponse.json(
-        { error: 'No active season found' },
-        { status: 404 }
+        { error: "No active season found" },
+        { status: 404 },
       );
     }
 
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
           experience: experience || 0,
           isPremium: false,
           totalSpent: totalSpent || 0,
-          branch: 'GO_VAP',
+          branch: "GO_VAP",
         },
       });
     } else {
@@ -66,8 +66,10 @@ export async function POST(request: Request) {
           id: userProgress.id,
         },
         data: {
-          experience: experience !== undefined ? experience : userProgress.experience,
-          totalSpent: totalSpent !== undefined ? totalSpent : userProgress.totalSpent,
+          experience:
+            experience !== undefined ? experience : userProgress.experience,
+          totalSpent:
+            totalSpent !== undefined ? totalSpent : userProgress.totalSpent,
         },
       });
     }
@@ -79,10 +81,10 @@ export async function POST(request: Request) {
       totalSpent: userProgress.totalSpent,
     });
   } catch (error) {
-    console.error('Error updating battle pass progress:', error);
+    console.error("Error updating battle pass progress:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
-} 
+}

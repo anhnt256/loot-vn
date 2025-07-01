@@ -138,7 +138,9 @@ export default function BattlePassSeasonsAdmin() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-white">Quản lý Battle Pass Season</h2>
+        <h2 className="text-2xl font-bold text-white">
+          Quản lý Battle Pass Season
+        </h2>
         <Button type="primary" onClick={() => openModal()}>
           Tạo mới
         </Button>
@@ -156,31 +158,45 @@ export default function BattlePassSeasonsAdmin() {
           <Input
             placeholder="Tên mùa"
             value={form.name}
-            onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
           />
           <Input
             placeholder="Mô tả"
             value={form.description}
-            onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, description: e.target.value }))
+            }
           />
           <DatePicker
             className="w-full"
             placeholder="Ngày bắt đầu"
             value={form.startDate ? dayjs(form.startDate) : undefined}
-            onChange={d => setForm(f => ({ ...f, startDate: d ? d.format("YYYY-MM-DD") : "" }))}
+            onChange={(d) =>
+              setForm((f) => ({
+                ...f,
+                startDate: d ? d.format("YYYY-MM-DD") : "",
+              }))
+            }
           />
           <DatePicker
             className="w-full"
             placeholder="Ngày kết thúc"
             value={form.endDate ? dayjs(form.endDate) : undefined}
-            onChange={d => setForm(f => ({ ...f, endDate: d ? d.format("YYYY-MM-DD") : "" }))}
+            onChange={(d) =>
+              setForm((f) => ({
+                ...f,
+                endDate: d ? d.format("YYYY-MM-DD") : "",
+              }))
+            }
           />
           <Input
             type="number"
             min={1}
             placeholder="Max Level"
             value={form.maxLevel}
-            onChange={e => setForm(f => ({ ...f, maxLevel: +e.target.value }))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, maxLevel: +e.target.value }))
+            }
           />
         </div>
       </Modal>
@@ -203,4 +219,4 @@ export default function BattlePassSeasonsAdmin() {
       </div>
     </div>
   );
-} 
+}

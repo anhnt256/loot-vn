@@ -1,18 +1,18 @@
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { calculateLevel } from '@/lib/battle-pass-utils';
+import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { calculateLevel } from "@/lib/battle-pass-utils";
 
 export async function GET(request: Request) {
   try {
     // Get user info from headers (set by middleware)
-    const userHeader = request.headers.get('user');
+    const userHeader = request.headers.get("user");
     if (!userHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const decoded = JSON.parse(userHeader);
     if (!decoded || !decoded.userId) {
-      return NextResponse.json({ error: 'Invalid user data' }, { status: 401 });
+      return NextResponse.json({ error: "Invalid user data" }, { status: 401 });
     }
 
     const currentSeason = await db.battlePassSeason.findFirst({
@@ -29,8 +29,8 @@ export async function GET(request: Request) {
 
     if (!currentSeason) {
       return NextResponse.json(
-        { error: 'No active season found' },
-        { status: 404 }
+        { error: "No active season found" },
+        { status: 404 },
       );
     }
 
@@ -46,8 +46,11 @@ export async function GET(request: Request) {
     if (!userProgress) {
       // Tính toán level dựa trên experience (mặc định 0)
       const experience = 0;
-      const calculatedLevel = calculateLevel(experience, currentSeason.maxLevel);
-      
+      const calculatedLevel = calculateLevel(
+        experience,
+        currentSeason.maxLevel,
+      );
+
       userProgress = await db.userBattlePass.create({
         data: {
           userId: decoded.userId,
@@ -56,7 +59,7 @@ export async function GET(request: Request) {
           experience: experience,
           isPremium: false,
           totalSpent: 0,
-          branch: 'GO_VAP', // Default branch
+          branch: "GO_VAP", // Default branch
         },
       });
     }
@@ -72,17 +75,19 @@ export async function GET(request: Request) {
       },
     });
 
-    const claimedRewardIds = claimedRewards.map(r => r.rewardId);
+    const claimedRewardIds = claimedRewards.map((r) => r.rewardId);
 
     // Lấy tất cả rewards của season
     const allRewards = await db.battlePassReward.findMany({
       where: { seasonId: currentSeason.id },
-      orderBy: { level: 'asc' },
+      orderBy: { level: "asc" },
     });
 
     // availableRewards: chưa nhận, đủ điều kiện
     const availableRewards = allRewards.filter(
-      reward => !claimedRewardIds.includes(reward.id) && userProgress.experience >= reward.experience
+      (reward) =>
+        !claimedRewardIds.includes(reward.id) &&
+        userProgress.experience >= reward.experience,
     );
 
     return NextResponse.json({
@@ -97,10 +102,10 @@ export async function GET(request: Request) {
       maxLevel: currentSeason.maxLevel,
     });
   } catch (error) {
-    console.error('Error fetching user progress:', error);
+    console.error("Error fetching user progress:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
-} 
+}

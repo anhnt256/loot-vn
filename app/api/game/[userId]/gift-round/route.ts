@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 // POST endpoint để tặng lượt cho user
 export async function POST(
   req: Request,
-  { params }: { params: { userId: string } }
+  { params }: { params: { userId: string } },
 ) {
   try {
     const { userId } = params;
@@ -14,7 +14,7 @@ export async function POST(
     if (!amount || amount <= 0) {
       return NextResponse.json(
         { error: "Số lượt tặng phải lớn hơn 0" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -26,7 +26,7 @@ export async function POST(
     if (!user) {
       return NextResponse.json(
         { error: "Không tìm thấy người dùng" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -46,25 +46,22 @@ export async function POST(
       where: { id: user.id },
       data: {
         magicStone: {
-          increment: amount
-        }
-      }
+          increment: amount,
+        },
+      },
     });
 
     return NextResponse.json(giftRound, { status: 201 });
   } catch (error) {
     console.error("Error gifting rounds:", error);
-    return NextResponse.json(
-      { error: "Lỗi khi tặng lượt" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Lỗi khi tặng lượt" }, { status: 500 });
   }
 }
 
 // GET endpoint để lấy lịch sử tặng lượt của user
 export async function GET(
   req: Request,
-  { params }: { params: { userId: string } }
+  { params }: { params: { userId: string } },
 ) {
   try {
     const { userId } = params;
@@ -76,7 +73,7 @@ export async function GET(
     if (!user) {
       return NextResponse.json(
         { error: "Không tìm thấy người dùng" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -90,7 +87,7 @@ export async function GET(
     console.error("Error fetching gift history:", error);
     return NextResponse.json(
       { error: "Lỗi khi lấy lịch sử tặng lượt" },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

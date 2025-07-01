@@ -51,7 +51,7 @@ export function AdminSidebar() {
   // Filter menu items based on login type and admin role
   const filteredMenuItems = menuItems.filter(
     (item) =>
-      !(item.href === "/admin/gift-rounds" && loginType === "macAddress")
+      !(item.href === "/admin/gift-rounds" && loginType === "macAddress"),
   );
 
   return (
@@ -78,4 +78,4 @@ export function AdminSidebar() {
       </nav>
     </aside>
   );
-} 
+}

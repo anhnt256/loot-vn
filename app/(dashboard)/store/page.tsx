@@ -20,7 +20,7 @@ const Store = () => {
     <div>
       <h1>Tính năng đang bảo trì, vui lòng quay lại sau</h1>
     </div>
-  )
+  );
 
   return (
     <div className="flex flex-col p-5 gap-4">
@@ -43,7 +43,9 @@ const Store = () => {
 
         <div className="flex justify-between items-center">
           <span className="text-xs text-black p-1 font-semibold mb-2 mr-4 bg-orange-300 w-full">
-            Sau khi đổi thưởng, phần thưởng sẽ được cộng trực tiếp vào số dư tài khoản. Vui lòng đăng nhập lại để cập nhật số giờ chơi chính xác. Xin cảm ơn.
+            Sau khi đổi thưởng, phần thưởng sẽ được cộng trực tiếp vào số dư tài
+            khoản. Vui lòng đăng nhập lại để cập nhật số giờ chơi chính xác. Xin
+            cảm ơn.
           </span>
         </div>
 

@@ -81,11 +81,14 @@ export async function POST(req: Request, res: Response): Promise<any> {
     });
 
     if (!existingUser) {
-      return NextResponse.json({ 
-        statusCode: 404,
-        message: "User not found",
-        data: null
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          statusCode: 404,
+          message: "User not found",
+          data: null,
+        },
+        { status: 404 },
+      );
     }
 
     // Cập nhật thông tin user nếu cần
@@ -100,7 +103,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
     const response = NextResponse.json({
       ...userUpdated,
       statusCode: 200,
-      message: "Login Success"
+      message: "Login Success",
     });
 
     response.cookies.set({
@@ -114,7 +117,6 @@ export async function POST(req: Request, res: Response): Promise<any> {
     });
 
     return response;
-
   } catch (error) {
     console.error("Login error:", error);
     const errorMessage =

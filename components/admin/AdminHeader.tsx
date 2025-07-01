@@ -7,12 +7,12 @@ export function AdminHeader() {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/logout', {
-        method: 'POST',
+      await fetch("/api/logout", {
+        method: "POST",
       });
-      router.push('/admin-login');
+      router.push("/admin-login");
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     }
   };
 
@@ -22,7 +22,7 @@ export function AdminHeader() {
         <h1 className="text-xl font-semibold text-gray-100">
           Gateway Admin Dashboard
         </h1>
-        
+
         <div className="flex items-center space-x-4">
           <button
             onClick={handleLogout}
@@ -34,4 +34,4 @@ export function AdminHeader() {
       </div>
     </header>
   );
-} 
+}

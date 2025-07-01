@@ -1,4 +1,10 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "./dialog";
 import { Button } from "./button";
 import { useState } from "react";
 
@@ -35,7 +41,8 @@ export function VIPPurchaseModal({
         <DialogHeader>
           <DialogTitle>Purchase Battle Pass VIP</DialogTitle>
           <DialogDescription>
-            Unlock exclusive rewards and faster progression with Battle Pass VIP.
+            Unlock exclusive rewards and faster progression with Battle Pass
+            VIP.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -64,4 +71,4 @@ export function VIPPurchaseModal({
       </DialogContent>
     </Dialog>
   );
-} 
+}

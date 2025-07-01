@@ -3,11 +3,13 @@
 ## Endpoints
 
 ### Get Current Season
+
 ```http
 GET /api/battle-pass/current-season
 ```
 
 **Response**
+
 ```json
 {
   "id": 1,
@@ -45,11 +47,13 @@ GET /api/battle-pass/current-season
 ```
 
 ### Get User Progress
+
 ```http
 GET /api/battle-pass/progress
 ```
 
 **Response**
+
 ```json
 {
   "seasonId": 1,
@@ -88,11 +92,13 @@ GET /api/battle-pass/progress
 ```
 
 ### Claim Reward
+
 ```http
 POST /api/battle-pass/claim-reward/:rewardId
 ```
 
 **Response**
+
 ```json
 {
   "success": true,
@@ -104,11 +110,13 @@ POST /api/battle-pass/claim-reward/:rewardId
 ```
 
 ### Purchase VIP
+
 ```http
 POST /api/battle-pass/purchase-vip
 ```
 
 **Request Body**
+
 ```json
 {
   "duration": 30 // days
@@ -116,6 +124,7 @@ POST /api/battle-pass/purchase-vip
 ```
 
 **Response**
+
 ```json
 {
   "success": true,
@@ -126,6 +135,7 @@ POST /api/battle-pass/purchase-vip
 ## Error Responses
 
 ### 400 Bad Request
+
 ```json
 {
   "error": "Invalid request",
@@ -134,6 +144,7 @@ POST /api/battle-pass/purchase-vip
 ```
 
 ### 401 Unauthorized
+
 ```json
 {
   "error": "Unauthorized",
@@ -142,6 +153,7 @@ POST /api/battle-pass/purchase-vip
 ```
 
 ### 403 Forbidden
+
 ```json
 {
   "error": "Forbidden",
@@ -150,6 +162,7 @@ POST /api/battle-pass/purchase-vip
 ```
 
 ### 404 Not Found
+
 ```json
 {
   "error": "Not Found",
@@ -158,6 +171,7 @@ POST /api/battle-pass/purchase-vip
 ```
 
 ### 500 Internal Server Error
+
 ```json
 {
   "error": "Internal Server Error",
@@ -166,13 +180,16 @@ POST /api/battle-pass/purchase-vip
 ```
 
 ## Rate Limiting
+
 - 100 requests per minute per IP
 - 1000 requests per hour per user
 
 ## Authentication
+
 - JWT token required in Authorization header
 - Token format: `Bearer <token>`
 
 ## Caching
+
 - GET requests are cached for 5 minutes
-- Cache can be bypassed with `Cache-Control: no-cache` header 
+- Cache can be bypassed with `Cache-Control: no-cache` header

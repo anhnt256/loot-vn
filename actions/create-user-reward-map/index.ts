@@ -37,12 +37,12 @@ const handler = async (data: InputType): Promise<any> => {
   // Check last claim time
   const lastClaim = await db.userRewardMap.findFirst({
     where: { userId },
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: "desc" },
   });
   if (lastClaim && lastClaim.createdAt) {
     const lastClaimTime = new Date(lastClaim.createdAt).getTime();
     const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-    
+
     if (lastClaimTime > fiveMinutesAgo) {
       return {
         error: "Please wait 5 minutes between claims.",
@@ -87,11 +87,13 @@ const handler = async (data: InputType): Promise<any> => {
         if (fnetUser) {
           const today = new Date();
           today.setFullYear(today.getFullYear() - 20);
-          const todayFormatted = today.toISOString().split('T')[0] + 'T00:00:00.000Z';
+          const todayFormatted =
+            today.toISOString().split("T")[0] + "T00:00:00.000Z";
 
           const expiryDate = new Date();
           expiryDate.setFullYear(expiryDate.getFullYear() + 10);
-          const expiryDateFormatted = expiryDate.toISOString().split('T')[0] + 'T00:00:00.000Z';
+          const expiryDateFormatted =
+            expiryDate.toISOString().split("T")[0] + "T00:00:00.000Z";
 
           await fnetDB.usertb.update({
             where: {
@@ -100,7 +102,7 @@ const handler = async (data: InputType): Promise<any> => {
             data: {
               RemainMoney: Number(fnetUser.RemainMoney) + Number(value),
               Birthdate: todayFormatted,
-              ExpiryDate: expiryDateFormatted
+              ExpiryDate: expiryDateFormatted,
             },
           });
         }

@@ -12,15 +12,12 @@ const updateGiftRoundSchema = z.object({
 // GET /api/gift-rounds/[id]
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const id = parseInt(params.id);
     if (isNaN(id)) {
-      return NextResponse.json(
-        { error: "Invalid ID" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
     }
 
     const giftRound = await db.giftRound.findUnique({
@@ -33,7 +30,7 @@ export async function GET(
     if (!giftRound) {
       return NextResponse.json(
         { error: "GiftRound not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -41,7 +38,7 @@ export async function GET(
   } catch (error) {
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -49,15 +46,12 @@ export async function GET(
 // PATCH /api/gift-rounds/[id]
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const id = parseInt(params.id);
     if (isNaN(id)) {
-      return NextResponse.json(
-        { error: "Invalid ID" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
     }
 
     const json = await request.json();
@@ -79,13 +73,13 @@ export async function PATCH(
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Invalid request data", details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -93,15 +87,12 @@ export async function PATCH(
 // DELETE /api/gift-rounds/[id]
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const id = parseInt(params.id);
     if (isNaN(id)) {
-      return NextResponse.json(
-        { error: "Invalid ID" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
     }
 
     await db.giftRound.delete({
@@ -112,7 +103,7 @@ export async function DELETE(
   } catch (error) {
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

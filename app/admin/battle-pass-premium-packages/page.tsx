@@ -106,7 +106,9 @@ export default function BattlePassPremiumPackagesAdmin() {
   // Delete
   const handleDelete = async (id: number) => {
     if (!confirm("Xóa package này?")) return;
-    await fetch(`/api/battle-pass/premium-packages/${id}`, { method: "DELETE" });
+    await fetch(`/api/battle-pass/premium-packages/${id}`, {
+      method: "DELETE",
+    });
     fetchData();
     toast.success("Đã xóa package");
   };
@@ -122,7 +124,7 @@ export default function BattlePassPremiumPackagesAdmin() {
       title: "Season",
       dataIndex: "seasonId",
       key: "seasonId",
-      render: (id: number) => seasons.find(s => s.id === id)?.name || id,
+      render: (id: number) => seasons.find((s) => s.id === id)?.name || id,
     },
     {
       title: "Giá gốc",
@@ -134,7 +136,8 @@ export default function BattlePassPremiumPackagesAdmin() {
       title: "Số lượng",
       dataIndex: "maxQuantity",
       key: "maxQuantity",
-      render: (v: number, r: PremiumPackage) => v ? `${r.sold}/${v}` : "Không giới hạn",
+      render: (v: number, r: PremiumPackage) =>
+        v ? `${r.sold}/${v}` : "Không giới hạn",
     },
     {
       title: "Quyền lợi",
@@ -161,7 +164,9 @@ export default function BattlePassPremiumPackagesAdmin() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-white">Quản lý Premium Battle Pass</h2>
+        <h2 className="text-2xl font-bold text-white">
+          Quản lý Premium Battle Pass
+        </h2>
         <Button type="primary" onClick={() => openModal()}>
           Tạo mới
         </Button>
@@ -180,38 +185,49 @@ export default function BattlePassPremiumPackagesAdmin() {
             className="w-full"
             placeholder="Chọn season"
             value={form.seasonId}
-            onChange={v => setForm(f => ({ ...f, seasonId: v }))}
-            options={seasons.map(s => ({ value: s.id, label: s.name }))}
+            onChange={(v) => setForm((f) => ({ ...f, seasonId: v }))}
+            options={seasons.map((s) => ({ value: s.id, label: s.name }))}
           />
           <Input
             placeholder="Tên gói"
             value={form.name}
-            onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
           />
           <Input
             type="number"
             min={0}
             placeholder="Giá gốc"
             value={form.basePrice}
-            onChange={e => setForm(f => ({ ...f, basePrice: +e.target.value }))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, basePrice: +e.target.value }))
+            }
           />
           <Input
             type="number"
             min={0}
             placeholder="Số lượng tối đa (bỏ trống = không giới hạn)"
             value={form.maxQuantity ?? ""}
-            onChange={e => setForm(f => ({ ...f, maxQuantity: e.target.value ? +e.target.value : undefined }))}
+            onChange={(e) =>
+              setForm((f) => ({
+                ...f,
+                maxQuantity: e.target.value ? +e.target.value : undefined,
+              }))
+            }
           />
           <Input.TextArea
             placeholder="Quyền lợi"
             value={form.benefits}
-            onChange={e => setForm(f => ({ ...f, benefits: e.target.value }))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, benefits: e.target.value }))
+            }
             rows={3}
           />
           <Input.TextArea
             placeholder="Mô tả"
             value={form.description}
-            onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, description: e.target.value }))
+            }
             rows={2}
           />
         </div>
@@ -235,4 +251,4 @@ export default function BattlePassPremiumPackagesAdmin() {
       </div>
     </div>
   );
-} 
+}

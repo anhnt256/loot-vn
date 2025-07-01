@@ -3,18 +3,22 @@
 ## Technology Stack
 
 ### Core Technologies
+
 - Next.js 14.0.4
 - React 18
 - TypeScript
 - Node.js
 
 ### Frontend
+
 1. UI Framework
+
    - Next.js App Router
    - React Server Components
    - Client Components where needed
 
 2. Styling
+
    - Tailwind CSS
    - Radix UI Components
    - Framer Motion for animations
@@ -25,12 +29,15 @@
    - React Hook Form for forms
 
 ### Backend
+
 1. Database
+
    - Prisma ORM
    - Multiple database schemas
    - Type-safe database operations
 
 2. Authentication
+
    - NextAuth.js
    - JWT handling
    - Session management
@@ -41,11 +48,14 @@
    - Event-based communication
 
 ### Development Tools
+
 1. Package Management
+
    - Yarn/npm
    - Node.js environment
 
 2. Code Quality
+
    - ESLint
    - Prettier
    - TypeScript strict mode
@@ -58,11 +68,13 @@
 ## Development Setup
 
 ### Prerequisites
+
 1. Node.js environment
 2. Yarn or npm package manager
 3. Git for version control
 
 ### Environment Setup
+
 1. Clone repository
 2. Install dependencies:
    ```bash
@@ -75,6 +87,7 @@
    ```
 
 ### Development Commands
+
 1. Start development server:
    ```bash
    yarn dev
@@ -89,7 +102,9 @@
    ```
 
 ### Database Management
+
 1. Prisma schemas:
+
    - Global schema
    - Fnet schema
    - FnetTP schema
@@ -102,18 +117,21 @@
 ## Technical Constraints
 
 ### Performance
+
 1. Server-side rendering
 2. Code splitting
 3. Image optimization
 4. Bundle size management
 
 ### Security
+
 1. Authentication requirements
 2. API security
 3. Data protection
 4. CORS policies
 
 ### Scalability
+
 1. Database design
 2. Caching strategy
 3. Real-time features
@@ -122,6 +140,7 @@
 ## Dependencies
 
 ### Production Dependencies
+
 - Next.js and React ecosystem
 - Prisma and database tools
 - UI components and styling
@@ -130,6 +149,7 @@
 - Real-time communication
 
 ### Development Dependencies
+
 - TypeScript and type definitions
 - ESLint and Prettier
 - Build and development tools
@@ -138,16 +158,19 @@
 ## Deployment
 
 ### Platform
+
 - Vercel deployment
 - Environment configuration
 - Build optimization
 
 ### Monitoring
+
 - Performance monitoring
 - Error tracking
 - Usage analytics
 
 ### Maintenance
+
 - Dependency updates
 - Security patches
-- Performance optimization 
+- Performance optimization

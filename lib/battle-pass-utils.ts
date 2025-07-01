@@ -14,7 +14,10 @@ export function calculateExperienceForLevel(level: number): number {
 }
 
 // Helper function để tính toán experience còn lại để lên level tiếp theo
-export function calculateRemainingExperience(currentExperience: number, currentLevel: number): number {
+export function calculateRemainingExperience(
+  currentExperience: number,
+  currentLevel: number,
+): number {
   const experienceForNextLevel = calculateExperienceForLevel(currentLevel + 1);
   return Math.max(0, experienceForNextLevel - currentExperience);
 }
@@ -27,21 +30,29 @@ export function calculateRemainingExperience(currentExperience: number, currentL
  */
 function parseSessionDateTime(enterDate: any, enterTime: any) {
   try {
-    const date = dayjs(enterDate).tz('Asia/Ho_Chi_Minh');
-    const time = dayjs(enterTime).tz('Asia/Ho_Chi_Minh');
+    const date = dayjs(enterDate).tz("Asia/Ho_Chi_Minh");
+    const time = dayjs(enterTime).tz("Asia/Ho_Chi_Minh");
     if (!date.isValid() || !time.isValid()) return null;
-    return date.hour(time.hour()).minute(time.minute()).second(time.second()).millisecond(0);
+    return date
+      .hour(time.hour())
+      .minute(time.minute())
+      .second(time.second())
+      .millisecond(0);
   } catch (error) {
     return null;
   }
 }
 
 function parseSessionEndDateTime(endDate: any, endTime: any) {
-  if (!endDate || !endTime) return dayjs().tz('Asia/Ho_Chi_Minh');
-  const date = dayjs(endDate).tz('Asia/Ho_Chi_Minh');
-  const time = dayjs(endTime).tz('Asia/Ho_Chi_Minh');
-  if (!date.isValid() || !time.isValid()) return dayjs().tz('Asia/Ho_Chi_Minh');
-  return date.hour(time.hour()).minute(time.minute()).second(time.second()).millisecond(0);
+  if (!endDate || !endTime) return dayjs().tz("Asia/Ho_Chi_Minh");
+  const date = dayjs(endDate).tz("Asia/Ho_Chi_Minh");
+  const time = dayjs(endTime).tz("Asia/Ho_Chi_Minh");
+  if (!date.isValid() || !time.isValid()) return dayjs().tz("Asia/Ho_Chi_Minh");
+  return date
+    .hour(time.hour())
+    .minute(time.minute())
+    .second(time.second())
+    .millisecond(0);
 }
 
 /**
@@ -65,16 +76,21 @@ function combineDateTime(dateVal: string | Date, timeVal: string | Date) {
  * @param targetDate - Chuỗi ngày cần tính (YYYY-MM-DD)
  * @returns Tổng thời gian sử dụng tính bằng phút
  */
-export const calculateDailyUsageMinutes = (sessions: any[], targetDate?: string): number => {
-  const day = targetDate ? dayjs.tz(targetDate, "Asia/Ho_Chi_Minh") : dayjs().tz('Asia/Ho_Chi_Minh').startOf('day');
-  const dayStart = day.startOf('day');
-  const dayEnd = day.endOf('day');
+export const calculateDailyUsageMinutes = (
+  sessions: any[],
+  targetDate?: string,
+): number => {
+  const day = targetDate
+    ? dayjs.tz(targetDate, "Asia/Ho_Chi_Minh")
+    : dayjs().tz("Asia/Ho_Chi_Minh").startOf("day");
+  const dayStart = day.startOf("day");
+  const dayEnd = day.endOf("day");
   let totalMinutes = 0;
 
   for (const session of sessions) {
     if (!session.EnterDate || !session.EnterTime) continue;
 
-    let enter = combineDateTime(session.EnterDate, session.EnterTime);
+    const enter = combineDateTime(session.EnterDate, session.EnterTime);
     let end;
     if (session.EndDate && session.EndTime) {
       end = combineDateTime(session.EndDate, session.EndTime);
@@ -86,14 +102,17 @@ export const calculateDailyUsageMinutes = (sessions: any[], targetDate?: string)
     const sessionEnd = end.isAfter(dayEnd) ? dayEnd : end;
 
     if (sessionEnd.isAfter(sessionStart)) {
-      totalMinutes += sessionEnd.diff(sessionStart, 'minute');
+      totalMinutes += sessionEnd.diff(sessionStart, "minute");
     }
   }
 
   return totalMinutes;
 };
 
-export const calculateDailyUsageHours = (sessions: any[], targetDate?: string): number => {
+export const calculateDailyUsageHours = (
+  sessions: any[],
+  targetDate?: string,
+): number => {
   return Math.floor(calculateDailyUsageMinutes(sessions, targetDate) / 60);
 };
 
@@ -135,4 +154,4 @@ export const getCurrentDateVN = (): string => {
  */
 export const getCurrentDayOfWeekVN = (): string => {
   return dayjs().tz("Asia/Ho_Chi_Minh").format("ddd");
-}; 
+};

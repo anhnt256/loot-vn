@@ -9,12 +9,36 @@ async function main() {
 
   // Bảng XP từng mốc cho 30 cấp
   const expPerLevel = [
-    600, 600, 600, 600, 600,      // 1-5
-    700, 700, 700, 700, 700,      // 6-10
-    750, 750, 750, 750, 750,      // 11-15
-    800, 800, 800, 800, 800,      // 16-20
-    850, 850, 850, 850, 850,      // 21-25
-    900, 900, 900, 900, 900       // 26-30
+    600,
+    600,
+    600,
+    600,
+    600, // 1-5
+    700,
+    700,
+    700,
+    700,
+    700, // 6-10
+    750,
+    750,
+    750,
+    750,
+    750, // 11-15
+    800,
+    800,
+    800,
+    800,
+    800, // 16-20
+    850,
+    850,
+    850,
+    850,
+    850, // 21-25
+    900,
+    900,
+    900,
+    900,
+    900, // 26-30
   ];
   // Bonus mỗi cấp +1000 XP
   const bonusExpPerLevel = 1000;
@@ -39,20 +63,60 @@ async function main() {
   ];
   const premiumRewards = [
     { level: 2, name: "7500 Stars", rewardType: "stars", rewardValue: 7500 },
-    { level: 4, name: "1 voucher Free nước", rewardType: "voucher", rewardValue: 10000 },
+    {
+      level: 4,
+      name: "1 voucher Free nước",
+      rewardType: "voucher",
+      rewardValue: 10000,
+    },
     { level: 6, name: "15000 Stars", rewardType: "stars", rewardValue: 15000 },
-    { level: 8, name: "1 voucher đồ ăn", rewardType: "voucher", rewardValue: 20000 },
+    {
+      level: 8,
+      name: "1 voucher đồ ăn",
+      rewardType: "voucher",
+      rewardValue: 20000,
+    },
     { level: 10, name: "22500 Stars", rewardType: "stars", rewardValue: 22500 },
-    { level: 12, name: "1 combo nước + đồ ăn", rewardType: "voucher", rewardValue: 30000 },
+    {
+      level: 12,
+      name: "1 combo nước + đồ ăn",
+      rewardType: "voucher",
+      rewardValue: 30000,
+    },
     { level: 14, name: "30000 Stars", rewardType: "stars", rewardValue: 30000 },
-    { level: 16, name: "1 combo nâng cao (F&B + giờ chơi)", rewardType: "voucher", rewardValue: 35000 },
+    {
+      level: 16,
+      name: "1 combo nâng cao (F&B + giờ chơi)",
+      rewardType: "voucher",
+      rewardValue: 35000,
+    },
     { level: 18, name: "37500 Stars", rewardType: "stars", rewardValue: 37500 },
-    { level: 20, name: "1 voucher combo + extra nước", rewardType: "voucher", rewardValue: 40000 },
+    {
+      level: 20,
+      name: "1 voucher combo + extra nước",
+      rewardType: "voucher",
+      rewardValue: 40000,
+    },
     { level: 22, name: "45000 Stars", rewardType: "stars", rewardValue: 45000 },
-    { level: 24, name: "2 combo nước + đồ ăn", rewardType: "voucher", rewardValue: 45000 },
+    {
+      level: 24,
+      name: "2 combo nước + đồ ăn",
+      rewardType: "voucher",
+      rewardValue: 45000,
+    },
     { level: 26, name: "45000 Stars", rewardType: "stars", rewardValue: 45000 },
-    { level: 28, name: "1 combo lớn + 1 giờ chơi", rewardType: "voucher", rewardValue: 48500 },
-    { level: 30, name: "1 voucher lớn (F&B hoặc giờ chơi)", rewardType: "voucher", rewardValue: 49000 },
+    {
+      level: 28,
+      name: "1 combo lớn + 1 giờ chơi",
+      rewardType: "voucher",
+      rewardValue: 48500,
+    },
+    {
+      level: 30,
+      name: "1 voucher lớn (F&B hoặc giờ chơi)",
+      rewardType: "voucher",
+      rewardValue: 49000,
+    },
   ];
 
   // Bonus rewards
@@ -94,7 +158,7 @@ async function main() {
   for (let i = 0; i < 30; i++) {
     cumulativeExp += expPerLevel[i];
     // Tìm reward free
-    const free = freeRewards.find(r => r.level === i + 1);
+    const free = freeRewards.find((r) => r.level === i + 1);
     if (free) {
       await prisma.battlePassReward.create({
         data: {
@@ -111,7 +175,7 @@ async function main() {
       });
     }
     // Tìm reward premium
-    const premium = premiumRewards.find(r => r.level === i + 1);
+    const premium = premiumRewards.find((r) => r.level === i + 1);
     if (premium) {
       await prisma.battlePassReward.create({
         data: {
@@ -122,7 +186,8 @@ async function main() {
           type: "premium",
           rewardType: premium.rewardType,
           rewardValue: premium.rewardValue,
-          imageUrl: premium.rewardType === "stars" ? "/star.png" : "/voucher.png",
+          imageUrl:
+            premium.rewardType === "stars" ? "/star.png" : "/voucher.png",
           experience: cumulativeExp,
         },
       });
@@ -148,7 +213,9 @@ async function main() {
     });
   }
 
-  console.log("✅ Đã seed lại bảng BattlePassReward với experience chuẩn từng mốc!");
+  console.log(
+    "✅ Đã seed lại bảng BattlePassReward với experience chuẩn từng mốc!",
+  );
 }
 
 main()

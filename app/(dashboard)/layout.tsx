@@ -21,11 +21,11 @@ function useAutoLogout(onLogout: () => void, timeout = 5 * 60 * 1000) {
       timer.current = setTimeout(onLogout, timeout);
     };
     const events = ["mousemove", "keydown", "click", "touchstart"];
-    events.forEach(e => window.addEventListener(e, resetTimer));
+    events.forEach((e) => window.addEventListener(e, resetTimer));
     resetTimer();
     return () => {
       clearTimeout(timer.current);
-      events.forEach(e => window.removeEventListener(e, resetTimer));
+      events.forEach((e) => window.removeEventListener(e, resetTimer));
     };
   }, [onLogout, timeout]);
 }
@@ -74,12 +74,15 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   };
 
   // Tích hợp auto logout
-  useAutoLogout(() => {
-    if (typeof window !== "undefined" && window.electron) {
-      // @ts-ignore
-      window.electron.send("close-app");
-    }
-  }, 5 * 60 * 1000);
+  useAutoLogout(
+    () => {
+      if (typeof window !== "undefined" && window.electron) {
+        // @ts-ignore
+        window.electron.send("close-app");
+      }
+    },
+    5 * 60 * 1000,
+  );
 
   return (
     <div className="flex h-screen bg-gray-200">

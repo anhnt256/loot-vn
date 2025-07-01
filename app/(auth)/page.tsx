@@ -37,7 +37,7 @@ const Login = () => {
       const response = await fetch("/api/check-branch");
       const data = await response.json();
 
-      if (data?.status !== 'success') {
+      if (data?.status !== "success") {
         toast.error(
           "Máy tính này chưa được đăng ký trong hệ thống. Vui lòng liên hệ quản trị viên.",
         );
@@ -53,7 +53,9 @@ const Login = () => {
     queryKey: ["check-existing-user", machineData?.machineName],
     enabled: !!machineData?.machineName,
     queryFn: async () => {
-      const response = await fetch(`/api/user/check-existing?machineName=${machineData.machineName}`);
+      const response = await fetch(
+        `/api/user/check-existing?machineName=${machineData.machineName}`,
+      );
       if (response.ok) {
         return await response.json();
       }
@@ -168,7 +170,11 @@ const Login = () => {
   if (initializing || pageLoading) {
     return (
       <div className="flex justify-center items-center">
-        <Spin size="large" tip={existingUser ? "Đang tự động đăng nhập..." : "Loading..."} spinning={true} />
+        <Spin
+          size="large"
+          tip={existingUser ? "Đang tự động đăng nhập..." : "Loading..."}
+          spinning={true}
+        />
       </div>
     );
   }
@@ -187,7 +193,9 @@ const Login = () => {
           />
         </div>
         <Spin size="large" tip="Đang tự động đăng nhập..." spinning={true} />
-        <p className="mt-4 text-green-500">Chào mừng trở lại, {existingUser.userName}!</p>
+        <p className="mt-4 text-green-500">
+          Chào mừng trở lại, {existingUser.userName}!
+        </p>
       </div>
     );
   }

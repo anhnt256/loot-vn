@@ -61,7 +61,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   }
 
   try {
-    if (!id) throw new Error('Missing user id for update!');
+    if (!id) throw new Error("Missing user id for update!");
     updateUser = await db.user.update({
       where: {
         id,
@@ -71,9 +71,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         stars,
         magicStone,
         userName,
-        updatedAt: dayjs()
-          .tz("Asia/Ho_Chi_Minh")
-          .toDate(),
+        updatedAt: dayjs().tz("Asia/Ho_Chi_Minh").toDate(),
       },
     });
   } catch (error) {

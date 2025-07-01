@@ -1,10 +1,13 @@
 # System Patterns
 
 ## Architecture Overview
+
 The application follows a modern Next.js architecture with the following key patterns:
 
 ### Frontend Architecture
+
 1. App Router Pattern (Next.js 14)
+
    - Server Components by default
    - Client Components when needed
    - Route-based code organization
@@ -15,7 +18,9 @@ The application follows a modern Next.js architecture with the following key pat
    - Layout-based organization
 
 ### State Management
+
 1. Server State
+
    - React Query for server state
    - Prisma for database operations
    - Server Actions for mutations
@@ -26,7 +31,9 @@ The application follows a modern Next.js architecture with the following key pat
    - Local component state when appropriate
 
 ### Data Flow
+
 1. Server-Side
+
    - Prisma ORM for database operations
    - Server Actions for mutations
    - API Routes for external services
@@ -39,7 +46,9 @@ The application follows a modern Next.js architecture with the following key pat
 ## Design Patterns
 
 ### Component Patterns
+
 1. Container/Presenter Pattern
+
    - Separation of logic and presentation
    - Reusable UI components
    - State management isolation
@@ -50,19 +59,23 @@ The application follows a modern Next.js architecture with the following key pat
    - Side effect handling
 
 ### Authentication Pattern
+
 1. NextAuth.js Integration
    - JWT-based authentication
    - Session management
    - Protected routes
 
 ### Real-time Pattern
+
 1. Pusher Integration
    - Real-time updates
    - Event-based communication
    - Channel-based organization
 
 ## Code Organization
+
 1. Feature-based Structure
+
    - Components grouped by feature
    - Shared components in common directory
    - Utils and helpers separated
@@ -73,13 +86,16 @@ The application follows a modern Next.js architecture with the following key pat
    - API type generation
 
 ## Testing Strategy
+
 1. Component Testing
    - Unit tests for components
    - Integration tests for features
    - E2E testing where needed
 
 ## Performance Patterns
+
 1. Code Splitting
+
    - Route-based splitting
    - Component lazy loading
    - Dynamic imports
@@ -90,7 +106,9 @@ The application follows a modern Next.js architecture with the following key pat
    - Incremental Static Regeneration
 
 ## Security Patterns
+
 1. Authentication
+
    - JWT-based auth
    - Session management
    - Protected routes
@@ -98,4 +116,4 @@ The application follows a modern Next.js architecture with the following key pat
 2. Data Protection
    - Input validation
    - API security
-   - CORS policies 
+   - CORS policies

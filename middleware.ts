@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
     "/api/user/check-existing",
     "/api/battle-pass/test-progress",
     "/api/battle-pass/test-sync",
-    "/admin-login"
+    "/admin-login",
   ];
 
   if (publicPaths.includes(request.nextUrl.pathname)) {
@@ -25,7 +25,10 @@ export async function middleware(request: NextRequest) {
   // Verify token cho tất cả API routes
   if (request.nextUrl.pathname.startsWith("/api/")) {
     const token = request.cookies.get("token")?.value;
-    console.log("Middleware - API route, token:", token ? "exists" : "not found");
+    console.log(
+      "Middleware - API route, token:",
+      token ? "exists" : "not found",
+    );
 
     if (!token) {
       return NextResponse.json(
@@ -62,7 +65,7 @@ export async function middleware(request: NextRequest) {
   // Kiểm tra nếu route bắt đầu bằng /admin
   if (request.nextUrl.pathname.startsWith("/admin")) {
     console.log("Middleware - Admin route detected");
-    
+
     // Skip authentication check for admin login page
     if (request.nextUrl.pathname === "/admin-login") {
       return NextResponse.next();
@@ -86,18 +89,18 @@ export async function middleware(request: NextRequest) {
     try {
       const payload = await verifyJWT(token);
       console.log("Middleware - Admin route, payload:", payload);
-      
+
       if (!payload) {
         console.log("Middleware - Invalid token, redirecting to login");
         return NextResponse.redirect(new URL("/", request.url));
       }
-      
+
       // Kiểm tra quyền admin
       if (payload.role !== "admin") {
         console.log("Middleware - Not admin role, redirecting to login");
         return NextResponse.redirect(new URL("/", request.url));
       }
-      
+
       console.log("Middleware - Admin access granted");
       return NextResponse.next();
     } catch (error) {

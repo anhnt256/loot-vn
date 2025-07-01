@@ -6,7 +6,10 @@ import { createSafeAction } from "@/lib/create-safe-action";
 import { CreateCheckInResult } from "./schema";
 import { InputType, ReturnType } from "./type";
 import dayjs from "@/lib/dayjs";
-import { calculateDailyUsageTime, getCurrentDayOfWeekVN } from "@/lib/battle-pass-utils";
+import {
+  calculateDailyUsageTime,
+  getCurrentDayOfWeekVN,
+} from "@/lib/battle-pass-utils";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
   const { userId, branch, addedStar } = data;
@@ -30,7 +33,8 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     const last = dayjs(lastCheckIn.createdAt);
     if (now.diff(last, "minute") < 10) {
       return {
-        error: "Bạn vừa check-in xong, vui lòng chờ 10 phút trước khi check-in tiếp!",
+        error:
+          "Bạn vừa check-in xong, vui lòng chờ 10 phút trước khi check-in tiếp!",
       };
     }
   }
@@ -95,9 +99,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         data: {
           userId,
           branch,
-          createdAt: dayjs()
-            .tz("Asia/Ho_Chi_Minh")
-            .toISOString(),
+          createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
         },
       });
 
@@ -120,9 +122,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
               oldStars,
               newStars,
               targetId: id,
-              createdAt: dayjs()
-                .tz("Asia/Ho_Chi_Minh")
-                .toISOString(),
+              createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
               branch,
             },
           });
@@ -131,9 +131,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
             where: { id: user.id },
             data: {
               stars: newStars,
-              updatedAt: dayjs()
-                .tz("Asia/Ho_Chi_Minh")
-                .toISOString(),
+              updatedAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
             },
           });
         }

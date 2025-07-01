@@ -38,9 +38,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         branch,
         rankId,
         stars,
-        createdAt: dayjs()
-          .tz("Asia/Ho_Chi_Minh")
-          .toISOString(),
+        createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
       },
     });
   } catch (error) {

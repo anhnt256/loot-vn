@@ -69,9 +69,9 @@ export async function GET(req: Request) {
     //     };
     //   }
     // }
-    return NextResponse.json({ data: dayjs()
-        .tz("Asia/Ho_Chi_Minh")
-        .toISOString() });
+    return NextResponse.json({
+      data: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
+    });
   } catch (error) {
     return new NextResponse("Internal Error", { status: 500 });
   }

@@ -1,28 +1,25 @@
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { calculateLevel } from '@/lib/battle-pass-utils';
+import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { calculateLevel } from "@/lib/battle-pass-utils";
 
 export async function POST(request: Request) {
   try {
     // Get user info from headers (set by middleware)
-    const userHeader = request.headers.get('user');
+    const userHeader = request.headers.get("user");
     if (!userHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const decoded = JSON.parse(userHeader);
     if (!decoded || !decoded.userId) {
-      return NextResponse.json({ error: 'Invalid user data' }, { status: 401 });
+      return NextResponse.json({ error: "Invalid user data" }, { status: 401 });
     }
 
     const body = await request.json();
     const { duration } = body;
 
-    if (!duration || typeof duration !== 'number' || duration <= 0) {
-      return NextResponse.json(
-        { error: 'Invalid duration' },
-        { status: 400 }
-      );
+    if (!duration || typeof duration !== "number" || duration <= 0) {
+      return NextResponse.json({ error: "Invalid duration" }, { status: 400 });
     }
 
     const currentSeason = await db.battlePassSeason.findFirst({
@@ -39,8 +36,8 @@ export async function POST(request: Request) {
 
     if (!currentSeason) {
       return NextResponse.json(
-        { error: 'No active season found' },
-        { status: 404 }
+        { error: "No active season found" },
+        { status: 404 },
       );
     }
 
@@ -66,7 +63,7 @@ export async function POST(request: Request) {
         experience: 0,
         isPremium: true,
         totalSpent: 0,
-        branch: 'GO_VAP',
+        branch: "GO_VAP",
       },
     });
 
@@ -75,10 +72,10 @@ export async function POST(request: Request) {
       expiryDate,
     });
   } catch (error) {
-    console.error('Error purchasing VIP:', error);
+    console.error("Error purchasing VIP:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
-} 
+}

@@ -210,9 +210,7 @@ async function saveResult(
       data: {
         userId,
         itemId: id,
-        createdAt: dayjs()
-          .tz("Asia/Ho_Chi_Minh")
-          .toDate(),
+        createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toDate(),
       },
     });
 
@@ -223,9 +221,7 @@ async function saveResult(
         oldStars,
         newStars,
         targetId: gameResultId,
-        createdAt: dayjs()
-          .tz("Asia/Ho_Chi_Minh")
-          .toDate(),
+        createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toDate(),
         branch,
       },
     });
@@ -234,9 +230,7 @@ async function saveResult(
       where: { id: user.id },
       data: {
         stars: newStars,
-        updatedAt: dayjs()
-          .tz("Asia/Ho_Chi_Minh")
-          .toDate(),
+        updatedAt: dayjs().tz("Asia/Ho_Chi_Minh").toDate(),
         magicStone: magicStone - 1,
       },
     });

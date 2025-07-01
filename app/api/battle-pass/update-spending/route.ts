@@ -1,19 +1,18 @@
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { getFnetDB } from '@/lib/db';
-import { calculateLevel } from '@/lib/battle-pass-utils';
+import { NextResponse } from "next/server";
+import { db, getFnetDB } from "@/lib/db";
+import { calculateLevel } from "@/lib/battle-pass-utils";
 
 export async function POST(request: Request) {
   try {
     // Get user info from headers (set by middleware)
-    const userHeader = request.headers.get('user');
+    const userHeader = request.headers.get("user");
     if (!userHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const decoded = JSON.parse(userHeader);
     if (!decoded || !decoded.userId) {
-      return NextResponse.json({ error: 'Invalid user data' }, { status: 401 });
+      return NextResponse.json({ error: "Invalid user data" }, { status: 401 });
     }
 
     const fnetDB = await getFnetDB();
@@ -34,8 +33,8 @@ export async function POST(request: Request) {
 
     if (!currentSeason) {
       return NextResponse.json(
-        { error: 'No active season found' },
-        { status: 404 }
+        { error: "No active season found" },
+        { status: 404 },
       );
     }
 
@@ -72,7 +71,7 @@ export async function POST(request: Request) {
         experience: 0,
         isPremium: false,
         totalSpent: totalSpending,
-        branch: 'GO_VAP',
+        branch: "GO_VAP",
       },
     });
 
@@ -83,10 +82,10 @@ export async function POST(request: Request) {
       totalSpent: userProgress.totalSpent,
     });
   } catch (error) {
-    console.error('Error updating battle pass spending:', error);
+    console.error("Error updating battle pass spending:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
-} 
+}

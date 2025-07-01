@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 async function testAPI() {
   try {
     console.log("🧪 Testing Battle Pass API...");
-    
+
     // Test 1: Kiểm tra season có active không
     const currentSeason = await prisma.battlePassSeason.findFirst({
       where: {
@@ -19,7 +19,10 @@ async function testAPI() {
       },
     });
 
-    console.log("✅ Current season:", currentSeason ? currentSeason.name : "Not found");
+    console.log(
+      "✅ Current season:",
+      currentSeason ? currentSeason.name : "Not found",
+    );
 
     if (!currentSeason) {
       console.log("❌ No active season found");
@@ -46,7 +49,7 @@ async function testAPI() {
           experience: 0,
           isPremium: false,
           totalSpent: 0,
-          branch: 'GO_VAP',
+          branch: "GO_VAP",
         },
       });
       console.log("✅ Created new user progress");
@@ -66,7 +69,7 @@ async function testAPI() {
     console.log("✅ Claimed rewards count:", claimedRewards.length);
 
     // Test 4: Kiểm tra available rewards
-    const claimedRewardIds = claimedRewards.map(r => r.rewardId);
+    const claimedRewardIds = claimedRewards.map((r) => r.rewardId);
     const availableRewards = await prisma.battlePassReward.findMany({
       where: {
         seasonId: currentSeason.id,
@@ -78,7 +81,7 @@ async function testAPI() {
         },
       },
       orderBy: {
-        level: 'asc',
+        level: "asc",
       },
     });
 
@@ -97,12 +100,11 @@ async function testAPI() {
     };
 
     console.log("✅ API Response:", JSON.stringify(response, null, 2));
-    
   } catch (error) {
-    console.error('❌ Error testing API:', error);
+    console.error("❌ Error testing API:", error);
   } finally {
     await prisma.$disconnect();
   }
 }
 
-testAPI(); 
+testAPI();

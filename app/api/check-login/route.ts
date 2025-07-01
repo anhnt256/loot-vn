@@ -55,7 +55,6 @@ export async function POST(req: Request, res: Response): Promise<any> {
     const userId = user[0]?.userId ?? null;
     // const userId = 2811;
 
-
     if (!userId) {
       return NextResponse.json(
         {
@@ -75,11 +74,16 @@ export async function POST(req: Request, res: Response): Promise<any> {
     });
 
     if (!currentUsers.length) {
-      console.error('Không tìm thấy user với userId:', userId, 'branch:', branchFromCookie);
+      console.error(
+        "Không tìm thấy user với userId:",
+        userId,
+        "branch:",
+        branchFromCookie,
+      );
       return NextResponse.json(
         {
           statusCode: 404,
-          message: 'Không tìm thấy user với userId và branch hiện tại.',
+          message: "Không tìm thấy user với userId và branch hiện tại.",
           data: null,
         },
         { status: 404 },
@@ -102,7 +106,9 @@ export async function POST(req: Request, res: Response): Promise<any> {
         },
       });
 
-      const uniqueBranches = new Set(usersByUsername.map((user) => user.branch));
+      const uniqueBranches = new Set(
+        usersByUsername.map((user) => user.branch),
+      );
       if (uniqueBranches.size > 1) {
         return NextResponse.json(
           {
@@ -118,16 +124,23 @@ export async function POST(req: Request, res: Response): Promise<any> {
       }
 
       allUsers = [
-        ...new Map([...currentUsers, ...usersByUsername].map((user) => [user.id, user])).values(),
+        ...new Map(
+          [...currentUsers, ...usersByUsername].map((user) => [user.id, user]),
+        ).values(),
       ];
     }
 
     if (!allUsers.length) {
-      console.error('allUsers rỗng sau merge, userId:', userId, 'branch:', branchFromCookie);
+      console.error(
+        "allUsers rỗng sau merge, userId:",
+        userId,
+        "branch:",
+        branchFromCookie,
+      );
       return NextResponse.json(
         {
           statusCode: 404,
-          message: 'Không tìm thấy user sau khi merge.',
+          message: "Không tìm thấy user sau khi merge.",
           data: null,
         },
         { status: 404 },
@@ -151,11 +164,13 @@ export async function POST(req: Request, res: Response): Promise<any> {
       const { checkIn, game, reward } = histories.reduce(
         (acc, h) => {
           if (h.type === "CHECK_IN") acc.checkIn += 1000;
-          else if (h.type === "GAME") acc.game += (h.newStars ?? 0) - (h.oldStars ?? 0);
-          else if (h.type === "REWARD") acc.reward += (h.oldStars ?? 0) - (h.newStars ?? 0);
+          else if (h.type === "GAME")
+            acc.game += (h.newStars ?? 0) - (h.oldStars ?? 0);
+          else if (h.type === "REWARD")
+            acc.reward += (h.oldStars ?? 0) - (h.newStars ?? 0);
           return acc;
         },
-        { checkIn: 0, game: 0, reward: 0 }
+        { checkIn: 0, game: 0, reward: 0 },
       );
       let total = checkIn + game - reward;
       if (total < 0) total = 0;
@@ -170,7 +185,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
         userId: userId,
         currentBranch: branchFromCookie,
         totalUsers: allUsers.length,
-        users: allUsers.map(user => ({
+        users: allUsers.map((user) => ({
           id: user.id,
           userId: user.userId,
           userName: user.userName,
@@ -184,13 +199,15 @@ export async function POST(req: Request, res: Response): Promise<any> {
         // Thông tin để migrate thủ công
         migrationInfo: {
           hasMultipleUsers: allUsers.length > 1,
-          branches: [...new Set(allUsers.map(user => user.branch))],
+          branches: [...new Set(allUsers.map((user) => user.branch))],
           totalStars: allUsers.reduce((sum, user) => sum + user.stars, 0),
-          totalMagicStones: allUsers.reduce((sum, user) => sum + user.magicStone, 0),
+          totalMagicStones: allUsers.reduce(
+            (sum, user) => sum + user.magicStone,
+            0,
+          ),
         },
       },
     });
-
   } catch (error) {
     console.error("Check-login error:", error);
     const errorMessage =
@@ -204,4 +221,4 @@ export async function POST(req: Request, res: Response): Promise<any> {
       { status: 500 },
     );
   }
-} 
+}

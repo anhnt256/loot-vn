@@ -121,8 +121,6 @@ export async function GET() {
       .filter((status: any) => status.UserId)
       .map((status: any) => status.UserId);
 
-
-
     // Batch queries cho tất cả users
     const [
       userSessions,
@@ -148,7 +146,7 @@ export async function GET() {
             )
         `;
 
-                         const result = await fnetDB.$queryRawUnsafe(queryString);
+            const result = await fnetDB.$queryRawUnsafe(queryString);
 
             return result;
           })()
@@ -192,7 +190,7 @@ export async function GET() {
               AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) <= NOW()
             GROUP BY UserId
           `;
-            
+
             const result = await fnetDB.$queryRawUnsafe(queryString);
             return result;
           })()
@@ -292,8 +290,6 @@ export async function GET() {
         const totalPlayTimeHours = Math.floor(totalPlayTimeMinutes / 60);
         const canClaim = Math.floor(totalPlayTimeHours * starsPerHour);
 
-
-
         const claims = userClaimsMap.get(UserId) || [];
         const totalClaimed = claims.reduce((acc: number, item: any) => {
           const difference = (item.newStars ?? 0) - (item.oldStars ?? 0);
@@ -314,11 +310,7 @@ export async function GET() {
         // Tính rounds từ cached data
         const userTopUp = userTopUpsMap.get(UserId) || 0;
         const spendPerRound = Number(process.env.NEXT_PUBLIC_SPEND_PER_ROUND);
-        const round = Math.floor(
-          userTopUp
-            ? userTopUp / spendPerRound
-            : 0,
-        );
+        const round = Math.floor(userTopUp ? userTopUp / spendPerRound : 0);
 
         if (userData?.id) {
           const giftRounds = userGiftRoundsMap.get(userData.id) || [];

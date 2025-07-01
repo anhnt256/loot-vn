@@ -24,7 +24,9 @@ export default function GiftRoundsPage() {
   const [giftRounds, setGiftRounds] = useState<GiftRound[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [selectedGiftRound, setSelectedGiftRound] = useState<GiftRound | null>(null);
+  const [selectedGiftRound, setSelectedGiftRound] = useState<GiftRound | null>(
+    null,
+  );
 
   const columns: ColumnsType<GiftRound> = [
     {
@@ -68,9 +70,7 @@ export default function GiftRoundsPage() {
       render: (isUsed: boolean) => (
         <span
           className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-            isUsed
-              ? "bg-gray-100 text-gray-800"
-              : "bg-green-100 text-green-800"
+            isUsed ? "bg-gray-100 text-gray-800" : "bg-green-100 text-green-800"
           }`}
         >
           {isUsed ? "Đã sử dụng" : "Còn hiệu lực"}
@@ -112,7 +112,9 @@ export default function GiftRoundsPage() {
       const formattedData = data.map((round: any) => ({
         ...round,
         createdAt: new Date(round.createdAt).toISOString(),
-        expiredAt: round.expiredAt ? new Date(round.expiredAt).toISOString() : null,
+        expiredAt: round.expiredAt
+          ? new Date(round.expiredAt).toISOString()
+          : null,
       }));
       setGiftRounds(formattedData);
     } catch (error) {
@@ -211,4 +213,4 @@ export default function GiftRoundsPage() {
       </div>
     </div>
   );
-} 
+}

@@ -1,28 +1,25 @@
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
 
 export async function POST(
   request: Request,
-  { params }: { params: { rewardId: string } }
+  { params }: { params: { rewardId: string } },
 ) {
   try {
     // Get user info from headers (set by middleware)
-    const userHeader = request.headers.get('user');
+    const userHeader = request.headers.get("user");
     if (!userHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const decoded = JSON.parse(userHeader);
     if (!decoded || !decoded.userId) {
-      return NextResponse.json({ error: 'Invalid user data' }, { status: 401 });
+      return NextResponse.json({ error: "Invalid user data" }, { status: 401 });
     }
 
     const rewardId = parseInt(params.rewardId);
     if (isNaN(rewardId)) {
-      return NextResponse.json(
-        { error: 'Invalid reward ID' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid reward ID" }, { status: 400 });
     }
 
     // Get current active season
@@ -43,26 +40,23 @@ export async function POST(
 
     if (!currentSeason) {
       return NextResponse.json(
-        { error: 'No active season found' },
-        { status: 404 }
+        { error: "No active season found" },
+        { status: 404 },
       );
     }
 
     // Double check - ensure season hasn't ended
     if (new Date() >= new Date(currentSeason.endDate)) {
       return NextResponse.json(
-        { error: 'Season has ended - cannot claim rewards' },
-        { status: 403 }
+        { error: "Season has ended - cannot claim rewards" },
+        { status: 403 },
       );
     }
 
     // Get the reward
-    const reward = currentSeason.rewards.find(r => r.id === rewardId);
+    const reward = currentSeason.rewards.find((r) => r.id === rewardId);
     if (!reward) {
-      return NextResponse.json(
-        { error: 'Reward not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Reward not found" }, { status: 404 });
     }
 
     // Get user progress
@@ -75,8 +69,8 @@ export async function POST(
 
     if (!userProgress) {
       return NextResponse.json(
-        { error: 'No progress found for this season' },
-        { status: 404 }
+        { error: "No progress found for this season" },
+        { status: 404 },
       );
     }
 
@@ -90,24 +84,26 @@ export async function POST(
 
     if (claimedReward) {
       return NextResponse.json(
-        { error: 'Reward already claimed' },
-        { status: 400 }
+        { error: "Reward already claimed" },
+        { status: 400 },
       );
     }
 
     // Check if user meets XP requirement
     if (userProgress.experience < reward.experience) {
       return NextResponse.json(
-        { error: `Not enough XP to claim this reward. Required: ${reward.experience}, Current: ${userProgress.experience}` },
-        { status: 400 }
+        {
+          error: `Not enough XP to claim this reward. Required: ${reward.experience}, Current: ${userProgress.experience}`,
+        },
+        { status: 400 },
       );
     }
 
     // Check if reward is VIP-only (premium type)
-    if (reward.type === 'premium' && !userProgress.isPremium) {
+    if (reward.type === "premium" && !userProgress.isPremium) {
       return NextResponse.json(
-        { error: 'Premium required for this reward' },
-        { status: 403 }
+        { error: "Premium required for this reward" },
+        { status: 403 },
       );
     }
 
@@ -129,14 +125,14 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message: 'Reward claimed successfully',
+      message: "Reward claimed successfully",
       reward,
     });
   } catch (error) {
-    console.error('Error claiming reward:', error);
+    console.error("Error claiming reward:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
-} 
+}

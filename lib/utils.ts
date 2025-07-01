@@ -29,12 +29,14 @@ export const checkReward = (actions: any[], mission: any) => {
 
   const priceActions = actions.filter(
     (x: any) =>
-      x.action_name.includes("Phiên theo biểu giá") && dayjs(x.start).tz("Asia/Ho_Chi_Minh").isToday(),
+      x.action_name.includes("Phiên theo biểu giá") &&
+      dayjs(x.start).tz("Asia/Ho_Chi_Minh").isToday(),
   );
 
   const ticketActions = actions.filter(
     (x: any) =>
-      x.action_name.includes("Ticket session") && dayjs(x.start).tz("Asia/Ho_Chi_Minh").isToday(),
+      x.action_name.includes("Ticket session") &&
+      dayjs(x.start).tz("Asia/Ho_Chi_Minh").isToday(),
   );
 
   const orderActions = actions.filter(
@@ -61,7 +63,7 @@ export const checkReward = (actions: any[], mission: any) => {
   if (priceActions && priceActions.length > 0 && type === "HOURS") {
     const now = dayjs().tz("Asia/Ho_Chi_Minh");
     const todayStart = now.startOf("day");
-    
+
     priceActions.forEach((action: any) => {
       if (minutes < 0) {
         minutes = 0;
@@ -70,7 +72,10 @@ export const checkReward = (actions: any[], mission: any) => {
       const currentDateStart = dayjs(start).tz("Asia/Ho_Chi_Minh");
       let currentDateEnd = now.add(1, "day");
       const currentEndDateFix = todayStart.hour(endHours).minute(0).second(0);
-      const currentStartDateFix = todayStart.hour(startHours).minute(0).second(0);
+      const currentStartDateFix = todayStart
+        .hour(startHours)
+        .minute(0)
+        .second(0);
 
       // console.log(
       //   "currentDateStart",

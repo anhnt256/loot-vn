@@ -8,21 +8,23 @@ export async function GET(req: Request) {
     const computerId = searchParams.get("computerId");
 
     const devices = await db.device.findMany({
-      where: computerId ? {
-        computerId: parseInt(computerId)
-      } : undefined,
+      where: computerId
+        ? {
+            computerId: parseInt(computerId),
+          }
+        : undefined,
       include: {
         computer: true,
         histories: {
           orderBy: {
-            createdAt: 'desc'
+            createdAt: "desc",
           },
-          take: 5 // Chỉ lấy 5 lịch sử gần nhất
-        }
+          take: 5, // Chỉ lấy 5 lịch sử gần nhất
+        },
       },
       orderBy: {
-        updatedAt: 'desc'
-      }
+        updatedAt: "desc",
+      },
     });
 
     return NextResponse.json(devices);
@@ -44,7 +46,7 @@ export async function POST(req: Request) {
 
     // Kiểm tra computer có tồn tại không
     const computer = await db.computer.findUnique({
-      where: { id: computerId }
+      where: { id: computerId },
     });
 
     if (!computer) {
@@ -53,18 +55,21 @@ export async function POST(req: Request) {
 
     // Kiểm tra xem computer này đã có device record chưa
     const existingDevice = await db.device.findFirst({
-      where: { computerId }
+      where: { computerId },
     });
 
     if (existingDevice) {
-      return new NextResponse("Device record already exists for this computer", { status: 400 });
+      return new NextResponse(
+        "Device record already exists for this computer",
+        { status: 400 },
+      );
     }
 
     const device = await db.device.create({
       data: {
         computerId,
         // Các trạng thái mặc định là GOOD
-      }
+      },
     });
 
     return NextResponse.json(device);
@@ -72,4 +77,4 @@ export async function POST(req: Request) {
     console.error("[DEVICES_POST]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
-} 
+}

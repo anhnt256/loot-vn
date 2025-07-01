@@ -48,15 +48,15 @@ export async function GET(
       where: {
         userId: user.id,
         isUsed: false,
-        OR: [
-          { expiredAt: null },
-          { expiredAt: { gt: new Date() } },
-        ],
+        OR: [{ expiredAt: null }, { expiredAt: { gt: new Date() } }],
       },
     });
 
     // Calculate total gift rounds
-    const totalGiftRounds = activeGiftRounds.reduce((sum, gr) => sum + gr.amount, 0);
+    const totalGiftRounds = activeGiftRounds.reduce(
+      (sum, gr) => sum + gr.amount,
+      0,
+    );
 
     // Số lượt đã sử dụng
     const query = Prisma.sql`
@@ -83,16 +83,18 @@ export async function GET(
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        paidRounds: round,
-        giftRounds: totalGiftRounds,
-        usedRounds,
-        remainingRounds,
-      }
-    }, { status: 200 });
-
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          paidRounds: round,
+          giftRounds: totalGiftRounds,
+          usedRounds,
+          remainingRounds,
+        },
+      },
+      { status: 200 },
+    );
   } catch (error) {
     console.error("Error calculating rounds:", error);
     return new NextResponse("Internal Error", { status: 500 });

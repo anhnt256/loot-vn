@@ -11,9 +11,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   const {
     id,
     isDone = true,
-    updatedAt = dayjs()
-      .tz("Asia/Ho_Chi_Minh")
-      .toDate(),
+    updatedAt = dayjs().tz("Asia/Ho_Chi_Minh").toDate(),
     userId,
     currentUserId,
     reward,
@@ -70,9 +68,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
               oldStars,
               newStars,
               targetId: id,
-              createdAt: dayjs()
-                .tz("Asia/Ho_Chi_Minh")
-                .toDate(),
+              createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toDate(),
               branch,
             },
           });

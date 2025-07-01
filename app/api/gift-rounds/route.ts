@@ -25,7 +25,7 @@ export async function GET() {
   } catch (error) {
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     if (!user?.role || user.role !== "admin") {
       return NextResponse.json(
         { error: "Unauthorized - Admin access required" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -55,10 +55,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!targetUser) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const giftRound = await db.giftRound.create({
@@ -80,13 +77,13 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Invalid request data", details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

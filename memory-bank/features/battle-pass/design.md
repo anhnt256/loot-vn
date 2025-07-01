@@ -3,6 +3,7 @@
 ## Database Schema
 
 ### BattlePassSeason
+
 ```prisma
 model BattlePassSeason {
   id          Int       @id @default(autoincrement())
@@ -17,6 +18,7 @@ model BattlePassSeason {
 ```
 
 ### BattlePassReward
+
 ```prisma
 model BattlePassReward {
   id          Int       @id @default(autoincrement())
@@ -35,6 +37,7 @@ model BattlePassReward {
 ```
 
 ### UserBattlePassProgress
+
 ```prisma
 model UserBattlePassProgress {
   id                Int       @id @default(autoincrement())
@@ -58,12 +61,15 @@ model UserBattlePassProgress {
 ## Architecture
 
 ### Components
+
 1. **Battle Pass Service**
+
    - Quản lý logic nghiệp vụ
    - Xử lý tiến độ người chơi
    - Quản lý phần thưởng
 
 2. **Battle Pass API**
+
    - RESTful API endpoints
    - Xử lý requests từ client
    - Validation và error handling
@@ -74,13 +80,16 @@ model UserBattlePassProgress {
    - Real-time updates
 
 ### Data Flow
+
 1. **Tracking Progress**
+
    ```
    Time Tracking System -> Battle Pass Service -> Update Progress -> Notify User
    Payment System -> Battle Pass Service -> Update Progress -> Notify User
    ```
 
 2. **Claiming Rewards**
+
    ```
    User Request -> Battle Pass API -> Battle Pass Service -> Validate -> Update Database -> Send Reward
    ```
@@ -91,6 +100,7 @@ model UserBattlePassProgress {
    ```
 
 ## Security Considerations
+
 1. Authentication và Authorization
 2. Rate limiting
 3. Data validation
@@ -98,19 +108,22 @@ model UserBattlePassProgress {
 5. XSS prevention
 
 ## Performance Considerations
+
 1. Database indexing
 2. Caching strategy
 3. Batch processing
 4. Real-time updates optimization
 
 ## Error Handling
+
 1. Validation errors
 2. Business logic errors
 3. System errors
 4. Network errors
 
 ## Monitoring
+
 1. Performance metrics
 2. Error tracking
 3. User activity
-4. System health 
+4. System health

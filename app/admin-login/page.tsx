@@ -20,12 +20,12 @@ const expirationDate = dayjs().add(expirationDuration, "day").format();
 // MAC address to branch mapping with type safety
 const ADMIN_MAC_MAPPING: Record<string, string> = {
   "00-25-D8-B9-27-0C": "GO_VAP",
-  "D8-BB-C1-5D-0A-DD": "TAN_PHU"
+  "D8-BB-C1-5D-0A-DD": "TAN_PHU",
 } as const;
 
 const BRANCHES = {
   GO_VAP: "Gò Vấp",
-  TAN_PHU: "Tân Phú"
+  TAN_PHU: "Tân Phú",
 } as const;
 
 const AdminLogin = () => {
@@ -48,7 +48,11 @@ const AdminLogin = () => {
     if (pageLoading) return;
 
     // For auto-login, we don't need to check username
-    if (!isAutoLogin && userName !== "gateway_admin" && !ADMIN_MAC_MAPPING[macAddress]) {
+    if (
+      !isAutoLogin &&
+      userName !== "gateway_admin" &&
+      !ADMIN_MAC_MAPPING[macAddress]
+    ) {
       toast.error("Bạn không có quyền truy cập trang này!");
       return;
     }
@@ -58,25 +62,25 @@ const AdminLogin = () => {
       // Set branch based on MAC address if available
       if (macAddress && ADMIN_MAC_MAPPING[macAddress]) {
         setCookie("branch", ADMIN_MAC_MAPPING[macAddress], {
-          path: '/',
+          path: "/",
           expires: new Date(expirationDate),
         });
         setCookie("loginType", "mac", {
-          path: '/',
+          path: "/",
           expires: new Date(expirationDate),
         });
       } else {
         setCookie("loginType", "username", {
-          path: '/',
+          path: "/",
           expires: new Date(expirationDate),
         });
       }
 
       const result = await loginMutation.mutateAsync({
         userName: isAutoLogin ? "gateway_admin" : userName,
-        isAdmin: true
+        isAdmin: true,
       });
-      
+
       const { statusCode, message } = result || {};
 
       if (statusCode === 200) {
@@ -114,15 +118,20 @@ const AdminLogin = () => {
                 priority
               />
             </div>
-            
+
             <div className="text-center space-y-2">
               <h1 className="text-2xl font-bold text-white">Admin Portal</h1>
-              <p className="text-gray-400 text-sm">Please sign in to continue</p>
+              <p className="text-gray-400 text-sm">
+                Please sign in to continue
+              </p>
             </div>
 
             <div className="w-full space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="macAddress" className="text-sm font-medium text-gray-200">
+                <Label
+                  htmlFor="macAddress"
+                  className="text-sm font-medium text-gray-200"
+                >
                   MAC Address
                 </Label>
                 <div className="relative">
@@ -144,7 +153,10 @@ const AdminLogin = () => {
 
               {!ADMIN_MAC_MAPPING[macAddress] && (
                 <div className="space-y-2">
-                  <Label htmlFor="username" className="text-sm font-medium text-gray-200">
+                  <Label
+                    htmlFor="username"
+                    className="text-sm font-medium text-gray-200"
+                  >
                     Username
                   </Label>
                   <div className="relative">
@@ -177,4 +189,4 @@ const AdminLogin = () => {
   );
 };
 
-export default AdminLogin; 
+export default AdminLogin;

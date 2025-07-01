@@ -43,4 +43,4 @@ export async function GET(req: Request) {
     console.error("[USER_STARS_GET]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
-} 
+}

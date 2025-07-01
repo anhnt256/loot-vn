@@ -9,10 +9,7 @@ const startOfDayVN = dayjs()
   .startOf("day")
   .toISOString();
 
-const endOfDayVN = dayjs()
-  .tz("Asia/Ho_Chi_Minh")
-  .endOf("day")
-  .toISOString();
+const endOfDayVN = dayjs().tz("Asia/Ho_Chi_Minh").endOf("day").toISOString();
 
 export async function GET(
   req: Request,

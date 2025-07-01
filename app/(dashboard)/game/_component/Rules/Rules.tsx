@@ -24,8 +24,9 @@ export function Rules({ isModalOpen, closeModal }: RulesProps) {
           🎮 Thể Lệ Chơi Game Đền Nguyện Ước
         </h1>
         <p className="mb-4 text-gray-700">
-          🔹 Tổng tiền nạp trong tuần (<strong>tính từ thứ Hai đến Chủ Nhật</strong>,
-          cứ mỗi <strong>30.000 VNĐ</strong> sẽ nhận được 1 lượt quay.
+          🔹 Tổng tiền nạp trong tuần (
+          <strong>tính từ thứ Hai đến Chủ Nhật</strong>, cứ mỗi{" "}
+          <strong>30.000 VNĐ</strong> sẽ nhận được 1 lượt quay.
         </p>
         <h2 className="text-xl font-semibold mb-3">🎁 Giải Thưởng</h2>
         <table className="w-full border border-gray-300 rounded-lg overflow-hidden">

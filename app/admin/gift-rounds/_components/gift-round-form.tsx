@@ -64,18 +64,20 @@ export function GiftRoundForm({
     }
 
     try {
-      const response = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`);
-      if (!response.ok) throw new Error('Search failed');
-      
+      const response = await fetch(
+        `/api/users/search?q=${encodeURIComponent(query)}`,
+      );
+      if (!response.ok) throw new Error("Search failed");
+
       const users = await response.json();
       setOptions(
         users.map((user: any) => ({
           value: user.userId,
-          label: `${user.userId} - ${user.userName || 'Không có tên'}`,
-        }))
+          label: `${user.userId} - ${user.userName || "Không có tên"}`,
+        })),
       );
     } catch (error) {
-      console.error('Search error:', error);
+      console.error("Search error:", error);
       setOptions([]);
     }
   };
@@ -103,9 +105,7 @@ export function GiftRoundForm({
         throw new Error(error.error || "Có lỗi xảy ra");
       }
 
-      toast.success(
-        initialData ? "Cập nhật thành công" : "Tạo mới thành công"
-      );
+      toast.success(initialData ? "Cập nhật thành công" : "Tạo mới thành công");
       onSuccess?.();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra");
@@ -139,9 +139,7 @@ export function GiftRoundForm({
           )}
         />
         {errors.userId && (
-          <p className="mt-1 text-sm text-red-600">
-            {errors.userId.message}
-          </p>
+          <p className="mt-1 text-sm text-red-600">{errors.userId.message}</p>
         )}
       </div>
 
@@ -160,9 +158,7 @@ export function GiftRoundForm({
           disabled={isLoading}
         />
         {errors.amount && (
-          <p className="mt-1 text-sm text-red-600">
-            {errors.amount.message}
-          </p>
+          <p className="mt-1 text-sm text-red-600">{errors.amount.message}</p>
         )}
       </div>
 
@@ -181,9 +177,7 @@ export function GiftRoundForm({
           disabled={isLoading}
         />
         {errors.reason && (
-          <p className="mt-1 text-sm text-red-600">
-            {errors.reason.message}
-          </p>
+          <p className="mt-1 text-sm text-red-600">{errors.reason.message}</p>
         )}
       </div>
 
@@ -224,13 +218,9 @@ export function GiftRoundForm({
           className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           disabled={isLoading}
         >
-          {isLoading
-            ? "Đang xử lý..."
-            : initialData
-            ? "Cập nhật"
-            : "Tạo mới"}
+          {isLoading ? "Đang xử lý..." : initialData ? "Cập nhật" : "Tạo mới"}
         </button>
       </div>
     </form>
   );
-} 
+}

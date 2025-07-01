@@ -1,5 +1,5 @@
 // hooks/usePolling.ts
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from "react";
 
 interface PollingOptions {
   interval?: number;
@@ -15,22 +15,19 @@ interface PollingState<T> {
   lastUpdated: Date | null;
 }
 
-export function usePolling<T>(
-  url: string,
-  options: PollingOptions = {}
-) {
+export function usePolling<T>(url: string, options: PollingOptions = {}) {
   const {
     interval = 10000, // 10 seconds default
     enabled = true,
     onError,
-    onSuccess
+    onSuccess,
   } = options;
 
   const [state, setState] = useState<PollingState<T>>({
     data: null,
     error: null,
     isLoading: false,
-    lastUpdated: null
+    lastUpdated: null,
   });
 
   const isInitialMount = useRef(true);
@@ -38,7 +35,7 @@ export function usePolling<T>(
 
   const fetchData = async () => {
     try {
-      setState(prev => ({ ...prev, isLoading: true }));
+      setState((prev) => ({ ...prev, isLoading: true }));
       const response = await fetch(url);
 
       if (!response.ok) {
@@ -51,18 +48,19 @@ export function usePolling<T>(
         data,
         error: null,
         isLoading: false,
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
       });
 
       onSuccess?.(data);
     } catch (error) {
-      const errorObject = error instanceof Error ? error : new Error(String(error));
+      const errorObject =
+        error instanceof Error ? error : new Error(String(error));
 
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         error: errorObject,
         isLoading: false,
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
       }));
 
       onError?.(errorObject);
@@ -70,13 +68,13 @@ export function usePolling<T>(
   };
 
   useEffect(() => {
-    console.log('usePolling effect running with:', { url, interval, enabled });
-    
+    console.log("usePolling effect running with:", { url, interval, enabled });
+
     if (!enabled) return;
 
     // Chỉ gọi fetchData lần đầu tiên khi component mount
     if (isInitialMount.current) {
-      console.log('Initial fetch');
+      console.log("Initial fetch");
       fetchData();
       isInitialMount.current = false;
     }
@@ -85,13 +83,13 @@ export function usePolling<T>(
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
-    
+
     intervalRef.current = setInterval(fetchData, interval);
-    console.log('New interval set up:', intervalRef.current);
+    console.log("New interval set up:", intervalRef.current);
 
     // Cleanup on unmount or when enabled changes
     return () => {
-      console.log('Cleaning up interval:', intervalRef.current);
+      console.log("Cleaning up interval:", intervalRef.current);
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
@@ -101,6 +99,6 @@ export function usePolling<T>(
   // Return state and manual fetch trigger
   return {
     ...state,
-    refetch: fetchData
+    refetch: fetchData,
   };
 }
