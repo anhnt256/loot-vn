@@ -300,7 +300,7 @@ model DeviceHistory {
   issue           String?
   status          String // 'PENDING', 'IN_PROGRESS', 'RESOLVED'
   createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  updatedAt       DateTime     @updatedAt @default(now())
   monitorStatus   DeviceStatus @default(GOOD)
   keyboardStatus  DeviceStatus @default(GOOD)
   mouseStatus     DeviceStatus @default(GOOD)

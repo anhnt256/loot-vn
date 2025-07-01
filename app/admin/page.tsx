@@ -118,6 +118,10 @@ const AdminDashboard = () => {
   const [reportForm] = Form.useForm();
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [updateForm] = Form.useForm();
+  const [showCheckLoginModal, setShowCheckLoginModal] = useState(false);
+  const [checkLoginForm] = Form.useForm();
+  const [searchUsers, setSearchUsers] = useState<any[]>([]);
+  const [loadingSearch, setLoadingSearch] = useState(false);
 
   const deviceList = [
     {
@@ -334,6 +338,23 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleCheckLoginSearch = async () => {
+    try {
+      setLoadingSearch(true);
+      const username = checkLoginForm.getFieldValue("account");
+      if (!username) return;
+      // Gọi API lấy danh sách user theo username
+      const res = await fetch(`/api/user/${encodeURIComponent(username)}/check-login`);
+      if (!res.ok) throw new Error("Không tìm thấy tài khoản");
+      const data = await res.json();
+      setSearchUsers(data?.users || []);
+    } catch (e) {
+      setSearchUsers([]);
+    } finally {
+      setLoadingSearch(false);
+    }
+  };
+
   return (
     <div className="flex flex-col p-5 gap-4">
       <div className="shadow-lg rounded-lg w-full overflow-auto max-h-[89vh] relative">
@@ -357,6 +378,12 @@ const AdminDashboard = () => {
                 color: "white",
               }}
             />
+            <Button
+              className="ml-2 bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => setShowCheckLoginModal(true)}
+            >
+              Kiểm tra đăng nhập
+            </Button>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <span className="text-gray-300">{`Dữ liệu sẽ cập nhật sau: ${countdown}s`}</span>
@@ -914,6 +941,119 @@ const AdminDashboard = () => {
             </Button>
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Check Login Modal */}
+      <Modal
+        title={<span className="text-white">Kiểm tra đăng nhập</span>}
+        open={showCheckLoginModal}
+        onCancel={() => {
+          setShowCheckLoginModal(false);
+          checkLoginForm.resetFields();
+          setSearchUsers([]);
+        }}
+        footer={null}
+        className="dark-modal"
+        width={500}
+        styles={{
+          header: {
+            background: "#1f2937",
+            color: "white",
+            borderBottom: "1px solid #374151",
+            paddingBottom: "12px",
+          },
+          content: {
+            background: "#1f2937",
+          },
+          body: {
+            background: "#1f2937",
+            padding: "20px",
+          },
+          mask: {
+            background: "rgba(0, 0, 0, 0.6)",
+          },
+          footer: {
+            background: "#1f2937",
+            borderTop: "1px solid #374151",
+          },
+        }}
+      >
+        <Form
+          form={checkLoginForm}
+          layout="vertical"
+          className="text-gray-200"
+          onFinish={handleCheckLoginSearch}
+        >
+          <div className="flex gap-2 items-end">
+            <Form.Item
+              label={<span className="text-gray-200">Tài khoản</span>}
+              name="account"
+              className="mb-0 flex-1"
+              rules={[{ required: true, message: "Vui lòng nhập tài khoản" }]}
+            >
+              <Input
+                placeholder="Nhập tài khoản..."
+                className="dark-input"
+                style={{
+                  backgroundColor: "#374151",
+                  borderColor: "#4B5563",
+                  color: "white",
+                }}
+              />
+            </Form.Item>
+            <Form.Item
+              label={<span className="text-gray-200">Số máy</span>}
+              name="computerId"
+              className="mb-0 flex-1"
+              rules={[{ required: true, message: "Vui lòng chọn số máy" }]}
+            >
+              <Select
+                placeholder="Chọn số máy..."
+                className="dark-input"
+                style={{
+                  backgroundColor: "#374151",
+                  borderColor: "#4B5563",
+                  color: "white",
+                }}
+                options={computers.map((c) => ({
+                  value: c.id,
+                  label: c.name,
+                }))}
+                showSearch
+                optionFilterProp="label"
+              />
+            </Form.Item>
+            <Form.Item className="mb-0">
+              <Button
+                type="primary"
+                htmlType="submit"
+                className="bg-blue-600 hover:bg-blue-700 ml-2"
+                loading={loadingSearch}
+              >
+                Search
+              </Button>
+            </Form.Item>
+          </div>
+        </Form>
+        {/* Hiển thị kết quả tìm kiếm user */}
+        <div className="mt-4">
+          {searchUsers.length > 0 ? (
+            <div>
+              <div className="font-bold text-gray-300 mb-2">Danh sách tài khoản:</div>
+              <ul className="divide-y divide-gray-700">
+                {searchUsers.map((user) => (
+                  <li key={user.id} className="py-2 flex flex-col">
+                    <span><b>ID:</b> {user.id}</span>
+                    <span><b>Username:</b> {user.username}</span>
+                    {/* Thêm các thông tin khác nếu cần */}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <div className="text-gray-400">Không có dữ liệu</div>
+          )}
+        </div>
       </Modal>
     </div>
   );

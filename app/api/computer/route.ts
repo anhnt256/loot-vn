@@ -40,27 +40,46 @@ export async function GET() {
     const results = [];
 
     const query = fnetPrisma.sql`
-      SELECT s.MachineName, s.EnterDate, s.EnterTime, s.Status, s.UserId
+      SELECT 
+        s.MachineName,
+        s.EnterDate,
+        s.EnterTime,
+        CASE 
+          WHEN s.Status = 3 AND prev1.Status = 1 AND prev2.Status = 3 THEN 2
+          ELSE s.Status
+        END as Status,
+        s.UserId
       FROM systemlogtb s
-             INNER JOIN (
-        SELECT MachineName, MAX(EnterDate) AS MaxEnterDate
+      LEFT JOIN systemlogtb prev1 ON 
+        s.MachineName = prev1.MachineName 
+        AND prev1.SystemLogId = (
+          SELECT MAX(SystemLogId)
+          FROM systemlogtb
+          WHERE MachineName = s.MachineName
+          AND SystemLogId < s.SystemLogId
+          AND EnterDate >= DATE_SUB(CURDATE(), INTERVAL 2 DAY)
+        )
+      LEFT JOIN systemlogtb prev2 ON 
+        s.MachineName = prev2.MachineName 
+        AND prev2.SystemLogId = (
+          SELECT MAX(SystemLogId)
+          FROM systemlogtb
+          WHERE MachineName = s.MachineName
+          AND SystemLogId < prev1.SystemLogId
+          AND EnterDate >= DATE_SUB(CURDATE(), INTERVAL 2 DAY)
+        )
+      INNER JOIN (
+        SELECT MachineName, MAX(SystemLogId) AS MaxSystemLogId
         FROM systemlogtb
         WHERE MachineName NOT LIKE 'MAY-%'
+        AND EnterDate >= DATE_SUB(CURDATE(), INTERVAL 2 DAY)
         GROUP BY MachineName
-      ) latest_date
-                        ON s.MachineName = latest_date.MachineName
-                          AND s.EnterDate = latest_date.MaxEnterDate
-             INNER JOIN (
-        SELECT MachineName, EnterDate, MAX(EnterTime) AS MaxEnterTime
-        FROM systemlogtb
-        WHERE MachineName NOT LIKE 'MAY-%'
-        GROUP BY MachineName, EnterDate
-      ) latest_time
-                        ON s.MachineName = latest_time.MachineName
-                          AND s.EnterDate = latest_time.EnterDate
-                          AND s.EnterTime = latest_time.MaxEnterTime
+      ) latest_log
+      ON s.MachineName = latest_log.MachineName
+      AND s.SystemLogId = latest_log.MaxSystemLogId
       WHERE s.MachineName NOT LIKE 'MAY-%'
-      ORDER BY MachineName ASC, s.EnterDate ASC, s.EnterTime ASC;
+      AND s.EnterDate >= DATE_SUB(CURDATE(), INTERVAL 2 DAY)
+      ORDER BY s.MachineName ASC;
     `;
 
     const computerStatus = await fnetDB.$queryRaw<any[]>(query);
