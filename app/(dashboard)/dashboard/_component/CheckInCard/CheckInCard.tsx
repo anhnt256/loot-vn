@@ -80,15 +80,7 @@ const CheckInCard = () => {
         setIsChecking(false);
       }
     }
-  }, [
-    rewards,
-    claim,
-    isChecking,
-    userCheckIn,
-    userData,
-    currentUserId,
-    executeCheckIn,
-  ]);
+  }, [rewards, claim, isChecking, userCheckIn, userData, executeCheckIn]);
 
   useEffect(() => {
     if (checkInItem) {

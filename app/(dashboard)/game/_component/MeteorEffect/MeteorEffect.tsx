@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 
 // Define types for the props
 interface MeteorEffectProps {
@@ -29,12 +29,15 @@ const MeteorEffect: React.FC<MeteorEffectProps> = ({
     console.error(message); // Replace with your toast/notification logic
   };
 
-  const meteorEnd = ({ skip = false }: { skip?: boolean } = {}): void => {
-    console.log(skip ? "Animation skipped" : "Animation ended");
-    setShowMeteor(false);
-    setShowSkipButton(false);
-    openModal();
-  };
+  const meteorEnd = useCallback(
+    ({ skip = false }: { skip?: boolean } = {}): void => {
+      console.log(skip ? "Animation skipped" : "Animation ended");
+      setShowMeteor(false);
+      setShowSkipButton(false);
+      openModal();
+    },
+    [setShowMeteor, setShowSkipButton, openModal],
+  );
 
   const skip = (): void => {
     playSfx();
@@ -96,7 +99,7 @@ const MeteorEffect: React.FC<MeteorEffectProps> = ({
         video.removeEventListener("error", pushToast);
       }
     };
-  }, []);
+  }, [meteorEnd]);
 
   return (
     <div

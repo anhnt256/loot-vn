@@ -127,7 +127,7 @@ export default function BattlePassPage() {
     if (currentSeason && !isLoadingSeason) {
       syncProgressMutation.mutate();
     }
-  }, [currentSeason, isLoadingSeason]);
+  }, [currentSeason, isLoadingSeason, syncProgressMutation]);
 
   const handleClaimReward = async (rewardId: number) => {
     if (currentSeason && new Date() >= new Date(currentSeason.endDate)) {

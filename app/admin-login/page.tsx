@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useLogin } from "@/queries/auth.query";
@@ -42,59 +42,62 @@ const AdminLogin = () => {
       setSelectedBranch(ADMIN_MAC_MAPPING[macAddress]);
       handleLogin(true);
     }
-  }, [macAddress]);
+  }, [macAddress, handleLogin]);
 
-  const handleLogin = async (isAutoLogin: boolean = false) => {
-    if (pageLoading) return;
+  const handleLogin = useCallback(
+    async (isAutoLogin: boolean = false) => {
+      if (pageLoading) return;
 
-    // For auto-login, we don't need to check username
-    if (
-      !isAutoLogin &&
-      userName !== "gateway_admin" &&
-      !ADMIN_MAC_MAPPING[macAddress]
-    ) {
-      toast.error("Bạn không có quyền truy cập trang này!");
-      return;
-    }
-
-    setPageLoading(true);
-    try {
-      // Set branch based on MAC address if available
-      if (macAddress && ADMIN_MAC_MAPPING[macAddress]) {
-        setCookie("branch", ADMIN_MAC_MAPPING[macAddress], {
-          path: "/",
-          expires: new Date(expirationDate),
-        });
-        setCookie("loginType", "mac", {
-          path: "/",
-          expires: new Date(expirationDate),
-        });
-      } else {
-        setCookie("loginType", "username", {
-          path: "/",
-          expires: new Date(expirationDate),
-        });
+      // For auto-login, we don't need to check username
+      if (
+        !isAutoLogin &&
+        userName !== "gateway_admin" &&
+        !ADMIN_MAC_MAPPING[macAddress]
+      ) {
+        toast.error("Bạn không có quyền truy cập trang này!");
+        return;
       }
 
-      const result = await loginMutation.mutateAsync({
-        userName: isAutoLogin ? "gateway_admin" : userName,
-        isAdmin: true,
-      });
+      setPageLoading(true);
+      try {
+        // Set branch based on MAC address if available
+        if (macAddress && ADMIN_MAC_MAPPING[macAddress]) {
+          setCookie("branch", ADMIN_MAC_MAPPING[macAddress], {
+            path: "/",
+            expires: new Date(expirationDate),
+          });
+          setCookie("loginType", "mac", {
+            path: "/",
+            expires: new Date(expirationDate),
+          });
+        } else {
+          setCookie("loginType", "username", {
+            path: "/",
+            expires: new Date(expirationDate),
+          });
+        }
 
-      const { statusCode, message } = result || {};
+        const result = await loginMutation.mutateAsync({
+          userName: isAutoLogin ? "gateway_admin" : userName,
+          isAdmin: true,
+        });
 
-      if (statusCode === 200) {
-        toast.success("Chào mừng đến với The GateWay!");
-        router.push("/admin");
-      } else if (statusCode === 500 || statusCode === 499) {
-        toast.error(message);
+        const { statusCode, message } = result || {};
+
+        if (statusCode === 200) {
+          toast.success("Chào mừng đến với The GateWay!");
+          router.push("/admin");
+        } else if (statusCode === 500 || statusCode === 499) {
+          toast.error(message);
+        }
+      } catch (error) {
+        console.error("Login error:", error);
+        toast.error("Đã có lỗi xảy ra khi đăng nhập");
       }
-    } catch (error) {
-      console.error("Login error:", error);
-      toast.error("Đã có lỗi xảy ra khi đăng nhập");
-    }
-    setPageLoading(false);
-  };
+      setPageLoading(false);
+    },
+    [pageLoading, userName, macAddress, loginMutation, router],
+  );
 
   if (pageLoading) {
     return (

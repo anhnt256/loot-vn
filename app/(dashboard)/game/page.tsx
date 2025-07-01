@@ -53,7 +53,7 @@ const Game = () => {
     if (isSuccess) {
       refreshAllData();
     }
-  }, [isSuccess]);
+  }, [isSuccess, refreshAllData]);
 
   const { execute: executeRoll, data } = useAction(createGameResult, {
     onSuccess: (data) => {

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   try {
@@ -6,14 +6,14 @@ export async function GET(request: NextRequest) {
     const vipStatus = {
       isVip: false,
       expiresAt: null,
-      tier: 'none'
+      tier: "none",
     };
 
     return NextResponse.json(vipStatus);
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to check VIP status' },
-      { status: 500 }
+      { error: "Failed to check VIP status" },
+      { status: 500 },
     );
   }
 }

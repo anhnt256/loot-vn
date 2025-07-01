@@ -2,7 +2,7 @@
 import Image from "next/image";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useLogin } from "@/queries/auth.query";
@@ -109,9 +109,9 @@ const Login = () => {
       setUsername(existingUser.userName || ""); // Set username từ DB
       onLoginForExistingUser();
     }
-  }, [machineData, existingUser]);
+  }, [machineData, existingUser, onLoginForExistingUser]);
 
-  const onLoginForExistingUser = async () => {
+  const onLoginForExistingUser = useCallback(async () => {
     if (pageLoading || !machineData || !existingUser) {
       return;
     }
@@ -137,7 +137,7 @@ const Login = () => {
       toast.error("Đã có lỗi xảy ra khi tự động đăng nhập");
     }
     setPageLoading(false);
-  };
+  }, [pageLoading, machineData, existingUser, loginMutation, router]);
 
   const onLogin = async () => {
     if (pageLoading || !machineData) {
