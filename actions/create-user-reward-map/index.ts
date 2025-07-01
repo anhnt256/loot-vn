@@ -249,8 +249,6 @@ export async function POST(req: Request, res: Response): Promise<any> {
           .map((u: { id: number }) => u.id)
           .filter((id: number) => id !== latestUser.id);
 
-        // UserMissionMap removed - no cleanup needed
-
         await db.user.deleteMany({
           where: { id: { in: deleteIds } },
         });
