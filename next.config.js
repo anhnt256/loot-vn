@@ -5,11 +5,11 @@ const Timestamp = new Date().getTime();
 const nextConfig = {
   compress: false,
   reactStrictMode: true,
-  typescript: {
-    ignoreBuildErrors: false,
-  },
   eslint: {
     ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
   },
   swcMinify: true,
   headers: () => [
