@@ -39,14 +39,13 @@ export async function POST(request: Request) {
     }
 
     // Get user's spending from fnet database
-    const query = `
+    const result = await fnetDB.$queryRaw<any[]>`
       SELECT SUM(Amount) as totalSpending
       FROM fnet.ordertb
       WHERE UserId = ${userId}
         AND DATE(OrderDate) = CURDATE()
-        AND Status = 1`;
-
-    const result = await fnetDB.$queryRaw<any[]>(query);
+        AND Status = 1
+    `;
     const totalSpending = result[0]?.totalSpending || 0;
 
     // Calculate food and drink spending (50/50 split for demo)
