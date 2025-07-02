@@ -16,7 +16,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
     if (isAdmin) {
       console.log("Processing admin check for user:", userName);
       if (userName !== "gateway_admin") {
-        console.log("Admin check failed: Invalid username");
+        console.log("Admin check failed: Invalid userName");
         return NextResponse.json(
           {
             statusCode: 401,
@@ -50,102 +50,126 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
     const user: any = await fnetDB.$queryRaw<any>(query);
 
-    console.log("user", user);
-
     const userId = user[0]?.userId ?? null;
-    // const userId = 2811;
 
-    if (!userId) {
-      return NextResponse.json(
-        {
-          statusCode: 404,
-          message: "Không tìm thấy userId từ machineName",
-          data: null,
-        },
-        { status: 404 },
-      );
-    }
+    const targetUserId = userId;
 
-    const currentUsers = await db.user.findMany({
-      where: {
-        userId: Number(userId),
-        branch: branchFromCookie,
-      },
-    });
+    let allUsers: any[] = [];
 
-    if (!currentUsers.length) {
-      console.error(
-        "Không tìm thấy user với userId:",
-        userId,
-        "branch:",
-        branchFromCookie,
-      );
-      return NextResponse.json(
-        {
-          statusCode: 404,
-          message: "Không tìm thấy user với userId và branch hiện tại.",
-          data: null,
-        },
-        { status: 404 },
-      );
-    }
+    // Nếu có userName và machineName, trả về list user có cùng username
 
-    const validUserNames = currentUsers
-      .map((user) => user.userName)
-      .filter(
-        (userName): userName is string =>
-          userName !== null && userName.trim() !== "",
-      );
 
-    let allUsers: any[] = [...currentUsers];
+    console.log("userName", userName);
+    console.log("machineName", machineName);
+    console.log("userId", userId);
 
-    if (validUserNames.length > 0) {
-      const usersByUsername = await db.user.findMany({
+    if (userName && machineName) {
+      const usersWithSameUsername = await db.user.findMany({
         where: {
-          userName: { in: validUserNames },
+          userName: userName,
         },
       });
 
-      const uniqueBranches = new Set(
-        usersByUsername.map((user) => user.branch),
-      );
-      if (uniqueBranches.size > 1) {
+      console.log("Users with same username:", usersWithSameUsername.length);
+
+      allUsers = [...usersWithSameUsername];
+    } else {
+      if (!userId) {
         return NextResponse.json(
           {
-            statusCode: 499,
-            message: "Duplicate account detected",
-            data: {
-              users: usersByUsername,
-              branches: Array.from(uniqueBranches),
-            },
+            statusCode: 404,
+            message: "Không tìm thấy userId từ machineName",
+            data: null,
           },
-          { status: 499 },
+          { status: 404 },
         );
       }
 
-      allUsers = [
-        ...new Map(
-          [...currentUsers, ...usersByUsername].map((user) => [user.id, user]),
-        ).values(),
-      ];
-    }
-
-    if (!allUsers.length) {
-      console.error(
-        "allUsers rỗng sau merge, userId:",
-        userId,
-        "branch:",
-        branchFromCookie,
-      );
-      return NextResponse.json(
-        {
-          statusCode: 404,
-          message: "Không tìm thấy user sau khi merge.",
-          data: null,
+      const currentUsers = await db.user.findMany({
+        where: {
+          userId: Number(userId),
+          branch: branchFromCookie,
         },
-        { status: 404 },
-      );
+      });
+
+      if (!currentUsers.length) {
+        console.error(
+          "Không tìm thấy user với userId:",
+          userId,
+          "branch:",
+          branchFromCookie,
+        );
+        return NextResponse.json(
+          {
+            statusCode: 404,
+            message: "Không tìm thấy user với userId và branch hiện tại.",
+            data: null,
+          },
+          { status: 404 },
+        );
+      }
+
+      const validUserNames = currentUsers
+        .map((user) => user.userName)
+        .filter(
+          (userName): userName is string =>
+            userName !== null && userName.trim() !== "",
+        );
+
+      allUsers = [...currentUsers];
+
+      if (validUserNames.length > 0) {
+        const usersByUsername = await db.user.findMany({
+          where: {
+            userName: { in: validUserNames },
+          },
+        });
+
+        const uniqueBranches = new Set(
+          usersByUsername.map((user) => user.branch),
+        );
+        if (uniqueBranches.size > 1) {
+          return NextResponse.json(
+            {
+              statusCode: 499,
+              message: "Duplicate account detected",
+              data: {
+                users: usersByUsername,
+                branches: Array.from(uniqueBranches),
+              },
+            },
+            { status: 499 },
+          );
+        }
+
+        allUsers = [
+          ...new Map(
+            [...currentUsers, ...usersByUsername].map((user) => [
+              user.id,
+              user,
+            ]),
+          ).values(),
+        ];
+      }
+
+      if (!allUsers.length) {
+        console.error(
+          "allUsers rỗng sau merge, userId:",
+          userId,
+          "branch:",
+          branchFromCookie,
+        );
+        return NextResponse.json(
+          {
+            statusCode: 404,
+            message: "Không tìm thấy user sau khi merge.",
+            data: null,
+          },
+          { status: 404 },
+        );
+      }
     }
+    // const userId = 2811;
 
     // Tính lại stars từ UserStarHistory cho userId hiện tại (base cho migration, không update DB)
     let starsCalculated = null;

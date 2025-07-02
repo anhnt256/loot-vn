@@ -303,21 +303,55 @@ const AdminDashboard = () => {
     try {
       setLoadingSearch(true);
       const computerId = checkLoginForm.getFieldValue("computerId");
-      if (!computerId) return;
-      // Lấy đúng object máy từ id
-      const computer = computers.find((c) => c.id === computerId);
-      if (!computer) return;
-      // Gọi API check-login đúng endpoint, truyền name (machineName)
+      const userName = checkLoginForm.getFieldValue("userName");
+
+      if (!computerId && !userName) {
+        message.error("Vui lòng nhập userName hoặc chọn số máy");
+        return;
+      }
+
+      let requestBody = {};
+
+      if (computerId && userName) {
+        // Tìm kiếm theo số máy + userName (để chuyển đổi)
+        const computer = computers.find((c) => c.id === computerId);
+        if (!computer) {
+          message.error("Không tìm thấy thông tin máy");
+          return;
+        }
+        requestBody = {
+          machineName: computer.name,
+          userName: userName.trim(),
+        };
+      } else if (computerId) {
+        // Tìm kiếm theo số máy riêng lẻ
+        const computer = computers.find((c) => c.id === computerId);
+        if (!computer) {
+          message.error("Không tìm thấy thông tin máy");
+          return;
+        }
+        requestBody = { machineName: computer.name };
+      } else if (userName) {
+        // Tìm kiếm theo userName riêng lẻ
+        requestBody = { userName: userName.trim() };
+      }
+
       const res = await fetch(`/api/check-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ machineName: computer.name }),
+        body: JSON.stringify(requestBody),
       });
-      if (!res.ok) throw new Error("Không tìm thấy thông tin máy");
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Không tìm thấy thông tin");
+      }
+
       const data = await res.json();
       setSearchUsers(data?.data?.users || []);
       setMigrationInfo(data?.data);
-    } catch (e) {
+    } catch (e: any) {
+      message.error(e.message || "Có lỗi xảy ra khi tìm kiếm");
       setSearchUsers([]);
     } finally {
       setLoadingSearch(false);
@@ -1184,6 +1218,7 @@ const AdminDashboard = () => {
           setShowCheckLoginModal(false);
           checkLoginForm.resetFields();
           setSearchUsers([]);
+          setMigrationInfo(null);
         }}
         footer={null}
         className="dark-modal"
@@ -1217,12 +1252,11 @@ const AdminDashboard = () => {
           className="text-gray-200"
           onFinish={handleCheckLoginSearch}
         >
-          <div className="flex gap-2 items-end">
+          <div className="grid grid-cols-2 gap-4">
             <Form.Item
               label={<span className="text-gray-200">Số máy</span>}
               name="computerId"
-              className="mb-0 flex-1"
-              rules={[{ required: true, message: "Vui lòng chọn số máy" }]}
+              className="mb-0"
             >
               <Select
                 placeholder="Chọn số máy..."
@@ -1238,60 +1272,151 @@ const AdminDashboard = () => {
                 }))}
                 showSearch
                 optionFilterProp="label"
+                allowClear
               />
             </Form.Item>
-            <Form.Item className="mb-0">
-              <Button
-                type="primary"
-                htmlType="submit"
-                className="bg-blue-600 hover:bg-blue-700 ml-2"
-                loading={loadingSearch}
-              >
-                Tìm kiếm
-              </Button>
+            <Form.Item
+              label={<span className="text-gray-200">Tên đăng nhập</span>}
+              name="userName"
+              className="mb-0"
+            >
+              <Input
+                placeholder="Nhập Tên đăng nhập..."
+                className="dark-input"
+                style={{
+                  borderColor: "#4B5563",
+                  color: "black",
+                }}
+                allowClear
+              />
             </Form.Item>
           </div>
+          <Form.Item className="mb-0 mt-4">
+            <Button
+              type="primary"
+              htmlType="submit"
+              className="bg-blue-600 hover:bg-blue-700 w-full"
+              loading={loadingSearch}
+            >
+              Tìm kiếm
+            </Button>
+          </Form.Item>
         </Form>
         {/* Hiển thị kết quả tìm kiếm user */}
         <div className="mt-4">
           {searchUsers.length > 0 ? (
             <div>
               <div className="font-bold text-gray-300 mb-2">
-                Danh sách tài khoản:
+                {(() => {
+                  const computerId = checkLoginForm.getFieldValue("computerId");
+                  const userName = checkLoginForm.getFieldValue("userName");
+                  if (computerId && userName) {
+                    const computer = computers.find((c) => c.id === computerId);
+                    return `Kết quả chuyển đổi tài khoản - Máy ${computer?.name} + Username: ${userName}`;
+                  } else if (computerId) {
+                    const computer = computers.find((c) => c.id === computerId);
+                    return `Danh sách tài khoản trên máy ${computer?.name}:`;
+                  } else if (userName) {
+                    return `Danh sách tài khoản có Username: ${userName}`;
+                  }
+                  return "Danh sách tài khoản:";
+                })()}
               </div>
-              <Card
-                className="bg-gradient-to-r from-yellow-400 to-yellow-200 border-2 border-yellow-500 text-black mb-3"
-                bodyStyle={{ padding: 16 }}
-              >
-                <div>
-                  <b className="text-blue-700 text-lg font-bold">
-                    Base UserId:
-                  </b>{" "}
-                  <span className="text-blue-900 text-lg font-bold">
-                    {migrationInfo.userId}
-                  </span>
-                </div>
-                <div>
-                  <b className="text-gray-700">Username:</b>{" "}
-                  <span className="text-black">
-                    {migrationInfo.userName ||
-                      searchUsers[0]?.userName.toUpperCase() ||
-                      "N/A"}
-                  </span>
-                </div>
-                <div>
-                  <b className="text-yellow-700 text-lg font-bold">Stars:</b>{" "}
-                  <span className="text-yellow-900 text-lg font-bold">
-                    {migrationInfo.starsCalculated?.toLocaleString() ?? 0}
-                  </span>
-                </div>
-                <div className="italic text-xs text-gray-700 mt-1">
-                  Đây là thông tin tài khoản gốc để bạn tham khảo khi quyết định
-                  giữ lại tài khoản bên dưới. Lưu ý: Cần ưu tiên chọn các tài
-                  khoản có UserId trùng với Base UserId. Nếu không sẽ không thể
-                  đăng nhập.
-                </div>
-              </Card>
+              {(() => {
+                const computerId = checkLoginForm.getFieldValue("computerId");
+                const username = checkLoginForm.getFieldValue("username");
+                const isMigrationMode = computerId && username;
+
+                return (
+                  <Card
+                    className="bg-gradient-to-r from-yellow-400 to-yellow-200 border-2 border-yellow-500 text-black mb-3"
+                    bodyStyle={{ padding: 16 }}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div>
+                          <b className="text-blue-700 text-lg font-bold">
+                            {isMigrationMode
+                              ? "Target UserId:"
+                              : "Base UserId:"}
+                          </b>{" "}
+                          <span className="text-blue-900 text-lg font-bold">
+                            {migrationInfo.userId}
+                          </span>
+                        </div>
+                        <div>
+                          <b className="text-gray-700">Username:</b>{" "}
+                          <span className="text-black">
+                            {migrationInfo.userName ||
+                              searchUsers[0]?.userName.toUpperCase() ||
+                              "N/A"}
+                          </span>
+                        </div>
+                        <div>
+                          <b className="text-yellow-700 text-lg font-bold">
+                            Stars:
+                          </b>{" "}
+                          <span className="text-yellow-900 text-lg font-bold">
+                            {migrationInfo.starsCalculated?.toLocaleString() ??
+                              0}
+                          </span>
+                        </div>
+                        <div className="italic text-xs text-gray-700 mt-1">
+                          {isMigrationMode
+                            ? "Đây là thông tin tài khoản đích để chuyển đổi. Lưu ý: Cần ưu tiên chọn các tài khoản có UserId trùng với Target UserId để đảm bảo đăng nhập thành công."
+                            : "Đây là thông tin tài khoản gốc để bạn tham khảo khi quyết định giữ lại tài khoản bên dưới. Lưu ý: Cần ưu tiên chọn các tài khoản có UserId trùng với Base UserId. Nếu không sẽ không thể đăng nhập."}
+                        </div>
+                      </div>
+                      {!isMigrationMode && (
+                        <Button
+                          type="primary"
+                          danger
+                          className="bg-red-600 hover:bg-red-700 text-white font-bold border-none"
+                          onClick={async () => {
+                            try {
+                              const baseUserId = migrationInfo.userId;
+                              const baseUserName = migrationInfo.userName || searchUsers[0]?.userName;
+                              const baseStars = migrationInfo.starsCalculated;
+                              
+                              const resetUser = {
+                                userId: baseUserId,
+                                userName: baseUserName,
+                                stars: baseStars,
+                                rankId: searchUsers[0]?.rankId || 1,
+                                magicStone: searchUsers[0]?.magicStone || 0,
+                                totalPayment: searchUsers[0]?.totalPayment || 0,
+                              };
+
+                              const res = await fetch("/api/user/reset", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ user: resetUser }),
+                              });
+
+                              const data = await res.json();
+                              if (data.success) {
+                                message.success(
+                                  `Đã reset tài khoản thành công! Đã xóa ${data.deletedCount} tài khoản cũ và tạo tài khoản mới.`
+                                );
+                                setShowCheckLoginModal(false);
+                                setSearchUsers([]);
+                                setMigrationInfo(null);
+                                await refetch();
+                              } else {
+                                message.error(data.message || "Có lỗi xảy ra khi reset");
+                              }
+                            } catch (e: any) {
+                              message.error(e.message || "Có lỗi xảy ra khi reset");
+                            }
+                          }}
+                        >
+                          Reset
+                        </Button>
+                      )}
+                    </div>
+                  </Card>
+                );
+              })()}
               {/* List các user có thể Migrate */}
               <div className="grid grid-cols-1 gap-3">
                 {sortedUsers.map((user, idx) => {
@@ -1350,7 +1475,15 @@ const AdminDashboard = () => {
                             setShowMigrateModal(true);
                           }}
                         >
-                          Giữ lại
+                          {(() => {
+                            const computerId =
+                              checkLoginForm.getFieldValue("computerId");
+                            const userName =
+                              checkLoginForm.getFieldValue("userName");
+                            return computerId && userName
+                              ? "Chuyển đổi"
+                              : "Giữ lại";
+                          })()}
                         </Button>
                       </div>
                     </Card>
@@ -1370,7 +1503,10 @@ const AdminDashboard = () => {
         open={showMigrateModal}
         onCancel={() => setShowMigrateModal(false)}
         onOk={async () => {
-          if (!migrateUser || !searchUsers.length) return;
+          if (!migrateUser || !searchUsers.length) {
+            message.error("Không có dữ liệu để migrate");
+            return;
+          }
           try {
             const res = await fetch("/api/user/migrate", {
               method: "POST",
@@ -1390,6 +1526,7 @@ const AdminDashboard = () => {
               setShowCheckLoginModal(false);
               setSearchUsers([]);
               setMigrateUser(null);
+              setMigrationInfo(null);
               await refetch();
             } else {
               message.error(data.message || "Có lỗi xảy ra khi migrate");
@@ -1416,7 +1553,7 @@ const AdminDashboard = () => {
         {migrateUser && (
           <div className="text-gray-200 text-base">
             Bạn sẽ giữ lại tài khoản có{" "}
-            <b className="text-blue-400">UserId: {migrateUser.userId}</b>,{" "}
+            <b className="text-blue-400">UserId: {migrationInfo?.userId}</b>,{" "}
             <b className="text-gray-300">
               Username: {migrateUser.userName || migrateUser.username}
             </b>

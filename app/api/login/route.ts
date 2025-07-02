@@ -3,6 +3,11 @@ import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
 import { signJWT } from "@/lib/jwt";
 import { cookies } from "next/headers";
 import dayjs from "@/lib/dayjs";
+import { 
+  checkUserCreationRateLimit, 
+  checkLoginRateLimit, 
+  checkDatabaseRateLimit 
+} from "@/lib/rate-limit";
 
 const expirationDuration = 1;
 const expirationDate = dayjs().add(expirationDuration, "day").format();
@@ -63,6 +68,20 @@ export async function POST(req: Request, res: Response): Promise<any> {
     const fnetDB = await getFnetDB();
     const fnetPrisma = await getFnetPrisma();
 
+    // Rate limiting cho đăng nhập
+    const loginRateLimit = await checkLoginRateLimit(machineName);
+    if (!loginRateLimit.allowed) {
+      const resetTime = new Date(loginRateLimit.resetTime).toLocaleString('vi-VN');
+      return NextResponse.json(
+        {
+          statusCode: 429,
+          message: `Quá nhiều lần đăng nhập. Vui lòng thử lại sau ${resetTime}`,
+          data: null,
+        },
+        { status: 429 },
+      );
+    }
+
     const query = fnetPrisma.sql`SELECT userId
                                  FROM fnet.systemlogtb AS t1
                                  WHERE t1.MachineName = ${machineName}
@@ -80,24 +99,149 @@ export async function POST(req: Request, res: Response): Promise<any> {
       },
     });
 
-    if (!existingUser) {
-      return NextResponse.json(
-        {
-          statusCode: 404,
-          message: "User not found",
-          data: null,
-        },
-        { status: 404 },
-      );
-    }
+    let userUpdated;
 
-    // Cập nhật thông tin user nếu cần
-    const userUpdated = await db.user.update({
-      where: { id: existingUser.id },
-      data: {
-        userId: userId,
-      },
-    });
+    if (!existingUser) {
+      // Nếu có username, tạo user mới
+      if (userName && userName.trim()) {
+        // Validation username
+        const trimmedUsername = userName.trim();
+        
+        // Kiểm tra độ dài username (3-20 ký tự)
+        if (trimmedUsername.length < 3 || trimmedUsername.length > 20) {
+          return NextResponse.json(
+            {
+              statusCode: 400,
+              message: "Username phải có độ dài từ 3-20 ký tự",
+              data: null,
+            },
+            { status: 400 },
+          );
+        }
+
+        // Kiểm tra ký tự đặc biệt (chỉ cho phép chữ cái, số, dấu gạch dưới)
+        const usernameRegex = /^[a-zA-Z0-9_]+$/;
+        if (!usernameRegex.test(trimmedUsername)) {
+          return NextResponse.json(
+            {
+              statusCode: 400,
+              message: "Username chỉ được chứa chữ cái, số và dấu gạch dưới",
+              data: null,
+            },
+            { status: 400 },
+          );
+        }
+
+        // Kiểm tra từ khóa bị cấm
+        const bannedKeywords = [
+          'admin', 'administrator', 'root', 'system', 'test', 'demo', 'guest',
+          'user', 'player', 'game', 'gateway', 'fnet', 'computer', 'machine',
+          'server', 'bot', 'spam', 'hack', 'crack', 'null', 'undefined'
+        ];
+        
+        const lowerUsername = trimmedUsername.toLowerCase();
+        if (bannedKeywords.some(keyword => lowerUsername.includes(keyword))) {
+          return NextResponse.json(
+            {
+              statusCode: 400,
+              message: "Username chứa từ khóa không được phép. Vui lòng liên hệ admin để được hỗ trợ",
+              data: null,
+            },
+            { status: 400 },
+          );
+        }
+
+        // Rate limiting cho việc tạo user mới
+        const userCreationRateLimit = await checkUserCreationRateLimit(machineName, branchFromCookie);
+        if (!userCreationRateLimit.allowed) {
+          const resetTime = new Date(userCreationRateLimit.resetTime).toLocaleString('vi-VN');
+          return NextResponse.json(
+            {
+              statusCode: 429,
+              message: `Quá nhiều tài khoản được tạo từ máy này. Vui lòng thử lại sau ${resetTime}`,
+              data: null,
+            },
+            { status: 429 },
+          );
+        }
+
+        // Kiểm tra rate limit từ database (persistent)
+        const dbRateLimit = await checkDatabaseRateLimit(branchFromCookie);
+        if (!dbRateLimit.allowed) {
+          return NextResponse.json(
+            {
+              statusCode: 429,
+              message: `Quá nhiều tài khoản được tạo trong chi nhánh này. Vui lòng thử lại sau 1 giờ. (${dbRateLimit.count}/10)`,
+              data: null,
+            },
+            { status: 429 },
+          );
+        }
+
+        // Kiểm tra username đã tồn tại chưa
+        const existingUsername = await db.user.findFirst({
+          where: {
+            userName: trimmedUsername,
+            branch: branchFromCookie,
+          },
+        });
+
+        if (existingUsername) {
+          return NextResponse.json(
+            {
+              statusCode: 409,
+              message: "Username đã tồn tại trong hệ thống",
+              data: null,
+            },
+            { status: 409 },
+          );
+        }
+
+        // Tạo user mới
+        try {
+          userUpdated = await db.user.create({
+            data: {
+              userName: trimmedUsername,
+              userId: Number(userId),
+              branch: branchFromCookie,
+              rankId: 1,
+              stars: 0,
+              magicStone: 0,
+              createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toDate(),
+            },
+          });
+          
+          console.log(`User mới được tạo: ${trimmedUsername} (ID: ${userUpdated.id}) từ machine: ${machineName}`);
+        } catch (error) {
+          console.error("Error creating user:", error);
+          return NextResponse.json(
+            {
+              statusCode: 500,
+              message: "Lỗi khi tạo tài khoản",
+              data: null,
+            },
+            { status: 500 },
+          );
+        }
+      } else {
+        return NextResponse.json(
+          {
+            statusCode: 404,
+            message: "User not found",
+            data: null,
+          },
+          { status: 404 },
+        );
+      }
+    } else {
+      // Cập nhật thông tin user nếu cần
+      userUpdated = await db.user.update({
+        where: { id: existingUser.id },
+        data: {
+          userId: userId,
+        },
+      });
+    }
 
     const token = await signJWT({ userId: userUpdated?.userId });
     const response = NextResponse.json({
