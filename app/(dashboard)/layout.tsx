@@ -37,6 +37,8 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   const { stars, magicStone } = userData || {};
   const pathname = usePathname();
 
+  const IS_MAINTENANCE = process.env.NEXT_PUBLIC_IS_MAINTENANCE === "true";
+
   const { execute: executeUpdateUser } = useAction(updateUser, {
     onSuccess: async () => {},
     onError: (error) => {
@@ -170,11 +172,14 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
       </div>
 
       <div className="flex-1 p-10 text-2xl font-bold bg-gray-400">
-        {children}
-        {/* <h1>
-          Website bảo trì để nâng cấp phần mềm mới. Chúng tôi sẽ quay trở lại
-          sớm. Rất mong các bạn thông cảm.
-        </h1> */}
+        {IS_MAINTENANCE ? (
+          <h1>
+            Website bảo trì để nâng cấp phần mềm mới. Chúng tôi sẽ quay trở lại
+            sớm. Rất mong các bạn thông cảm.
+          </h1>
+        ) : (
+          { children }
+        )}
       </div>
     </div>
   );
