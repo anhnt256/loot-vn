@@ -124,15 +124,6 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
           >
             Điểm danh
           </Link>
-          {/*<Link*/}
-          {/*  className={cn(*/}
-          {/*    "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",*/}
-          {/*    pathname === "/missions" ? "bg-gray-700" : "transparent",*/}
-          {/*  )}*/}
-          {/*  href="/missions"*/}
-          {/*>*/}
-          {/*  Nhiệm vụ*/}
-          {/*</Link>*/}
           <Link
             className={cn(
               "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
@@ -179,11 +170,11 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
       </div>
 
       <div className="flex-1 p-10 text-2xl font-bold bg-gray-400">
-        {/* {children} */}
-        <h1>
+        {children}
+        {/* <h1>
           Website bảo trì để nâng cấp phần mềm mới. Chúng tôi sẽ quay trở lại
           sớm. Rất mong các bạn thông cảm.
-        </h1>
+        </h1> */}
       </div>
     </div>
   );
