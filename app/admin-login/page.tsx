@@ -36,14 +36,6 @@ const AdminLogin = () => {
   const loginMutation = useLogin();
   const router = useRouter();
 
-  // Auto-login when valid MAC address is entered
-  useEffect(() => {
-    if (macAddress && ADMIN_MAC_MAPPING[macAddress]) {
-      setSelectedBranch(ADMIN_MAC_MAPPING[macAddress]);
-      handleLogin(true);
-    }
-  }, [macAddress, handleLogin]);
-
   const handleLogin = useCallback(
     async (isAutoLogin: boolean = false) => {
       if (pageLoading) return;
@@ -98,6 +90,14 @@ const AdminLogin = () => {
     },
     [pageLoading, userName, macAddress, loginMutation, router],
   );
+
+  // Auto-login when valid MAC address is entered
+  useEffect(() => {
+    if (macAddress && ADMIN_MAC_MAPPING[macAddress]) {
+      setSelectedBranch(ADMIN_MAC_MAPPING[macAddress]);
+      handleLogin(true);
+    }
+  }, [macAddress, handleLogin]);
 
   if (pageLoading) {
     return (
