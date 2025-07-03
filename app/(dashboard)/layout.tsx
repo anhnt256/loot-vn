@@ -178,7 +178,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
             sớm. Rất mong các bạn thông cảm.
           </h1>
         ) : (
-          { children }
+          children
         )}
       </div>
     </div>
