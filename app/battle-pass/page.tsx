@@ -27,6 +27,7 @@ interface BattlePassReward {
   rewardValue?: number;
   imageUrl?: string;
   isBonus?: boolean;
+  experience: number;
 }
 
 interface UserProgress {

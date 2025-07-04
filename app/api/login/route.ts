@@ -186,7 +186,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
         // Rate limiting cho việc tạo user mới
         const userCreationRateLimit = await checkUserCreationRateLimit(
           machineName,
-          branchFromCookie,
+          branchFromCookie || "",
         );
         if (!userCreationRateLimit.allowed) {
           const resetTime = new Date(
@@ -203,7 +203,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
         }
 
         // Kiểm tra rate limit từ database (persistent)
-        const dbRateLimit = await checkDatabaseRateLimit(branchFromCookie);
+        const dbRateLimit = await checkDatabaseRateLimit(branchFromCookie || "");
         if (!dbRateLimit.allowed) {
           return NextResponse.json(
             {
@@ -240,7 +240,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
             data: {
               userName: trimmedUsername,
               userId: Number(userId),
-              branch: branchFromCookie,
+              branch: branchFromCookie || "",
               rankId: 1,
               stars: 0,
               magicStone: 0,

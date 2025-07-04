@@ -27,6 +27,7 @@ interface BattlePassProgressProps {
   seasonName?: string;
   seasonEndDate?: string;
   userStars?: number;
+  availableRewards: BattlePassReward[];
   onClaimReward: (rewardId: number) => void;
   onClaimAll?: (rewardIds: number[]) => void;
   onPurchasePremium: () => void;
@@ -44,6 +45,7 @@ export function BattlePassProgress({
   seasonName,
   seasonEndDate,
   userStars,
+  availableRewards,
   onClaimReward,
   onClaimAll,
   onPurchasePremium,

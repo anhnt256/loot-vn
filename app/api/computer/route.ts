@@ -249,7 +249,7 @@ export async function GET() {
     });
 
     const userTopUpsMap = new Map();
-    userTopUps.forEach((topUp) => {
+    (userTopUps as any[]).forEach((topUp: any) => {
       const amount = parseFloat(topUp.total.toString());
       userTopUpsMap.set(topUp.UserId, amount);
     });
