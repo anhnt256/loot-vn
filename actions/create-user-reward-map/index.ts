@@ -154,10 +154,10 @@ const handler = async (data: InputType): Promise<any> => {
   return { data: createUserRewardMap };
 };
 
-// export const createUserRewardMap = createSafeAction(
-//   CreateUserRewardMap,
-//   handler,
-// );
+export const createUserRewardMap = createSafeAction(
+  CreateUserRewardMap,
+  handler,
+);
 
 export async function POST(req: Request, res: Response): Promise<any> {
   const cookieStore = await cookies();
