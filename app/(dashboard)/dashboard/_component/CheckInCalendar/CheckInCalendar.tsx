@@ -8,12 +8,13 @@ import { useQuery } from "@tanstack/react-query";
 import { fetcher } from "@/lib/fetcher";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
-import { useUserInfo } from "@/hooks/use-user-info";
+import { useUserInfo, useUserCheckIn } from "@/hooks/use-user-info";
 import Image from "next/image";
 import { UserStarHistory } from "@/prisma/generated/prisma-client";
 
 const CheckInCalendar = () => {
-  const { userBalance, userCheckIn } = useUserInfo();
+  const { userBalance, currentUserId, branch } = useUserInfo();
+  const { userCheckIn } = useUserCheckIn(currentUserId, branch);
   const [days, setDays] = useState<CheckInDay[]>([]);
   const [totalRewards, setTotalReward] = useState<number>(0);
 

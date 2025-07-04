@@ -105,7 +105,7 @@ const CheckInCard = () => {
         setIsChecking(false);
       }
     }
-  }, [rewards, claim, isChecking, userData, executeCheckIn]);
+  }, [rewards, claim, isChecking, userData, executeCheckIn, userCheckIn]);
 
   useEffect(() => {
     if (checkInItem && totalHours !== undefined) {
