@@ -25,6 +25,7 @@ import {
   FaWifi,
   FaEdit,
   FaSave,
+  FaPencilAlt,
 } from "react-icons/fa";
 
 interface DeviceHistory {
@@ -131,7 +132,7 @@ const AdminDashboard = () => {
   const [migrateUser, setMigrateUser] = useState<any>(null);
   const [showMigrateModal, setShowMigrateModal] = useState(false);
   const [migrationInfo, setMigrationInfo] = useState<any>(null);
-  const [editingUserName, setEditingUserName] = useState(false);
+  const [isEditingUserName, setIsEditingUserName] = useState(false);
   const [editedUserName, setEditedUserName] = useState("");
 
   const deviceList = [
@@ -448,7 +449,7 @@ const AdminDashboard = () => {
     } catch (e) {
       message.error("Có lỗi xảy ra khi cập nhật tên người dùng");
     }
-    setEditingUserName(false);
+    setIsEditingUserName(false);
   };
 
   return (
@@ -635,6 +636,7 @@ const AdminDashboard = () => {
         onClose={() => {
           setShowDetailDrawer(false);
           setCurrentComputer(undefined);
+          setIsEditingUserName(false);
         }}
         open={showDetailDrawer}
         width={600}
@@ -686,11 +688,48 @@ const AdminDashboard = () => {
                   </div>
                   <div className="text-gray-400">Tên người dùng:</div>
                   <div className="flex items-center gap-2">
-                    <span className="text-white font-bold">
-                      {currentComputer.userType === 5
-                        ? "Combo"
-                        : currentComputer.userName || "Chưa có người dùng"}
-                    </span>
+                    {isEditingUserName ? (
+                      <>
+                        <input
+                          className="bg-gray-800 text-white border border-gray-500 rounded px-2 py-1 w-32 focus:outline-none"
+                          value={editedUserName}
+                          autoFocus
+                          onChange={e => setEditedUserName(e.target.value)}
+                          onBlur={() => setIsEditingUserName(false)}
+                          onKeyDown={e => {
+                            if (e.key === "Enter") handleUpdateUserName();
+                            if (e.key === "Escape") setIsEditingUserName(false);
+                          }}
+                        />
+                        <button
+                          className="text-green-400 hover:text-green-600"
+                          onMouseDown={e => { e.preventDefault(); handleUpdateUserName(); }}
+                          title="Lưu"
+                        >
+                          <FaSave />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-white font-bold">
+                          {currentComputer.userType === 5
+                            ? "Combo"
+                            : currentComputer.userName || "Chưa có người dùng"}
+                        </span>
+                        {currentComputer.userType !== 5 && (
+                          <button
+                            className="text-gray-400 hover:text-blue-400 ml-1"
+                            onClick={() => {
+                              setIsEditingUserName(true);
+                              setEditedUserName(currentComputer.userName || "");
+                            }}
+                            title="Sửa tên người dùng"
+                          >
+                            <FaPencilAlt />
+                          </button>
+                        )}
+                      </>
+                    )}
                   </div>
                   <div className="text-gray-400">ID người dùng:</div>
                   <div className="text-orange-300 font-bold">
