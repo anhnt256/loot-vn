@@ -1,11 +1,9 @@
 import { Modal, Table, Tabs } from "antd";
 import React, { useState } from "react";
-import dayjs from "dayjs";
-import type { TabsProps } from "antd";
+import dayjs from "@/lib/dayjs";
 import { useQuery } from "@tanstack/react-query";
 import { fetcher } from "@/lib/fetcher";
 import { useUserInfo } from "@/hooks/use-user-info";
-import TabPane from "antd/es/tabs/TabPane";
 
 interface TableItem {
   key: number;
@@ -134,38 +132,48 @@ export function WishResult({ isModalOpen, closeModal }: WishResultProps) {
       footer={null}
       width={850}
     >
-      <Tabs defaultActiveKey="1" onChange={setActiveTab}>
-        <TabPane tab="Lịch sử quay thưởng cá nhân" key="1">
-          <Table<TableItem>
-            key={activeTab}
-            loading={isLoadingGame}
-            dataSource={gameResults}
-            columns={columns}
-            className="[&_td]:!text-[11px] [&_th]:!text-[11px]"
-            pagination={{
-              pageSize: 10,
-              position: ["bottomCenter"],
-            }}
-            sortDirections={["descend"]}
-            bordered
-          />
-        </TabPane>
-        <TabPane tab="Lịch sử quay thưởng GateWay" key="2">
-          <Table<TableItem>
-            key={activeTab}
-            loading={isLoadingServer}
-            dataSource={serverResults}
-            columns={columns}
-            className="[&_td]:!text-[11px] [&_th]:!text-[11px]"
-            pagination={{
-              pageSize: 10,
-              position: ["bottomCenter"],
-            }}
-            sortDirections={["descend"]}
-            bordered
-          />
-        </TabPane>
-      </Tabs>
+      <Tabs
+        defaultActiveKey="1"
+        onChange={setActiveTab}
+        items={[
+          {
+            key: "1",
+            label: "Lịch sử quay thưởng cá nhân",
+            children: (
+              <Table<TableItem>
+                loading={isLoadingGame}
+                dataSource={Array.isArray(gameResults) ? gameResults.map((item, idx) => ({ ...item, key: item.id ?? idx })) : []}
+                columns={columns}
+                className="[&_td]:!text-[11px] [&_th]:!text-[11px]"
+                pagination={{
+                  pageSize: 10,
+                  position: ["bottomCenter"],
+                }}
+                sortDirections={["descend"]}
+                bordered
+              />
+            ),
+          },
+          {
+            key: "2",
+            label: "Lịch sử quay thưởng GateWay",
+            children: (
+              <Table<TableItem>
+                loading={isLoadingServer}
+                dataSource={Array.isArray(serverResults) ? serverResults.map((item, idx) => ({ ...item, key: item.id ?? idx })) : []}
+                columns={columns}
+                className="[&_td]:!text-[11px] [&_th]:!text-[11px]"
+                pagination={{
+                  pageSize: 10,
+                  position: ["bottomCenter"],
+                }}
+                sortDirections={["descend"]}
+                bordered
+              />
+            ),
+          },
+        ]}
+      />
     </Modal>
   );
 }

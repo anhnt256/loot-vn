@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Table, Modal, Input, Button, DatePicker } from "antd";
 import { toast } from "sonner";
-import dayjs from "dayjs";
+import dayjs from "@/lib/dayjs";
 import { useUserInfo } from "@/hooks/use-user-info";
 
 interface Season {

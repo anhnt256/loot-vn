@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import apiClient from "@/lib/apiClient";
 import { getCookie } from "cookies-next";
 import { db } from "@/lib/db";
-import dayjs from "dayjs";
+import dayjs from "@/lib/dayjs";
 
 export async function GET(req: Request) {
   const cookie = getCookie("branch", { req }) || "";

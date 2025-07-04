@@ -2,239 +2,171 @@
 
 import { db } from "@/lib/db";
 import { createSafeAction } from "@/lib/create-safe-action";
+import { checkGameRollRateLimit } from "@/lib/rate-limit";
 
 import { GameItemResults, InputType, ReturnType } from "./type";
 import { CreateGameResult } from "@/actions/create-gameResult/schema";
-import { Item } from "@/prisma/generated/prisma-client";
-import { patchConsoleError } from "next/dist/client/components/react-dev-overlay/internal/helpers/hydration-error-info";
-import dayjs from "dayjs";
+import dayjs from "@/lib/dayjs";  
 
 const UP_RATE = 0.5;
-const ROUND_COST = 30000; // 30000 một vòng quay
+const ROUND_COST = process.env.NEXT_PUBLIC_SPEND_PER_ROUND; // 30000 một vòng quay
 const RATE = 0.015; // 1.5%
-const UP_RATE_AMOUNT = 500000;
+const UP_RATE_AMOUNT = process.env.NEXT_PUBLIC_UP_RATE_AMOUNT;
 const JACKPOT_ID = 8;
 
 const ITEM_RATE_DEFAULT = [
-  { id: 1, rating: 53.0 },
-  { id: 2, rating: 20.0 },
+  { id: 1, rating: 60.0 },
+  { id: 2, rating: 25.0 },
   { id: 3, rating: 10.0 },
-  { id: 4, rating: 7.0 },
-  { id: 5, rating: 5.0 },
-  { id: 6, rating: 3.0 },
-  { id: 7, rating: 2.0 },
+  { id: 4, rating: 4.0 },
+  { id: 5, rating: 1.0 },
+  { id: 6, rating: 0.5 },
+  { id: 7, rating: 0.1 },
   { id: 8, rating: 0 },
 ];
 
 const handler = async (data: InputType): Promise<ReturnType> => {
-  const { userId, currentUserId, branch, rolls } = data;
-
+  const { userId, branch, rolls } = data;
   let resultFilters: GameItemResults[] = [];
 
   try {
-    const currentUser = await db.user.findUnique({
-      where: {
-        id: currentUserId,
-        branch,
-      },
-    });
-
-    if (!currentUser) {
+    // Rate limiting check
+    const rateLimitResult = await checkGameRollRateLimit(String(userId), branch);
+    if (!rateLimitResult.allowed) {
       return {
-        error: "User not found",
+        error: `Quá nhiều yêu cầu. Vui lòng thử lại sau ${Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)} giây.`,
       };
     }
 
-    const { magicStone = 0 } = currentUser ?? {};
-
-    if (magicStone - rolls < 0) {
-      return {
-        error: "Bạn không đủ đá năng lượng. Hãy quay lại sau nhé.",
-      };
+    if (rolls !== 1 && rolls !== 10) {
+      return { error: "Chỉ cho phép quay 1 hoặc 10 lần." };
     }
 
-    const lastJackPotDate = await db.gameResult.findFirst({
-      where: {
-        itemId: 8,
-      },
-      select: {
-        createdAt: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    return await db.$transaction(async (tx) => {
+      // Lấy user và item rate ban đầu
+      const user = await tx.user.findFirst({ where: { userId, branch } });
+      if (!user) return { error: "User not found" };
+      if (user.magicStone < rolls) return { error: "Bạn không đủ đá năng lượng." };
 
-    const totalRound = await db.gameResult.count({
-      where: {
-        ...(lastJackPotDate?.createdAt && {
-          createdAt: {
-            gt: lastJackPotDate.createdAt,
-          },
-        }),
-      },
-      orderBy: {
-        createdAt: "asc",
-      },
-    });
+      let itemRates = await tx.item.findMany();
+      // Lấy thời điểm jackpot gần nhất
+      const lastJackPot = await tx.gameResult.findFirst({
+        where: { itemId: JACKPOT_ID },
+        select: { createdAt: true },
+        orderBy: { createdAt: "desc" },
+      });
+      // Tính tổng quỹ kể từ lần jackpot gần nhất
+      const totalRound = await tx.gameResult.count({
+        where: {
+          ...(lastJackPot?.createdAt && {
+            createdAt: { gt: lastJackPot.createdAt },
+          }),
+        },
+      });
+      let totalFund = totalRound * Number(ROUND_COST) * RATE;
+      let jackpotHit = false;
+      let totalAddedStars = 0;
+      const results = [];
 
-    const totalFund = totalRound * ROUND_COST * RATE;
-
-    await db.$transaction(
-      async (tx) => {
-        const results = [];
-
-        // Thực hiện số lần quay yêu cầu
-        for (let i = 0; i < rolls; i++) {
-          // Get fresh itemRate data for each roll
-          const itemRate = await tx.item.findMany();
-
-          const random = Math.random() * 100;
-          let cumulativeProbability = 0;
-
-          for (let j = 0; j < itemRate.length; j++) {
-            cumulativeProbability += itemRate[j].rating;
-            if (random < cumulativeProbability) {
-              const isJackpot = itemRate[j].id === JACKPOT_ID;
-
-              let addedStar = itemRate[j].value;
-
-              // Add result
-              if (isJackpot) {
-                addedStar = totalFund;
-                results.push({
-                  ...itemRate[j],
-                  value: totalFund,
-                });
-              } else {
-                results.push(itemRate[j]);
-              }
-
-              // Update ratings and get fresh rates
-              await updateRating(itemRate, totalFund, tx, isJackpot);
-              await saveResult(userId, branch, tx, itemRate[j].id, addedStar);
-              break;
-            }
+      for (let i = 0; i < rolls; i++) {
+        // Roll
+        const random = Math.random() * 100;
+        let cumulative = 0;
+        let selectedItem = null;
+        for (const item of itemRates) {
+          cumulative += item.rating;
+          if (random < cumulative) {
+            selectedItem = { ...item };
+            break;
           }
         }
-
-        resultFilters = results.map((item) => ({
-          id: item.id,
-          image_url: item.image_url,
-          title: item.title,
-          value: item.value,
-        }));
-
-        return { data: resultFilters };
-      },
-      {
-        timeout: 60000, // 30 seconds timeout for handling multiple rolls
-      },
-    );
+        if (!selectedItem) selectedItem = itemRates[itemRates.length - 1];
+        let addedStar = selectedItem.value;
+        if (selectedItem.id === JACKPOT_ID) {
+          addedStar = totalFund;
+          jackpotHit = true;
+        }
+        
+        // Lưu gameResult trước
+        const gameResult = await tx.gameResult.create({
+          data: {
+            userId,
+            itemId: selectedItem.id,
+            createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
+          },
+        });
+        
+        // Lưu UserStarHistory với stars hiện tại
+        const currentStars = user.stars + totalAddedStars;
+        await tx.userStarHistory.create({
+          data: {
+            userId,
+            type: "GAME",
+            oldStars: currentStars,
+            newStars: currentStars + addedStar,
+            targetId: gameResult.id,
+            createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
+            branch,
+          },
+        });
+        
+        totalAddedStars += addedStar;
+        results.push({ ...selectedItem, value: addedStar });
+        // Update rate nếu cần
+        if (jackpotHit) {
+          // Reset rate về mặc định, giữ lại các field khác từ itemRates cũ
+          itemRates = itemRates.map((item) => {
+            const def = ITEM_RATE_DEFAULT.find((d) => d.id === item.id);
+            return def ? { ...item, rating: def.rating } : item;
+          });
+          for (const item of itemRates) {
+            await tx.item.update({
+              where: { id: item.id },
+              data: { rating: item.rating },
+            });
+          }
+        } else if (totalFund >= Number(UP_RATE_AMOUNT)) {
+          // Tăng rate jackpot, giảm các ô khác
+          const jackpotItem = itemRates.find((x) => x.id === JACKPOT_ID);
+          if (jackpotItem) {
+            jackpotItem.rating += UP_RATE;
+            const others = itemRates.filter((x) => x.id !== JACKPOT_ID);
+            const reduce = UP_RATE / others.length;
+            others.forEach((x) => (x.rating -= reduce));
+          }
+          // Update lại DB
+          for (const item of itemRates) {
+            await tx.item.update({
+              where: { id: item.id },
+              data: { rating: item.rating },
+            });
+          }
+        }
+      }
+      // Update user cuối cùng
+      await tx.user.update({
+        where: { id: user.id },
+        data: {
+          stars: user.stars + totalAddedStars,
+          magicStone: user.magicStone - rolls,
+          updatedAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
+        },
+      });
+      // Trả về kết quả roll
+      resultFilters = results.map((item) => ({
+        id: item.id,
+        image_url: item.image_url,
+        title: item.title,
+        value: item.value,
+      }));
+      return { data: resultFilters };
+    });
   } catch (error) {
+    console.error(`[ERROR] Transaction failed:`, error);
     return {
       error: "Failed to create.",
     };
   }
-
-  return { data: resultFilters };
 };
-
-async function updateRating(
-  itemRate: Item[],
-  totalFund: number,
-  tx: any,
-  isJackpot: boolean,
-) {
-  if (isJackpot) {
-    for (const item of ITEM_RATE_DEFAULT) {
-      await tx.item.update({
-        where: {
-          id: item.id,
-        },
-        data: {
-          rating: item.rating,
-        },
-      });
-    }
-    return;
-  }
-  // Update rate every user roll
-  if (totalFund >= UP_RATE_AMOUNT) {
-    // Tìm item Galactic Jackpot
-    const jackpotItem = itemRate.find((item) => item.id === JACKPOT_ID);
-
-    if (jackpotItem) {
-      jackpotItem.rating += UP_RATE; // Tăng tỷ lệ ô 8 thêm 0.1%
-
-      // Tính toán giảm tỷ lệ cho các ô khác
-      const totalRatingReduction = UP_RATE;
-      const otherItems = itemRate.filter((item) => item.id !== JACKPOT_ID);
-      const reductionPerItem = totalRatingReduction / otherItems.length;
-
-      otherItems.forEach((item) => {
-        item.rating -= reductionPerItem;
-      });
-    }
-
-    for (const item of itemRate) {
-      await tx.item.update({
-        where: {
-          id: item.id,
-        },
-        data: {
-          rating: item.rating,
-        },
-      });
-    }
-  }
-}
-
-async function saveResult(
-  userId: any,
-  branch: any,
-  tx: any,
-  id: any,
-  addedStar: any,
-) {
-  const user = await tx.user.findFirst({
-    where: { userId, branch },
-  });
-
-  if (user) {
-    const { stars: oldStars, magicStone } = user;
-
-    const newStars = oldStars + addedStar;
-
-    const { id: gameResultId } = await tx.gameResult.create({
-      data: {
-        userId,
-        itemId: id,
-        createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toDate(),
-      },
-    });
-
-    await tx.userStarHistory.create({
-      data: {
-        userId,
-        type: "GAME",
-        oldStars,
-        newStars,
-        targetId: gameResultId,
-        createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toDate(),
-        branch,
-      },
-    });
-
-    await tx.user.update({
-      where: { id: user.id },
-      data: {
-        stars: newStars,
-        updatedAt: dayjs().tz("Asia/Ho_Chi_Minh").toDate(),
-        magicStone: magicStone - 1,
-      },
-    });
-  }
-}
 
 export const createGameResult = createSafeAction(CreateGameResult, handler);

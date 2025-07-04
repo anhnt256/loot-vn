@@ -1,10 +1,13 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { getCookie } from "cookies-next";
+import { getDebugMacAddress, logDebugInfo } from "@/lib/debug-utils";
 
 export async function GET(req: Request, res: Response): Promise<any> {
-  const macAddress = getCookie("macAddress", { req, res });
-  // const macAddress = "EC-D6-8A-DE-89-53";
+  const originalMacAddress = getCookie("macAddress", { req, res });
+  const macAddress = getDebugMacAddress(originalMacAddress);
+  
+  logDebugInfo("check-branch", { originalMacAddress, macAddress });
 
   try {
     if (macAddress) {

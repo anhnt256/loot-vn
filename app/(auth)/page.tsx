@@ -9,7 +9,7 @@ import { useLogin } from "@/queries/auth.query";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { setCookie } from "cookies-next";
-import dayjs from "dayjs";
+import dayjs from "@/lib/dayjs";
 import { Spin } from "antd";
 import { isElectron } from "@/lib/electron";
 import { getMacAddresses } from "@/lib/mac";
@@ -28,6 +28,7 @@ const Login = () => {
   const [macAddresses, setMacAddresses] = useState<string>();
   const [isDesktopApp, setIsDesktopApp] = useState(false);
   const [cookiesSet, setCookiesSet] = useState(false);
+  const [isToastShown, setIsToastShown] = useState(false);
 
   const { data: machineData } = useQuery({
     queryKey: ["check-branch", macAddresses],
@@ -64,7 +65,7 @@ const Login = () => {
   });
 
   const onLoginForExistingUser = useCallback(async () => {
-    if (pageLoading || !machineData || !existingUser) {
+    if (pageLoading || !machineData || !existingUser || isToastShown) {
       return;
     }
 
@@ -79,7 +80,10 @@ const Login = () => {
       const { statusCode, message } = result || {};
 
       if (statusCode === 200) {
-        toast.success("Chào mừng trở lại The GateWay!");
+        if (!isToastShown) {
+          toast.success("Chào mừng trở lại The GateWay!");
+          setIsToastShown(true);
+        }
         router.push("/dashboard");
       } else if (statusCode === 500 || statusCode === 499) {
         toast.error(message);
@@ -89,7 +93,7 @@ const Login = () => {
       toast.error("Đã có lỗi xảy ra khi tự động đăng nhập");
     }
     setPageLoading(false);
-  }, [pageLoading, machineData, existingUser, loginMutation, router]);
+  }, [pageLoading, machineData, existingUser, loginMutation, router, isToastShown]);
 
   useEffect(() => {
     let mounted = true;
@@ -140,7 +144,7 @@ const Login = () => {
   }, [machineData, existingUser, onLoginForExistingUser]);
 
   const onLogin = async () => {
-    if (pageLoading || !machineData) {
+    if (pageLoading || !machineData || isToastShown) {
       return;
     }
 
@@ -155,7 +159,10 @@ const Login = () => {
       const { statusCode, message } = result || {};
 
       if (statusCode === 200) {
-        toast.success("Chào mừng đến với The GateWay!");
+        if (!isToastShown) {
+          toast.success("Chào mừng đến với The GateWay!");
+          setIsToastShown(true);
+        }
         router.push("/dashboard");
       } else if (statusCode === 500 || statusCode === 499) {
         toast.error(message);
@@ -167,6 +174,7 @@ const Login = () => {
     setPageLoading(false);
   };
 
+  // Nếu đang khởi tạo hoặc loading, chỉ hiển thị loading
   if (initializing || pageLoading) {
     return (
       <div className="flex justify-center items-center">
@@ -179,7 +187,7 @@ const Login = () => {
     );
   }
 
-  // Nếu có existingUser, ẩn form và chỉ hiển thị loading
+  // Nếu có existingUser, chỉ auto-login, không render form đăng nhập nữa
   if (existingUser && machineData) {
     return (
       <div className="flex flex-col items-center justify-center">
@@ -200,6 +208,7 @@ const Login = () => {
     );
   }
 
+  // Nếu chưa có existingUser, render form đăng nhập
   return (
     <>
       <div className="flex justify-center mb-2">

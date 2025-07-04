@@ -8,6 +8,7 @@ import {
   checkLoginRateLimit, 
   checkDatabaseRateLimit 
 } from "@/lib/rate-limit";
+import { getDebugUserId, logDebugInfo } from "@/lib/debug-utils";
 
 const expirationDuration = 1;
 const expirationDate = dayjs().add(expirationDuration, "day").format();
@@ -89,7 +90,17 @@ export async function POST(req: Request, res: Response): Promise<any> {
                                    LIMIT 1`;
 
     const user: any = await fnetDB.$queryRaw<any>(query);
-    const userId = user[0]?.userId ?? null;
+
+    const originalUserId = user[0]?.userId ?? null;
+    const userId = getDebugUserId(originalUserId);
+    
+    logDebugInfo("login", { 
+      userName, 
+      machineName, 
+      branchFromCookie, 
+      originalUserId, 
+      userId 
+    });
 
     // Kiểm tra user đã tồn tại trong hệ thống
     const existingUser = await db.user.findFirst({
@@ -207,11 +218,29 @@ export async function POST(req: Request, res: Response): Promise<any> {
               rankId: 1,
               stars: 0,
               magicStone: 0,
-              createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toDate(),
+              createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
             },
           });
           
-          console.log(`User mới được tạo: ${trimmedUsername} (ID: ${userUpdated.id}) từ machine: ${machineName}`);
+          // Trả về thông tin user mới tạo
+          const token = await signJWT({ userId: String(userUpdated.userId ?? "") });
+          const response = NextResponse.json({
+            ...userUpdated,
+            statusCode: 200,
+            message: "Login Success",
+          });
+
+          response.cookies.set({
+            name: "token",
+            value: token,
+            maxAge: 86400,
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            path: "/",
+          });
+
+          return response;
         } catch (error) {
           console.error("Error creating user:", error);
           return NextResponse.json(
@@ -243,7 +272,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
       });
     }
 
-    const token = await signJWT({ userId: userUpdated?.userId });
+    const token = await signJWT({ userId: String(userUpdated?.userId ?? "") });
     const response = NextResponse.json({
       ...userUpdated,
       statusCode: 200,

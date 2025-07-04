@@ -4,7 +4,7 @@ import dayjs from "@/lib/dayjs";
 import { useAction } from "@/hooks/use-action";
 import { createCheckInResult } from "@/actions/create-checkInResult";
 import { toast } from "sonner";
-import { useUserInfo } from "@/hooks/use-user-info";
+import { useUserInfo, useUserCheckIn, useCheckInItem } from "@/hooks/use-user-info";
 import { UserStarHistory } from "@/prisma/generated/prisma-client";
 import isEmpty from "lodash/isEmpty";
 import { StarFilled, StarOutlined } from "@ant-design/icons";
@@ -18,33 +18,52 @@ const CheckInCard = () => {
   const [isChecking, setIsChecking] = useState<boolean | undefined>(false);
   const [playTime, setPlayTime] = useState<number>(0);
   const [rewards, setRewards] = useState<number>(0);
-  const { userData, userCheckIn, checkInItem, currentUserId } = useUserInfo();
+  const { userData, currentUserId, branch } = useUserInfo();
+  const { userCheckIn } = useUserCheckIn(currentUserId, branch);
+  const { checkInItem } = useCheckInItem();
 
-  const { userId, branch } = userData || {};
+  const { userId } = userData || {};
 
   const claim = useMemo(() => {
     const date = dayjs().tz("Asia/Ho_Chi_Minh").format("YYYY-MM-DD");
 
     const currentResults = userCheckIn?.filter((item: UserStarHistory) => {
-      return (
-        dayjs(item.createdAt).tz("Asia/Ho_Chi_Minh").format("YYYY-MM-DD") ===
-        date
-      );
+      const itemDate = dayjs(item.createdAt).tz("Asia/Ho_Chi_Minh").format("YYYY-MM-DD");
+      return itemDate === date;
     });
 
     if (isEmpty(currentResults)) {
       return 0;
     }
 
-    return currentResults?.reduce((sum, item) => {
+    const totalClaim = currentResults?.reduce((sum, item) => {
       return sum + (item.newStars - item.oldStars);
     }, 0);
+
+    // Debug logging for claim calculation
+    console.log('Claim Debug:', {
+      date,
+      currentResults,
+      totalClaim
+    });
+
+    return totalClaim;
   }, [userCheckIn]);
 
   const { data: totalHours } = useQuery<[any]>({
     queryKey: ["user-spend"],
     enabled: !!userId && !!branch,
     queryFn: () => fetcher(`/api/spend/${userId}/${branch}`),
+  });
+
+  // Debug logging for data loading
+  console.log('CheckIn Data Debug:', {
+    userId,
+    branch,
+    totalHours,
+    checkInItem,
+    userCheckIn,
+    userData
   });
 
   const { execute: executeCheckIn } = useAction(createCheckInResult, {
@@ -80,10 +99,10 @@ const CheckInCard = () => {
         setIsChecking(false);
       }
     }
-  }, [rewards, claim, isChecking, userCheckIn, userData, executeCheckIn]);
+  }, [rewards, claim, isChecking, userData, executeCheckIn]);
 
   useEffect(() => {
-    if (checkInItem) {
+    if (checkInItem && totalHours !== undefined) {
       const currentTime = totalHours as unknown as number;
       const today = getCurrentDayOfWeekVN();
 
@@ -92,9 +111,21 @@ const CheckInCard = () => {
       const todayCheckIn = checkInItem.find((item) => item.dayName === today);
       const starsPerHour = todayCheckIn ? todayCheckIn.stars : 1000;
 
-      setRewards(currentTime * starsPerHour);
+      const calculatedRewards = currentTime * starsPerHour;
+      setRewards(calculatedRewards);
+
+      // Debug logging
+      console.log('CheckIn Debug:', {
+        currentTime,
+        today,
+        todayCheckIn,
+        starsPerHour,
+        calculatedRewards,
+        claim,
+        canClaim: calculatedRewards - claim
+      });
     }
-  }, [totalHours, checkInItem]);
+  }, [totalHours, checkInItem, claim]);
 
   const handleUpdate = useCallback(() => {
     window.location.reload();

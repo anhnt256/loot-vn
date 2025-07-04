@@ -196,29 +196,33 @@ export async function GET() {
           })()
         : [],
 
-      // 5. Tất cả gift rounds trong 1 query
+      // 5. Tất cả gift rounds trong tuần hiện tại
       activeUserIds.length > 0
         ? db.giftRound.findMany({
             where: {
               userId: { in: activeUserIds.map((id) => parseInt(id, 10)) },
               isUsed: false,
-              OR: [{ expiredAt: null }, { expiredAt: { gt: new Date() } }],
+              expiredAt: {
+                gte: dayjs().startOf('week').toDate(),
+                lte: dayjs().endOf('week').toDate(),
+              },
             },
           })
         : [],
 
-      // 6. Tất cả game rounds trong 1 query
+      // 6. Tất cả game rounds từ UserStarHistory
       activeUserIds.length > 0
-        ? db.$queryRaw<any[]>(Prisma.sql`
-        SELECT 
-          userId,
-          COUNT(*) as count
-        FROM GameResult gr
-        WHERE gr.userId IN (${Prisma.join(activeUserIds.map((id) => parseInt(id, 10)))})
-        AND CreatedAt >= DATE(DATE_SUB(NOW(), INTERVAL WEEKDAY(NOW()) DAY))
-        AND CreatedAt <= NOW()
-        GROUP BY userId
-      `)
+        ? db.userStarHistory.findMany({
+            where: {
+              userId: { in: activeUserIds.map((id) => parseInt(id, 10)) },
+              branch: branchFromCookie,
+              type: "GAME",
+              createdAt: {
+                gte: dayjs().startOf('week').toDate(),
+                lte: dayjs().endOf('week').toDate(),
+              },
+            },
+          })
         : [],
     ]);
 
@@ -239,6 +243,7 @@ export async function GET() {
       userClaimsMap.get(claim.userId).push(claim);
     });
 
+    
     const userDataMap = new Map();
     userData.forEach((user) => {
       userDataMap.set(user.userId, user);
@@ -260,7 +265,10 @@ export async function GET() {
 
     const userGameRoundsMap = new Map();
     userGameRounds.forEach((round) => {
-      userGameRoundsMap.set(round.userId, Number(round.count));
+      if (!userGameRoundsMap.has(round.userId)) {
+        userGameRoundsMap.set(round.userId, 0);
+      }
+      userGameRoundsMap.set(round.userId, userGameRoundsMap.get(round.userId) + 1);
     });
 
     // Query real-time check in items
@@ -312,6 +320,16 @@ export async function GET() {
         const spendPerRound = Number(process.env.NEXT_PUBLIC_SPEND_PER_ROUND);
         const round = Math.floor(userTopUp ? userTopUp / spendPerRound : 0);
 
+        // Debug cho userId = 1828
+        if (UserId === 1828) {
+          console.log("=== DEBUG ROUND CALCULATION FOR USER 1828 ===");
+          console.log("UserId:", UserId);
+          console.log("userTopUp:", userTopUp);
+          console.log("spendPerRound:", spendPerRound);
+          console.log("round from topup:", round);
+          console.log("userData?.id:", userData?.id);
+        }
+
         if (userData?.id) {
           const giftRounds = userGiftRoundsMap.get(userData.id) || [];
           const totalGiftRounds = giftRounds.reduce(
@@ -320,9 +338,24 @@ export async function GET() {
           );
           const usedRounds = userGameRoundsMap.get(parseInt(UserId, 10)) || 0;
           totalRound = round + totalGiftRounds - usedRounds;
+
+          // Debug cho userId = 1828
+          if (UserId === 1828) {
+            console.log("giftRounds:", giftRounds);
+            console.log("totalGiftRounds:", totalGiftRounds);
+            console.log("usedRounds:", usedRounds);
+            console.log("totalRound (final):", totalRound);
+            console.log("=== END DEBUG ===");
+          }
         } else {
           // User chưa đăng nhập, chưa sử dụng lượt quay
           totalRound = round;
+
+          // Debug cho userId = 1828
+          if (UserId === 1828) {
+            console.log("User not logged in, totalRound:", totalRound);
+            console.log("=== END DEBUG ===");
+          }
         }
       }
 

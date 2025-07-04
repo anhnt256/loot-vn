@@ -56,13 +56,6 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
     let allUsers: any[] = [];
 
-    // Nếu có userName và machineName, trả về list user có cùng username
-
-
-    console.log("userName", userName);
-    console.log("machineName", machineName);
-    console.log("userId", userId);
-
     if (userName && machineName) {
       const usersWithSameUsername = await db.user.findMany({
         where: {
@@ -153,12 +146,6 @@ export async function POST(req: Request, res: Response): Promise<any> {
       }
 
       if (!allUsers.length) {
-        console.error(
-          "allUsers rỗng sau merge, userId:",
-          userId,
-          "branch:",
-          branchFromCookie,
-        );
         return NextResponse.json(
           {
             statusCode: 404,
@@ -178,6 +165,9 @@ export async function POST(req: Request, res: Response): Promise<any> {
         where: {
           userId: Number(userId),
           branch: branchFromCookie,
+          createdAt: {
+            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+          },
         },
         select: {
           type: true,
@@ -187,7 +177,8 @@ export async function POST(req: Request, res: Response): Promise<any> {
       });
       const { checkIn, game, reward } = histories.reduce(
         (acc, h) => {
-          if (h.type === "CHECK_IN") acc.checkIn += 1000;
+          if (h.type === "CHECK_IN")
+            acc.checkIn += (h.newStars ?? 0) - (h.oldStars ?? 0);
           else if (h.type === "GAME")
             acc.game += (h.newStars ?? 0) - (h.oldStars ?? 0);
           else if (h.type === "REWARD")
@@ -197,7 +188,6 @@ export async function POST(req: Request, res: Response): Promise<any> {
         { checkIn: 0, game: 0, reward: 0 },
       );
       let total = checkIn + game - reward;
-      if (total < 0) total = 0;
       starsCalculated = total;
     }
 

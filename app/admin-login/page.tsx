@@ -9,7 +9,7 @@ import { useLogin } from "@/queries/auth.query";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { setCookie } from "cookies-next";
-import dayjs from "dayjs";
+import dayjs from "@/lib/dayjs";
 import { Spin } from "antd";
 import { UserIcon, WifiIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";

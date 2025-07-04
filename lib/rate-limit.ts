@@ -105,4 +105,18 @@ export async function checkDatabaseRateLimit(
     allowed: recentUsers < maxUsersPerHour,
     count: recentUsers,
   };
+}
+
+// Rate limit cho game roll
+export async function checkGameRollRateLimit(
+  userId: string,
+  branch: string
+): Promise<{ allowed: boolean; remaining: number; resetTime: number }> {
+  const identifier = `${userId}:${branch}`;
+  
+  return checkRateLimit(identifier, {
+    windowMs: 10 * 1000, // 10 seconds
+    maxRequests: 1, // Chỉ cho phép 1 roll mỗi 10 giây
+    keyPrefix: "game_roll",
+  });
 } 

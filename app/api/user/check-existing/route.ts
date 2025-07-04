@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
 import { cookies } from "next/headers";
 import dayjs from "@/lib/dayjs";
+import { getDebugUserId, logDebugInfo } from "@/lib/debug-utils";
 
 export async function GET(req: Request): Promise<any> {
   const cookieStore = await cookies();
@@ -29,7 +30,15 @@ export async function GET(req: Request): Promise<any> {
                                    LIMIT 1`;
 
     const user: any = await fnetDB.$queryRaw<any>(query);
-    const userId = user[0]?.userId ?? null;
+    const originalUserId = user[0]?.userId ?? null;
+    const userId = getDebugUserId(originalUserId);
+    
+    logDebugInfo("user/check-existing", { 
+      machineName, 
+      branchFromCookie, 
+      originalUserId, 
+      userId 
+    });
 
     if (!userId) {
       return NextResponse.json(null);

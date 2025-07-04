@@ -7,7 +7,7 @@ import { WishResult } from "@/app/(dashboard)/game/_component/WishResult/WishRes
 import { useUserInfo } from "@/hooks/use-user-info";
 import { Rules } from "@/app/(dashboard)/game/_component/Rules/Rules";
 import CircleSegments from "@/app/(dashboard)/game/_component/CirclePrize/CirclePrize";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetcher } from "@/lib/fetcher";
 import { useAction } from "@/hooks/use-action";
 import { toast } from "sonner";
@@ -20,23 +20,18 @@ const Game = () => {
   const [single, setSingle] = useState<boolean>(false);
   const [isRuleModalOpen, setIsRuleModalOpen] = useState(false);
   const [isRolling, setIsRolling] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
 
-  const { userData, refreshAllData } = useUserInfo();
+  const { userData, branch } = useUserInfo();
+  const queryClient = useQueryClient();
 
   const {
     stars,
     userId,
-    branch,
     id: currentUserId,
     magicStone,
     totalPayment,
   } = userData || {};
-
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
-
-  const openRuleModal = () => setIsRuleModalOpen(true);
-  const closeRuleModal = () => setIsRuleModalOpen(false);
 
   const { data: segments } = useQuery<[any]>({
     queryKey: ["game-items"],
@@ -45,26 +40,37 @@ const Game = () => {
 
   const { data: rounds, isSuccess } = useQuery<[any]>({
     queryKey: ["calc-round"],
-    enabled: !!userId && !!branch,
     queryFn: () => fetcher(`/api/game/${userId}/calc-round`),
+    enabled: !!userId && !!branch,
   });
 
+  // Cập nhật user data sau khi calc-round thành công
   useEffect(() => {
-    if (isSuccess) {
-      refreshAllData();
+    if (isSuccess && rounds) {
+      queryClient.invalidateQueries({ queryKey: ["user", currentUserId] });
     }
-  }, [isSuccess, refreshAllData]);
+  }, [isSuccess, rounds, queryClient, currentUserId]);
 
   const { execute: executeRoll, data } = useAction(createGameResult, {
     onSuccess: (data) => {
       setIsRolling(false);
       handleMeteorAnimation(data);
     },
-    onError: (error) => {
+    onError: (error: any) => {
       setIsRolling(false);
-      toast.error(error);
+      toast.error(
+        error?.message ||
+        error ||
+        "Không thể thực hiện quay. Vui lòng thử lại hoặc liên hệ admin."
+      );
     },
   });
+
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+
+  const openRuleModal = () => setIsRuleModalOpen(true);
+  const closeRuleModal = () => setIsRuleModalOpen(false);
 
   const handleMeteorAnimation = (data: any) => {
     const ids = data.map((item: any) => item.id);
@@ -77,28 +83,34 @@ const Game = () => {
     setMeteorStar(starLevel);
 
     setShowMeteor(true);
-    refreshAllData();
+    setIsAnimating(true);
+    
+    // Cập nhật magicStone sau khi quay
+    queryClient.invalidateQueries({ queryKey: ["calc-round"] });
+    queryClient.invalidateQueries({ queryKey: ["user", currentUserId] });
   };
 
   const handleRoll = async (rolls: number) => {
-    if (isRolling) {
+    if (isRolling || isAnimating) {
       return;
     }
-
     setIsRolling(true);
     await executeRoll({
       userId: Number(userId),
-      currentUserId: Number(currentUserId),
       branch: String(branch),
       rolls,
     });
   };
 
   const WishButton = ({ count }: { count: number }) => {
+    const isDisabled = isRolling || isAnimating;
     return (
       <button
-        className="bg-white rounded-full p-2 shadow-lg flex flex-col items-center w-48"
+        className={`bg-white rounded-full p-2 shadow-lg flex flex-col items-center w-48 ${
+          isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
+        }`}
         onClick={() => handleRoll(count)}
+        disabled={isDisabled}
       >
         <span className="text-gray-600 text-sm">Wish ×{count}</span>
         <div className="flex items-center space-x-1 mt-1">
@@ -108,6 +120,8 @@ const Game = () => {
       </button>
     );
   };
+
+  if (!userData || !branch) return null;
 
   return (
     <div className="flex flex-col p-5 gap-4">
@@ -170,7 +184,12 @@ const Game = () => {
               show={showMeteor}
               isSingle={single}
               rarity={meteorStar}
-              setShowMeteor={setShowMeteor}
+              setShowMeteor={(show) => {
+                setShowMeteor(show);
+                if (!show) {
+                  setIsAnimating(false);
+                }
+              }}
               openModal={openModal}
             />
           </div>

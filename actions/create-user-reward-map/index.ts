@@ -4,7 +4,7 @@ import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
 import { createSafeAction } from "@/lib/create-safe-action";
 import { CreateUserRewardMap } from "./schema";
 import { InputType } from "./type";
-import dayjs from "dayjs";
+import dayjs from "@/lib/dayjs";
 import { NextResponse } from "next/server";
 import { signJWT } from "@/lib/jwt";
 import { cookies } from "next/headers";
@@ -70,7 +70,7 @@ const handler = async (data: InputType): Promise<any> => {
           },
           data: {
             isUsed: false,
-            updatedAt: dayjs().tz("Asia/Ho_Chi_Minh").toDate(),
+            updatedAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
           },
         });
 
@@ -115,7 +115,7 @@ const handler = async (data: InputType): Promise<any> => {
             duration,
             isUsed,
             branch,
-            createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toDate(),
+            createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
           },
         });
 
@@ -126,7 +126,7 @@ const handler = async (data: InputType): Promise<any> => {
             },
             data: {
               stars: newStars,
-              updatedAt: dayjs().tz("Asia/Ho_Chi_Minh").toDate(),
+              updatedAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
             },
           });
 
@@ -137,7 +137,7 @@ const handler = async (data: InputType): Promise<any> => {
               oldStars,
               newStars,
               targetId: rewardId,
-              createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toDate(),
+              createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
               branch,
             },
           });
@@ -154,10 +154,10 @@ const handler = async (data: InputType): Promise<any> => {
   return { data: createUserRewardMap };
 };
 
-export const createUserRewardMap = createSafeAction(
-  CreateUserRewardMap,
-  handler,
-);
+// export const createUserRewardMap = createSafeAction(
+//   CreateUserRewardMap,
+//   handler,
+// );
 
 export async function POST(req: Request, res: Response): Promise<any> {
   const cookieStore = await cookies();
@@ -270,7 +270,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
             rankId: 1,
             stars: 0,
             magicStone: 0,
-            createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toDate(),
+            createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
           },
         });
       }

@@ -41,38 +41,38 @@ export const useUserInfo = () => {
     queryFn: () => fetcher(`/api/user/${currentUserId}/${branch}`),
   });
 
-  const { data: userCheckIn } = useQuery<[any]>({
-    queryKey: ["check-in-result", currentUserId],
-    enabled: !!userName,
-    queryFn: () => fetcher(`/api/check-in-result/${currentUserId}/${branch}`),
-  });
-
-  const { data: checkInItem } = useQuery<[any]>({
-    queryKey: ["check-in-item"],
-    enabled: !!userName,
-    queryFn: () => fetcher(`/api/check-in-item`),
-  });
-
-  const refreshAllData = () => {
+  const refreshUserData = () => {
     queryClient.invalidateQueries({ queryKey: ["user", currentUserId] });
-    queryClient.invalidateQueries({
-      queryKey: ["check-in-result", currentUserId],
-    });
-    queryClient.invalidateQueries({ queryKey: ["check-in-item"] });
   };
 
   useEffect(() => {
-    refreshAllData();
+    refreshUserData();
   }, []);
 
   return {
     currentUserId,
     userName,
     userData,
-    userCheckIn,
     userBalance,
-    checkInItem,
     isNewUser,
-    refreshAllData,
+    refreshUserData,
+    branch,
   };
+};
+
+export const useUserCheckIn = (currentUserId: number | undefined, branch: string | undefined) => {
+  const { data: userCheckIn } = useQuery<[any]>({
+    queryKey: ["check-in-result", currentUserId],
+    enabled: !!currentUserId && !!branch,
+    queryFn: () => fetcher(`/api/check-in-result/${currentUserId}/${branch}`),
+  });
+  return { userCheckIn };
+};
+
+export const useCheckInItem = () => {
+  const { data: checkInItem } = useQuery<[any]>({
+    queryKey: ["check-in-item"],
+    queryFn: () => fetcher(`/api/check-in-item`),
+  });
+  return { checkInItem };
 };

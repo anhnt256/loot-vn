@@ -23,6 +23,8 @@ import {
   FaHeadphones,
   FaChair,
   FaWifi,
+  FaEdit,
+  FaSave,
 } from "react-icons/fa";
 
 interface DeviceHistory {
@@ -129,6 +131,8 @@ const AdminDashboard = () => {
   const [migrateUser, setMigrateUser] = useState<any>(null);
   const [showMigrateModal, setShowMigrateModal] = useState(false);
   const [migrationInfo, setMigrationInfo] = useState<any>(null);
+  const [editingUserName, setEditingUserName] = useState(false);
+  const [editedUserName, setEditedUserName] = useState("");
 
   const deviceList = [
     {
@@ -372,7 +376,8 @@ const AdminDashboard = () => {
       Number(c.status) !== EnumComputerStatus.ON.id,
   ).length;
   const countCombo = computers.filter((c) => c.userType === 5).length;
-  const countActive = countReady + countOn;
+  // Số máy hoạt động = máy đang sử dụng + combo
+  const countActive = countOn + countCombo;
 
   // Chuẩn bị base info
   const baseUserId = migrationInfo?.userId;
@@ -418,6 +423,30 @@ const AdminDashboard = () => {
 
   // Kiểm tra có user nào trùng userId không
   const hasUserIdMatch = sortedUsers.some((u) => u.userId === baseUserId);
+
+  // Thêm hàm cập nhật tên người dùng
+  const handleUpdateUserName = async () => {
+    if (!currentComputer) return;
+    try {
+      const res = await fetch("/api/computer/update-userName", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: currentComputer.userId, userName: editedUserName }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCurrentComputer({ ...currentComputer, userName: editedUserName });
+        message.success("Đã cập nhật tên người dùng thành công!");
+        // Refresh data từ server để cập nhật UI
+        await refetch();
+      } else {
+        message.error(data.message || "Cập nhật thất bại");
+      }
+    } catch (e) {
+      message.error("Có lỗi xảy ra khi cập nhật tên người dùng");
+    }
+    setEditingUserName(false);
+  };
 
   return (
     <div className="flex flex-col p-5 gap-4">
@@ -558,7 +587,7 @@ const AdminDashboard = () => {
                       <div
                         className={`text-[9px] truncate font-bold ${stars > 100000 ? "text-red-400" : "text-yellow-300"}`}
                       >
-                        {`⭐ ${stars.toLocaleString()}`}
+                        {`⭐ ${Number(stars) ? Number(stars).toLocaleString() : "0"}`}
                       </div>
                     )}
                   </div>
@@ -639,31 +668,49 @@ const AdminDashboard = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="text-gray-400">Trạng thái:</div>
-                  <div>
-                    {Number(currentComputer.status) === EnumComputerStatus.ON.id
-                      ? "Đang sử dụng"
-                      : Number(currentComputer.status) ===
-                          EnumComputerStatus.READY.id
-                        ? "Đang khởi động"
-                        : "Máy tắt"}
+                  <div className="font-bold">
+                    {currentComputer.userType === 5
+                      ? <span className="text-purple-400">Combo</span>
+                      : Number(currentComputer.status) === EnumComputerStatus.ON.id
+                      ? <span className="text-blue-400">Đang sử dụng</span>
+                      : Number(currentComputer.status) === EnumComputerStatus.READY.id
+                      ? <span className="text-orange-400">Đang khởi động</span>
+                      : <span className="text-gray-400">Máy tắt</span>}
                   </div>
-                  <div className="text-gray-400">Người dùng:</div>
-                  <div>{currentComputer.userName || "Chưa có người dùng"}</div>
+                  <div className="text-gray-400">Tên người dùng:</div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-white font-bold">
+                      {currentComputer.userType === 5 
+                        ? "Combo" 
+                        : currentComputer.userName || "Chưa có người dùng"}
+                    </span>
+                  </div>
                   <div className="text-gray-400">ID người dùng:</div>
-                  <div>{currentComputer.userId || "N/A"}</div>
+                  <div className="text-orange-300 font-bold">{currentComputer.userId || "N/A"}</div>
                   <div className="text-gray-400">Điểm danh:</div>
-                  <div>{currentComputer.canClaim?.toLocaleString() || 0}</div>
+                  <div className="text-purple-300 font-bold">{currentComputer.canClaim?.toLocaleString() || 0}</div>
                   <div className="text-gray-400">Lượt quay:</div>
-                  <div>{currentComputer.round?.toLocaleString() || 0}</div>
+                  <div className="text-blue-300 font-bold">{currentComputer.round?.toLocaleString() || 0}</div>
                   <div className="text-gray-400">Stars:</div>
-                  <div
-                    className={`${currentComputer.stars > 100000 ? "text-red-400" : "text-yellow-400"}`}
-                  >
-                    ⭐ {currentComputer.stars?.toLocaleString() || 0}
-                  </div>
+                  {currentComputer.userType === 5 || 
+                   Number(currentComputer.status) !== EnumComputerStatus.ON.id ||
+                   !currentComputer.userName || 
+                   currentComputer.userId === 0 ? (
+                    <div className="text-yellow-300 font-bold">
+                      ⭐ 0
+                    </div>
+                  ) : (
+                    <div className={`font-bold ${currentComputer.stars > 100000 ? "text-red-400" : "text-yellow-300"}`}>
+                      ⭐ {Number(currentComputer.stars) ? Number(currentComputer.stars).toLocaleString() : "0"}
+                    </div>
+                  )}
                   <div className="text-gray-400">Magic Stone:</div>
-                  <div className="text-green-400">
-                    💎 {currentComputer.magicStone?.toLocaleString() || 0}
+                  <div className="text-green-400 font-bold">
+                    💎 {currentComputer.userType === 5 || 
+                        Number(currentComputer.status) !== EnumComputerStatus.ON.id ||
+                        !currentComputer.userName || 
+                        currentComputer.userId === 0 ? "0" : 
+                        (Number(currentComputer.magicStone) ? Number(currentComputer.magicStone).toLocaleString() : "0")}
                   </div>
                 </div>
               </div>
@@ -786,6 +833,24 @@ const AdminDashboard = () => {
 
               {/* Action Buttons */}
               <div className="flex gap-2 justify-end">
+                {currentComputer.userType !== 5 && (
+                  <Button
+                    type="default"
+                    onClick={() => {
+                      setShowCheckLoginModal(true);
+                      // Tự động set số máy và username hiện tại
+                      setTimeout(() => {
+                        checkLoginForm.setFieldsValue({
+                          computerId: currentComputer.id,
+                          userName: currentComputer.userName || "",
+                        });
+                      }, 100);
+                    }}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    Kiểm tra đăng nhập
+                  </Button>
+                )}
                 <Button type="primary" danger onClick={handleReportIssue}>
                   Báo hỏng
                 </Button>

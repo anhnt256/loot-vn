@@ -7,7 +7,7 @@ import { CreateUser } from "./schema";
 import { InputType, ReturnType } from "./type";
 import { User } from "@/prisma/generated/prisma-client";
 import { BRANCH } from "@/constants/enum.constant";
-import dayjs from "dayjs";
+import dayjs from "@/lib/dayjs";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
   const { userId, rankId = 1, branch = BRANCH.GOVAP, stars = 0 } = data;

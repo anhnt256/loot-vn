@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useUserInfo } from "@/hooks/use-user-info";
 import Image from "next/image";
@@ -10,6 +10,7 @@ import { useLogout } from "@/queries/auth.query";
 import { toast } from "sonner";
 import { useAction } from "@/hooks/use-action";
 import { updateUser } from "@/actions/update-user";
+import dayjs from "@/lib/dayjs";
 
 // Hook auto logout sau 5 phút không hoạt động
 function useAutoLogout(onLogout: () => void, timeout = 5 * 60 * 1000) {
@@ -36,6 +37,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   const { userName, userData } = useUserInfo();
   const { stars, magicStone } = userData || {};
   const pathname = usePathname();
+  const [showGatewayBonus, setShowGatewayBonus] = useState(true);
 
   const IS_MAINTENANCE = process.env.NEXT_PUBLIC_IS_MAINTENANCE === "true";
 
@@ -45,22 +47,6 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
       toast.error(error);
     },
   });
-
-  useEffect(() => {
-    if (userData && userName) {
-      const { id, rankId, userId, stars } = userData;
-
-      const data = {
-        id,
-        rankId,
-        userId,
-        stars,
-        userName,
-        magicStone,
-      };
-      executeUpdateUser(data);
-    }
-  }, [userName, userData, magicStone]);
 
   const handleLogout = async () => {
     const result = await loginMutation.mutateAsync();
@@ -85,6 +71,17 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
     },
     5 * 60 * 1000,
   );
+
+  // Kiểm tra xem có hiển thị Gateway Bonus không
+  useEffect(() => {
+    const claimDeadline = process.env.NEXT_PUBLIC_GATEWAY_BONUS_DEADLINE || "2025-07-15";
+    const now = dayjs();
+    const deadline = dayjs(claimDeadline);
+    
+    if (now.isAfter(deadline)) {
+      setShowGatewayBonus(false);
+    }
+  }, []);
 
   return (
     <div className="flex h-screen bg-gray-200">
@@ -135,6 +132,23 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
           >
             Trò chơi
           </Link>
+          {showGatewayBonus && (
+            <Link
+              className={cn(
+                "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center gap-2 font-bold",
+                pathname === "/gateway-bonus"
+                  ? "bg-gradient-to-r from-yellow-400/80 to-pink-400/80 text-white scale-105 shadow-lg"
+                  : "text-yellow-400 animate-pulse"
+              )}
+              href="/gateway-bonus"
+            >
+              <span className={pathname === "/gateway-bonus" ? "text-2xl" : "text-2xl animate-bounce"}>🎁</span>
+              Gateway Bonus
+              {pathname !== "/gateway-bonus" && (
+                <span className="ml-2 animate-ping inline-flex h-3 w-3 rounded-full bg-yellow-400 opacity-75"></span>
+              )}
+            </Link>
+          )}
           {/* <Link
             className={cn(
               "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",

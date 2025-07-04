@@ -49,10 +49,16 @@ export function AdminSidebar() {
   const loginType = Cookies.get("loginType");
 
   // Filter menu items based on login type and admin role
-  const filteredMenuItems = menuItems.filter(
-    (item) =>
-      !(item.href === "/admin/gift-rounds" && loginType === "macAddress"),
-  );
+  const filteredMenuItems = menuItems.filter((item) => {
+    // If login type is macAddress, only show dashboard
+    if (loginType === "macAddress") {
+      return item.href === "/admin";
+    }
+    
+    // For other login types, show all items except adminOnly items for non-admin users
+    // You can add additional logic here if needed
+    return true;
+  });
 
   return (
     <aside className="w-64 bg-gray-800 shadow-xl border-r border-gray-700">

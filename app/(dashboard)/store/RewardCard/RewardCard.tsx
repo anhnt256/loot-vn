@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { createUserRewardMap } from "@/actions/create-user-reward-map";
 import { getCookie } from "cookies-next";
 import { BRANCH } from "@/constants/enum.constant";
-import dayjs from "dayjs";
+import dayjs from "@/lib/dayjs";
 
 interface CardProps {
   data: any;

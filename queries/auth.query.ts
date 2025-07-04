@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { deleteCookie, setCookie } from "cookies-next";
 import { ACCESS_TOKEN_KEY, CURRENT_USER } from "@/constants/token.constant";
-import dayjs from "dayjs";
+import dayjs from "@/lib/dayjs";
 import isEmpty from "lodash/isEmpty";
 
 const expirationDuration = 1;
