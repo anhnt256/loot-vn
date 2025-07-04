@@ -203,7 +203,9 @@ export async function POST(req: Request, res: Response): Promise<any> {
         }
 
         // Kiểm tra rate limit từ database (persistent)
-        const dbRateLimit = await checkDatabaseRateLimit(branchFromCookie || "");
+        const dbRateLimit = await checkDatabaseRateLimit(
+          branchFromCookie || "",
+        );
         if (!dbRateLimit.allowed) {
           return NextResponse.json(
             {

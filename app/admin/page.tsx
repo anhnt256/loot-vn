@@ -693,17 +693,19 @@ const AdminDashboard = () => {
                         <input
                           className="bg-gray-800 text-white border border-gray-500 rounded px-2 py-1 w-32 focus:outline-none"
                           value={editedUserName}
-                          autoFocus
-                          onChange={e => setEditedUserName(e.target.value)}
+                          onChange={(e) => setEditedUserName(e.target.value)}
                           onBlur={() => setIsEditingUserName(false)}
-                          onKeyDown={e => {
+                          onKeyDown={(e) => {
                             if (e.key === "Enter") handleUpdateUserName();
                             if (e.key === "Escape") setIsEditingUserName(false);
                           }}
                         />
                         <button
                           className="text-green-400 hover:text-green-600"
-                          onMouseDown={e => { e.preventDefault(); handleUpdateUserName(); }}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            handleUpdateUserName();
+                          }}
                           title="Lưu"
                         >
                           <FaSave />
