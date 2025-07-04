@@ -5,6 +5,7 @@
   "prisma": {
     "seed": "node prisma/seed.js"
   },
+  "lint": "next lint src pages components",
   "scripts": {
     "dev": "next dev",
     "build": "npm run generate && next build",
