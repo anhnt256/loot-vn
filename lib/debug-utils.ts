@@ -16,22 +16,22 @@ export interface DebugConfig {
  * Get debug configuration based on environment variables
  */
 export function getDebugConfig(): DebugConfig {
-  const isDebugGoVap = process.env.IS_DEBUG_GO_VAP === 'true';
-  const isDebugTanPhu = process.env.IS_DEBUG_TAN_PHU === 'true';
-  const useDefaultUserId = process.env.USE_DEFAULT_USER_ID === 'true';
+  const isDebugGoVap = process.env.IS_DEBUG_GO_VAP === "true";
+  const isDebugTanPhu = process.env.IS_DEBUG_TAN_PHU === "true";
+  const useDefaultUserId = process.env.USE_DEFAULT_USER_ID === "true";
 
   // Default values for Go Vap branch
   const goVapDefaults = {
-    macAddress: '00-CF-E0-46-C8-37',
+    macAddress: "00-CF-E0-46-C8-37",
     userId: 8503,
-    machineName: 'GO_VAP_01'
+    machineName: "GO_VAP_01",
   };
 
-  // Default values for Tan Phu branch  
+  // Default values for Tan Phu branch
   const tanPhuDefaults = {
-    macAddress: 'EC-D6-8A-DE-89-55',
+    macAddress: "EC-D6-8A-DE-89-55",
     userId: 218,
-    machineName: 'TAN_PHU_01'
+    machineName: "TAN_PHU_01",
   };
 
   // Determine which defaults to use
@@ -49,9 +49,9 @@ export function getDebugConfig(): DebugConfig {
     defaultMachineName = tanPhuDefaults.machineName;
   } else {
     // No debug mode active
-    defaultMacAddress = '';
+    defaultMacAddress = "";
     defaultUserId = 0;
-    defaultMachineName = '';
+    defaultMachineName = "";
   }
 
   return {
@@ -60,7 +60,7 @@ export function getDebugConfig(): DebugConfig {
     useDefaultUserId,
     defaultMacAddress,
     defaultUserId,
-    defaultMachineName
+    defaultMachineName,
   };
 }
 
@@ -70,28 +70,35 @@ export function getDebugConfig(): DebugConfig {
  */
 export function getDebugMacAddress(originalMacAddress?: string): string {
   const config = getDebugConfig();
-  
+
   if (config.isDebugGoVap || config.isDebugTanPhu) {
-    console.log(`[DEBUG] Using default MacAddress: ${config.defaultMacAddress} for branch: ${getDebugBranch()}`);
+    console.log(
+      `[DEBUG] Using default MacAddress: ${config.defaultMacAddress} for branch: ${getDebugBranch()}`,
+    );
     return config.defaultMacAddress;
   }
-  
-  return originalMacAddress || '';
+
+  return originalMacAddress || "";
 }
 
 /**
  * Get default userId for debug mode
- * Returns the debug userId if debug mode is active AND USE_DEFAULT_USER_ID is true, 
+ * Returns the debug userId if debug mode is active AND USE_DEFAULT_USER_ID is true,
  * otherwise returns the provided value from DB
  */
 export function getDebugUserId(originalUserId?: number): number {
   const config = getDebugConfig();
-  
-  if ((config.isDebugGoVap || config.isDebugTanPhu) && config.useDefaultUserId) {
-    console.log(`[DEBUG] Using default userId: ${config.defaultUserId} for branch: ${getDebugBranch()} (USE_DEFAULT_USER_ID=true)`);
+
+  if (
+    (config.isDebugGoVap || config.isDebugTanPhu) &&
+    config.useDefaultUserId
+  ) {
+    console.log(
+      `[DEBUG] Using default userId: ${config.defaultUserId} for branch: ${getDebugBranch()} (USE_DEFAULT_USER_ID=true)`,
+    );
     return config.defaultUserId;
   }
-  
+
   return originalUserId || 0;
 }
 
@@ -101,13 +108,15 @@ export function getDebugUserId(originalUserId?: number): number {
  */
 export function getDebugMachineName(originalMachineName?: string): string {
   const config = getDebugConfig();
-  
+
   if (config.isDebugGoVap || config.isDebugTanPhu) {
-    console.log(`[DEBUG] Using default machine name: ${config.defaultMachineName} for branch: ${getDebugBranch()}`);
+    console.log(
+      `[DEBUG] Using default machine name: ${config.defaultMachineName} for branch: ${getDebugBranch()}`,
+    );
     return config.defaultMachineName;
   }
-  
-  return originalMachineName || '';
+
+  return originalMachineName || "";
 }
 
 /**
@@ -123,14 +132,14 @@ export function isDebugMode(): boolean {
  */
 export function getDebugBranch(): string {
   const config = getDebugConfig();
-  
+
   if (config.isDebugGoVap) {
-    return 'GO_VAP';
+    return "GO_VAP";
   } else if (config.isDebugTanPhu) {
-    return 'TAN_PHU';
+    return "TAN_PHU";
   }
-  
-  return '';
+
+  return "";
 }
 
 /**
@@ -147,7 +156,7 @@ export function logDebugInfo(context: string, data?: any): void {
       defaultMacAddress: config.defaultMacAddress,
       defaultUserId: config.defaultUserId,
       defaultMachineName: config.defaultMachineName,
-      ...(data && { data })
+      ...(data && { data }),
     });
   }
-} 
+}

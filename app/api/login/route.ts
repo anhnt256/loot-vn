@@ -3,10 +3,10 @@ import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
 import { signJWT } from "@/lib/jwt";
 import { cookies } from "next/headers";
 import dayjs from "@/lib/dayjs";
-import { 
-  checkUserCreationRateLimit, 
-  checkLoginRateLimit, 
-  checkDatabaseRateLimit 
+import {
+  checkUserCreationRateLimit,
+  checkLoginRateLimit,
+  checkDatabaseRateLimit,
 } from "@/lib/rate-limit";
 import { getDebugUserId, logDebugInfo } from "@/lib/debug-utils";
 
@@ -72,7 +72,9 @@ export async function POST(req: Request, res: Response): Promise<any> {
     // Rate limiting cho đăng nhập
     const loginRateLimit = await checkLoginRateLimit(machineName);
     if (!loginRateLimit.allowed) {
-      const resetTime = new Date(loginRateLimit.resetTime).toLocaleString('vi-VN');
+      const resetTime = new Date(loginRateLimit.resetTime).toLocaleString(
+        "vi-VN",
+      );
       return NextResponse.json(
         {
           statusCode: 429,
@@ -93,13 +95,13 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
     const originalUserId = user[0]?.userId ?? null;
     const userId = getDebugUserId(originalUserId);
-    
-    logDebugInfo("login", { 
-      userName, 
-      machineName, 
-      branchFromCookie, 
-      originalUserId, 
-      userId 
+
+    logDebugInfo("login", {
+      userName,
+      machineName,
+      branchFromCookie,
+      originalUserId,
+      userId,
     });
 
     // Kiểm tra user đã tồn tại trong hệ thống
@@ -117,7 +119,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
       if (userName && userName.trim()) {
         // Validation username
         const trimmedUsername = userName.trim();
-        
+
         // Kiểm tra độ dài username (3-20 ký tự)
         if (trimmedUsername.length < 3 || trimmedUsername.length > 20) {
           return NextResponse.json(
@@ -145,17 +147,36 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
         // Kiểm tra từ khóa bị cấm
         const bannedKeywords = [
-          'admin', 'administrator', 'root', 'system', 'test', 'demo', 'guest',
-          'user', 'player', 'game', 'gateway', 'fnet', 'computer', 'machine',
-          'server', 'bot', 'spam', 'hack', 'crack', 'null', 'undefined'
+          "admin",
+          "administrator",
+          "root",
+          "system",
+          "test",
+          "demo",
+          "guest",
+          "user",
+          "player",
+          "game",
+          "gateway",
+          "fnet",
+          "computer",
+          "machine",
+          "server",
+          "bot",
+          "spam",
+          "hack",
+          "crack",
+          "null",
+          "undefined",
         ];
-        
+
         const lowerUsername = trimmedUsername.toLowerCase();
-        if (bannedKeywords.some(keyword => lowerUsername.includes(keyword))) {
+        if (bannedKeywords.some((keyword) => lowerUsername.includes(keyword))) {
           return NextResponse.json(
             {
               statusCode: 400,
-              message: "Username chứa từ khóa không được phép. Vui lòng liên hệ admin để được hỗ trợ",
+              message:
+                "Username chứa từ khóa không được phép. Vui lòng liên hệ admin để được hỗ trợ",
               data: null,
             },
             { status: 400 },
@@ -163,9 +184,14 @@ export async function POST(req: Request, res: Response): Promise<any> {
         }
 
         // Rate limiting cho việc tạo user mới
-        const userCreationRateLimit = await checkUserCreationRateLimit(machineName, branchFromCookie);
+        const userCreationRateLimit = await checkUserCreationRateLimit(
+          machineName,
+          branchFromCookie,
+        );
         if (!userCreationRateLimit.allowed) {
-          const resetTime = new Date(userCreationRateLimit.resetTime).toLocaleString('vi-VN');
+          const resetTime = new Date(
+            userCreationRateLimit.resetTime,
+          ).toLocaleString("vi-VN");
           return NextResponse.json(
             {
               statusCode: 429,
@@ -221,9 +247,11 @@ export async function POST(req: Request, res: Response): Promise<any> {
               createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
             },
           });
-          
+
           // Trả về thông tin user mới tạo
-          const token = await signJWT({ userId: String(userUpdated.userId ?? "") });
+          const token = await signJWT({
+            userId: String(userUpdated.userId ?? ""),
+          });
           const response = NextResponse.json({
             ...userUpdated,
             statusCode: 200,

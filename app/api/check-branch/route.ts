@@ -6,7 +6,7 @@ import { getDebugMacAddress, logDebugInfo } from "@/lib/debug-utils";
 export async function GET(req: Request, res: Response): Promise<any> {
   const originalMacAddress = getCookie("macAddress", { req, res });
   const macAddress = getDebugMacAddress(originalMacAddress);
-  
+
   logDebugInfo("check-branch", { originalMacAddress, macAddress });
 
   try {

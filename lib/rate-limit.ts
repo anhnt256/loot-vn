@@ -11,7 +11,7 @@ const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
 export async function checkRateLimit(
   identifier: string,
-  config: RateLimitConfig
+  config: RateLimitConfig,
 ): Promise<{ allowed: boolean; remaining: number; resetTime: number }> {
   const key = `${config.keyPrefix}:${identifier}`;
   const now = Date.now();
@@ -60,10 +60,10 @@ export async function checkRateLimit(
 // Rate limit cho việc tạo user mới
 export async function checkUserCreationRateLimit(
   machineName: string,
-  branch: string
+  branch: string,
 ): Promise<{ allowed: boolean; remaining: number; resetTime: number }> {
   const identifier = `${machineName}:${branch}`;
-  
+
   return checkRateLimit(identifier, {
     windowMs: 60 * 60 * 1000, // 1 hour
     maxRequests: 3, // Tối đa 3 user mới từ cùng machine trong 1 giờ
@@ -73,7 +73,7 @@ export async function checkUserCreationRateLimit(
 
 // Rate limit cho việc đăng nhập
 export async function checkLoginRateLimit(
-  machineName: string
+  machineName: string,
 ): Promise<{ allowed: boolean; remaining: number; resetTime: number }> {
   return checkRateLimit(machineName, {
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -85,10 +85,10 @@ export async function checkLoginRateLimit(
 // Kiểm tra spam từ database (persistent)
 export async function checkDatabaseRateLimit(
   branch: string,
-  windowMs: number = 60 * 60 * 1000
+  windowMs: number = 60 * 60 * 1000,
 ): Promise<{ allowed: boolean; count: number }> {
   const oneHourAgo = new Date(Date.now() - windowMs);
-  
+
   const recentUsers = await db.user.count({
     where: {
       createdAt: {
@@ -100,7 +100,7 @@ export async function checkDatabaseRateLimit(
 
   // Giới hạn 10 user mới từ cùng branch trong 1 giờ
   const maxUsersPerHour = 10;
-  
+
   return {
     allowed: recentUsers < maxUsersPerHour,
     count: recentUsers,
@@ -110,13 +110,13 @@ export async function checkDatabaseRateLimit(
 // Rate limit cho game roll
 export async function checkGameRollRateLimit(
   userId: string,
-  branch: string
+  branch: string,
 ): Promise<{ allowed: boolean; remaining: number; resetTime: number }> {
   const identifier = `${userId}:${branch}`;
-  
+
   return checkRateLimit(identifier, {
     windowMs: 10 * 1000, // 10 seconds
     maxRequests: 1, // Chỉ cho phép 1 roll mỗi 10 giây
     keyPrefix: "game_roll",
   });
-} 
+}

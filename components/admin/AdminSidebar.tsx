@@ -54,7 +54,7 @@ export function AdminSidebar() {
     if (loginType === "macAddress") {
       return item.href === "/admin";
     }
-    
+
     // For other login types, show all items except adminOnly items for non-admin users
     // You can add additional logic here if needed
     return true;

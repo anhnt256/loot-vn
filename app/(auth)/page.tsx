@@ -93,7 +93,14 @@ const Login = () => {
       toast.error("Đã có lỗi xảy ra khi tự động đăng nhập");
     }
     setPageLoading(false);
-  }, [pageLoading, machineData, existingUser, loginMutation, router, isToastShown]);
+  }, [
+    pageLoading,
+    machineData,
+    existingUser,
+    loginMutation,
+    router,
+    isToastShown,
+  ]);
 
   useEffect(() => {
     let mounted = true;

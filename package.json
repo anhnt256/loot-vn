@@ -15,7 +15,7 @@
     "generate": "npm run generate:global && npm run generate:govap && npm run generate:tanphu",
     "postinstall": "prisma generate",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "next lint --fix --quiet",
     "generate:prisma": "prisma generate && prisma generate --schema=./prisma/schemaFnet.prisma && prisma generate --schema=./prisma/schemaFnetTP.prisma"
   },
   "dependencies": {

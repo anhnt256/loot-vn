@@ -32,12 +32,12 @@ export async function GET(req: Request): Promise<any> {
     const user: any = await fnetDB.$queryRaw<any>(query);
     const originalUserId = user[0]?.userId ?? null;
     const userId = getDebugUserId(originalUserId);
-    
-    logDebugInfo("user/check-existing", { 
-      machineName, 
-      branchFromCookie, 
-      originalUserId, 
-      userId 
+
+    logDebugInfo("user/check-existing", {
+      machineName,
+      branchFromCookie,
+      originalUserId,
+      userId,
     });
 
     if (!userId) {

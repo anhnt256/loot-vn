@@ -187,7 +187,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
         },
         { checkIn: 0, game: 0, reward: 0 },
       );
-      let total = checkIn + game - reward;
+      const total = checkIn + game - reward;
       starsCalculated = total;
     }
 

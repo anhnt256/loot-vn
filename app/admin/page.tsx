@@ -431,7 +431,10 @@ const AdminDashboard = () => {
       const res = await fetch("/api/computer/update-userName", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: currentComputer.userId, userName: editedUserName }),
+        body: JSON.stringify({
+          userId: currentComputer.userId,
+          userName: editedUserName,
+        }),
       });
       const data = await res.json();
       if (data.success) {
@@ -669,48 +672,66 @@ const AdminDashboard = () => {
                 <div className="grid grid-cols-2 gap-2">
                   <div className="text-gray-400">Trạng thái:</div>
                   <div className="font-bold">
-                    {currentComputer.userType === 5
-                      ? <span className="text-purple-400">Combo</span>
-                      : Number(currentComputer.status) === EnumComputerStatus.ON.id
-                      ? <span className="text-blue-400">Đang sử dụng</span>
-                      : Number(currentComputer.status) === EnumComputerStatus.READY.id
-                      ? <span className="text-orange-400">Đang khởi động</span>
-                      : <span className="text-gray-400">Máy tắt</span>}
+                    {currentComputer.userType === 5 ? (
+                      <span className="text-purple-400">Combo</span>
+                    ) : Number(currentComputer.status) ===
+                      EnumComputerStatus.ON.id ? (
+                      <span className="text-blue-400">Đang sử dụng</span>
+                    ) : Number(currentComputer.status) ===
+                      EnumComputerStatus.READY.id ? (
+                      <span className="text-orange-400">Đang khởi động</span>
+                    ) : (
+                      <span className="text-gray-400">Máy tắt</span>
+                    )}
                   </div>
                   <div className="text-gray-400">Tên người dùng:</div>
                   <div className="flex items-center gap-2">
                     <span className="text-white font-bold">
-                      {currentComputer.userType === 5 
-                        ? "Combo" 
+                      {currentComputer.userType === 5
+                        ? "Combo"
                         : currentComputer.userName || "Chưa có người dùng"}
                     </span>
                   </div>
                   <div className="text-gray-400">ID người dùng:</div>
-                  <div className="text-orange-300 font-bold">{currentComputer.userId || "N/A"}</div>
+                  <div className="text-orange-300 font-bold">
+                    {currentComputer.userId || "N/A"}
+                  </div>
                   <div className="text-gray-400">Điểm danh:</div>
-                  <div className="text-purple-300 font-bold">{currentComputer.canClaim?.toLocaleString() || 0}</div>
+                  <div className="text-purple-300 font-bold">
+                    {currentComputer.canClaim?.toLocaleString() || 0}
+                  </div>
                   <div className="text-gray-400">Lượt quay:</div>
-                  <div className="text-blue-300 font-bold">{currentComputer.round?.toLocaleString() || 0}</div>
+                  <div className="text-blue-300 font-bold">
+                    {currentComputer.round?.toLocaleString() || 0}
+                  </div>
                   <div className="text-gray-400">Stars:</div>
-                  {currentComputer.userType === 5 || 
-                   Number(currentComputer.status) !== EnumComputerStatus.ON.id ||
-                   !currentComputer.userName || 
-                   currentComputer.userId === 0 ? (
-                    <div className="text-yellow-300 font-bold">
-                      ⭐ 0
-                    </div>
+                  {currentComputer.userType === 5 ||
+                  Number(currentComputer.status) !== EnumComputerStatus.ON.id ||
+                  !currentComputer.userName ||
+                  currentComputer.userId === 0 ? (
+                    <div className="text-yellow-300 font-bold">⭐ 0</div>
                   ) : (
-                    <div className={`font-bold ${currentComputer.stars > 100000 ? "text-red-400" : "text-yellow-300"}`}>
-                      ⭐ {Number(currentComputer.stars) ? Number(currentComputer.stars).toLocaleString() : "0"}
+                    <div
+                      className={`font-bold ${currentComputer.stars > 100000 ? "text-red-400" : "text-yellow-300"}`}
+                    >
+                      ⭐{" "}
+                      {Number(currentComputer.stars)
+                        ? Number(currentComputer.stars).toLocaleString()
+                        : "0"}
                     </div>
                   )}
                   <div className="text-gray-400">Magic Stone:</div>
                   <div className="text-green-400 font-bold">
-                    💎 {currentComputer.userType === 5 || 
-                        Number(currentComputer.status) !== EnumComputerStatus.ON.id ||
-                        !currentComputer.userName || 
-                        currentComputer.userId === 0 ? "0" : 
-                        (Number(currentComputer.magicStone) ? Number(currentComputer.magicStone).toLocaleString() : "0")}
+                    💎{" "}
+                    {currentComputer.userType === 5 ||
+                    Number(currentComputer.status) !==
+                      EnumComputerStatus.ON.id ||
+                    !currentComputer.userName ||
+                    currentComputer.userId === 0
+                      ? "0"
+                      : Number(currentComputer.magicStone)
+                        ? Number(currentComputer.magicStone).toLocaleString()
+                        : "0"}
                   </div>
                 </div>
               </div>
@@ -1440,9 +1461,11 @@ const AdminDashboard = () => {
                           onClick={async () => {
                             try {
                               const baseUserId = migrationInfo.userId;
-                              const baseUserName = migrationInfo.userName || searchUsers[0]?.userName;
+                              const baseUserName =
+                                migrationInfo.userName ||
+                                searchUsers[0]?.userName;
                               const baseStars = migrationInfo.starsCalculated;
-                              
+
                               const resetUser = {
                                 userId: baseUserId,
                                 userName: baseUserName,
@@ -1461,17 +1484,21 @@ const AdminDashboard = () => {
                               const data = await res.json();
                               if (data.success) {
                                 message.success(
-                                  `Đã reset tài khoản thành công! Đã xóa ${data.deletedCount} tài khoản cũ và tạo tài khoản mới.`
+                                  `Đã reset tài khoản thành công! Đã xóa ${data.deletedCount} tài khoản cũ và tạo tài khoản mới.`,
                                 );
                                 setShowCheckLoginModal(false);
                                 setSearchUsers([]);
                                 setMigrationInfo(null);
                                 await refetch();
                               } else {
-                                message.error(data.message || "Có lỗi xảy ra khi reset");
+                                message.error(
+                                  data.message || "Có lỗi xảy ra khi reset",
+                                );
                               }
                             } catch (e: any) {
-                              message.error(e.message || "Có lỗi xảy ra khi reset");
+                              message.error(
+                                e.message || "Có lỗi xảy ra khi reset",
+                              );
                             }
                           }}
                         >

@@ -60,8 +60,8 @@ const Game = () => {
       setIsRolling(false);
       toast.error(
         error?.message ||
-        error ||
-        "Không thể thực hiện quay. Vui lòng thử lại hoặc liên hệ admin."
+          error ||
+          "Không thể thực hiện quay. Vui lòng thử lại hoặc liên hệ admin.",
       );
     },
   });
@@ -84,7 +84,7 @@ const Game = () => {
 
     setShowMeteor(true);
     setIsAnimating(true);
-    
+
     // Cập nhật magicStone sau khi quay
     queryClient.invalidateQueries({ queryKey: ["calc-round"] });
     queryClient.invalidateQueries({ queryKey: ["user", currentUserId] });
@@ -107,7 +107,7 @@ const Game = () => {
     return (
       <button
         className={`bg-white rounded-full p-2 shadow-lg flex flex-col items-center w-48 ${
-          isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
+          isDisabled ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"
         }`}
         onClick={() => handleRoll(count)}
         disabled={isDisabled}

@@ -4,7 +4,11 @@ import dayjs from "@/lib/dayjs";
 import { useAction } from "@/hooks/use-action";
 import { createCheckInResult } from "@/actions/create-checkInResult";
 import { toast } from "sonner";
-import { useUserInfo, useUserCheckIn, useCheckInItem } from "@/hooks/use-user-info";
+import {
+  useUserInfo,
+  useUserCheckIn,
+  useCheckInItem,
+} from "@/hooks/use-user-info";
 import { UserStarHistory } from "@/prisma/generated/prisma-client";
 import isEmpty from "lodash/isEmpty";
 import { StarFilled, StarOutlined } from "@ant-design/icons";
@@ -28,7 +32,9 @@ const CheckInCard = () => {
     const date = dayjs().tz("Asia/Ho_Chi_Minh").format("YYYY-MM-DD");
 
     const currentResults = userCheckIn?.filter((item: UserStarHistory) => {
-      const itemDate = dayjs(item.createdAt).tz("Asia/Ho_Chi_Minh").format("YYYY-MM-DD");
+      const itemDate = dayjs(item.createdAt)
+        .tz("Asia/Ho_Chi_Minh")
+        .format("YYYY-MM-DD");
       return itemDate === date;
     });
 
@@ -41,10 +47,10 @@ const CheckInCard = () => {
     }, 0);
 
     // Debug logging for claim calculation
-    console.log('Claim Debug:', {
+    console.log("Claim Debug:", {
       date,
       currentResults,
-      totalClaim
+      totalClaim,
     });
 
     return totalClaim;
@@ -57,13 +63,13 @@ const CheckInCard = () => {
   });
 
   // Debug logging for data loading
-  console.log('CheckIn Data Debug:', {
+  console.log("CheckIn Data Debug:", {
     userId,
     branch,
     totalHours,
     checkInItem,
     userCheckIn,
-    userData
+    userData,
   });
 
   const { execute: executeCheckIn } = useAction(createCheckInResult, {
@@ -115,14 +121,14 @@ const CheckInCard = () => {
       setRewards(calculatedRewards);
 
       // Debug logging
-      console.log('CheckIn Debug:', {
+      console.log("CheckIn Debug:", {
         currentTime,
         today,
         todayCheckIn,
         starsPerHour,
         calculatedRewards,
         claim,
-        canClaim: calculatedRewards - claim
+        canClaim: calculatedRewards - claim,
       });
     }
   }, [totalHours, checkInItem, claim]);

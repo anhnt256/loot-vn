@@ -142,7 +142,14 @@ export function WishResult({ isModalOpen, closeModal }: WishResultProps) {
             children: (
               <Table<TableItem>
                 loading={isLoadingGame}
-                dataSource={Array.isArray(gameResults) ? gameResults.map((item, idx) => ({ ...item, key: item.id ?? idx })) : []}
+                dataSource={
+                  Array.isArray(gameResults)
+                    ? gameResults.map((item, idx) => ({
+                        ...item,
+                        key: item.id ?? idx,
+                      }))
+                    : []
+                }
                 columns={columns}
                 className="[&_td]:!text-[11px] [&_th]:!text-[11px]"
                 pagination={{
@@ -160,7 +167,14 @@ export function WishResult({ isModalOpen, closeModal }: WishResultProps) {
             children: (
               <Table<TableItem>
                 loading={isLoadingServer}
-                dataSource={Array.isArray(serverResults) ? serverResults.map((item, idx) => ({ ...item, key: item.id ?? idx })) : []}
+                dataSource={
+                  Array.isArray(serverResults)
+                    ? serverResults.map((item, idx) => ({
+                        ...item,
+                        key: item.id ?? idx,
+                      }))
+                    : []
+                }
                 columns={columns}
                 className="[&_td]:!text-[11px] [&_th]:!text-[11px]"
                 pagination={{

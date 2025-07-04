@@ -74,10 +74,11 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
 
   // Kiểm tra xem có hiển thị Gateway Bonus không
   useEffect(() => {
-    const claimDeadline = process.env.NEXT_PUBLIC_GATEWAY_BONUS_DEADLINE || "2025-07-15";
+    const claimDeadline =
+      process.env.NEXT_PUBLIC_GATEWAY_BONUS_DEADLINE || "2025-07-15";
     const now = dayjs();
     const deadline = dayjs(claimDeadline);
-    
+
     if (now.isAfter(deadline)) {
       setShowGatewayBonus(false);
     }
@@ -138,11 +139,19 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
                 "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center gap-2 font-bold",
                 pathname === "/gateway-bonus"
                   ? "bg-gradient-to-r from-yellow-400/80 to-pink-400/80 text-white scale-105 shadow-lg"
-                  : "text-yellow-400 animate-pulse"
+                  : "text-yellow-400 animate-pulse",
               )}
               href="/gateway-bonus"
             >
-              <span className={pathname === "/gateway-bonus" ? "text-2xl" : "text-2xl animate-bounce"}>🎁</span>
+              <span
+                className={
+                  pathname === "/gateway-bonus"
+                    ? "text-2xl"
+                    : "text-2xl animate-bounce"
+                }
+              >
+                🎁
+              </span>
               Gateway Bonus
               {pathname !== "/gateway-bonus" && (
                 <span className="ml-2 animate-ping inline-flex h-3 w-3 rounded-full bg-yellow-400 opacity-75"></span>

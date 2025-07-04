@@ -7,30 +7,36 @@ export async function GET(request: NextRequest) {
   try {
     // Lấy userId từ query params
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-    
+    const userId = searchParams.get("userId");
+
     if (!userId) {
-      return NextResponse.json({ 
-        error: "Missing userId",
-        message: "Vui lòng cung cấp userId"
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: "Missing userId",
+          message: "Vui lòng cung cấp userId",
+        },
+        { status: 400 },
+      );
     }
 
     // Lấy branch từ cookie
-    const branch = request.cookies.get('branch')?.value;
+    const branch = request.cookies.get("branch")?.value;
     if (!branch) {
-      return NextResponse.json({ 
-        error: "Missing branch",
-        message: "Không tìm thấy thông tin chi nhánh"
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: "Missing branch",
+          message: "Không tìm thấy thông tin chi nhánh",
+        },
+        { status: 400 },
+      );
     }
 
     // Lấy ngày hết hạn từ env
     const claimDeadline = process.env.GATEWAY_BONUS_DEADLINE || "2025-07-15";
     const accountCreationDeadline = "2025-07-05";
-    
+
     const now = dayjs();
-    const deadline = dayjs(claimDeadline).endOf('day');
+    const deadline = dayjs(claimDeadline).endOf("day");
     const accountDeadline = dayjs(accountCreationDeadline);
 
     // Kiểm tra xem đã qua ngày hết hạn chưa
@@ -38,23 +44,26 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         available: false,
         reason: "expired",
-        message: "Chương trình Gateway Bonus đã kết thúc"
+        message: "Chương trình Gateway Bonus đã kết thúc",
       });
     }
 
     // Tìm user theo userId và branch
     const user = await db.user.findFirst({
-      where: { 
+      where: {
         userId: parseInt(userId),
-        branch: branch
+        branch: branch,
       },
     });
 
     if (!user) {
-      return NextResponse.json({ 
-        error: "User not found",
-        message: "Không tìm thấy người dùng"
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          error: "User not found",
+          message: "Không tìm thấy người dùng",
+        },
+        { status: 404 },
+      );
     }
 
     // Kiểm tra ngày tạo tài khoản
@@ -63,7 +72,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         available: false,
         reason: "new_account",
-        message: "Chỉ áp dụng cho tài khoản tạo trước ngày 05/07/2025"
+        message: "Chỉ áp dụng cho tài khoản tạo trước ngày 05/07/2025",
       });
     }
 
@@ -79,7 +88,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         available: false,
         reason: "already_claimed",
-        message: "Bạn đã nhận Gateway Bonus rồi"
+        message: "Bạn đã nhận Gateway Bonus rồi",
       });
     }
 
@@ -87,9 +96,8 @@ export async function GET(request: NextRequest) {
       available: true,
       deadline: claimDeadline,
       accountDeadline: accountCreationDeadline,
-      message: "Bạn có thể nhận 3 lượt quay miễn phí"
+      message: "Bạn có thể nhận 3 lượt quay miễn phí",
     });
-
   } catch (error) {
     console.error("Gateway Bonus GET error:", error);
     return NextResponse.json(
@@ -105,59 +113,74 @@ export async function POST(request: NextRequest) {
     // Lấy userId từ request body
     const body = await request.json();
     const { userId } = body;
-    
+
     if (!userId) {
-      return NextResponse.json({ 
-        error: "Missing userId",
-        message: "Vui lòng cung cấp userId"
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: "Missing userId",
+          message: "Vui lòng cung cấp userId",
+        },
+        { status: 400 },
+      );
     }
 
     // Lấy branch từ cookie
-    const branch = request.cookies.get('branch')?.value;
+    const branch = request.cookies.get("branch")?.value;
     if (!branch) {
-      return NextResponse.json({ 
-        error: "Missing branch",
-        message: "Không tìm thấy thông tin chi nhánh"
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: "Missing branch",
+          message: "Không tìm thấy thông tin chi nhánh",
+        },
+        { status: 400 },
+      );
     }
 
     // Lấy ngày hết hạn từ env
     const claimDeadline = process.env.GATEWAY_BONUS_DEADLINE || "2025-07-15";
     const accountCreationDeadline = "2025-07-05";
-    
+
     const now = dayjs();
-    const deadline = dayjs(claimDeadline).endOf('day');
+    const deadline = dayjs(claimDeadline).endOf("day");
     const accountDeadline = dayjs(accountCreationDeadline);
 
     // Kiểm tra xem đã qua ngày hết hạn chưa
     if (now.isAfter(deadline)) {
-      return NextResponse.json({
-        error: "Chương trình Gateway Bonus đã kết thúc"
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: "Chương trình Gateway Bonus đã kết thúc",
+        },
+        { status: 400 },
+      );
     }
 
     // Tìm user theo userId và branch
     const user = await db.user.findFirst({
-      where: { 
+      where: {
         userId: parseInt(userId),
-        branch: branch
+        branch: branch,
       },
     });
 
     if (!user) {
-      return NextResponse.json({ 
-        error: "User not found",
-        message: "Không tìm thấy người dùng"
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          error: "User not found",
+          message: "Không tìm thấy người dùng",
+        },
+        { status: 404 },
+      );
     }
 
     // Kiểm tra ngày tạo tài khoản
     const userCreatedAt = dayjs(user.createdAt);
     if (userCreatedAt.isAfter(accountDeadline)) {
-      return NextResponse.json({
-        error: "Chỉ áp dụng cho tài khoản tạo trước ngày 05/07/2025"
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: "Chỉ áp dụng cho tài khoản tạo trước ngày 05/07/2025",
+        },
+        { status: 400 },
+      );
     }
 
     // Kiểm tra xem user đã claim chưa
@@ -169,13 +192,16 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingClaim) {
-      return NextResponse.json({
-        error: "Bạn đã nhận Gateway Bonus rồi"
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: "Bạn đã nhận Gateway Bonus rồi",
+        },
+        { status: 400 },
+      );
     }
 
     // Tính ngày hết hạn là 1 tuần từ ngày hiện tại
-    const expirationDate = now.add(1, 'week').toDate();
+    const expirationDate = now.add(1, "week").toDate();
 
     // Tạo gift round mới
     const giftRound = await db.giftRound.create({
@@ -205,9 +231,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: "Nhận Gateway Bonus thành công!",
-      giftRound
+      giftRound,
     });
-
   } catch (error) {
     console.error("Gateway Bonus POST error:", error);
     return NextResponse.json(
@@ -215,4 +240,4 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-} 
+}

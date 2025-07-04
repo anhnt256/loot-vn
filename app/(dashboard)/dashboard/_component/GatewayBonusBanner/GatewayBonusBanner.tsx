@@ -23,7 +23,9 @@ export function GatewayBonusBanner() {
     try {
       setIsLoading(true);
       if (!currentUserId) return;
-      const response = await fetch(`/api/gateway-bonus?userId=${currentUserId}`);
+      const response = await fetch(
+        `/api/gateway-bonus?userId=${currentUserId}`,
+      );
       const data = await response.json();
       if (!response.ok) {
         if (response.status === 401) {
@@ -47,7 +49,8 @@ export function GatewayBonusBanner() {
   }, [currentUserId]);
 
   useEffect(() => {
-    const claimDeadline = process.env.NEXT_PUBLIC_GATEWAY_BONUS_DEADLINE || "2025-07-15";
+    const claimDeadline =
+      process.env.NEXT_PUBLIC_GATEWAY_BONUS_DEADLINE || "2025-07-15";
     const now = dayjs();
     const deadline = dayjs(claimDeadline);
     if (now.isAfter(deadline)) {
@@ -75,7 +78,11 @@ export function GatewayBonusBanner() {
               Chỉ áp dụng cho tài khoản tạo trước ngày 05/07/2025
             </p>
             <p className="text-yellow-300 text-sm font-semibold">
-              ⚠️ HẠN CUỐI: {status.deadline ? dayjs(status.deadline).format("DD/MM/YYYY") : "15/07/2025"} - Không claim sẽ mất phần thưởng!
+              ⚠️ HẠN CUỐI:{" "}
+              {status.deadline
+                ? dayjs(status.deadline).format("DD/MM/YYYY")
+                : "15/07/2025"}{" "}
+              - Không claim sẽ mất phần thưởng!
             </p>
           </div>
         </div>
@@ -96,4 +103,4 @@ export function GatewayBonusBanner() {
       </div>
     </div>
   );
-} 
+}

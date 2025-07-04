@@ -203,8 +203,8 @@ export async function GET() {
               userId: { in: activeUserIds.map((id) => parseInt(id, 10)) },
               isUsed: false,
               expiredAt: {
-                gte: dayjs().startOf('week').toDate(),
-                lte: dayjs().endOf('week').toDate(),
+                gte: dayjs().startOf("week").toDate(),
+                lte: dayjs().endOf("week").toDate(),
               },
             },
           })
@@ -218,8 +218,8 @@ export async function GET() {
               branch: branchFromCookie,
               type: "GAME",
               createdAt: {
-                gte: dayjs().startOf('week').toDate(),
-                lte: dayjs().endOf('week').toDate(),
+                gte: dayjs().startOf("week").toDate(),
+                lte: dayjs().endOf("week").toDate(),
               },
             },
           })
@@ -243,7 +243,6 @@ export async function GET() {
       userClaimsMap.get(claim.userId).push(claim);
     });
 
-    
     const userDataMap = new Map();
     userData.forEach((user) => {
       userDataMap.set(user.userId, user);
@@ -268,7 +267,10 @@ export async function GET() {
       if (!userGameRoundsMap.has(round.userId)) {
         userGameRoundsMap.set(round.userId, 0);
       }
-      userGameRoundsMap.set(round.userId, userGameRoundsMap.get(round.userId) + 1);
+      userGameRoundsMap.set(
+        round.userId,
+        userGameRoundsMap.get(round.userId) + 1,
+      );
     });
 
     // Query real-time check in items
