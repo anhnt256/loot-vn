@@ -19,14 +19,8 @@ export async function GET(
 
   const { currentUserId } = params;
 
-  const startDate = dayjs()
-    .tz("Asia/Ho_Chi_Minh")
-    .startOf("day")
-    .format("YYYY-MM-DDTHH:mm:ss.SSSZ");
-  const endDate = dayjs()
-    .tz("Asia/Ho_Chi_Minh")
-    .endOf("day")
-    .format("YYYY-MM-DDTHH:mm:ss.SSSZ");
+  const startDate = dayjs().tz("Asia/Ho_Chi_Minh").startOf("day").toISOString();
+  const endDate = dayjs().tz("Asia/Ho_Chi_Minh").endOf("day").toISOString();
 
   const url = `/accounts/${currentUserId}/balance_changes/?from_date=${encodeURIComponent(
     startDate,

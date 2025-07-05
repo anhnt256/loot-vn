@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { calculateLevel } from "@/lib/battle-pass-utils";
+import { getCurrentDateVN } from "@/lib/timezone-utils";
 
 export async function POST(request: Request) {
   try {
@@ -26,10 +27,10 @@ export async function POST(request: Request) {
       where: {
         isActive: true,
         startDate: {
-          lte: new Date(),
+          lte: getCurrentDateVN(),
         },
         endDate: {
-          gte: new Date(),
+          gte: getCurrentDateVN(),
         },
       },
     });

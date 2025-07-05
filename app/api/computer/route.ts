@@ -8,6 +8,13 @@ import {
   calculateDailyUsageMinutes,
   getCurrentDayOfWeekVN,
 } from "@/lib/battle-pass-utils";
+import {
+  getStartOfDayVNISO,
+  getCurrentDateVN,
+  getStartOfWeekDateVN,
+  getEndOfWeekDateVN,
+  convertToVNTimeISO,
+} from "@/lib/timezone-utils";
 
 // Hàm chuyển BigInt về string để tránh lỗi serialize
 function convertBigIntToString(obj: any): any {
@@ -33,8 +40,8 @@ export async function GET() {
   const cookieStore = await cookies();
   const branchFromCookie = cookieStore.get("branch")?.value;
 
-  const startOfDayVN = dayjs().startOf("day").toISOString();
-  const today = new Date();
+  const startOfDayVN = getStartOfDayVNISO();
+  const today = getCurrentDateVN();
   const yyyy = today.getFullYear();
   const mm = String(today.getMonth() + 1).padStart(2, "0");
   const dd = String(today.getDate()).padStart(2, "0");
@@ -202,7 +209,7 @@ export async function GET() {
             where: {
               userId: { in: activeUserIds.map((id) => parseInt(id, 10)) },
               expiredAt: {
-                gte: new Date(),
+                gte: getCurrentDateVN(),
               },
             },
           })
@@ -216,8 +223,8 @@ export async function GET() {
               branch: branchFromCookie,
               type: "GAME",
               createdAt: {
-                gte: dayjs().startOf("week").toDate(),
-                lte: dayjs().endOf("week").toDate(),
+                gte: getStartOfWeekDateVN(),
+                lte: getEndOfWeekDateVN(),
               },
             },
           })
@@ -362,14 +369,14 @@ export async function GET() {
               ? {
                   ...deviceIdToHistories[device.id].REPORT,
                   createdAt: deviceIdToHistories[device.id].REPORT.createdAt
-                    ? new Date(
+                    ? convertToVNTimeISO(
                         deviceIdToHistories[device.id].REPORT.createdAt,
-                      ).toISOString()
+                      )
                     : null,
                   updatedAt: deviceIdToHistories[device.id].REPORT.updatedAt
-                    ? new Date(
+                    ? convertToVNTimeISO(
                         deviceIdToHistories[device.id].REPORT.updatedAt,
-                      ).toISOString()
+                      )
                     : null,
                 }
               : null,
@@ -377,14 +384,14 @@ export async function GET() {
               ? {
                   ...deviceIdToHistories[device.id].REPAIR,
                   createdAt: deviceIdToHistories[device.id].REPAIR.createdAt
-                    ? new Date(
+                    ? convertToVNTimeISO(
                         deviceIdToHistories[device.id].REPAIR.createdAt,
-                      ).toISOString()
+                      )
                     : null,
                   updatedAt: deviceIdToHistories[device.id].REPAIR.updatedAt
-                    ? new Date(
+                    ? convertToVNTimeISO(
                         deviceIdToHistories[device.id].REPAIR.updatedAt,
-                      ).toISOString()
+                      )
                     : null,
                 }
               : null,

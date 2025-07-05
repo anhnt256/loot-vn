@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getCurrentDateVN } from "@/lib/timezone-utils";
 
 export async function POST(
   request: Request,
@@ -27,10 +28,10 @@ export async function POST(
       where: {
         isActive: true,
         startDate: {
-          lte: new Date(),
+          lte: getCurrentDateVN(),
         },
         endDate: {
-          gte: new Date(),
+          gte: getCurrentDateVN(),
         },
       },
       include: {
@@ -46,7 +47,7 @@ export async function POST(
     }
 
     // Double check - ensure season hasn't ended
-    if (new Date() >= new Date(currentSeason.endDate)) {
+    if (getCurrentDateVN() >= new Date(currentSeason.endDate)) {
       return NextResponse.json(
         { error: "Season has ended - cannot claim rewards" },
         { status: 403 },

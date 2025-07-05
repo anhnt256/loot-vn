@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
 import { Prisma } from "@/prisma/generated/prisma-client";
+import { getCurrentDateVN } from "@/lib/timezone-utils";
 
 export async function GET(
   req: Request,
@@ -46,9 +47,9 @@ export async function GET(
     // Get active gift rounds
     const activeGiftRounds = await db.giftRound.findMany({
       where: {
-        userId: user.id,
+        userId: Number(userId),
         isUsed: false,
-        OR: [{ expiredAt: null }, { expiredAt: { gt: new Date() } }],
+        OR: [{ expiredAt: null }, { expiredAt: { gt: getCurrentDateVN() } }],
       },
     });
 
@@ -57,6 +58,8 @@ export async function GET(
       (sum, gr) => sum + gr.amount,
       0,
     );
+
+    console.log("totalGiftRounds", totalGiftRounds);
 
     // Số lượt đã sử dụng
     const query = Prisma.sql`

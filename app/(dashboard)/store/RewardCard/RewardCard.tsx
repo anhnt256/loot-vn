@@ -8,6 +8,7 @@ import { createUserRewardMap } from "@/actions/create-user-reward-map";
 import { getCookie } from "cookies-next";
 import { BRANCH } from "@/constants/enum.constant";
 import dayjs from "@/lib/dayjs";
+import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
 
 interface CardProps {
   data: any;
@@ -62,10 +63,7 @@ const RewardCard: React.FC<CardProps> = ({ data }) => {
             branch,
             oldStars: stars,
             newStars,
-            createdAt: dayjs()
-              .tz("Asia/Ho_Chi_Minh")
-              .add(7, "hours")
-              .toISOString(),
+            createdAt: getCurrentTimeVNISO(),
           });
           window.location.reload();
         } else {

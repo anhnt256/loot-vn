@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getCurrentDateVN } from "@/lib/timezone-utils";
 
 export async function GET() {
   try {
@@ -8,10 +9,10 @@ export async function GET() {
       where: {
         isActive: true,
         startDate: {
-          lte: new Date(),
+          lte: getCurrentDateVN(),
         },
         endDate: {
-          gte: new Date(),
+          gte: getCurrentDateVN(),
         },
       },
       include: {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
 import { cookies } from "next/headers";
+import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
 
 export async function POST(req: NextRequest) {
   try {
@@ -40,8 +41,8 @@ export async function POST(req: NextRequest) {
         rankId: user.rankId || 1, // Default rankId
         magicStone: user.magicStone || 0,
         totalPayment: user.totalPayment || 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: getCurrentTimeVNISO(),
+        updatedAt: getCurrentTimeVNISO(),
       },
     });
 

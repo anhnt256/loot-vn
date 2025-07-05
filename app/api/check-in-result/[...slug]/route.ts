@@ -2,14 +2,14 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import dayjs from "@/lib/dayjs";
+import { getStartOfMonthVNISO, getEndOfMonthVNISO } from "@/lib/timezone-utils";
 
 export async function GET(
   req: Request,
   { params }: { params: { slug: string[] } },
 ) {
-  const now = dayjs();
-  const startOfMonth = now.startOf("month");
-  const endOfMonth = now.endOf("month");
+  const startOfMonth = getStartOfMonthVNISO();
+  const endOfMonth = getEndOfMonthVNISO();
 
   const [userId, branch] = params.slug;
 
@@ -20,8 +20,8 @@ export async function GET(
         branch,
         type: "CHECK_IN",
         createdAt: {
-          gte: startOfMonth.toISOString(),
-          lte: endOfMonth.toISOString(),
+          gte: startOfMonth,
+          lte: endOfMonth,
         },
       },
       orderBy: {

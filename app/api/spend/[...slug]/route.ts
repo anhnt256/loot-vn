@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getFnetDB } from "@/lib/db";
 import { calculateDailyUsageHours } from "@/lib/battle-pass-utils";
+import { getCurrentDateVN } from "@/lib/timezone-utils";
 
 export async function GET(
   req: Request,
@@ -15,7 +16,7 @@ export async function GET(
 
     if (userId) {
       // Lấy session có EnterDate = hôm nay hoặc EndDate = hôm nay
-      const today = new Date();
+      const today = getCurrentDateVN();
       const yyyy = today.getFullYear();
       const mm = String(today.getMonth() + 1).padStart(2, "0");
       const dd = String(today.getDate()).padStart(2, "0");
