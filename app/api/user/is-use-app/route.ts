@@ -48,7 +48,7 @@ export async function PATCH(req: NextRequest) {
         branch,
         "- Creating new user",
       );
-      
+
       // Tạo user mới nếu chưa tồn tại
       existingUser = await db.user.create({
         data: {
@@ -62,7 +62,7 @@ export async function PATCH(req: NextRequest) {
           note: "",
         },
       });
-      
+
       console.log("Debug - Created new user:", existingUser);
     } else {
       console.log("Debug - Found existing user:", existingUser);
@@ -86,4 +86,4 @@ export async function PATCH(req: NextRequest) {
       { status: 500 },
     );
   }
-} 
+}

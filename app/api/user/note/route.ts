@@ -23,14 +23,7 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    console.log(
-      "Debug - userId:",
-      userId,
-      "branch:",
-      branch,
-      "note:",
-      note,
-    );
+    console.log("Debug - userId:", userId, "branch:", branch, "note:", note);
 
     // Kiểm tra user có tồn tại không trước khi update
     let existingUser = await db.user.findFirst({
@@ -48,7 +41,7 @@ export async function PATCH(req: NextRequest) {
         branch,
         "- Creating new user",
       );
-      
+
       // Tạo user mới nếu chưa tồn tại
       existingUser = await db.user.create({
         data: {
@@ -62,7 +55,7 @@ export async function PATCH(req: NextRequest) {
           note: note,
         },
       });
-      
+
       console.log("Debug - Created new user:", existingUser);
     } else {
       console.log("Debug - Found existing user:", existingUser);
@@ -86,4 +79,4 @@ export async function PATCH(req: NextRequest) {
       { status: 500 },
     );
   }
-} 
+}

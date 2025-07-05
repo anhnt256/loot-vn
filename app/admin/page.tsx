@@ -692,13 +692,15 @@ const AdminDashboard = () => {
                       </>
                     )}
 
-                    {!isEmpty(userName) && userId !== 0 && isUseApp === true && (
-                      <div
-                        className={`text-[9px] truncate font-bold ${stars > 100000 ? "text-red-400" : "text-yellow-300"}`}
-                      >
-                        {`⭐ ${Number(stars) ? Number(stars).toLocaleString() : "0"}`}
-                      </div>
-                    )}
+                    {!isEmpty(userName) &&
+                      userId !== 0 &&
+                      isUseApp === true && (
+                        <div
+                          className={`text-[9px] truncate font-bold ${stars > 100000 ? "text-red-400" : "text-yellow-300"}`}
+                        >
+                          {`⭐ ${Number(stars) ? Number(stars).toLocaleString() : "0"}`}
+                        </div>
+                      )}
                   </div>
 
                   {/* Device Status Icons */}
@@ -811,12 +813,13 @@ const AdminDashboard = () => {
                           </div>
                           <div className="text-gray-400 flex items-center gap-2">
                             Tên người dùng:
-                            {currentComputer.userType !== 5 && currentComputer.isUseApp === false && (
-                              <FaInfoCircle 
-                                className="text-blue-400 cursor-help" 
-                                title="Bạn cần bật 'Quan tâm App' để có thể đổi tên người dùng"
-                              />
-                            )}
+                            {currentComputer.userType !== 5 &&
+                              currentComputer.isUseApp === false && (
+                                <FaInfoCircle
+                                  className="text-blue-400 cursor-help"
+                                  title="Bạn cần bật 'Quan tâm App' để có thể đổi tên người dùng"
+                                />
+                              )}
                           </div>
                           <div className="flex items-center gap-2">
                             {isEditingUserName ? (
@@ -848,34 +851,37 @@ const AdminDashboard = () => {
                               </>
                             ) : (
                               <>
-                                <span className={`font-bold ${
-                                  currentComputer.userType === 5
-                                    ? "text-white"
-                                    : currentComputer.isUseApp === false
-                                    ? "text-red-500"
-                                    : "text-white"
-                                }`}>
+                                <span
+                                  className={`font-bold ${
+                                    currentComputer.userType === 5
+                                      ? "text-white"
+                                      : currentComputer.isUseApp === false
+                                        ? "text-red-500"
+                                        : "text-white"
+                                  }`}
+                                >
                                   {currentComputer.userType === 5
                                     ? "Combo"
                                     : currentComputer.isUseApp === false
-                                    ? "Không sử dụng App"
-                                    : currentComputer.userName ||
-                                      "Chưa có người dùng"}
+                                      ? "Không sử dụng App"
+                                      : currentComputer.userName ||
+                                        "Chưa có người dùng"}
                                 </span>
-                                {currentComputer.userType !== 5 && currentComputer.isUseApp !== false && (
-                                  <button
-                                    className="text-gray-400 hover:text-blue-400 ml-1"
-                                    onClick={() => {
-                                      setIsEditingUserName(true);
-                                      setEditedUserName(
-                                        currentComputer.userName || "",
-                                      );
-                                    }}
-                                    title="Sửa tên người dùng"
-                                  >
-                                    <FaPencilAlt />
-                                  </button>
-                                )}
+                                {currentComputer.userType !== 5 &&
+                                  currentComputer.isUseApp !== false && (
+                                    <button
+                                      className="text-gray-400 hover:text-blue-400 ml-1"
+                                      onClick={() => {
+                                        setIsEditingUserName(true);
+                                        setEditedUserName(
+                                          currentComputer.userName || "",
+                                        );
+                                      }}
+                                      title="Sửa tên người dùng"
+                                    >
+                                      <FaPencilAlt />
+                                    </button>
+                                  )}
                               </>
                             )}
                           </div>
@@ -961,7 +967,9 @@ const AdminDashboard = () => {
                                   <button
                                     className="ml-2 text-blue-400 underline text-xs font-normal"
                                     onClick={() => {
-                                      setNoteModalContent(currentComputer.note || "");
+                                      setNoteModalContent(
+                                        currentComputer.note || "",
+                                      );
                                       setEditedNote(currentComputer.note || "");
                                       setShowNoteModal(true);
                                     }}
@@ -1968,17 +1976,13 @@ const AdminDashboard = () => {
           <textarea
             className="w-full bg-gray-800 text-white border border-gray-500 rounded px-2 py-1 focus:outline-none resize-none"
             value={editedNote}
-            onChange={e => setEditedNote(e.target.value)}
+            onChange={(e) => setEditedNote(e.target.value)}
             rows={10}
             placeholder="Nhập ghi chú..."
             style={{ minHeight: 120 }}
           />
           <div className="flex justify-end gap-2">
-            <Button
-              onClick={() => setShowNoteModal(false)}
-            >
-              Đóng
-            </Button>
+            <Button onClick={() => setShowNoteModal(false)}>Đóng</Button>
             <Button
               type="primary"
               className="bg-blue-600 hover:bg-blue-700"
