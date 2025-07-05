@@ -108,7 +108,6 @@ model User {
   totalPayment  Float?          @db.Float
   UserRewardMap UserRewardMap[]
   GameResults   GameResult[]
-  GiftRounds    GiftRound[]
   premiumOrders BattlePassPremiumOrder[]
 }
 
@@ -221,13 +220,11 @@ model GiftRound {
   amount    Int
   reason    String    @db.VarChar(255)
   staffId   Int
+  branch    String    @default("GO_VAP")
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now())
   expiredAt DateTime?
   isUsed    Boolean   @default(false)
-  user      User      @relation(fields: [userId], references: [id])
-
-  @@index([userId])
 }
 
 model Device {

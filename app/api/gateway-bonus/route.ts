@@ -212,11 +212,9 @@ export async function POST(request: NextRequest) {
         amount: 3, // 3 lượt quay miễn phí
         reason: "Gateway Bonus",
         staffId: 0, // System
+        branch: branch,
         expiredAt: expirationDate, // Hết hạn sau 1 tuần
         isUsed: false,
-      },
-      include: {
-        user: true,
       },
     });
 
