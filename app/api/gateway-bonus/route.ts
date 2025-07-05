@@ -222,7 +222,7 @@ export async function POST(request: NextRequest) {
 
     // Cập nhật magicStone của user
     await db.user.update({
-      where: { userId: parseInt(userId) },
+      where: { id: user.id },
       data: {
         magicStone: {
           increment: 3,
