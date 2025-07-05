@@ -924,7 +924,7 @@ const AdminDashboard = () => {
                   }}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
-                  Cập nhật trạng thái thiết bị
+                  Sửa chữa
                 </Button>
               </div>
             </div>

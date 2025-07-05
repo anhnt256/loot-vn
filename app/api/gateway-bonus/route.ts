@@ -56,6 +56,8 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    console.log(user);
+
     if (!user) {
       return NextResponse.json(
         {
@@ -79,7 +81,7 @@ export async function GET(request: NextRequest) {
     // Kiểm tra xem user đã claim chưa
     const existingClaim = await db.giftRound.findFirst({
       where: {
-        userId: user.id,
+        userId: parseInt(userId),
         reason: "Gateway Bonus",
       },
     });

@@ -196,15 +196,13 @@ export async function GET() {
           })()
         : [],
 
-      // 5. Tất cả gift rounds trong tuần hiện tại
+      // 5. Tất cả gift rounds chưa hết hạn
       activeUserIds.length > 0
         ? db.giftRound.findMany({
             where: {
               userId: { in: activeUserIds.map((id) => parseInt(id, 10)) },
-              isUsed: false,
               expiredAt: {
-                gte: dayjs().startOf("week").toDate(),
-                lte: dayjs().endOf("week").toDate(),
+                gte: new Date(),
               },
             },
           })
@@ -322,42 +320,17 @@ export async function GET() {
         const spendPerRound = Number(process.env.NEXT_PUBLIC_SPEND_PER_ROUND);
         const round = Math.floor(userTopUp ? userTopUp / spendPerRound : 0);
 
-        // Debug cho userId = 1828
-        if (UserId === 1828) {
-          console.log("=== DEBUG ROUND CALCULATION FOR USER 1828 ===");
-          console.log("UserId:", UserId);
-          console.log("userTopUp:", userTopUp);
-          console.log("spendPerRound:", spendPerRound);
-          console.log("round from topup:", round);
-          console.log("userData?.id:", userData?.id);
-        }
-
         if (userData?.id) {
-          const giftRounds = userGiftRoundsMap.get(userData.id) || [];
+          const giftRounds = userGiftRoundsMap.get(UserId) || [];
           const totalGiftRounds = giftRounds.reduce(
             (sum: number, gr: any) => sum + gr.amount,
             0,
           );
           const usedRounds = userGameRoundsMap.get(parseInt(UserId, 10)) || 0;
           totalRound = round + totalGiftRounds - usedRounds;
-
-          // Debug cho userId = 1828
-          if (UserId === 1828) {
-            console.log("giftRounds:", giftRounds);
-            console.log("totalGiftRounds:", totalGiftRounds);
-            console.log("usedRounds:", usedRounds);
-            console.log("totalRound (final):", totalRound);
-            console.log("=== END DEBUG ===");
-          }
         } else {
           // User chưa đăng nhập, chưa sử dụng lượt quay
           totalRound = round;
-
-          // Debug cho userId = 1828
-          if (UserId === 1828) {
-            console.log("User not logged in, totalRound:", totalRound);
-            console.log("=== END DEBUG ===");
-          }
         }
       }
 
