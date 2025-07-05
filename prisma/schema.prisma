@@ -103,6 +103,8 @@ model User {
   updatedAt     DateTime        @updatedAt
   magicStone    Int             @default(0)
   branch        String
+  note          String? @db.VarChar(1000) @default("")
+  isUseApp      Boolean         @default(true)
   totalPayment  Float?          @db.Float
   UserRewardMap UserRewardMap[]
   GameResults   GameResult[]

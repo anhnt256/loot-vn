@@ -345,6 +345,8 @@ export async function GET() {
         round: totalRound,
         stars: userData?.stars || 0,
         magicStone: userData?.magicStone || 0,
+        isUseApp: userData?.isUseApp !== undefined ? userData.isUseApp : true,
+        note: userData?.note || "",
         devices: computer.devices.map((device) => ({
           id: device.id,
           monitorStatus: device.monitorStatus,

@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
     // Kiểm tra xem user đã claim chưa
     const existingClaim = await db.giftRound.findFirst({
       where: {
-        userId: user.id,
+        userId: parseInt(userId),
         reason: "Gateway Bonus",
       },
     });
@@ -208,7 +208,7 @@ export async function POST(request: NextRequest) {
     // Tạo gift round mới
     const giftRound = await db.giftRound.create({
       data: {
-        userId: user.id,
+        userId: parseInt(userId),
         amount: 3, // 3 lượt quay miễn phí
         reason: "Gateway Bonus",
         staffId: 0, // System
@@ -222,7 +222,7 @@ export async function POST(request: NextRequest) {
 
     // Cập nhật magicStone của user
     await db.user.update({
-      where: { id: user.id },
+      where: { userId: parseInt(userId) },
       data: {
         magicStone: {
           increment: 3,

@@ -1,0 +1,46 @@
+/* Custom tab style for admin drawer */
+.custom-admin-tabs .ant-tabs-tab {
+  background: #23272f;
+  color: #bfbfbf;
+  border-radius: 8px 8px 0 0;
+  font-weight: 600;
+  margin-right: 8px;
+  padding: 8px 24px !important;
+  transition: background 0.2s, color 0.2s;
+}
+.custom-admin-tabs .ant-tabs-tab-active {
+  /* Mặc định, sẽ override từng tab cụ thể bên dưới */
+}
+.custom-admin-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #fff !important;
+}
+.custom-admin-tabs .ant-tabs-tab:not(.ant-tabs-tab-active):hover {
+  background: #374151;
+  color: #fff;
+}
+.custom-admin-tabs .ant-tabs-nav {
+  margin-bottom: 0.5rem;
+  border-bottom: none;
+}
+/* Ẩn line xanh dưới tab bar */
+.custom-admin-tabs .ant-tabs-ink-bar {
+  display: none !important;
+}
+.custom-admin-tabs .ant-tabs-nav::before {
+  display: none !important;
+  border-bottom: none !important;
+}
+/* Tab Thông tin cơ bản (key=1): nền cam, chữ trắng khi active */
+.custom-admin-tabs .ant-tabs-tab:nth-child(1).ant-tabs-tab-active {
+  background: #f59e42 !important;
+}
+.custom-admin-tabs .ant-tabs-tab:nth-child(1).ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #fff !important;
+}
+/* Tab Lịch sử máy (key=2): nền trắng, chữ đen khi active */
+.custom-admin-tabs .ant-tabs-tab:nth-child(2).ant-tabs-tab-active {
+  background: #fff !important;
+}
+.custom-admin-tabs .ant-tabs-tab:nth-child(2).ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #222 !important;
+} 

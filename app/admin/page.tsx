@@ -10,6 +10,7 @@ import {
   Radio,
   Input,
   message,
+  Tabs,
 } from "antd";
 import { useEffect, useRef, useState, useMemo } from "react";
 import _, { isEmpty } from "lodash";
@@ -26,7 +27,10 @@ import {
   FaEdit,
   FaSave,
   FaPencilAlt,
+  FaInfoCircle,
+  FaEye,
 } from "react-icons/fa";
+import "./admin-tabs.css";
 
 interface DeviceHistory {
   id: number;
@@ -71,6 +75,8 @@ interface Computer {
   magicStone: number;
   devices: DeviceStatus[];
   userType?: number;
+  isUseApp?: boolean;
+  note?: string;
 }
 
 interface DeviceStatusOption {
@@ -134,6 +140,10 @@ const AdminDashboard = () => {
   const [migrationInfo, setMigrationInfo] = useState<any>(null);
   const [isEditingUserName, setIsEditingUserName] = useState(false);
   const [editedUserName, setEditedUserName] = useState("");
+  const [isEditingNote, setIsEditingNote] = useState(false);
+  const [editedNote, setEditedNote] = useState("");
+  const [showNoteModal, setShowNoteModal] = useState(false);
+  const [noteModalContent, setNoteModalContent] = useState("");
 
   const deviceList = [
     {
@@ -452,6 +462,88 @@ const AdminDashboard = () => {
     setIsEditingUserName(false);
   };
 
+  // Thêm hàm cập nhật ghi chú
+  const handleUpdateNote = async () => {
+    if (!currentComputer) return;
+    try {
+      const res = await fetch("/api/user/note", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: currentComputer.userId,
+          note: editedNote,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCurrentComputer({ ...currentComputer, note: editedNote });
+        message.success("Đã cập nhật ghi chú thành công!");
+        // Refresh data từ server để cập nhật UI
+        await refetch();
+      } else {
+        message.error(data.message || "Cập nhật thất bại");
+      }
+    } catch (e) {
+      message.error("Có lỗi xảy ra khi cập nhật ghi chú");
+    }
+    setIsEditingNote(false);
+  };
+
+  // Thêm hàm cập nhật trạng thái quan tâm app
+  const handleUpdateIsUseApp = async (isUseApp: boolean) => {
+    if (!currentComputer) return;
+    try {
+      const res = await fetch("/api/user/is-use-app", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: currentComputer.userId,
+          isUseApp: isUseApp,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCurrentComputer({ ...currentComputer, isUseApp: isUseApp });
+        message.success(
+          `Đã cập nhật trạng thái quan tâm app thành ${isUseApp ? "có" : "không"}!`,
+        );
+        // Refresh data từ server để cập nhật UI
+        await refetch();
+      } else {
+        message.error(data.message || "Cập nhật thất bại");
+      }
+    } catch (e) {
+      message.error("Có lỗi xảy ra khi cập nhật trạng thái quan tâm app");
+    }
+  };
+
+  // Thêm hàm cập nhật ghi chú từ modal
+  const handleUpdateNoteModal = async () => {
+    if (!currentComputer) return;
+    try {
+      const res = await fetch("/api/user/note", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: currentComputer.userId,
+          note: editedNote,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCurrentComputer({ ...currentComputer, note: editedNote });
+        message.success("Đã cập nhật ghi chú thành công!");
+        setShowNoteModal(false);
+        await refetch();
+      } else {
+        message.error(data.message || "Cập nhật thất bại");
+      }
+    } catch (e) {
+      message.error("Có lỗi xảy ra khi cập nhật ghi chú");
+    }
+    setIsEditingNote(false);
+  };
+
   return (
     <div className="flex flex-col p-5 gap-4">
       <div className="shadow-lg rounded-lg w-full overflow-auto max-h-[89vh] relative">
@@ -530,6 +622,7 @@ const AdminDashboard = () => {
                 stars,
                 devices,
                 userType,
+                isUseApp,
               } = item || {};
               const {
                 monitorStatus,
@@ -563,7 +656,7 @@ const AdminDashboard = () => {
                   )}
                   <div className="absolute top-2 left-2">
                     <div>{name}</div>
-                    {!isEmpty(userName) && (
+                    {!isEmpty(userName) && isUseApp === true && (
                       <div className="text-[9px] truncate">
                         {userName.toUpperCase()}
                       </div>
@@ -575,19 +668,31 @@ const AdminDashboard = () => {
                         </div>
                       )}
 
-                    <div className="text-[9px] truncate text-orange-300 font-bold">
-                      {userId}
-                    </div>
+                    {/* Show "Không sử dụng" in red when isUseApp is false */}
+                    {isUseApp === false && (
+                      <div className="text-[11px] truncate text-red-500 font-bold overflow-hidden display-webkit-box webkit-line-clamp-2 webkit-box-orient-vertical">
+                        Không sử dụng
+                      </div>
+                    )}
 
-                    <div className="text-[9px] truncate text-purple-300 font-bold">
-                      {`Điểm danh: ${canClaim.toLocaleString()}`}
-                    </div>
+                    {/* Hide UserId, Điểm danh, Lượt quay when isUseApp is false */}
+                    {isUseApp !== false && (
+                      <>
+                        <div className="text-[9px] truncate text-orange-300 font-bold">
+                          {userId}
+                        </div>
 
-                    <div className="text-[9px] truncate text-blue-300 font-bold">
-                      {`Lượt quay: ${round.toLocaleString()}`}
-                    </div>
+                        <div className="text-[9px] truncate text-purple-300 font-bold">
+                          {`Điểm danh: ${canClaim.toLocaleString()}`}
+                        </div>
 
-                    {!isEmpty(userName) && userId !== 0 && (
+                        <div className="text-[9px] truncate text-blue-300 font-bold">
+                          {`Lượt quay: ${round.toLocaleString()}`}
+                        </div>
+                      </>
+                    )}
+
+                    {!isEmpty(userName) && userId !== 0 && isUseApp === true && (
                       <div
                         className={`text-[9px] truncate font-bold ${stars > 100000 ? "text-red-400" : "text-yellow-300"}`}
                       >
@@ -637,6 +742,7 @@ const AdminDashboard = () => {
           setShowDetailDrawer(false);
           setCurrentComputer(undefined);
           setIsEditingUserName(false);
+          setIsEditingNote(false);
         }}
         open={showDetailDrawer}
         width={600}
@@ -664,430 +770,563 @@ const AdminDashboard = () => {
         }}
       >
         {currentComputer && (
-          <div className="flex flex-col gap-4 text-gray-200">
-            {/* Computer Information Section */}
-            <div className="flex flex-col gap-4 pb-4 border-b border-gray-700">
-              <div className="flex flex-col gap-2">
-                <div className="text-lg font-bold text-white">
-                  Thông tin cơ bản
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="text-gray-400">Trạng thái:</div>
-                  <div className="font-bold">
-                    {currentComputer.userType === 5 ? (
-                      <span className="text-purple-400">Combo</span>
-                    ) : Number(currentComputer.status) ===
-                      EnumComputerStatus.ON.id ? (
-                      <span className="text-blue-400">Đang sử dụng</span>
-                    ) : Number(currentComputer.status) ===
-                      EnumComputerStatus.READY.id ? (
-                      <span className="text-orange-400">Đang khởi động</span>
-                    ) : (
-                      <span className="text-gray-400">Máy tắt</span>
-                    )}
-                  </div>
-                  <div className="text-gray-400">Tên người dùng:</div>
-                  <div className="flex items-center gap-2">
-                    {isEditingUserName ? (
-                      <>
-                        <input
-                          className="bg-gray-800 text-white border border-gray-500 rounded px-2 py-1 w-32 focus:outline-none"
-                          value={editedUserName}
-                          onChange={(e) => setEditedUserName(e.target.value)}
-                          onBlur={() => setIsEditingUserName(false)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") handleUpdateUserName();
-                            if (e.key === "Escape") setIsEditingUserName(false);
-                          }}
-                        />
-                        <button
-                          className="text-green-400 hover:text-green-600"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            handleUpdateUserName();
-                          }}
-                          title="Lưu"
+          <Tabs
+            defaultActiveKey="1"
+            className="text-gray-200 custom-admin-tabs"
+            tabBarGutter={32}
+            items={[
+              {
+                key: "1",
+                label: (
+                  <span className="text-base font-semibold">
+                    Thông tin cơ bản
+                  </span>
+                ),
+                children: (
+                  <div className="py-6 px-6 bg-[#23272f] rounded-lg border border-[#374151]">
+                    {/* Computer Information Section */}
+                    <div className="flex flex-col gap-4 pb-4 border-b border-gray-700">
+                      <div className="flex flex-col gap-2">
+                        <div className="text-lg font-bold text-white">
+                          Thông tin cơ bản
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="text-gray-400">Trạng thái:</div>
+                          <div className="font-bold">
+                            {currentComputer.userType === 5 ? (
+                              <span className="text-purple-400">Combo</span>
+                            ) : Number(currentComputer.status) ===
+                              EnumComputerStatus.ON.id ? (
+                              <span className="text-blue-400">
+                                Đang sử dụng
+                              </span>
+                            ) : Number(currentComputer.status) ===
+                              EnumComputerStatus.READY.id ? (
+                              <span className="text-orange-400">
+                                Đang khởi động
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">Máy tắt</span>
+                            )}
+                          </div>
+                          <div className="text-gray-400 flex items-center gap-2">
+                            Tên người dùng:
+                            {currentComputer.userType !== 5 && currentComputer.isUseApp === false && (
+                              <FaInfoCircle 
+                                className="text-blue-400 cursor-help" 
+                                title="Bạn cần bật 'Quan tâm App' để có thể đổi tên người dùng"
+                              />
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {isEditingUserName ? (
+                              <>
+                                <input
+                                  className="bg-gray-800 text-white border border-gray-500 rounded px-2 py-1 w-32 focus:outline-none"
+                                  value={editedUserName}
+                                  onChange={(e) =>
+                                    setEditedUserName(e.target.value)
+                                  }
+                                  onBlur={() => setIsEditingUserName(false)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter")
+                                      handleUpdateUserName();
+                                    if (e.key === "Escape")
+                                      setIsEditingUserName(false);
+                                  }}
+                                />
+                                <button
+                                  className="text-green-400 hover:text-green-600"
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    handleUpdateUserName();
+                                  }}
+                                  title="Lưu"
+                                >
+                                  <FaSave />
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <span className={`font-bold ${
+                                  currentComputer.userType === 5
+                                    ? "text-white"
+                                    : currentComputer.isUseApp === false
+                                    ? "text-red-500"
+                                    : "text-white"
+                                }`}>
+                                  {currentComputer.userType === 5
+                                    ? "Combo"
+                                    : currentComputer.isUseApp === false
+                                    ? "Không sử dụng App"
+                                    : currentComputer.userName ||
+                                      "Chưa có người dùng"}
+                                </span>
+                                {currentComputer.userType !== 5 && currentComputer.isUseApp !== false && (
+                                  <button
+                                    className="text-gray-400 hover:text-blue-400 ml-1"
+                                    onClick={() => {
+                                      setIsEditingUserName(true);
+                                      setEditedUserName(
+                                        currentComputer.userName || "",
+                                      );
+                                    }}
+                                    title="Sửa tên người dùng"
+                                  >
+                                    <FaPencilAlt />
+                                  </button>
+                                )}
+                              </>
+                            )}
+                          </div>
+                          <div className="text-gray-400">ID người dùng:</div>
+                          <div className="text-orange-300 font-bold">
+                            {currentComputer.userId || "N/A"}
+                          </div>
+                          <div className="text-gray-400">Điểm danh:</div>
+                          <div className="text-purple-300 font-bold">
+                            {currentComputer.canClaim?.toLocaleString() || 0}
+                          </div>
+                          <div className="text-gray-400">Lượt quay:</div>
+                          <div className="text-blue-300 font-bold">
+                            {currentComputer.round?.toLocaleString() || 0}
+                          </div>
+                          <div className="text-gray-400">Stars:</div>
+                          {currentComputer.userType === 5 ||
+                          Number(currentComputer.status) !==
+                            EnumComputerStatus.ON.id ||
+                          !currentComputer.userName ||
+                          currentComputer.userId === 0 ? (
+                            <div className="text-yellow-300 font-bold">
+                              ⭐ 0
+                            </div>
+                          ) : (
+                            <div
+                              className={`font-bold ${currentComputer.stars > 100000 ? "text-red-400" : "text-yellow-300"}`}
+                            >
+                              ⭐{" "}
+                              {Number(currentComputer.stars)
+                                ? Number(currentComputer.stars).toLocaleString()
+                                : "0"}
+                            </div>
+                          )}
+                          <div className="text-gray-400">Magic Stone:</div>
+                          <div className="text-green-400 font-bold">
+                            💎{" "}
+                            {currentComputer.userType === 5 ||
+                            Number(currentComputer.status) !==
+                              EnumComputerStatus.ON.id ||
+                            !currentComputer.userName ||
+                            currentComputer.userId === 0
+                              ? "0"
+                              : Number(currentComputer.magicStone)
+                                ? Number(
+                                    currentComputer.magicStone,
+                                  ).toLocaleString()
+                                : "0"}
+                          </div>
+                          <div className="text-gray-400">Quan tâm App:</div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={currentComputer.isUseApp || false}
+                              onChange={(e) =>
+                                handleUpdateIsUseApp(e.target.checked)
+                              }
+                              className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-500 rounded focus:ring-blue-500 focus:ring-2"
+                            />
+                            <span className="text-white font-bold">
+                              {currentComputer.isUseApp ? "Có" : "Không"}
+                            </span>
+                          </div>
+                          <div className="text-gray-400">Ghi chú:</div>
+                          <div className="flex items-start gap-2">
+                            <div className="flex-1">
+                              <span
+                                className="text-white font-bold block"
+                                style={{
+                                  display: "-webkit-box",
+                                  WebkitLineClamp: 5,
+                                  WebkitBoxOrient: "vertical",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "pre-line",
+                                  maxHeight: "7.5em", // 5 dòng x 1.5em
+                                }}
+                              >
+                                {currentComputer.note || "Không có ghi chú"}
+                              </span>
+                              {currentComputer.note &&
+                                currentComputer.note.split("\n").length > 5 && (
+                                  <button
+                                    className="ml-2 text-blue-400 underline text-xs font-normal"
+                                    onClick={() => {
+                                      setNoteModalContent(currentComputer.note || "");
+                                      setEditedNote(currentComputer.note || "");
+                                      setShowNoteModal(true);
+                                    }}
+                                  >
+                                    Xem thêm
+                                  </button>
+                                )}
+                            </div>
+                            <button
+                              className="text-gray-400 hover:text-blue-400 ml-1"
+                              onClick={() => {
+                                setNoteModalContent(currentComputer.note || "");
+                                setEditedNote(currentComputer.note || "");
+                                setShowNoteModal(true);
+                              }}
+                              title="Xem/Sửa ghi chú"
+                            >
+                              <FaEye />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Device Status Section */}
+                    <div className="flex flex-col gap-2 mt-2 py-4">
+                      <div className="text-lg font-bold text-white">
+                        Trạng thái thiết bị
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="flex items-center gap-2">
+                          <FaDesktop
+                            className={getStatusColor(
+                              currentComputer.devices[0]?.monitorStatus ||
+                                "GOOD",
+                            )}
+                          />
+                          <span>Màn hình</span>
+                        </div>
+                        <div
+                          className={getStatusColor(
+                            currentComputer.devices[0]?.monitorStatus || "GOOD",
+                          )}
                         >
-                          <FaSave />
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-white font-bold">
-                          {currentComputer.userType === 5
-                            ? "Combo"
-                            : currentComputer.userName || "Chưa có người dùng"}
-                        </span>
-                        {currentComputer.userType !== 5 && (
-                          <button
-                            className="text-gray-400 hover:text-blue-400 ml-1"
-                            onClick={() => {
-                              setIsEditingUserName(true);
-                              setEditedUserName(currentComputer.userName || "");
-                            }}
-                            title="Sửa tên người dùng"
-                          >
-                            <FaPencilAlt />
-                          </button>
-                        )}
-                      </>
-                    )}
-                  </div>
-                  <div className="text-gray-400">ID người dùng:</div>
-                  <div className="text-orange-300 font-bold">
-                    {currentComputer.userId || "N/A"}
-                  </div>
-                  <div className="text-gray-400">Điểm danh:</div>
-                  <div className="text-purple-300 font-bold">
-                    {currentComputer.canClaim?.toLocaleString() || 0}
-                  </div>
-                  <div className="text-gray-400">Lượt quay:</div>
-                  <div className="text-blue-300 font-bold">
-                    {currentComputer.round?.toLocaleString() || 0}
-                  </div>
-                  <div className="text-gray-400">Stars:</div>
-                  {currentComputer.userType === 5 ||
-                  Number(currentComputer.status) !== EnumComputerStatus.ON.id ||
-                  !currentComputer.userName ||
-                  currentComputer.userId === 0 ? (
-                    <div className="text-yellow-300 font-bold">⭐ 0</div>
-                  ) : (
-                    <div
-                      className={`font-bold ${currentComputer.stars > 100000 ? "text-red-400" : "text-yellow-300"}`}
-                    >
-                      ⭐{" "}
-                      {Number(currentComputer.stars)
-                        ? Number(currentComputer.stars).toLocaleString()
-                        : "0"}
-                    </div>
-                  )}
-                  <div className="text-gray-400">Magic Stone:</div>
-                  <div className="text-green-400 font-bold">
-                    💎{" "}
-                    {currentComputer.userType === 5 ||
-                    Number(currentComputer.status) !==
-                      EnumComputerStatus.ON.id ||
-                    !currentComputer.userName ||
-                    currentComputer.userId === 0
-                      ? "0"
-                      : Number(currentComputer.magicStone)
-                        ? Number(currentComputer.magicStone).toLocaleString()
-                        : "0"}
-                  </div>
-                </div>
-              </div>
+                          {getStatusText(
+                            currentComputer.devices[0]?.monitorStatus || "GOOD",
+                          )}
+                        </div>
 
-              {/* Device Status Section */}
-              <div className="flex flex-col gap-2">
-                <div className="text-lg font-bold text-white">
-                  Trạng thái thiết bị
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex items-center gap-2">
-                    <FaDesktop
-                      className={getStatusColor(
-                        currentComputer.devices[0]?.monitorStatus || "GOOD",
+                        <div className="flex items-center gap-2">
+                          <FaKeyboard
+                            className={getStatusColor(
+                              currentComputer.devices[0]?.keyboardStatus ||
+                                "GOOD",
+                            )}
+                          />
+                          <span>Bàn phím</span>
+                        </div>
+                        <div
+                          className={getStatusColor(
+                            currentComputer.devices[0]?.keyboardStatus ||
+                              "GOOD",
+                          )}
+                        >
+                          {getStatusText(
+                            currentComputer.devices[0]?.keyboardStatus ||
+                              "GOOD",
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <FaMouse
+                            className={getStatusColor(
+                              currentComputer.devices[0]?.mouseStatus || "GOOD",
+                            )}
+                          />
+                          <span>Chuột</span>
+                        </div>
+                        <div
+                          className={getStatusColor(
+                            currentComputer.devices[0]?.mouseStatus || "GOOD",
+                          )}
+                        >
+                          {getStatusText(
+                            currentComputer.devices[0]?.mouseStatus || "GOOD",
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <FaHeadphones
+                            className={getStatusColor(
+                              currentComputer.devices[0]?.headphoneStatus ||
+                                "GOOD",
+                            )}
+                          />
+                          <span>Tai nghe</span>
+                        </div>
+                        <div
+                          className={getStatusColor(
+                            currentComputer.devices[0]?.headphoneStatus ||
+                              "GOOD",
+                          )}
+                        >
+                          {getStatusText(
+                            currentComputer.devices[0]?.headphoneStatus ||
+                              "GOOD",
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <FaChair
+                            className={getStatusColor(
+                              currentComputer.devices[0]?.chairStatus || "GOOD",
+                            )}
+                          />
+                          <span>Ghế</span>
+                        </div>
+                        <div
+                          className={getStatusColor(
+                            currentComputer.devices[0]?.chairStatus || "GOOD",
+                          )}
+                        >
+                          {getStatusText(
+                            currentComputer.devices[0]?.chairStatus || "GOOD",
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <FaWifi
+                            className={getStatusColor(
+                              currentComputer.devices[0]?.networkStatus ||
+                                "GOOD",
+                            )}
+                          />
+                          <span>Mạng</span>
+                        </div>
+                        <div
+                          className={getStatusColor(
+                            currentComputer.devices[0]?.networkStatus || "GOOD",
+                          )}
+                        >
+                          {getStatusText(
+                            currentComputer.devices[0]?.networkStatus || "GOOD",
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 justify-end">
+                      {currentComputer.userType !== 5 && (
+                        <Button
+                          type="default"
+                          onClick={() => {
+                            setShowCheckLoginModal(true);
+                            // Tự động set số máy và username hiện tại
+                            setTimeout(() => {
+                              checkLoginForm.setFieldsValue({
+                                computerId: currentComputer.id,
+                                userName: currentComputer.userName || "",
+                              });
+                            }, 100);
+                          }}
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          Kiểm tra đăng nhập
+                        </Button>
                       )}
-                    />
-                    <span>Màn hình</span>
-                  </div>
-                  <div
-                    className={getStatusColor(
-                      currentComputer.devices[0]?.monitorStatus || "GOOD",
-                    )}
-                  >
-                    {getStatusText(
-                      currentComputer.devices[0]?.monitorStatus || "GOOD",
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <FaKeyboard
-                      className={getStatusColor(
-                        currentComputer.devices[0]?.keyboardStatus || "GOOD",
-                      )}
-                    />
-                    <span>Bàn phím</span>
-                  </div>
-                  <div
-                    className={getStatusColor(
-                      currentComputer.devices[0]?.keyboardStatus || "GOOD",
-                    )}
-                  >
-                    {getStatusText(
-                      currentComputer.devices[0]?.keyboardStatus || "GOOD",
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <FaMouse
-                      className={getStatusColor(
-                        currentComputer.devices[0]?.mouseStatus || "GOOD",
-                      )}
-                    />
-                    <span>Chuột</span>
-                  </div>
-                  <div
-                    className={getStatusColor(
-                      currentComputer.devices[0]?.mouseStatus || "GOOD",
-                    )}
-                  >
-                    {getStatusText(
-                      currentComputer.devices[0]?.mouseStatus || "GOOD",
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <FaHeadphones
-                      className={getStatusColor(
-                        currentComputer.devices[0]?.headphoneStatus || "GOOD",
-                      )}
-                    />
-                    <span>Tai nghe</span>
-                  </div>
-                  <div
-                    className={getStatusColor(
-                      currentComputer.devices[0]?.headphoneStatus || "GOOD",
-                    )}
-                  >
-                    {getStatusText(
-                      currentComputer.devices[0]?.headphoneStatus || "GOOD",
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <FaChair
-                      className={getStatusColor(
-                        currentComputer.devices[0]?.chairStatus || "GOOD",
-                      )}
-                    />
-                    <span>Ghế</span>
-                  </div>
-                  <div
-                    className={getStatusColor(
-                      currentComputer.devices[0]?.chairStatus || "GOOD",
-                    )}
-                  >
-                    {getStatusText(
-                      currentComputer.devices[0]?.chairStatus || "GOOD",
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <FaWifi
-                      className={getStatusColor(
-                        currentComputer.devices[0]?.networkStatus || "GOOD",
-                      )}
-                    />
-                    <span>Mạng</span>
-                  </div>
-                  <div
-                    className={getStatusColor(
-                      currentComputer.devices[0]?.networkStatus || "GOOD",
-                    )}
-                  >
-                    {getStatusText(
-                      currentComputer.devices[0]?.networkStatus || "GOOD",
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-2 justify-end">
-                {currentComputer.userType !== 5 && (
-                  <Button
-                    type="default"
-                    onClick={() => {
-                      setShowCheckLoginModal(true);
-                      // Tự động set số máy và username hiện tại
-                      setTimeout(() => {
-                        checkLoginForm.setFieldsValue({
-                          computerId: currentComputer.id,
-                          userName: currentComputer.userName || "",
-                        });
-                      }, 100);
-                    }}
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    Kiểm tra đăng nhập
-                  </Button>
-                )}
-                <Button type="primary" danger onClick={handleReportIssue}>
-                  Báo hỏng
-                </Button>
-                <Button
-                  type="primary"
-                  onClick={() => {
-                    setCurrentComputer(currentComputer);
-                    setShowUpdateModal(true);
-                  }}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  Sửa chữa
-                </Button>
-              </div>
-            </div>
-
-            {/* Repair History Section */}
-            <div className="flex flex-col gap-2 pt-2">
-              <div className="text-lg font-bold text-white">
-                Lịch sử sửa chữa
-              </div>
-              {(() => {
-                const histories = (
-                  currentComputer.devices[0]?.histories || []
-                ).filter(Boolean);
-                const latestReport = [...histories]
-                  .filter((h) => h.type === "REPORT")
-                  .sort(
-                    (a, b) =>
-                      new Date(b.createdAt).getTime() -
-                      new Date(a.createdAt).getTime(),
-                  )
-                  .pop();
-                const latestRepair = [...histories]
-                  .filter((h) => h.type === "REPAIR")
-                  .sort(
-                    (a, b) =>
-                      new Date(b.createdAt).getTime() -
-                      new Date(a.createdAt).getTime(),
-                  )
-                  .pop();
-                const renderDeviceStatus = (history: DeviceHistory) => (
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    <div className="flex items-center gap-2">
-                      <FaDesktop /> <span>Màn hình:</span>{" "}
-                      <span
-                        className={getStatusColor(
-                          history?.monitorStatus || "GOOD",
-                        )}
+                      <Button type="primary" danger onClick={handleReportIssue}>
+                        Báo hỏng
+                      </Button>
+                      <Button
+                        type="primary"
+                        onClick={() => {
+                          setCurrentComputer(currentComputer);
+                          setShowUpdateModal(true);
+                        }}
+                        className="bg-blue-600 hover:bg-blue-700"
                       >
-                        {getStatusText(history?.monitorStatus || "GOOD")}
-                      </span>
+                        Sửa chữa
+                      </Button>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <FaKeyboard /> <span>Bàn phím:</span>{" "}
-                      <span
-                        className={getStatusColor(
-                          history?.keyboardStatus || "GOOD",
-                        )}
-                      >
-                        {getStatusText(history?.keyboardStatus || "GOOD")}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <FaMouse /> <span>Chuột:</span>{" "}
-                      <span
-                        className={getStatusColor(
-                          history?.mouseStatus || "GOOD",
-                        )}
-                      >
-                        {getStatusText(history?.mouseStatus || "GOOD")}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <FaHeadphones /> <span>Tai nghe:</span>{" "}
-                      <span
-                        className={getStatusColor(
-                          history?.headphoneStatus || "GOOD",
-                        )}
-                      >
-                        {getStatusText(history?.headphoneStatus || "GOOD")}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <FaChair /> <span>Ghế:</span>{" "}
-                      <span
-                        className={getStatusColor(
-                          history?.chairStatus || "GOOD",
-                        )}
-                      >
-                        {getStatusText(history?.chairStatus || "GOOD")}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <FaWifi /> <span>Mạng:</span>{" "}
-                      <span
-                        className={getStatusColor(
-                          history?.networkStatus || "GOOD",
-                        )}
-                      >
-                        {getStatusText(history?.networkStatus || "GOOD")}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <FaDesktop /> <span>Máy tính:</span>{" "}
-                      <span
-                        className={getStatusColor(
-                          history?.computerStatus || "GOOD",
-                        )}
-                      >
-                        {getStatusText(history?.computerStatus || "GOOD")}
-                      </span>
-                    </div>
-                    <p className="col-span-2 mt-2 text-gray-300">
-                      <b>Mô tả:</b> {history?.issue || "Không có mô tả"}
-                    </p>
                   </div>
-                );
-                return (
-                  <div className="flex flex-col gap-4 mb-4">
-                    <Card
-                      title={
-                        <span className="text-red-500 font-bold">
-                          Báo hỏng mới nhất
-                        </span>
-                      }
-                      bordered={false}
-                      className="bg-gray-800 border-l-4 border-red-500 shadow-lg text-white"
-                    >
-                      {latestReport ? (
-                        <>
-                          <div>
-                            <b>Thời gian:</b>{" "}
-                            {latestReport.createdAt
-                              ? new Date(
-                                  latestReport.createdAt,
-                                ).toLocaleString()
-                              : "-"}
+                ),
+              },
+              {
+                key: "2",
+                label: (
+                  <span className="text-base font-semibold">Lịch sử máy</span>
+                ),
+                children: (
+                  <div className="p-6 bg-[#23272f] rounded-lg border border-[#374151]">
+                    <div className="flex flex-col gap-2 pt-2">
+                      {(() => {
+                        const histories = (
+                          currentComputer.devices[0]?.histories || []
+                        ).filter(Boolean);
+                        const latestReport = [...histories]
+                          .filter((h) => h.type === "REPORT")
+                          .sort(
+                            (a, b) =>
+                              new Date(b.createdAt).getTime() -
+                              new Date(a.createdAt).getTime(),
+                          )
+                          .pop();
+                        const latestRepair = [...histories]
+                          .filter((h) => h.type === "REPAIR")
+                          .sort(
+                            (a, b) =>
+                              new Date(b.createdAt).getTime() -
+                              new Date(a.createdAt).getTime(),
+                          )
+                          .pop();
+                        const renderDeviceStatus = (history: DeviceHistory) => (
+                          <div className="grid grid-cols-2 gap-2 mt-2">
+                            <div className="flex items-center gap-2">
+                              <FaDesktop /> <span>Màn hình:</span>{" "}
+                              <span
+                                className={getStatusColor(
+                                  history?.monitorStatus || "GOOD",
+                                )}
+                              >
+                                {getStatusText(
+                                  history?.monitorStatus || "GOOD",
+                                )}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <FaKeyboard /> <span>Bàn phím:</span>{" "}
+                              <span
+                                className={getStatusColor(
+                                  history?.keyboardStatus || "GOOD",
+                                )}
+                              >
+                                {getStatusText(
+                                  history?.keyboardStatus || "GOOD",
+                                )}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <FaMouse /> <span>Chuột:</span>{" "}
+                              <span
+                                className={getStatusColor(
+                                  history?.mouseStatus || "GOOD",
+                                )}
+                              >
+                                {getStatusText(history?.mouseStatus || "GOOD")}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <FaHeadphones /> <span>Tai nghe:</span>{" "}
+                              <span
+                                className={getStatusColor(
+                                  history?.headphoneStatus || "GOOD",
+                                )}
+                              >
+                                {getStatusText(
+                                  history?.headphoneStatus || "GOOD",
+                                )}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <FaChair /> <span>Ghế:</span>{" "}
+                              <span
+                                className={getStatusColor(
+                                  history?.chairStatus || "GOOD",
+                                )}
+                              >
+                                {getStatusText(history?.chairStatus || "GOOD")}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <FaWifi /> <span>Mạng:</span>{" "}
+                              <span
+                                className={getStatusColor(
+                                  history?.networkStatus || "GOOD",
+                                )}
+                              >
+                                {getStatusText(
+                                  history?.networkStatus || "GOOD",
+                                )}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <FaDesktop /> <span>Máy tính:</span>{" "}
+                              <span
+                                className={getStatusColor(
+                                  history?.computerStatus || "GOOD",
+                                )}
+                              >
+                                {getStatusText(
+                                  history?.computerStatus || "GOOD",
+                                )}
+                              </span>
+                            </div>
+                            <p className="col-span-2 mt-2 text-gray-300">
+                              <b>Mô tả:</b> {history?.issue || "Không có mô tả"}
+                            </p>
                           </div>
-                          {renderDeviceStatus(latestReport)}
-                        </>
-                      ) : (
-                        <div className="text-gray-400">Không có dữ liệu</div>
-                      )}
-                    </Card>
-                    <Card
-                      title={
-                        <span className="text-blue-500 font-bold">
-                          Sửa chữa mới nhất
-                        </span>
-                      }
-                      bordered={false}
-                      className="bg-gray-800 border-l-4 border-blue-500 shadow-lg text-white"
-                    >
-                      {latestRepair ? (
-                        <>
-                          <div>
-                            <b>Thời gian:</b>{" "}
-                            {latestRepair.createdAt
-                              ? new Date(
-                                  latestRepair.createdAt,
-                                ).toLocaleString()
-                              : "-"}
+                        );
+                        return (
+                          <div className="flex flex-col gap-4 mb-4">
+                            <Card
+                              title={
+                                <span className="text-red-500 font-bold">
+                                  Báo hỏng mới nhất
+                                </span>
+                              }
+                              bordered={false}
+                              className="bg-gray-800 border-l-4 border-red-500 shadow-lg text-white"
+                            >
+                              {latestReport ? (
+                                <>
+                                  <div>
+                                    <b>Thời gian:</b>{" "}
+                                    {latestReport.createdAt
+                                      ? new Date(
+                                          latestReport.createdAt,
+                                        ).toLocaleString()
+                                      : "-"}
+                                  </div>
+                                  {renderDeviceStatus(latestReport)}
+                                </>
+                              ) : (
+                                <div className="text-gray-400">
+                                  Không có dữ liệu
+                                </div>
+                              )}
+                            </Card>
+                            <Card
+                              title={
+                                <span className="text-blue-500 font-bold">
+                                  Sửa chữa mới nhất
+                                </span>
+                              }
+                              bordered={false}
+                              className="bg-gray-800 border-l-4 border-blue-500 shadow-lg text-white"
+                            >
+                              {latestRepair ? (
+                                <>
+                                  <div>
+                                    <b>Thời gian:</b>{" "}
+                                    {latestRepair.createdAt
+                                      ? new Date(
+                                          latestRepair.createdAt,
+                                        ).toLocaleString()
+                                      : "-"}
+                                  </div>
+                                  {renderDeviceStatus(latestRepair)}
+                                </>
+                              ) : (
+                                <div className="text-gray-400">
+                                  Không có dữ liệu
+                                </div>
+                              )}
+                            </Card>
                           </div>
-                          {renderDeviceStatus(latestRepair)}
-                        </>
-                      ) : (
-                        <div className="text-gray-400">Không có dữ liệu</div>
-                      )}
-                    </Card>
+                        );
+                      })()}
+                    </div>
                   </div>
-                );
-              })()}
-            </div>
-          </div>
+                ),
+              },
+            ]}
+          />
         )}
       </Drawer>
 
@@ -1707,6 +1946,51 @@ const AdminDashboard = () => {
             </span>
           </div>
         )}
+      </Modal>
+
+      {/* Modal xem/sửa toàn bộ ghi chú */}
+      <Modal
+        open={showNoteModal}
+        onCancel={() => setShowNoteModal(false)}
+        footer={null}
+        title={<span className="text-lg font-bold">Ghi chú</span>}
+        className="dark-modal"
+        width={600}
+        styles={{
+          header: { background: "#1f2937", color: "white" },
+          content: { background: "#23272f" },
+          body: { background: "#23272f", color: "#fff", padding: 24 },
+          mask: { background: "rgba(0,0,0,0.6)" },
+          footer: { background: "#23272f" },
+        }}
+      >
+        <div className="flex flex-col gap-4">
+          <textarea
+            className="w-full bg-gray-800 text-white border border-gray-500 rounded px-2 py-1 focus:outline-none resize-none"
+            value={editedNote}
+            onChange={e => setEditedNote(e.target.value)}
+            rows={10}
+            placeholder="Nhập ghi chú..."
+            style={{ minHeight: 120 }}
+          />
+          <div className="flex justify-end gap-2">
+            <Button
+              onClick={() => setShowNoteModal(false)}
+            >
+              Đóng
+            </Button>
+            <Button
+              type="primary"
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={async () => {
+                setIsEditingNote(true);
+                await handleUpdateNoteModal();
+              }}
+            >
+              Lưu
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );
