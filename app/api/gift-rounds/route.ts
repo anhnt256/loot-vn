@@ -13,9 +13,6 @@ const createGiftRoundSchema = z.object({
 export async function GET() {
   try {
     const giftRounds = await db.giftRound.findMany({
-      include: {
-        user: true,
-      },
       orderBy: {
         createdAt: "desc",
       },
@@ -66,9 +63,6 @@ export async function POST(request: NextRequest) {
         staffId: 0, // Using 0 to represent admin
         expiredAt: body.expiredAt ? new Date(body.expiredAt) : null,
         isUsed: false,
-      },
-      include: {
-        user: true,
       },
     });
 

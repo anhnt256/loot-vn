@@ -22,9 +22,6 @@ export async function GET(
 
     const giftRound = await db.giftRound.findUnique({
       where: { id },
-      include: {
-        user: true,
-      },
     });
 
     if (!giftRound) {
@@ -62,9 +59,6 @@ export async function PATCH(
       data: {
         ...body,
         expiredAt: body.expiredAt ? new Date(body.expiredAt) : null,
-      },
-      include: {
-        user: true,
       },
     });
 
