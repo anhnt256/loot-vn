@@ -161,11 +161,24 @@ const CircleSegments: React.FC<CircleSegmentsProps> = ({ segments }) => {
     <div className="relative flex justify-center items-center h-[675px]">
       <canvas ref={canvasRef} className="max-w-full max-h-full" />
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center w-full">
-        <div className="text-2xl font-bold mb-2 drop-shadow" style={{ color: '#b86e00' }}>Jackpot</div>
-        <div className="text-5xl font-extrabold mb-2 drop-shadow-lg" style={{ color: '#ff9900', textShadow: '0 2px 8px #fff, 0 0px 2px #000' }}>
-          {new Intl.NumberFormat('en-US').format(fund)}
+        <div
+          className="text-2xl font-bold mb-2 drop-shadow"
+          style={{ color: "#b86e00" }}
+        >
+          Jackpot
         </div>
-        <div className="text-base text-gray-700 font-medium">Cập nhật sau: {countdown}s</div>
+        <div
+          className="text-5xl font-extrabold mb-2 drop-shadow-lg"
+          style={{
+            color: "#ff9900",
+            textShadow: "0 2px 8px #fff, 0 0px 2px #000",
+          }}
+        >
+          {new Intl.NumberFormat("en-US").format(fund)}
+        </div>
+        <div className="text-base text-gray-700 font-medium">
+          Cập nhật sau: {countdown}s
+        </div>
       </div>
     </div>
   );

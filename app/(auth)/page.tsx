@@ -68,7 +68,13 @@ const Login = () => {
   });
 
   const onLoginForExistingUser = useCallback(async () => {
-    if (pageLoading || !machineData || !existingUser || isToastShown || loginFatalError) {
+    if (
+      pageLoading ||
+      !machineData ||
+      !existingUser ||
+      isToastShown ||
+      loginFatalError
+    ) {
       return;
     }
 
@@ -79,7 +85,6 @@ const Login = () => {
         machineName: machineData?.machineName,
         isAdmin: false,
       });
-
 
       const { statusCode, message } = result || {};
 
@@ -271,7 +276,8 @@ const Login = () => {
           />
         </div>
         <h3 className="text-red-500 text-center text-lg font-semibold mt-4">
-          {fatalErrorMessage || "Không lấy được thông tin user, vui lòng đăng nhập lại."}
+          {fatalErrorMessage ||
+            "Không lấy được thông tin user, vui lòng đăng nhập lại."}
         </h3>
         <button
           className="mt-4 bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded font-semibold"

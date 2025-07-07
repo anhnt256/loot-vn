@@ -256,11 +256,14 @@ export async function POST(req: Request, res: Response): Promise<any> {
           try {
             const calculatorResults = await calculateActiveUsersInfo(
               [Number(userId)],
-              branchFromCookie || ""
+              branchFromCookie || "",
             );
             if (calculatorResults.length > 0) {
               userCalculatorData = calculatorResults[0];
-              console.log("User calculator data for new user:", userCalculatorData);
+              console.log(
+                "User calculator data for new user:",
+                userCalculatorData,
+              );
             }
           } catch (calculatorError) {
             console.error("Error calling user-calculator:", calculatorError);
@@ -272,9 +275,10 @@ export async function POST(req: Request, res: Response): Promise<any> {
             return NextResponse.json(
               {
                 statusCode: 500,
-                message: "Không lấy được thông tin user, vui lòng đăng nhập lại.",
+                message:
+                  "Không lấy được thông tin user, vui lòng đăng nhập lại.",
               },
-              { status: 500 }
+              { status: 500 },
             );
           }
 
@@ -337,16 +341,19 @@ export async function POST(req: Request, res: Response): Promise<any> {
     try {
       const calculatorResults = await calculateActiveUsersInfo(
         [Number(userId)],
-        branchFromCookie || ""
+        branchFromCookie || "",
       );
 
-      console.log('userId', userId)
-      console.log('branchFromCookie', branchFromCookie)
-      console.log('calculatorResults', calculatorResults)
+      console.log("userId", userId);
+      console.log("branchFromCookie", branchFromCookie);
+      console.log("calculatorResults", calculatorResults);
 
       if (calculatorResults.length > 0) {
         userCalculatorData = calculatorResults[0];
-        console.log("User calculator data for existing user:", userCalculatorData);
+        console.log(
+          "User calculator data for existing user:",
+          userCalculatorData,
+        );
       }
     } catch (calculatorError) {
       console.error("Error calling user-calculator:", calculatorError);
@@ -360,7 +367,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
           statusCode: 500,
           message: "Không lấy được thông tin user, vui lòng đăng nhập lại.",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 

@@ -7,7 +7,6 @@ import { BattlePassProgress } from "@/app/components/battle-pass/BattlePassProgr
 import { toast } from "sonner";
 import { CURRENT_USER } from "@/constants/token.constant";
 
-
 interface Season {
   id: number;
   name: string;
@@ -47,22 +46,22 @@ export default function BattlePassPage() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const [userData, setUserData] = useState<any>(null);
-  
+
   // Load user data from localStorage
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const userDataString = localStorage.getItem(CURRENT_USER);
       if (userDataString) {
         try {
           const parsedUserData = JSON.parse(userDataString);
           setUserData(parsedUserData);
         } catch (error) {
-          console.error('Error parsing user data:', error);
+          console.error("Error parsing user data:", error);
         }
       }
     }
   }, []);
-  
+
   const { stars } = userData || {};
 
   const { data: currentSeason, isLoading: isLoadingSeason } = useQuery<Season>({

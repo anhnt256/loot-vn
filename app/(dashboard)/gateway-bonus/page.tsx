@@ -45,7 +45,7 @@ export default function GatewayBonusPage() {
 
   // Load user data from localStorage
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const userDataString = localStorage.getItem(CURRENT_USER);
       if (userDataString) {
         try {
@@ -53,7 +53,7 @@ export default function GatewayBonusPage() {
           setCurrentUserId(parsedUserData.userId || parsedUserData.id);
           setUserData(parsedUserData);
         } catch (error) {
-          console.error('Error parsing user data:', error);
+          console.error("Error parsing user data:", error);
         }
       }
     }

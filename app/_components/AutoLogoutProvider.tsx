@@ -31,7 +31,7 @@ export function AutoLogoutProvider({
     () => {
       // Xóa thông tin user khỏi localStorage
       clearUserData();
-      
+
       if (typeof window !== "undefined" && window.electron) {
         // @ts-ignore
         window.electron.send("close-app");

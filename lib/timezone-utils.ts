@@ -163,13 +163,13 @@ export const formatVNTime = (
 // Helper function để lấy ngày hiện tại theo format YYYY-MM-DD
 export const getCurrentDateVNString = () => {
   const nowVN = dayjs().utcOffset(7);
-  return nowVN.format('YYYY-MM-DD');
+  return nowVN.format("YYYY-MM-DD");
 };
 
 // Helper function để lấy tên ngày trong tuần (Monday, Tuesday, etc.)
 export const getCurrentDayOfWeekVN = () => {
   const nowVN = dayjs().utcOffset(7);
-  return nowVN.format('dddd');
+  return nowVN.format("dddd");
 };
 
 // ===== PRISMA HELPER FUNCTIONS =====

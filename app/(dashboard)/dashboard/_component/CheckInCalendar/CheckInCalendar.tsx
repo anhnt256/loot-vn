@@ -61,19 +61,19 @@ const CheckInCalendar = () => {
 
   // Load user data from localStorage
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const userData = localStorage.getItem(CURRENT_USER);
       if (userData) {
         try {
           const parsedUserData = JSON.parse(userData);
           setCurrentUserId(parsedUserData.userId || parsedUserData.id);
         } catch (error) {
-          console.error('Error parsing user data:', error);
+          console.error("Error parsing user data:", error);
         }
       }
-      
+
       // Get branch from localStorage or default
-      const branchData = localStorage.getItem('branch') || 'GO_VAP';
+      const branchData = localStorage.getItem("branch") || "GO_VAP";
       setBranch(branchData);
     }
   }, []);
@@ -90,7 +90,7 @@ const CheckInCalendar = () => {
           setUserCheckIn(data || []);
         }
       } catch (error) {
-        console.error('Error fetching user check-in data:', error);
+        console.error("Error fetching user check-in data:", error);
         setUserCheckIn([]);
       }
     };

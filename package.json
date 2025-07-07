@@ -17,6 +17,7 @@
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "next lint --fix --quiet",
+    "tsc": "tsc --noEmit",
     "generate:prisma": "prisma generate && prisma generate --schema=./prisma/schemaFnet.prisma && prisma generate --schema=./prisma/schemaFnetTP.prisma",
     "test": "jest",
     "test:watch": "jest --watch",

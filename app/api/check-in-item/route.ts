@@ -11,7 +11,7 @@ export async function GET(req: Request) {
     if (!branch) {
       return NextResponse.json(
         { error: "Branch cookie is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -26,7 +26,7 @@ export async function GET(req: Request) {
     console.error("[CHECK_IN_ITEM_GET]", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

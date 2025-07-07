@@ -895,7 +895,8 @@ const AdminDashboard = () => {
                           </div>
                           <div className="text-gray-400">Điểm danh:</div>
                           <div className="text-purple-300 font-bold">
-                            {currentComputer.availableCheckIn?.toLocaleString() || 0}
+                            {currentComputer.availableCheckIn?.toLocaleString() ||
+                              0}
                           </div>
                           <div className="text-gray-400">Lượt quay:</div>
                           <div className="text-blue-300 font-bold">

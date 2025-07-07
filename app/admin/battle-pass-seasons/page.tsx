@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { Table, Modal, Input, Button, DatePicker } from "antd";
 import { toast } from "sonner";
 import dayjs from "@/lib/dayjs";
-import { useUserInfo } from "@/hooks/use-user-info";
 
 interface Season {
   id: number;
@@ -16,7 +15,6 @@ interface Season {
 }
 
 export default function BattlePassSeasonsAdmin() {
-  const { userData } = useUserInfo();
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);

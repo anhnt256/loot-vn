@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     const accountDeadline = dayjs(accountCreationDeadline).utcOffset(7);
 
     // Kiểm tra xem đã qua ngày hết hạn chưa
-    if (now.isAfter(deadline)) {
+    if (dayjs(now).isAfter(dayjs(deadline))) {
       return NextResponse.json({
         available: false,
         reason: "expired",
@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
     const accountDeadline = dayjs(accountCreationDeadline).utcOffset(7);
 
     // Kiểm tra xem đã qua ngày hết hạn chưa
-    if (now.isAfter(deadline)) {
+    if (dayjs(now).isAfter(dayjs(deadline))) {
       return NextResponse.json(
         {
           error: "Chương trình Gateway Bonus đã kết thúc",
@@ -204,7 +204,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Tính ngày hết hạn là 1 tuần từ ngày hiện tại
-    const expirationDate = now.add(1, "week").toDate();
+    const expirationDate = dayjs(now).add(1, "week").toDate();
 
     // Tạo gift round mới
     const giftRound = await db.giftRound.create({

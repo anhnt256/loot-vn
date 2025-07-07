@@ -15,7 +15,7 @@ export async function GET(
     if (!branch) {
       return NextResponse.json(
         { error: "Branch cookie is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -25,7 +25,7 @@ export async function GET(
     if (!userId || !requestBranch) {
       return NextResponse.json(
         { error: "User ID and branch are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -34,23 +34,20 @@ export async function GET(
     if (isNaN(parsedUserId)) {
       return NextResponse.json(
         { error: "Invalid user ID format" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Validate branch matches cookie
     if (requestBranch !== branch) {
-      return NextResponse.json(
-        { error: "Branch mismatch" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Branch mismatch" }, { status: 403 });
     }
 
     const rewards = await db.userRewardMap.findMany({
-      where: { 
-        userId: parsedUserId, 
-        branch: requestBranch, 
-        isUsed: false 
+      where: {
+        userId: parsedUserId,
+        branch: requestBranch,
+        isUsed: false,
       },
       include: {
         promotionCode: {
@@ -68,7 +65,7 @@ export async function GET(
     console.error("[REWARD_GET]", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Table, Modal, Input, Button, Select } from "antd";
 import { toast } from "sonner";
-import { useUserInfo } from "@/hooks/use-user-info";
 
 interface Season {
   id: number;

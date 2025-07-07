@@ -128,4 +128,3 @@ const CheckInCard = () => {
 };
 
 export default CheckInCard;
-

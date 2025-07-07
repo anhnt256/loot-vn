@@ -22,7 +22,7 @@ export async function GET(
     if (!branch) {
       return NextResponse.json(
         { error: "Branch cookie is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -33,11 +33,14 @@ export async function GET(
     if (isNaN(parsedUserId)) {
       return NextResponse.json(
         { error: "Invalid user ID format" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const startDate = dayjs().tz("Asia/Ho_Chi_Minh").startOf("day").toISOString();
+    const startDate = dayjs()
+      .tz("Asia/Ho_Chi_Minh")
+      .startOf("day")
+      .toISOString();
     const endDate = dayjs().tz("Asia/Ho_Chi_Minh").endOf("day").toISOString();
 
     const url = `/accounts/${parsedUserId}/balance_changes/?from_date=${encodeURIComponent(
@@ -58,7 +61,7 @@ export async function GET(
     console.error("[BALANCE_CHANGES_GET]", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

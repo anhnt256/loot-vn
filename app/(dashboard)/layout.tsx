@@ -34,9 +34,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   const loginMutation = useLogout();
   const pathname = usePathname();
   const [showGatewayBonus, setShowGatewayBonus] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
   const currentUser = useLocalStorageValue(CURRENT_USER, null);
-  const [isUserDataReady, setIsUserDataReady] = useState(false);
 
   const IS_MAINTENANCE = process.env.NEXT_PUBLIC_IS_MAINTENANCE === "true";
 
@@ -56,42 +54,36 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
         }
       }
       if (!userId) {
-        console.error('No userId found in localStorage');
-        setIsLoading(false);
+        console.error("No userId found in localStorage");
         return;
       }
-      const response = await fetch('/api/user-calculator', {
-        method: 'POST',
+      const response = await fetch("/api/user-calculator", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          listUsers: [userId]
+          listUsers: [userId],
         }),
       });
       if (response.ok) {
         const freshUserData = await response.json();
         // Lấy user đầu tiên trong mảng data
-        const user = Array.isArray(freshUserData.data) ? freshUserData.data[0] : null;
+        const user = Array.isArray(freshUserData.data)
+          ? freshUserData.data[0]
+          : null;
         if (user) {
           localStorage.setItem(CURRENT_USER, JSON.stringify(user));
         }
       }
     } catch (error) {
-      console.error('Error refreshing user data:', error);
-    } finally {
-      setIsLoading(false);
+      console.error("Error refreshing user data:", error);
     }
   };
 
   // Load currentUser và refresh data khi mount
   useEffect(() => {
-    setIsLoading(true);
-    const fetchUserData = async () => {
-      await refreshUserData();
-      setIsUserDataReady(true);
-    };
-    fetchUserData();
+    refreshUserData();
   }, []);
 
   const handleLogout = async () => {
@@ -100,7 +92,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
     if (statusCode === 200) {
       // Xóa thông tin user khỏi localStorage
       clearUserData();
-      
+
       if (typeof window !== "undefined" && window.electron) {
         // @ts-ignore
         window.electron.send("close-app");
@@ -115,7 +107,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
     () => {
       // Xóa thông tin user khỏi localStorage
       clearUserData();
-      
+
       if (typeof window !== "undefined" && window.electron) {
         // @ts-ignore
         window.electron.send("close-app");
@@ -126,7 +118,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
 
   // Chỉ gọi checkGatewayBonus sau khi user-calculator fetch xong và currentUser đã ổn định
   useEffect(() => {
-    if (!isUserDataReady || !currentUser) return;
+    if (!currentUser) return;
     const checkGatewayBonus = async () => {
       try {
         let userId = null;
@@ -148,10 +140,10 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
       }
     };
     checkGatewayBonus();
-  }, [isUserDataReady]);
+  }, [currentUser]);
 
   // Show loading if currentUser is not loaded yet hoặc đang refresh
-  if (!currentUser || isLoading || !isUserDataReady) {
+  if (!currentUser) {
     return (
       <div className="flex h-screen bg-gray-200">
         <div className="bg-gray-800 text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out">
@@ -166,7 +158,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
                 </div>
               </div>
             </div>
-            
+
             {/* Navigation skeleton */}
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="py-2.5 px-4">
@@ -185,7 +177,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
                 <div className="h-6 w-32 bg-gray-500 mx-auto rounded"></div>
               </div>
             </div>
-            
+
             {/* Game-style loading animation */}
             <div className="flex space-x-2">
               {[1, 2, 3].map((i) => (
@@ -196,9 +188,9 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
                 />
               ))}
             </div>
-            
+
             <div className="text-gray-600 text-lg">
-              {isLoading ? 'Đang cập nhật dữ liệu...' : 'Đang tải dữ liệu...'}
+              Đang tải dữ liệu...
             </div>
           </div>
         </div>

@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     if (!branchFromCookie) {
       return NextResponse.json(
         { error: "Branch not found in cookies" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     if (!listUsers || !Array.isArray(listUsers)) {
       return NextResponse.json(
         { error: "listUsers array is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     console.error("User calculator API error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -45,4 +45,4 @@ export async function GET() {
     message: "User Calculator API",
     usage: "POST with { activeUsers: [{ UserId: string, UserType?: string }] }",
   });
-} 
+}

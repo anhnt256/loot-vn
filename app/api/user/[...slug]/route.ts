@@ -15,7 +15,7 @@ export async function GET(
     if (!branch) {
       return NextResponse.json(
         { error: "Branch cookie is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -25,7 +25,7 @@ export async function GET(
     if (!userId || !requestBranch) {
       return NextResponse.json(
         { error: "User ID and branch are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -34,30 +34,24 @@ export async function GET(
     if (isNaN(parsedUserId)) {
       return NextResponse.json(
         { error: "Invalid user ID format" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Validate branch matches cookie
     if (requestBranch !== branch) {
-      return NextResponse.json(
-        { error: "Branch mismatch" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Branch mismatch" }, { status: 403 });
     }
 
     const currentUser: User | null = await db.user.findFirst({
-      where: { 
-        userId: parsedUserId, 
-        branch: requestBranch 
+      where: {
+        userId: parsedUserId,
+        branch: requestBranch,
       },
     });
 
     if (!currentUser) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     return NextResponse.json(currentUser);
@@ -65,7 +59,7 @@ export async function GET(
     console.error("[USER_GET]", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

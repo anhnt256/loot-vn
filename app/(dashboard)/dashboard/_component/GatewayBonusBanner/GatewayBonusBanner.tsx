@@ -45,14 +45,14 @@ export function GatewayBonusBanner() {
 
   // Load user data from localStorage
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const userData = localStorage.getItem(CURRENT_USER);
       if (userData) {
         try {
           const parsedUserData = JSON.parse(userData);
           setCurrentUserId(parsedUserData.userId || parsedUserData.id);
         } catch (error) {
-          console.error('Error parsing user data:', error);
+          console.error("Error parsing user data:", error);
         }
       }
     }
