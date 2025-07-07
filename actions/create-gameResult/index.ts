@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { cookies } from "next/headers";
 import { createSafeAction } from "@/lib/create-safe-action";
 import { checkGameRollRateLimit } from "@/lib/rate-limit";
 
@@ -100,8 +101,17 @@ async function updateRates(
 }
 
 const handler = async (data: InputType): Promise<ReturnType> => {
-  const { userId, branch, rolls, type } = data;
+  const { userId, rolls, type } = data;
   let resultFilters: GameItemResults[] = [];
+
+  // Lấy branch từ cookie
+  const cookieStore = cookies();
+  const branch = cookieStore.get("branch")?.value;
+
+  if (!branch) {
+    return { error: "Không tìm thấy thông tin chi nhánh (branch) trong cookie." };
+  }
+
 
   // Rate limiting check
   const rateLimitResult = await checkGameRollRateLimit(String(userId), branch);
@@ -116,6 +126,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   }
 
   if (type === "Gift") {
+
     // Tìm GiftRound còn lượt
     const giftRound = await db.giftRound.findFirst({
       where: { userId, branch, isUsed: false },

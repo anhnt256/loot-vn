@@ -276,7 +276,7 @@ export async function calculateActiveUsersInfo(
     // Tính gift rounds
     const giftRounds = userGiftRoundsMap.get(userId) || [];
     totalGiftRounds = giftRounds.reduce(
-      (sum: number, gr: any) => sum + gr.amount,
+      (sum: number, gr: any) => sum + (gr.amount - gr.usedAmount),
       0,
     );
 

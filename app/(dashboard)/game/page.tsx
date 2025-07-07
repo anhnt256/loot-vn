@@ -94,7 +94,6 @@ const Game = () => {
     setIsRolling(true);
     await executeRoll({
       userId: Number(userId),
-      branch: String(branch),
       rolls,
       type: selectedType === "round" ? "Wish" : "Gift",
     });
@@ -217,7 +216,7 @@ const Game = () => {
               ) : (
                 <Image src={"/rock.png"} alt="wish" width={18} height={18} />
               )}
-              Wish
+              Ước
             </button>
             {/* Wish x10: icon theo selectedType, luôn w-40 */}
             <button
@@ -240,7 +239,7 @@ const Game = () => {
               ) : (
                 <Image src={"/rock.png"} alt="wish" width={18} height={18} />
               )}
-              Wish x10
+              Ước x10
             </button>
           </div>
         </div>
