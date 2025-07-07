@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { getCookie } from "cookies-next";
 import { getDebugMacAddress, logDebugInfo } from "@/lib/debug-utils";
+import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
 
 export async function GET(req: Request, res: Response): Promise<any> {
   const originalMacAddress = getCookie("macAddress", { req, res });
@@ -32,6 +33,8 @@ export async function GET(req: Request, res: Response): Promise<any> {
         value: result?.branch,
         maxAge: 86400,
       });
+
+      console.log('----DEBUG----', getCurrentTimeVNISO())
 
       return response;
     }

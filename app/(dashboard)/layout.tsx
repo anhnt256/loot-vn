@@ -83,6 +83,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
 
   // Load currentUser và refresh data khi mount
   useEffect(() => {
+    console.log(new Date().toString()); 
     refreshUserData();
   }, []);
 
