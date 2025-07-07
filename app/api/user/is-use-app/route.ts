@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { cookies } from "next/headers";
+import { getVNTimeForPrisma } from "@/lib/timezone-utils";
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -23,15 +24,6 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    console.log(
-      "Debug - userId:",
-      userId,
-      "branch:",
-      branch,
-      "isUseApp:",
-      isUseApp,
-    );
-
     // Kiểm tra user có tồn tại không trước khi update
     let existingUser = await db.user.findFirst({
       where: {
@@ -41,14 +33,6 @@ export async function PATCH(req: NextRequest) {
     });
 
     if (!existingUser) {
-      console.log(
-        "Debug - User not found with userId:",
-        userId,
-        "branch:",
-        branch,
-        "- Creating new user",
-      );
-
       // Tạo user mới nếu chưa tồn tại
       existingUser = await db.user.create({
         data: {
@@ -58,6 +42,7 @@ export async function PATCH(req: NextRequest) {
           rankId: 1, // Default rank
           stars: 0,
           magicStone: 0,
+          createdAt: getVNTimeForPrisma(),
           isUseApp: isUseApp,
           note: "",
         },

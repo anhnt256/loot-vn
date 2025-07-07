@@ -53,9 +53,6 @@ const handler = async (data: InputType): Promise<ReturnType> => {
 
   const startOfDayVN = getVNStartOfDayForPrisma();
 
-  console.log('Start of day VN (Date object):', startOfDayVN);
-  console.log('Current time VN (Date object):', getVNTimeForPrisma());
-
   // Enhanced anti-spam: Prevent check-in if last check-in was less than 30 minutes ago
   const lastCheckIn = await db.checkInResult.findFirst({
     where: { userId, branch },
@@ -101,22 +98,14 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     // Calculate total play time using utility function
     const totalPlayTime = calculateDailyUsageTime(result);
 
-    console.log('Total play time:', totalPlayTime);
-
     // Get check-in configuration for today
     const checkInItems = await db.checkInItem.findMany();
     const today = getCurrentDayOfWeekVN();
     const todayCheckIn = checkInItems.find((item) => item.dayName === today);
     const starsPerHour = todayCheckIn ? todayCheckIn.stars : 1000;
 
-    console.log('Today:', today);
-    console.log('Stars per hour:', starsPerHour);
-    console.log('Check-in items:', checkInItems);
-
     // Server-side calculation of stars to earn (don't trust client input)
     const starsToEarn = Math.floor(totalPlayTime * starsPerHour);
-
-    console.log('Stars to earn (totalPlayTime * starsPerHour):', starsToEarn);
 
     // Check if user has already claimed maximum stars for today
     const userClaim = await db.userStarHistory.findMany({
@@ -135,9 +124,6 @@ const handler = async (data: InputType): Promise<ReturnType> => {
       return acc + difference;
     }, 0);
 
-    console.log('Total claimed today:', totalClaimed);
-    console.log('User claim history:', userClaim);
-
     if (totalClaimed >= starsToEarn) {
       return {
         error: "Bạn chưa có sao để nhận, hãy chơi thêm để nhận sao nhé!",
@@ -146,17 +132,6 @@ const handler = async (data: InputType): Promise<ReturnType> => {
 
     // Calculate actual stars to add (remaining stars)
     const actualStarsToAdd = starsToEarn - totalClaimed;
-
-    console.log('Actual stars to add:', actualStarsToAdd);
-    console.log('Remaining stars (starsToEarn - totalClaimed):', starsToEarn - totalClaimed);
-    console.log('Stars per hour limit:', starsPerHour);
-
-    // Additional validation: Ensure user has played at least 1 hour
-    if (totalPlayTime < 1) {
-      return {
-        error: "Bạn cần chơi ít nhất 1 giờ để có thể check-in!",
-      };
-    }
 
     await db.$transaction(async (tx) => {
       checkIn = await db.checkInResult.create({

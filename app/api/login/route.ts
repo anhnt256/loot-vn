@@ -20,15 +20,12 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
   try {
     const body = await req.text();
-    console.log("Login request body:", body);
 
     const { userName, machineName, isAdmin } = JSON.parse(body);
 
     // Xử lý đăng nhập admin
     if (isAdmin) {
-      console.log("Processing admin login for user:", userName);
       if (userName !== "gateway_admin") {
-        console.log("Admin login failed: Invalid username");
         return NextResponse.json(
           {
             statusCode: 401,
@@ -63,7 +60,6 @@ export async function POST(req: Request, res: Response): Promise<any> {
         path: "/",
       });
 
-      console.log("Admin login successful");
       return response;
     }
 
@@ -260,10 +256,6 @@ export async function POST(req: Request, res: Response): Promise<any> {
             );
             if (calculatorResults.length > 0) {
               userCalculatorData = calculatorResults[0];
-              console.log(
-                "User calculator data for new user:",
-                userCalculatorData,
-              );
             }
           } catch (calculatorError) {
             console.error("Error calling user-calculator:", calculatorError);
@@ -291,7 +283,6 @@ export async function POST(req: Request, res: Response): Promise<any> {
             message: "Login Success",
             ...userCalculatorData, // Trả về trực tiếp userCalculatorData
           };
-          console.log("Login response for new user:", responseData);
           const response = NextResponse.json(responseData);
 
           response.cookies.set({
@@ -344,16 +335,8 @@ export async function POST(req: Request, res: Response): Promise<any> {
         branchFromCookie || "",
       );
 
-      console.log("userId", userId);
-      console.log("branchFromCookie", branchFromCookie);
-      console.log("calculatorResults", calculatorResults);
-
       if (calculatorResults.length > 0) {
         userCalculatorData = calculatorResults[0];
-        console.log(
-          "User calculator data for existing user:",
-          userCalculatorData,
-        );
       }
     } catch (calculatorError) {
       console.error("Error calling user-calculator:", calculatorError);
@@ -377,7 +360,6 @@ export async function POST(req: Request, res: Response): Promise<any> {
       message: "Login Success",
       ...userCalculatorData, // Trả về trực tiếp userCalculatorData
     };
-    console.log("Login response for existing user:", responseData);
     const response = NextResponse.json(responseData);
 
     response.cookies.set({

@@ -34,7 +34,7 @@ export async function GET(req: Request, res: Response): Promise<any> {
         maxAge: 86400,
       });
 
-      console.log('----DEBUG----', getCurrentTimeVNISO())
+      console.log("----DEBUG----", getCurrentTimeVNISO());
 
       return response;
     }

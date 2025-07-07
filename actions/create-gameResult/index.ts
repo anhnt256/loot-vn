@@ -115,8 +115,6 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     return { error: "Chỉ cho phép quay 1 hoặc 10 lần." };
   }
 
-  console.log(type);
-
   if (type === "Gift") {
     // Tìm GiftRound còn lượt
     const giftRound = await db.giftRound.findFirst({

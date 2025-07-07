@@ -35,6 +35,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const [showGatewayBonus, setShowGatewayBonus] = useState(true);
   const currentUser = useLocalStorageValue(CURRENT_USER, null);
+  const [isClient, setIsClient] = useState(false);
 
   const IS_MAINTENANCE = process.env.NEXT_PUBLIC_IS_MAINTENANCE === "true";
 
@@ -83,7 +84,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
 
   // Load currentUser và refresh data khi mount
   useEffect(() => {
-    console.log(new Date().toString()); 
+    console.log(new Date().toString());
     refreshUserData();
   }, []);
 
@@ -143,8 +144,12 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
     checkGatewayBonus();
   }, [currentUser]);
 
-  // Show loading if currentUser is not loaded yet hoặc đang refresh
-  if (!currentUser) {
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Show loading hoặc skeleton nếu chưa ở client hoặc chưa có currentUser
+  if (!isClient || !currentUser) {
     return (
       <div className="flex h-screen bg-gray-200">
         <div className="bg-gray-800 text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out">
@@ -159,7 +164,6 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
                 </div>
               </div>
             </div>
-
             {/* Navigation skeleton */}
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="py-2.5 px-4">
@@ -168,7 +172,6 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
             ))}
           </nav>
         </div>
-
         <div className="flex-1 p-10 text-2xl font-bold bg-gray-400">
           <div className="flex flex-col items-center justify-center h-full space-y-8">
             <div className="text-center space-y-4">
@@ -178,7 +181,6 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
                 <div className="h-6 w-32 bg-gray-500 mx-auto rounded"></div>
               </div>
             </div>
-
             {/* Game-style loading animation */}
             <div className="flex space-x-2">
               {[1, 2, 3].map((i) => (
@@ -189,10 +191,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
                 />
               ))}
             </div>
-
-            <div className="text-gray-600 text-lg">
-              Đang tải dữ liệu...
-            </div>
+            <div className="text-gray-600 text-lg">Đang tải dữ liệu...</div>
           </div>
         </div>
       </div>

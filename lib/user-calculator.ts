@@ -81,7 +81,6 @@ export async function calculateActiveUsersInfo(
             AND (
               systemlogtb.EnterDate = '${curDate}' 
               OR systemlogtb.EndDate = '${curDate}'
-              OR (systemlogtb.EndDate IS NULL AND systemlogtb.EnterDate = DATE_SUB('${curDate}', INTERVAL 1 DAY))
             )
         `;
 
