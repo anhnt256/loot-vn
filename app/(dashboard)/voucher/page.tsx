@@ -3,15 +3,29 @@
 import { Reward } from "@/prisma/generated/prisma-client";
 import { fetcher } from "@/lib/fetcher";
 import { useQuery } from "@tanstack/react-query";
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import VoucherList from "@/app/(dashboard)/voucher/VoucherList/VoucherList";
 import { getCookie } from "cookies-next";
 import { BRANCH } from "@/constants/enum.constant";
-import { useUserInfo } from "@/hooks/use-user-info";
+import { CURRENT_USER } from "@/constants/token.constant";
 
 const Voucher = () => {
-  const { userData } = useUserInfo();
+  const [userData, setUserData] = useState<any>(null);
   const { userId, branch } = userData || {};
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const userDataString = localStorage.getItem(CURRENT_USER);
+      if (userDataString) {
+        try {
+          const parsedUserData = JSON.parse(userDataString);
+          setUserData(parsedUserData);
+        } catch (error) {
+          console.error("Error parsing user data from localStorage:", error);
+        }
+      }
+    }
+  }, []);
 
   const { data: vouchers } = useQuery<[any]>({
     queryKey: ["vouchers"],

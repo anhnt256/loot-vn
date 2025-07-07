@@ -120,7 +120,7 @@ model Mission {
   endHours    Int
   createdAt   DateTime     @default(now())
   quantity    Int
-  type        Mission_type
+  type        MissionType
 }
 
 model UserRewardMap {
@@ -171,7 +171,7 @@ model UserStarHistory {
   userId       Int?
   oldStars     Int?
   newStars     Int?
-  type         UserStarHistory_type?
+  type         UserStarHistoryType?
   createdAt    DateTime?             @default(now())
   targetId     Int?
   branch       String?               @db.VarChar(45)
@@ -224,6 +224,7 @@ model GiftRound {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now())
   expiredAt DateTime?
+  usedAmount Int      @default(0)
   isUsed    Boolean   @default(false)
 }
 
@@ -335,7 +336,7 @@ model UserBattlePassReward {
   @@index([userId])
 }
 
-enum Mission_type {
+enum MissionType {
   HOURS
   ORDER
   TOPUP
@@ -347,12 +348,13 @@ enum DeviceStatus {
   COMPLETELY_DAMAGED
 }
 
-enum UserStarHistory_type {
+enum UserStarHistoryType {
   CHECK_IN
   MISSION
   REWARD
   GAME
   RETURN_GIFT
+  GIFT_ROUND
 }
 
 enum PromotionType {

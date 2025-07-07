@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import dayjs from "@/lib/dayjs";
+import { getVNTimeForPrisma } from "@/lib/timezone-utils";
 
 // GET endpoint để kiểm tra trạng thái Gateway Bonus
 export async function GET(request: NextRequest) {
@@ -35,9 +36,9 @@ export async function GET(request: NextRequest) {
     const claimDeadline = process.env.GATEWAY_BONUS_DEADLINE || "2025-07-15";
     const accountCreationDeadline = "2025-07-05";
 
-    const now = dayjs();
-    const deadline = dayjs(claimDeadline).endOf("day");
-    const accountDeadline = dayjs(accountCreationDeadline);
+    const now = dayjs().utcOffset(7);
+    const deadline = dayjs(claimDeadline).utcOffset(7).endOf("day");
+    const accountDeadline = dayjs(accountCreationDeadline).utcOffset(7);
 
     // Kiểm tra xem đã qua ngày hết hạn chưa
     if (now.isAfter(deadline)) {
@@ -69,7 +70,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Kiểm tra ngày tạo tài khoản
-    const userCreatedAt = dayjs(user.createdAt);
+    const userCreatedAt = dayjs(user.createdAt).utcOffset(7);
     if (userCreatedAt.isAfter(accountDeadline)) {
       return NextResponse.json({
         available: false,
@@ -142,9 +143,9 @@ export async function POST(request: NextRequest) {
     const claimDeadline = process.env.GATEWAY_BONUS_DEADLINE || "2025-07-15";
     const accountCreationDeadline = "2025-07-05";
 
-    const now = dayjs();
-    const deadline = dayjs(claimDeadline).endOf("day");
-    const accountDeadline = dayjs(accountCreationDeadline);
+    const now = getVNTimeForPrisma();
+    const deadline = dayjs(claimDeadline).utcOffset(7).endOf("day");
+    const accountDeadline = dayjs(accountCreationDeadline).utcOffset(7);
 
     // Kiểm tra xem đã qua ngày hết hạn chưa
     if (now.isAfter(deadline)) {
@@ -175,7 +176,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Kiểm tra ngày tạo tài khoản
-    const userCreatedAt = dayjs(user.createdAt);
+    const userCreatedAt = dayjs(user.createdAt).utcOffset(7);
     if (userCreatedAt.isAfter(accountDeadline)) {
       return NextResponse.json(
         {
@@ -213,6 +214,7 @@ export async function POST(request: NextRequest) {
         reason: "Gateway Bonus",
         staffId: 0, // System
         branch: branch,
+        createdAt: getVNTimeForPrisma(),
         expiredAt: expirationDate, // Hết hạn sau 1 tuần
         isUsed: false,
       },

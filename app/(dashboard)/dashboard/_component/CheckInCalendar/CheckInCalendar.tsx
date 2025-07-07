@@ -1,22 +1,20 @@
 // Calendar.tsx
 import React, { useCallback, useEffect, useState } from "react";
-import { Star } from "lucide-react";
 import { CheckInDay } from "@/type/checkin";
 import dayjs from "@/lib/dayjs";
 import isEmpty from "lodash/isEmpty";
-import { useQuery } from "@tanstack/react-query";
-import { fetcher } from "@/lib/fetcher";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
-import { useUserInfo, useUserCheckIn } from "@/hooks/use-user-info";
 import Image from "next/image";
 import { UserStarHistory } from "@/prisma/generated/prisma-client";
+import { CURRENT_USER } from "@/constants/token.constant";
 
 const CheckInCalendar = () => {
-  const { userBalance, currentUserId, branch } = useUserInfo();
-  const { userCheckIn } = useUserCheckIn(currentUserId, branch);
   const [days, setDays] = useState<CheckInDay[]>([]);
   const [totalRewards, setTotalReward] = useState<number>(0);
+  const [userCheckIn, setUserCheckIn] = useState<any[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [branch, setBranch] = useState<string | null>(null);
 
   const createDaysOfMonth = useCallback((): CheckInDay[] => {
     const year = dayjs().year();
@@ -60,6 +58,45 @@ const CheckInCalendar = () => {
 
     return daysList;
   }, [userCheckIn]);
+
+  // Load user data from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const userData = localStorage.getItem(CURRENT_USER);
+      if (userData) {
+        try {
+          const parsedUserData = JSON.parse(userData);
+          setCurrentUserId(parsedUserData.userId || parsedUserData.id);
+        } catch (error) {
+          console.error('Error parsing user data:', error);
+        }
+      }
+      
+      // Get branch from localStorage or default
+      const branchData = localStorage.getItem('branch') || 'GO_VAP';
+      setBranch(branchData);
+    }
+  }, []);
+
+  // Fetch user check-in data
+  useEffect(() => {
+    if (!currentUserId || !branch) return;
+
+    const fetchUserCheckIn = async () => {
+      try {
+        const response = await fetch(`/api/check-in-result/${currentUserId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setUserCheckIn(data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching user check-in data:', error);
+        setUserCheckIn([]);
+      }
+    };
+
+    fetchUserCheckIn();
+  }, [currentUserId, branch]);
 
   useEffect(() => {
     if (userCheckIn && userCheckIn.length > 0) {

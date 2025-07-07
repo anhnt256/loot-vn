@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { BattlePassProgress } from "@/app/components/battle-pass/BattlePassProgress";
 import { toast } from "sonner";
-import { useUserInfo } from "@/hooks/use-user-info";
+import { CURRENT_USER } from "@/constants/token.constant";
+
 
 interface Season {
   id: number;
@@ -45,7 +46,23 @@ interface UserProgress {
 export default function BattlePassPage() {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { userData } = useUserInfo();
+  const [userData, setUserData] = useState<any>(null);
+  
+  // Load user data from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const userDataString = localStorage.getItem(CURRENT_USER);
+      if (userDataString) {
+        try {
+          const parsedUserData = JSON.parse(userDataString);
+          setUserData(parsedUserData);
+        } catch (error) {
+          console.error('Error parsing user data:', error);
+        }
+      }
+    }
+  }, []);
+  
   const { stars } = userData || {};
 
   const { data: currentSeason, isLoading: isLoadingSeason } = useQuery<Season>({

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useUserInfo } from "@/hooks/use-user-info";
+
 import Link from "next/link";
 import dayjs from "@/lib/dayjs";
+import { CURRENT_USER } from "@/constants/token.constant";
 
 interface GatewayBonusStatus {
   available: boolean;
@@ -13,7 +14,7 @@ interface GatewayBonusStatus {
 }
 
 export function GatewayBonusBanner() {
-  const { currentUserId } = useUserInfo();
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [status, setStatus] = useState<GatewayBonusStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isVisible, setIsVisible] = useState(true);
@@ -41,6 +42,21 @@ export function GatewayBonusBanner() {
       setIsLoading(false);
     }
   };
+
+  // Load user data from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const userData = localStorage.getItem(CURRENT_USER);
+      if (userData) {
+        try {
+          const parsedUserData = JSON.parse(userData);
+          setCurrentUserId(parsedUserData.userId || parsedUserData.id);
+        } catch (error) {
+          console.error('Error parsing user data:', error);
+        }
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (currentUserId) {

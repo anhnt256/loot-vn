@@ -9,6 +9,7 @@ import {
   checkDatabaseRateLimit,
 } from "@/lib/rate-limit";
 import { getDebugUserId, logDebugInfo } from "@/lib/debug-utils";
+import { calculateActiveUsersInfo } from "@/lib/user-calculator";
 
 const expirationDuration = 1;
 const expirationDate = dayjs().add(expirationDuration, "day").format();
@@ -250,15 +251,44 @@ export async function POST(req: Request, res: Response): Promise<any> {
             },
           });
 
+          // Gọi user-calculator để lấy thông tin chi tiết
+          let userCalculatorData = null;
+          try {
+            const calculatorResults = await calculateActiveUsersInfo(
+              [Number(userId)],
+              branchFromCookie || ""
+            );
+            if (calculatorResults.length > 0) {
+              userCalculatorData = calculatorResults[0];
+              console.log("User calculator data for new user:", userCalculatorData);
+            }
+          } catch (calculatorError) {
+            console.error("Error calling user-calculator:", calculatorError);
+            // Không fail login nếu user-calculator lỗi
+          }
+
+          // Nếu không có userCalculatorData, trả về lỗi
+          if (!userCalculatorData) {
+            return NextResponse.json(
+              {
+                statusCode: 500,
+                message: "Không lấy được thông tin user, vui lòng đăng nhập lại.",
+              },
+              { status: 500 }
+            );
+          }
+
           // Trả về thông tin user mới tạo
           const token = await signJWT({
             userId: String(userUpdated.userId ?? ""),
           });
-          const response = NextResponse.json({
-            ...userUpdated,
+          const responseData = {
             statusCode: 200,
             message: "Login Success",
-          });
+            ...userCalculatorData, // Trả về trực tiếp userCalculatorData
+          };
+          console.log("Login response for new user:", responseData);
+          const response = NextResponse.json(responseData);
 
           response.cookies.set({
             name: "token",
@@ -302,12 +332,46 @@ export async function POST(req: Request, res: Response): Promise<any> {
       });
     }
 
+    // Gọi user-calculator để lấy thông tin chi tiết cho user đã tồn tại
+    let userCalculatorData = null;
+    try {
+      const calculatorResults = await calculateActiveUsersInfo(
+        [Number(userId)],
+        branchFromCookie || ""
+      );
+
+      console.log('userId', userId)
+      console.log('branchFromCookie', branchFromCookie)
+      console.log('calculatorResults', calculatorResults)
+
+      if (calculatorResults.length > 0) {
+        userCalculatorData = calculatorResults[0];
+        console.log("User calculator data for existing user:", userCalculatorData);
+      }
+    } catch (calculatorError) {
+      console.error("Error calling user-calculator:", calculatorError);
+      // Không fail login nếu user-calculator lỗi
+    }
+
+    // Nếu không có userCalculatorData, trả về lỗi
+    if (!userCalculatorData) {
+      return NextResponse.json(
+        {
+          statusCode: 500,
+          message: "Không lấy được thông tin user, vui lòng đăng nhập lại.",
+        },
+        { status: 500 }
+      );
+    }
+
     const token = await signJWT({ userId: String(userUpdated?.userId ?? "") });
-    const response = NextResponse.json({
-      ...userUpdated,
+    const responseData = {
       statusCode: 200,
       message: "Login Success",
-    });
+      ...userCalculatorData, // Trả về trực tiếp userCalculatorData
+    };
+    console.log("Login response for existing user:", responseData);
+    const response = NextResponse.json(responseData);
 
     response.cookies.set({
       name: "token",

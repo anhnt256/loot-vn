@@ -85,6 +85,7 @@ export const calculateDailyUsageMinutes = (
     : dayjs().tz("Asia/Ho_Chi_Minh").startOf("day");
   const dayStart = day.startOf("day");
   const dayEnd = day.endOf("day");
+
   let totalMinutes = 0;
 
   for (const session of sessions) {

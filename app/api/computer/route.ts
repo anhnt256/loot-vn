@@ -4,10 +4,7 @@ import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
 import { cookies } from "next/headers";
 import dayjs from "@/lib/dayjs";
 import { Prisma } from "@/prisma/generated/prisma-client";
-import {
-  calculateDailyUsageMinutes,
-  getCurrentDayOfWeekVN,
-} from "@/lib/battle-pass-utils";
+import { calculateDailyUsageMinutes } from "@/lib/battle-pass-utils";
 import {
   getStartOfDayVNISO,
   getCurrentDateVN,
@@ -15,6 +12,7 @@ import {
   getEndOfWeekDateVN,
   convertToVNTimeISO,
 } from "@/lib/timezone-utils";
+import { calculateActiveUsersInfo } from "@/lib/user-calculator";
 
 // Hàm chuyển BigInt về string để tránh lỗi serialize
 function convertBigIntToString(obj: any): any {
@@ -126,164 +124,19 @@ export async function GET() {
     // Lấy tất cả UserIds có sử dụng máy
     const activeUserIds = computerStatus
       .filter((status: any) => status.UserId)
-      .map((status: any) => status.UserId);
+      .map((status: any) => parseInt(status.UserId, 10));
 
-    // Batch queries cho tất cả users
-    const [
-      userSessions,
-      userClaims,
-      userData,
-      userTopUps,
-      userGiftRounds,
-      userGameRounds,
-    ] = await Promise.all([
-      // 1. Tất cả user sessions trong 1 query
-      activeUserIds.length > 0
-        ? (async () => {
-            const userIdsStr = activeUserIds.join(",");
-            const queryString = `
-          SELECT UserId, EnterDate, EndDate, EnterTime, EndTime, status
-          FROM fnet.systemlogtb
-          WHERE UserId IN (${userIdsStr})
-            AND status = 3
-            AND (
-              EnterDate = '${curDate}' 
-              OR EndDate = '${curDate}'
-              OR (EndDate IS NULL AND EnterDate = DATE_SUB('${curDate}', INTERVAL 1 DAY))
-            )
-        `;
+    // Sử dụng hàm calculateActiveUsersInfo để tính toán thông tin users
+    const usersInfo =
+      activeUserIds.length > 0 && branchFromCookie
+        ? await calculateActiveUsersInfo(activeUserIds, branchFromCookie)
+        : [];
 
-            const result = await fnetDB.$queryRawUnsafe(queryString);
-
-            return result;
-          })()
-        : [],
-
-      // 2. Tất cả user claims trong 1 query
-      activeUserIds.length > 0
-        ? db.userStarHistory.findMany({
-            where: {
-              userId: { in: activeUserIds },
-              branch: branchFromCookie,
-              type: "CHECK_IN",
-              createdAt: { gte: startOfDayVN },
-            },
-          })
-        : [],
-
-      // 3. Tất cả user data trong 1 query
-      activeUserIds.length > 0
-        ? db.user.findMany({
-            where: {
-              userId: { in: activeUserIds },
-              branch: branchFromCookie,
-            },
-          })
-        : [],
-
-      // 4. Tất cả user top ups trong 1 query
-      activeUserIds.length > 0
-        ? (async () => {
-            const userIdsStr = activeUserIds.join(",");
-            const queryString = `
-            SELECT 
-              UserId,
-              COALESCE(CAST(SUM(AutoAmount) AS DECIMAL(18,2)), 0) AS total
-            FROM fnet.paymenttb
-            WHERE PaymentType = 4
-              AND UserId IN (${userIdsStr})
-              AND Note = N'Thời gian phí'
-              AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) >= DATE(DATE_SUB(NOW(), INTERVAL WEEKDAY(NOW()) DAY))
-              AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) <= NOW()
-            GROUP BY UserId
-          `;
-
-            const result = await fnetDB.$queryRawUnsafe(queryString);
-            return result;
-          })()
-        : [],
-
-      // 5. Tất cả gift rounds chưa hết hạn
-      activeUserIds.length > 0
-        ? db.giftRound.findMany({
-            where: {
-              userId: { in: activeUserIds.map((id) => parseInt(id, 10)) },
-              expiredAt: {
-                gte: getCurrentDateVN(),
-              },
-            },
-          })
-        : [],
-
-      // 6. Tất cả game rounds từ UserStarHistory
-      activeUserIds.length > 0
-        ? db.userStarHistory.findMany({
-            where: {
-              userId: { in: activeUserIds.map((id) => parseInt(id, 10)) },
-              branch: branchFromCookie,
-              type: "GAME",
-              createdAt: {
-                gte: getStartOfWeekDateVN(),
-                lte: getEndOfWeekDateVN(),
-              },
-            },
-          })
-        : [],
-    ]);
-
-    // Tạo maps để lookup nhanh
-    const userSessionsMap = new Map();
-    (userSessions as any[]).forEach((session) => {
-      if (!userSessionsMap.has(session.UserId)) {
-        userSessionsMap.set(session.UserId, []);
-      }
-      userSessionsMap.get(session.UserId).push(session);
+    // Tạo map để lookup nhanh user info
+    const userInfoMap = new Map();
+    usersInfo.forEach((userInfo) => {
+      userInfoMap.set(userInfo.userId, userInfo);
     });
-
-    const userClaimsMap = new Map();
-    userClaims.forEach((claim) => {
-      if (!userClaimsMap.has(claim.userId)) {
-        userClaimsMap.set(claim.userId, []);
-      }
-      userClaimsMap.get(claim.userId).push(claim);
-    });
-
-    const userDataMap = new Map();
-    userData.forEach((user) => {
-      userDataMap.set(user.userId, user);
-    });
-
-    const userTopUpsMap = new Map();
-    (userTopUps as any[]).forEach((topUp: any) => {
-      const amount = parseFloat(topUp.total.toString());
-      userTopUpsMap.set(topUp.UserId, amount);
-    });
-
-    const userGiftRoundsMap = new Map();
-    userGiftRounds.forEach((gr) => {
-      if (!userGiftRoundsMap.has(gr.userId)) {
-        userGiftRoundsMap.set(gr.userId, []);
-      }
-      userGiftRoundsMap.get(gr.userId).push(gr);
-    });
-
-    const userGameRoundsMap = new Map();
-    userGameRounds.forEach((round) => {
-      if (!userGameRoundsMap.has(round.userId)) {
-        userGameRoundsMap.set(round.userId, 0);
-      }
-      userGameRoundsMap.set(
-        round.userId,
-        userGameRoundsMap.get(round.userId) + 1,
-      );
-    });
-
-    // Query real-time check in items
-    const todayDayOfWeek = getCurrentDayOfWeekVN();
-    const todayCheckIn = await db.checkInItem.findFirst({
-      where: { dayName: todayDayOfWeek },
-    });
-    const starsPerHour = todayCheckIn ? todayCheckIn.stars : 1000;
 
     const results = [];
 
@@ -294,66 +147,26 @@ export async function GET() {
       );
       const { UserId, Status, UserType } = computerStatusData || {};
 
-      let checkIn = 0;
-      let totalRound = 0;
-      let userData = null;
-
-      if (UserId) {
-        // Tính check in từ cached data
-        const sessions = userSessionsMap.get(UserId) || [];
-        const totalPlayTimeMinutes = calculateDailyUsageMinutes(sessions);
-        const totalPlayTimeHours = Math.floor(totalPlayTimeMinutes / 60);
-        const canClaim = Math.floor(totalPlayTimeHours * starsPerHour);
-
-        const claims = userClaimsMap.get(UserId) || [];
-        const totalClaimed = claims.reduce((acc: number, item: any) => {
-          const difference = (item.newStars ?? 0) - (item.oldStars ?? 0);
-          return acc + difference;
-        }, 0);
-
-        // Lấy user data từ cache
-        userData = userDataMap.get(UserId);
-
-        if (userData?.id) {
-          // User đã đăng nhập, tính check-in đã claim
-          checkIn = Math.max(0, canClaim - totalClaimed);
-        } else {
-          // User chưa đăng nhập, chưa claim check-in
-          checkIn = canClaim;
-        }
-
-        // Tính rounds từ cached data
-        const userTopUp = userTopUpsMap.get(UserId) || 0;
-        const spendPerRound = Number(process.env.NEXT_PUBLIC_SPEND_PER_ROUND);
-        const round = Math.floor(userTopUp ? userTopUp / spendPerRound : 0);
-
-        if (userData?.id) {
-          const giftRounds = userGiftRoundsMap.get(UserId) || [];
-          const totalGiftRounds = giftRounds.reduce(
-            (sum: number, gr: any) => sum + gr.amount,
-            0,
-          );
-          const usedRounds = userGameRoundsMap.get(parseInt(UserId, 10)) || 0;
-          totalRound = round + totalGiftRounds - usedRounds;
-        } else {
-          // User chưa đăng nhập, chưa sử dụng lượt quay
-          totalRound = round;
-        }
-      }
+      // Lấy user info từ map
+      const userInfo = UserId ? userInfoMap.get(parseInt(UserId, 10)) : null;
 
       results.push({
         id: computer.id,
         name: computer.name,
         status: Status,
         userId: UserId,
-        userName: userData?.userName,
+        userName: userInfo?.userName,
         userType: UserType,
-        canClaim: checkIn,
-        round: totalRound,
-        stars: userData?.stars || 0,
-        magicStone: userData?.magicStone || 0,
-        isUseApp: userData?.isUseApp !== undefined ? userData.isUseApp : true,
-        note: userData?.note || "",
+        totalCheckIn: userInfo?.totalCheckIn || 0,
+        claimedCheckIn: userInfo?.claimedCheckIn || 0,
+        availableCheckIn: userInfo?.availableCheckIn || 0,
+        round: userInfo?.round || 0,
+        stars: userInfo?.stars || 0,
+        magicStone: userInfo?.magicStone || 0,
+        isUseApp: userInfo?.isUseApp !== undefined ? userInfo.isUseApp : true,
+        note: userInfo?.note || "",
+        totalPayment: userInfo?.totalPayment || 0,
+        giftRound: userInfo?.giftRound || 0,
         devices: computer.devices.map((device) => ({
           id: device.id,
           monitorStatus: device.monitorStatus,

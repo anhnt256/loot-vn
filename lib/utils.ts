@@ -165,3 +165,17 @@ export const checkTodaySpentTime = (actions: any[]) => {
 
   return Math.floor(billingMinutes / 60);
 };
+
+/**
+ * Clears all user-related data from localStorage
+ */
+export const clearUserData = () => {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("currentUser");
+    localStorage.removeItem("token");
+    // Clear any other user-related items that might exist
+    localStorage.removeItem("userInfo");
+    localStorage.removeItem("user_info");
+    localStorage.removeItem("user-info");
+  }
+};

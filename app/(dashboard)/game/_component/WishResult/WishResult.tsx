@@ -1,9 +1,9 @@
 import { Modal, Table, Tabs } from "antd";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import dayjs from "@/lib/dayjs";
 import { useQuery } from "@tanstack/react-query";
 import { fetcher } from "@/lib/fetcher";
-import { useUserInfo } from "@/hooks/use-user-info";
+import { CURRENT_USER } from "@/constants/token.constant";
 
 interface TableItem {
   key: number;
@@ -37,8 +37,24 @@ const getRarityStyle = (itemId: number) => {
 };
 
 export function WishResult({ isModalOpen, closeModal }: WishResultProps) {
-  const { userData, userName } = useUserInfo();
   const [activeTab, setActiveTab] = useState<string>("1");
+  const [userData, setUserData] = useState<any>(null);
+  const [userName, setUserName] = useState<string>("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const userDataString = localStorage.getItem(CURRENT_USER);
+      if (userDataString) {
+        try {
+          const parsedUserData = JSON.parse(userDataString);
+          setUserData(parsedUserData);
+          setUserName(parsedUserData.userName || "");
+        } catch (error) {
+          console.error("Error parsing user data from localStorage:", error);
+        }
+      }
+    }
+  }, []);
 
   const { userId } = userData || {};
 

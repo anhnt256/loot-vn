@@ -9,6 +9,7 @@ import apiClient from "@/lib/apiClient";
 import { MIN_LOGIN_TIME } from "@/constants/constant";
 import { checkReward } from "@/lib/utils";
 import dayjs from "dayjs";
+import { getVNTimeForPrisma } from "@/lib/timezone-utils";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
   const { id, rankId, magicStone, userId, stars, branch, userName, mission } = data;
@@ -23,7 +24,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         stars: stars !== undefined ? stars : undefined,
         branch: branch !== undefined ? branch : undefined,
         userName: userName !== undefined ? userName : undefined,
-        updatedAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
+        updatedAt: getVNTimeForPrisma(),
       },
     });
 

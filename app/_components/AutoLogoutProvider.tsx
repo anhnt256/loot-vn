@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect } from "react";
+import { clearUserData } from "@/lib/utils";
 
 // Hook auto logout sau 5 phút không hoạt động
 function useAutoLogout(onLogout: () => void, timeout = 1 * 60 * 1000) {
@@ -28,12 +29,15 @@ export function AutoLogoutProvider({
   // Tích hợp auto logout cho toàn app
   useAutoLogout(
     () => {
+      // Xóa thông tin user khỏi localStorage
+      clearUserData();
+      
       if (typeof window !== "undefined" && window.electron) {
         // @ts-ignore
         window.electron.send("close-app");
       }
     },
-    5 * 60 * 1000,
+    60 * 60 * 1000, // 1 hour
   );
 
   return <>{children}</>;

@@ -3,6 +3,7 @@ import { deleteCookie, setCookie } from "cookies-next";
 import { ACCESS_TOKEN_KEY, CURRENT_USER } from "@/constants/token.constant";
 import dayjs from "@/lib/dayjs";
 import isEmpty from "lodash/isEmpty";
+import { clearUserData } from "@/lib/utils";
 
 const expirationDuration = 1;
 const expirationDate = dayjs().add(expirationDuration, "day").format();
@@ -28,6 +29,7 @@ export const postLogin = async ({
   });
 
   const resultText = await result.text();
+  const statusCode = result.status;
 
   if (resultText.includes("Duplicate account")) {
     return {
@@ -38,26 +40,43 @@ export const postLogin = async ({
     };
   }
 
-  if (resultText !== "Internal Error") {
-    const data = JSON.parse(resultText);
-
-    const { userId, userName } = data || {};
-    if (isEmpty(userName) && !isAdmin) {
+  if (statusCode >= 200 && statusCode < 300) {
+    try {
+      const data = JSON.parse(resultText);
+      const { userId, userName } = data || {};
+      
+      if (isEmpty(userName) && !isAdmin) {
+        return {
+          statusCode: 700,
+          data: null,
+        };
+      }
+      
+      localStorage.setItem(CURRENT_USER, JSON.stringify(data));
+      return { statusCode: 200, data: data, message: "Login Success" };
+    } catch (parseError) {
       return {
-        statusCode: 700,
+        statusCode: 500,
         data: null,
+        message: "Lỗi khi xử lý dữ liệu từ server",
       };
     }
-    localStorage.setItem(CURRENT_USER, JSON.stringify(data));
-    return { statusCode: 200, data: userId, message: "Login Success" };
   }
 
-  return {
-    statusCode: 500,
-    data: null,
-    message:
-      "Thông tin tài khoản hoặc chi nhánh không đúng. Vui lòng kiểm tra và thử lại!",
-  };
+  try {
+    const errorData = JSON.parse(resultText);
+    return {
+      statusCode: statusCode,
+      data: null,
+      message: errorData.message || "Đã xảy ra lỗi",
+    };
+  } catch (parseError) {
+    return {
+      statusCode: statusCode,
+      data: null,
+      message: "Thông tin tài khoản hoặc chi nhánh không đúng. Vui lòng kiểm tra và thử lại!",
+    };
+  }
 };
 
 export const postLogout = async (): Promise<any> => {
@@ -70,11 +89,27 @@ export const postLogout = async (): Promise<any> => {
   });
 
   const resultText = await result.text();
+  const statusCode = result.status;
 
-  if (resultText !== "Internal Error") {
+  if (statusCode >= 200 && statusCode < 300) {
     deleteCookie(ACCESS_TOKEN_KEY);
-    localStorage.clear();
+    clearUserData();
     return { statusCode: 200, data: null };
+  }
+
+  try {
+    const errorData = JSON.parse(resultText);
+    return {
+      statusCode: statusCode,
+      data: null,
+      message: errorData.message || "Đã xảy ra lỗi khi đăng xuất",
+    };
+  } catch (parseError) {
+    return {
+      statusCode: statusCode,
+      data: null,
+      message: "Đã xảy ra lỗi khi đăng xuất",
+    };
   }
 };
 

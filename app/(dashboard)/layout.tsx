@@ -2,18 +2,17 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useUserInfo } from "@/hooks/use-user-info";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { usePathname } from "next/navigation";
+import { cn, clearUserData } from "@/lib/utils";
 import { useLogout } from "@/queries/auth.query";
 import { toast } from "sonner";
-import { useAction } from "@/hooks/use-action";
-import { updateUser } from "@/actions/update-user";
 import dayjs from "@/lib/dayjs";
+import { CURRENT_USER } from "@/constants/token.constant";
+import { useLocalStorageValue } from "@/hooks/useLocalStorageValue";
 
-// Hook auto logout sau 5 phút không hoạt động
-function useAutoLogout(onLogout: () => void, timeout = 5 * 60 * 1000) {
+// Hook auto logout sau 1 giờ không hoạt động
+function useAutoLogout(onLogout: () => void, timeout = 60 * 60 * 1000) {
   const timer = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
@@ -33,25 +32,75 @@ function useAutoLogout(onLogout: () => void, timeout = 5 * 60 * 1000) {
 
 const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   const loginMutation = useLogout();
-
-  const { userName, userData } = useUserInfo();
-  const { stars, magicStone } = userData || {};
   const pathname = usePathname();
   const [showGatewayBonus, setShowGatewayBonus] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const currentUser = useLocalStorageValue(CURRENT_USER, null);
+  const [isUserDataReady, setIsUserDataReady] = useState(false);
 
   const IS_MAINTENANCE = process.env.NEXT_PUBLIC_IS_MAINTENANCE === "true";
 
-  const { execute: executeUpdateUser } = useAction(updateUser, {
-    onSuccess: async () => {},
-    onError: (error) => {
-      toast.error(error);
-    },
-  });
+  // Function to call user-calculator API and update localStorage
+  const refreshUserData = async () => {
+    let parsedUserData = null;
+    try {
+      // Get userData from localStorage
+      const userData = localStorage.getItem(CURRENT_USER);
+      let userId = null;
+      if (userData) {
+        try {
+          parsedUserData = JSON.parse(userData);
+          userId = parsedUserData.userId || parsedUserData.id;
+        } catch (error) {
+          console.error("Error parsing currentUser from localStorage:", error);
+        }
+      }
+      if (!userId) {
+        console.error('No userId found in localStorage');
+        setIsLoading(false);
+        return;
+      }
+      const response = await fetch('/api/user-calculator', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          listUsers: [userId]
+        }),
+      });
+      if (response.ok) {
+        const freshUserData = await response.json();
+        // Lấy user đầu tiên trong mảng data
+        const user = Array.isArray(freshUserData.data) ? freshUserData.data[0] : null;
+        if (user) {
+          localStorage.setItem(CURRENT_USER, JSON.stringify(user));
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Load currentUser và refresh data khi mount
+  useEffect(() => {
+    setIsLoading(true);
+    const fetchUserData = async () => {
+      await refreshUserData();
+      setIsUserDataReady(true);
+    };
+    fetchUserData();
+  }, []);
 
   const handleLogout = async () => {
     const result = await loginMutation.mutateAsync();
-    const { statusCode, data, message } = result || {};
+    const { statusCode, message } = result || {};
     if (statusCode === 200) {
+      // Xóa thông tin user khỏi localStorage
+      clearUserData();
+      
       if (typeof window !== "undefined" && window.electron) {
         // @ts-ignore
         window.electron.send("close-app");
@@ -64,6 +113,9 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   // Tích hợp auto logout
   useAutoLogout(
     () => {
+      // Xóa thông tin user khỏi localStorage
+      clearUserData();
+      
       if (typeof window !== "undefined" && window.electron) {
         // @ts-ignore
         window.electron.send("close-app");
@@ -72,17 +124,87 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
     5 * 60 * 1000,
   );
 
-  // Kiểm tra xem có hiển thị Gateway Bonus không
+  // Chỉ gọi checkGatewayBonus sau khi user-calculator fetch xong và currentUser đã ổn định
   useEffect(() => {
-    const claimDeadline =
-      process.env.NEXT_PUBLIC_GATEWAY_BONUS_DEADLINE || "2025-07-15";
-    const now = dayjs();
-    const deadline = dayjs(claimDeadline);
+    if (!isUserDataReady || !currentUser) return;
+    const checkGatewayBonus = async () => {
+      try {
+        let userId = null;
+        const user = currentUser as any;
+        userId = user.userId || user.id;
+        if (!userId) {
+          setShowGatewayBonus(false);
+          return;
+        }
+        const res = await fetch(`/api/gateway-bonus?userId=${userId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setShowGatewayBonus(!!data.available);
+        } else {
+          setShowGatewayBonus(false);
+        }
+      } catch (err) {
+        setShowGatewayBonus(false);
+      }
+    };
+    checkGatewayBonus();
+  }, [isUserDataReady]);
 
-    if (now.isAfter(deadline)) {
-      setShowGatewayBonus(false);
-    }
-  }, []);
+  // Show loading if currentUser is not loaded yet hoặc đang refresh
+  if (!currentUser || isLoading || !isUserDataReady) {
+    return (
+      <div className="flex h-screen bg-gray-200">
+        <div className="bg-gray-800 text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out">
+          <nav>
+            <div className="flex justify-end mb-4">
+              <div className="flex gap-2">
+                <div className="flex items-center px-3 py-1.5">
+                  <div className="h-6 w-24 bg-gray-600 animate-pulse rounded"></div>
+                </div>
+                <div className="flex items-center bg-gray-600/80 rounded-full px-3 py-1.5">
+                  <div className="h-6 w-16 bg-gray-500 animate-pulse rounded"></div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Navigation skeleton */}
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="py-2.5 px-4">
+                <div className="h-6 w-full bg-gray-600 animate-pulse rounded"></div>
+              </div>
+            ))}
+          </nav>
+        </div>
+
+        <div className="flex-1 p-10 text-2xl font-bold bg-gray-400">
+          <div className="flex flex-col items-center justify-center h-full space-y-8">
+            <div className="text-center space-y-4">
+              <div className="animate-pulse">
+                <div className="h-12 w-64 bg-gray-500 mx-auto mb-4 rounded"></div>
+                <div className="h-8 w-48 bg-gray-500 mx-auto mb-2 rounded"></div>
+                <div className="h-6 w-32 bg-gray-500 mx-auto rounded"></div>
+              </div>
+            </div>
+            
+            {/* Game-style loading animation */}
+            <div className="flex space-x-2">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="w-4 h-4 bg-yellow-400 rounded-full animate-bounce"
+                  style={{ animationDelay: `${i * 0.1}s` }}
+                />
+              ))}
+            </div>
+            
+            <div className="text-gray-600 text-lg">
+              {isLoading ? 'Đang cập nhật dữ liệu...' : 'Đang tải dữ liệu...'}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-200">
@@ -90,30 +212,18 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
         <nav>
           <div className="flex justify-end mb-4">
             <div className="flex gap-2">
-              <div className="flex items-center  px-3 py-1.5">
+              <div className="flex items-center px-3 py-1.5">
                 <span className="text-orange-500 uppercase font-semibold flex items-center gap-2">
-                  {userName}
+                  {(currentUser as any)?.userName}
                 </span>
               </div>
               <div className="flex items-center bg-gray-600/80 rounded-full px-3 py-1.5">
                 <span className="text-white font-semibold flex items-center gap-2">
-                  {stars?.toLocaleString()}
-                  <Image src="/star.png" width="24" height="24" alt="stars" />
+                  {(currentUser as any)?.stars?.toLocaleString()}
                 </span>
               </div>
             </div>
           </div>
-          {/*{isNewUser && (*/}
-          {/*  <Link*/}
-          {/*    className={cn(*/}
-          {/*      "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",*/}
-          {/*      pathname === "/welcome" ? "bg-gray-700" : "transparent",*/}
-          {/*    )}*/}
-          {/*    href="/welcome"*/}
-          {/*  >*/}
-          {/*    Quà chào mừng*/}
-          {/*  </Link>*/}
-          {/*)}*/}
 
           <Link
             className={cn(
@@ -158,33 +268,6 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
               )}
             </Link>
           )}
-          {/* <Link
-            className={cn(
-              "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
-              pathname === "/store" ? "bg-gray-700" : "transparent",
-            )}
-            href="/store"
-          >
-            Đổi thưởng
-          </Link>
-          <Link
-            className={cn(
-              "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
-              pathname === "/battle-pass" ? "bg-gray-700" : "transparent",
-            )}
-            href="/battle-pass"
-          >
-            Battle Pass
-          </Link> */}
-          {/*<Link*/}
-          {/*  className={cn(*/}
-          {/*    "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",*/}
-          {/*    pathname === "/voucher" ? "bg-gray-700" : "transparent",*/}
-          {/*  )}*/}
-          {/*  href="/voucher"*/}
-          {/*>*/}
-          {/*  Voucher*/}
-          {/*</Link>*/}
           <div
             onClick={handleLogout}
             className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 cursor-pointer"

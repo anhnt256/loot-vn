@@ -70,7 +70,9 @@ interface Computer {
   userId: number;
   userName: string;
   round: number;
-  canClaim: number;
+  totalCheckIn: number;
+  claimedCheckIn: number;
+  availableCheckIn: number;
   stars: number;
   magicStone: number;
   devices: DeviceStatus[];
@@ -618,7 +620,9 @@ const AdminDashboard = () => {
                 userName,
                 userId,
                 round,
-                canClaim,
+                totalCheckIn,
+                claimedCheckIn,
+                availableCheckIn,
                 stars,
                 devices,
                 userType,
@@ -683,7 +687,7 @@ const AdminDashboard = () => {
                         </div>
 
                         <div className="text-[9px] truncate text-purple-300 font-bold">
-                          {`Điểm danh: ${canClaim.toLocaleString()}`}
+                          {`Điểm danh: ${availableCheckIn.toLocaleString()}`}
                         </div>
 
                         <div className="text-[9px] truncate text-blue-300 font-bold">
@@ -891,7 +895,7 @@ const AdminDashboard = () => {
                           </div>
                           <div className="text-gray-400">Điểm danh:</div>
                           <div className="text-purple-300 font-bold">
-                            {currentComputer.canClaim?.toLocaleString() || 0}
+                            {currentComputer.availableCheckIn?.toLocaleString() || 0}
                           </div>
                           <div className="text-gray-400">Lượt quay:</div>
                           <div className="text-blue-300 font-bold">

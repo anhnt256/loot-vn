@@ -1,76 +1,20 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Clock, Star, RefreshCw } from "lucide-react";
+import React, { useCallback, useState } from "react";
+import { Clock, RefreshCw } from "lucide-react";
 import dayjs from "@/lib/dayjs";
+import { toast } from "sonner";
+import { StarFilled, StarOutlined } from "@ant-design/icons";
+import { Spin } from "antd";
 import { useAction } from "@/hooks/use-action";
 import { createCheckInResult } from "@/actions/create-checkInResult";
-import { toast } from "sonner";
-import {
-  useUserInfo,
-  useUserCheckIn,
-  useCheckInItem,
-} from "@/hooks/use-user-info";
-import { UserStarHistory } from "@/prisma/generated/prisma-client";
-import isEmpty from "lodash/isEmpty";
-import { StarFilled, StarOutlined } from "@ant-design/icons";
-import Image from "next/image";
-import { Spin } from "antd";
-import { useQuery } from "@tanstack/react-query";
-import { fetcher } from "@/lib/fetcher";
-import { getCurrentDayOfWeekVN } from "@/lib/battle-pass-utils";
+import { CURRENT_USER } from "@/constants/token.constant";
 
 const CheckInCard = () => {
-  const [isChecking, setIsChecking] = useState<boolean | undefined>(false);
-  const [playTime, setPlayTime] = useState<number>(0);
-  const [rewards, setRewards] = useState<number>(0);
-  const { userData, currentUserId, branch } = useUserInfo();
-  const { userCheckIn } = useUserCheckIn(currentUserId, branch);
-  const { checkInItem } = useCheckInItem();
-
-  const { userId } = userData || {};
-
-  const claim = useMemo(() => {
-    const date = dayjs().tz("Asia/Ho_Chi_Minh").format("YYYY-MM-DD");
-
-    const currentResults = userCheckIn?.filter((item: UserStarHistory) => {
-      const itemDate = dayjs(item.createdAt)
-        .tz("Asia/Ho_Chi_Minh")
-        .format("YYYY-MM-DD");
-      return itemDate === date;
-    });
-
-    if (isEmpty(currentResults)) {
-      return 0;
-    }
-
-    const totalClaim = currentResults?.reduce((sum, item) => {
-      return sum + (item.newStars - item.oldStars);
-    }, 0);
-
-    // Debug logging for claim calculation
-    console.log("Claim Debug:", {
-      date,
-      currentResults,
-      totalClaim,
-    });
-
-    return totalClaim;
-  }, [userCheckIn]);
-
-  const { data: totalHours } = useQuery<[any]>({
-    queryKey: ["user-spend"],
-    enabled: !!userId && !!branch,
-    queryFn: () => fetcher(`/api/spend/${userId}/${branch}`),
-  });
-
-  // Debug logging for data loading
-  console.log("CheckIn Data Debug:", {
-    userId,
-    branch,
-    totalHours,
-    checkInItem,
-    userCheckIn,
-    userData,
-  });
+  const [isChecking, setIsChecking] = useState(false);
+  const currentUser = JSON.parse(localStorage.getItem(CURRENT_USER) || "{}");
+  const playTime = currentUser?.totalCheckIn / 1000 || 0;
+  const claim = currentUser?.claimedCheckIn || 0;
+  const rewards = currentUser?.availableCheckIn || 0;
+  const userId = currentUser?.userId || 0;
 
   const { execute: executeCheckIn } = useAction(createCheckInResult, {
     onSuccess: () => {
@@ -88,50 +32,23 @@ const CheckInCard = () => {
       toast.error("Lỗi hệ thống. Vui lòng liên hệ nhân viên để được hỗ trợ!");
       return;
     }
-
     if (isChecking || canClaim <= 0) {
       toast.error("Bạn không có phần thưởng để nhận");
       return;
     }
-    if (!isChecking && userCheckIn) {
-      if (userData) {
-        const { userId, branch } = userData;
-        setIsChecking(true);
+    if (!isChecking) {
+      setIsChecking(true);
+      try {
         await executeCheckIn({
           userId,
-          branch,
-          addedStar: canClaim,
         });
-        setIsChecking(false);
+      } catch (error) {
+        toast.error("Lỗi khi nhận thưởng!");
       }
+      setIsChecking(false);
+      window.location.reload();
     }
-  }, [rewards, claim, isChecking, userData, executeCheckIn, userCheckIn]);
-
-  useEffect(() => {
-    if (checkInItem && totalHours !== undefined) {
-      const currentTime = totalHours as unknown as number;
-      const today = getCurrentDayOfWeekVN();
-
-      setPlayTime(currentTime);
-
-      const todayCheckIn = checkInItem.find((item) => item.dayName === today);
-      const starsPerHour = todayCheckIn ? todayCheckIn.stars : 1000;
-
-      const calculatedRewards = currentTime * starsPerHour;
-      setRewards(calculatedRewards);
-
-      // Debug logging
-      console.log("CheckIn Debug:", {
-        currentTime,
-        today,
-        todayCheckIn,
-        starsPerHour,
-        calculatedRewards,
-        claim,
-        canClaim: calculatedRewards - claim,
-      });
-    }
-  }, [totalHours, checkInItem, claim]);
+  }, [rewards, claim, isChecking, executeCheckIn, userId]);
 
   const handleUpdate = useCallback(() => {
     window.location.reload();
@@ -151,7 +68,6 @@ const CheckInCard = () => {
           {dayjs().tz("Asia/Ho_Chi_Minh").format("DD/MM/YYYY")}
         </p>
       </div>
-
       {/* Stats */}
       <div className="space-y-4 mb-6">
         {/* Play time */}
@@ -162,7 +78,6 @@ const CheckInCard = () => {
             <p className="text-white font-bold text-lg">{playTime}h</p>
           </div>
         </div>
-
         <div className="flex items-center gap-2">
           <div className="text-yellow-500">
             <StarFilled className="w-5 h-5 text-gold" />
@@ -173,11 +88,9 @@ const CheckInCard = () => {
               <p className="text-white font-bold text-lg">
                 {claim.toLocaleString()}
               </p>
-              <Image src="/star.png" width="24" height="24" alt="stars" />
             </div>
           </div>
         </div>
-
         {/* Rewards */}
         <div className="flex items-center gap-2">
           <div className="text-yellow-500">
@@ -187,14 +100,12 @@ const CheckInCard = () => {
             <p className="text-gray-400">Có thể nhận</p>
             <div className="flex items-center gap-2">
               <p className="text-white font-bold text-lg">
-                {(rewards - claim).toLocaleString()}
+                {rewards.toLocaleString()}
               </p>
-              <Image src="/star.png" width="24" height="24" alt="stars" />
             </div>
           </div>
         </div>
       </div>
-
       {/* Buttons */}
       <div className="flex gap-3">
         <button
@@ -204,7 +115,6 @@ const CheckInCard = () => {
           <RefreshCw className="w-4 h-4" />
           <span>Cập nhật</span>
         </button>
-
         <button
           disabled={rewards - claim <= 0}
           onClick={handleCheckIn}
@@ -218,3 +128,4 @@ const CheckInCard = () => {
 };
 
 export default CheckInCard;
+

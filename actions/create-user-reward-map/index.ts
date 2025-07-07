@@ -5,6 +5,7 @@ import { createSafeAction } from "@/lib/create-safe-action";
 import { CreateUserRewardMap } from "./schema";
 import { InputType } from "./type";
 import dayjs from "@/lib/dayjs";
+import { getVNTimeForPrisma } from "@/lib/timezone-utils";
 import { NextResponse } from "next/server";
 import { signJWT } from "@/lib/jwt";
 import { cookies } from "next/headers";
@@ -70,7 +71,7 @@ const handler = async (data: InputType): Promise<any> => {
           },
           data: {
             isUsed: false,
-            updatedAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
+            updatedAt: getVNTimeForPrisma(),
           },
         });
 
@@ -115,7 +116,7 @@ const handler = async (data: InputType): Promise<any> => {
             duration,
             isUsed,
             branch,
-            createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
+            createdAt: getVNTimeForPrisma(),
           },
         });
 
@@ -126,7 +127,7 @@ const handler = async (data: InputType): Promise<any> => {
             },
             data: {
               stars: newStars,
-              updatedAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
+              updatedAt: getVNTimeForPrisma(),
             },
           });
 
@@ -137,7 +138,7 @@ const handler = async (data: InputType): Promise<any> => {
               oldStars,
               newStars,
               targetId: rewardId,
-              createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
+              createdAt: getVNTimeForPrisma(),
               branch,
             },
           });
@@ -270,7 +271,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
             rankId: 1,
             stars: 0,
             magicStone: 0,
-            createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
+            createdAt: getVNTimeForPrisma(),
           },
         });
       }

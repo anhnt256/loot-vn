@@ -1,23 +1,50 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import dayjs from "@/lib/dayjs";
 import { getStartOfMonthVNISO, getEndOfMonthVNISO } from "@/lib/timezone-utils";
+import { cookies } from "next/headers";
 
 export async function GET(
   req: Request,
   { params }: { params: { slug: string[] } },
 ) {
-  const startOfMonth = getStartOfMonthVNISO();
-  const endOfMonth = getEndOfMonthVNISO();
-
-  const [userId, branch] = params.slug;
-
   try {
+    const cookieStore = await cookies();
+    const branch = cookieStore.get("branch")?.value;
+
+    if (!branch) {
+      return NextResponse.json(
+        { error: "Branch cookie is required" },
+        { status: 400 },
+      );
+    }
+
+    const [userId] = params.slug;
+
+    // Validate input parameters
+    if (!userId) {
+      return NextResponse.json(
+        { error: "User ID and branch are required" },
+        { status: 400 },
+      );
+    }
+
+    // Validate userId is a number
+    const parsedUserId = parseInt(userId, 10);
+    if (isNaN(parsedUserId)) {
+      return NextResponse.json(
+        { error: "Invalid user ID format" },
+        { status: 400 },
+      );
+    }
+
+    const startOfMonth = getStartOfMonthVNISO();
+    const endOfMonth = getEndOfMonthVNISO();
+
     const checkInItems = await db.userStarHistory.findMany({
       where: {
-        userId: parseInt(userId, 10),
-        branch,
+        userId: parsedUserId,
+        branch: branch,
         type: "CHECK_IN",
         createdAt: {
           gte: startOfMonth,
@@ -31,6 +58,10 @@ export async function GET(
 
     return NextResponse.json(checkInItems);
   } catch (error) {
-    return new NextResponse("Internal Error", { status: 500 });
+    console.error("[CHECK_IN_RESULT_GET]", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

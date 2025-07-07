@@ -10,10 +10,11 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { setCookie } from "cookies-next";
 import dayjs from "@/lib/dayjs";
-import { Spin } from "antd";
+import { Spin, Modal } from "antd";
 import { isElectron } from "@/lib/electron";
 import { getMacAddresses } from "@/lib/mac";
 import { useQuery } from "@tanstack/react-query";
+import { CURRENT_USER } from "@/constants/token.constant";
 
 const expirationDuration = 1;
 const expirationDate = dayjs().add(expirationDuration, "day").format();
@@ -29,12 +30,14 @@ const Login = () => {
   const [isDesktopApp, setIsDesktopApp] = useState(false);
   const [cookiesSet, setCookiesSet] = useState(false);
   const [isToastShown, setIsToastShown] = useState(false);
+  const [loginFatalError, setLoginFatalError] = useState(false);
+  const [fatalErrorMessage, setFatalErrorMessage] = useState("");
+  const [loginSuccess, setLoginSuccess] = useState(false);
 
   const { data: machineData } = useQuery({
     queryKey: ["check-branch", macAddresses],
     enabled: !!macAddresses && cookiesSet,
     queryFn: async () => {
-      console.log("Fetching with macAddress:", macAddresses);
       const response = await fetch("/api/check-branch");
       const data = await response.json();
 
@@ -65,7 +68,7 @@ const Login = () => {
   });
 
   const onLoginForExistingUser = useCallback(async () => {
-    if (pageLoading || !machineData || !existingUser || isToastShown) {
+    if (pageLoading || !machineData || !existingUser || isToastShown || loginFatalError) {
       return;
     }
 
@@ -77,19 +80,39 @@ const Login = () => {
         isAdmin: false,
       });
 
+
       const { statusCode, message } = result || {};
 
+      if (
+        statusCode === 500 &&
+        message?.includes("Không lấy được thông tin user")
+      ) {
+        // Clear localStorage khi có lỗi fatal
+        localStorage.removeItem(CURRENT_USER);
+        setLoginFatalError(true);
+        setFatalErrorMessage(message);
+        setLoginSuccess(false);
+        setPageLoading(false);
+        return;
+      }
+
       if (statusCode === 200) {
+        setLoginSuccess(true);
+        // Lưu thông tin user vào localStorage
+        if (result.data) {
+          localStorage.setItem(CURRENT_USER, JSON.stringify(result.data));
+        }
         if (!isToastShown) {
           toast.success("Chào mừng trở lại The GateWay!");
           setIsToastShown(true);
         }
         router.push("/dashboard");
       } else if (statusCode === 500 || statusCode === 499) {
+        setLoginSuccess(false);
         toast.error(message);
       }
     } catch (error) {
-      console.error("Auto-login error:", error);
+      setLoginSuccess(false);
       toast.error("Đã có lỗi xảy ra khi tự động đăng nhập");
     }
     setPageLoading(false);
@@ -100,6 +123,7 @@ const Login = () => {
     loginMutation,
     router,
     isToastShown,
+    loginFatalError,
   ]);
 
   useEffect(() => {
@@ -121,7 +145,6 @@ const Login = () => {
             setCookiesSet(true);
           }
         } catch (error) {
-          console.error("Failed to get MAC addresses:", error);
           toast.error(
             "Không thể lấy thông tin MAC address. Vui lòng thử lại sau.",
           );
@@ -142,16 +165,16 @@ const Login = () => {
   }, []);
 
   useEffect(() => {
+    if (loginFatalError) return; // Nếu đã lỗi, không auto-login nữa
     if (machineData && existingUser) {
       // Auto-login chỉ khi user đã tồn tại trong DB
-      console.log("Auto-login for existing user:", existingUser);
       setUsername(existingUser.userName || ""); // Set username từ DB
       onLoginForExistingUser();
     }
-  }, [machineData, existingUser, onLoginForExistingUser]);
+  }, [machineData, existingUser, loginFatalError]);
 
   const onLogin = async () => {
-    if (pageLoading || !machineData || isToastShown) {
+    if (pageLoading || !machineData || isToastShown || loginFatalError) {
       return;
     }
 
@@ -165,17 +188,36 @@ const Login = () => {
 
       const { statusCode, message } = result || {};
 
+      if (
+        statusCode === 500 &&
+        message?.includes("Không lấy được thông tin user")
+      ) {
+        // Clear localStorage khi có lỗi fatal
+        localStorage.removeItem(CURRENT_USER);
+        setLoginFatalError(true);
+        setFatalErrorMessage(message);
+        setLoginSuccess(false);
+        setPageLoading(false);
+        return;
+      }
+
       if (statusCode === 200) {
+        setLoginSuccess(true);
+        // Lưu thông tin user vào localStorage
+        if (result.data) {
+          localStorage.setItem(CURRENT_USER, JSON.stringify(result.data));
+        }
         if (!isToastShown) {
           toast.success("Chào mừng đến với The GateWay!");
           setIsToastShown(true);
         }
         router.push("/dashboard");
       } else if (statusCode === 500 || statusCode === 499) {
+        setLoginSuccess(false);
         toast.error(message);
       }
     } catch (error) {
-      console.error("Login error:", error);
+      setLoginSuccess(false);
       toast.error("Đã có lỗi xảy ra khi đăng nhập");
     }
     setPageLoading(false);
@@ -195,7 +237,7 @@ const Login = () => {
   }
 
   // Nếu có existingUser, chỉ auto-login, không render form đăng nhập nữa
-  if (existingUser && machineData) {
+  if (loginSuccess && existingUser && machineData) {
     return (
       <div className="flex flex-col items-center justify-center">
         <div className="flex justify-center mb-4">
@@ -211,6 +253,43 @@ const Login = () => {
         <p className="mt-4 text-green-500">
           Chào mừng trở lại, {existingUser.userName}!
         </p>
+      </div>
+    );
+  }
+
+  // Nếu lỗi không lấy được thông tin user hoặc lỗi 500, chỉ render logo + thông báo lỗi
+  if (loginFatalError) {
+    return (
+      <div className="flex flex-col items-center justify-center">
+        <div className="flex justify-center mb-2">
+          <Image
+            src="/logo.png"
+            alt="Logo"
+            className="rounded-full"
+            width={100}
+            height={100}
+          />
+        </div>
+        <h3 className="text-red-500 text-center text-lg font-semibold mt-4">
+          {fatalErrorMessage || "Không lấy được thông tin user, vui lòng đăng nhập lại."}
+        </h3>
+        <button
+          className="mt-4 bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded font-semibold"
+          onClick={() => {
+            if (isElectron()) {
+              if (typeof window !== "undefined" && window.electron) {
+                // @ts-ignore
+                window.electron.send("close-app");
+              } else {
+                window.close();
+              }
+            } else {
+              window.location.reload();
+            }
+          }}
+        >
+          Đăng xuất
+        </button>
       </div>
     );
   }

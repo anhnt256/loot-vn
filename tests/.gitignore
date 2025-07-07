@@ -1,0 +1,43 @@
+# Test coverage
+coverage/
+*.lcov
+
+# Test cache
+.jest-cache/
+
+# Test reports
+test-results/
+junit.xml
+
+# Test logs
+test.log
+*.log
+
+# Temporary test files
+*.tmp
+*.temp
+
+# Test environment files
+.env.test
+.env.test.local
+
+# Test database files
+test.db
+test.sqlite
+
+# Test uploads
+uploads/test/
+
+# Test screenshots
+screenshots/
+*.png
+*.jpg
+*.jpeg
+
+# Test videos
+videos/
+*.mp4
+*.webm
+
+# Test artifacts
+artifacts/ 

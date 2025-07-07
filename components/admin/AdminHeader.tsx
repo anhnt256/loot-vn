@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { clearUserData } from "@/lib/utils";
 
 export function AdminHeader() {
   const router = useRouter();
@@ -10,6 +11,8 @@ export function AdminHeader() {
       await fetch("/api/logout", {
         method: "POST",
       });
+      // Xóa thông tin user khỏi localStorage
+      clearUserData();
       router.push("/admin-login");
     } catch (error) {
       console.error("Logout error:", error);

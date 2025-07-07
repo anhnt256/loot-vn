@@ -4,4 +4,5 @@ export const CreateGameResult = z.object({
   userId: z.number(),
   branch: z.string(),
   rolls: z.number(),
+  type: z.enum(["Wish", "Gift"]),
 });

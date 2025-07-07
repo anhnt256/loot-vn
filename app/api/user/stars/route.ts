@@ -1,21 +1,42 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getCookie } from "cookies-next";
+import { cookies } from "next/headers";
 
 export async function GET(req: Request) {
-  const cookie = getCookie("branch", { req });
-  const { searchParams } = new URL(req.url);
-  const userId = searchParams.get("userId");
-
-  if (!userId) {
-    return new NextResponse("User ID is required", { status: 400 });
-  }
-
   try {
+    const cookieStore = await cookies();
+    const branch = cookieStore.get("branch")?.value;
+
+    if (!branch) {
+      return NextResponse.json(
+        { error: "Branch cookie is required" },
+        { status: 400 }
+      );
+    }
+
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get("userId");
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "User ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate userId is a number
+    const parsedUserId = parseInt(userId, 10);
+    if (isNaN(parsedUserId)) {
+      return NextResponse.json(
+        { error: "Invalid user ID format" },
+        { status: 400 }
+      );
+    }
+
     const user = await db.user.findFirst({
       where: {
-        userId: parseInt(userId, 10),
-        branch: cookie,
+        userId: parsedUserId,
+        branch: branch,
       },
       select: {
         id: true,
@@ -28,7 +49,10 @@ export async function GET(req: Request) {
     });
 
     if (!user) {
-      return new NextResponse("User not found", { status: 404 });
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json({
@@ -41,6 +65,9 @@ export async function GET(req: Request) {
     });
   } catch (error) {
     console.error("[USER_STARS_GET]", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

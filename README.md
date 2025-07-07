@@ -1,4 +1,66 @@
+# Gateway Gaming App
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+
+## 🧪 Testing
+
+This project includes comprehensive timezone tests to ensure all time-sensitive features work correctly with Vietnam timezone (GMT+7).
+
+### Quick Start
+
+```bash
+# Install dependencies
+npm install
+
+# Run all tests
+npm test
+
+# Run specific test categories
+npm run test:timezone    # Timezone tests only
+npm run test:api         # API tests only
+npm run test:coverage    # Tests with coverage report
+
+# Build with tests (recommended)
+npm run build
+
+# Build without tests (if needed)
+npm run build:no-test
+```
+
+### Test Categories
+
+- **Game Roll Tests**: Weekly reset, rate limiting, timezone edge cases
+- **Check-in Tests**: Daily reset, anti-spam protection, day change handling
+- **Daily Usage Tests**: Session calculation, overnight sessions, timezone conversion
+- **API Tests**: Endpoint validation, error handling, performance testing
+- **Integration Tests**: DST handling, leap year, timezone consistency
+
+### CI/CD Integration
+
+Tests run automatically on:
+- Every push to main/develop branches
+- Every pull request
+- Daily at 9 AM VN time (2 AM UTC)
+
+See [`.github/workflows/test.yml`](.github/workflows/test.yml) for details.
+
+### Test Coverage
+
+- **Lines**: 80% minimum
+- **Functions**: 80% minimum  
+- **Branches**: 80% minimum
+- **Statements**: 80% minimum
+
+### Timezone Validation
+
+All tests ensure:
+- ✅ VN timezone (GMT+7) correctly applied
+- ✅ Weekly reset (Monday 00:00) working
+- ✅ Daily reset (00:00) working
+- ✅ Anti-spam protection working
+- ✅ Overnight sessions handled correctly
+
+For detailed test documentation, see [tests/README.md](tests/README.md).
 
 ## Getting Started
 

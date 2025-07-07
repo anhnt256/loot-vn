@@ -1,7 +1,7 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { useUserInfo } from "@/hooks/use-user-info";
+import { CURRENT_USER } from "@/constants/token.constant";
 import { useAction } from "@/hooks/use-action";
 import { toast } from "sonner";
 import { createUserRewardMap } from "@/actions/create-user-reward-map";
@@ -15,12 +15,30 @@ interface CardProps {
 }
 
 const RewardCard: React.FC<CardProps> = ({ data }) => {
-  const { userData } = useUserInfo();
+  const [userData, setUserData] = useState<any>(null);
   const { userId, stars } = userData || {};
   const { id, name, value, totalPromotion } = data;
   const branch = getCookie("branch") || BRANCH.GOVAP;
 
-  const { refreshUserData } = useUserInfo();
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const userDataString = localStorage.getItem(CURRENT_USER);
+      if (userDataString) {
+        try {
+          const parsedUserData = JSON.parse(userDataString);
+          setUserData(parsedUserData);
+        } catch (error) {
+          console.error("Error parsing user data from localStorage:", error);
+        }
+      }
+    }
+  }, []);
+
+  const refreshUserData = async () => {
+    // This function can be implemented if needed to refresh user data
+    // For now, we'll just reload the page
+    window.location.reload();
+  };
 
   let bgColor = "";
   if (stars && stars >= value) {

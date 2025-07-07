@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { getStartOfDayDateVN } from "@/lib/timezone-utils";
 
 interface RateLimitConfig {
   windowMs: number; // Time window in milliseconds
@@ -119,4 +120,44 @@ export async function checkGameRollRateLimit(
     maxRequests: 1, // Chỉ cho phép 1 roll mỗi 10 giây
     keyPrefix: "game_roll",
   });
+}
+
+// Rate limit cho check-in
+export async function checkCheckInRateLimit(
+  userId: string,
+  branch: string,
+): Promise<{ allowed: boolean; remaining: number; resetTime: number }> {
+  const identifier = `${userId}:${branch}`;
+
+  return checkRateLimit(identifier, {
+    windowMs: 60 * 60 * 1000, // 1 hour
+    maxRequests: 5, // Tối đa 5 lần check-in mỗi giờ
+    keyPrefix: "checkin",
+  });
+}
+
+// Rate limit cho check-in daily (per day)
+export async function checkDailyCheckInLimit(
+  userId: string,
+  branch: string,
+): Promise<{ allowed: boolean; count: number; maxAllowed: number }> {
+  const today = getStartOfDayDateVN();
+
+  const checkInCount = await db.checkInResult.count({
+    where: {
+      userId: parseInt(userId),
+      branch: branch,
+      createdAt: {
+        gte: today,
+      },
+    },
+  });
+
+  const maxDailyCheckIns = 10; // Tối đa 10 lần check-in mỗi ngày
+
+  return {
+    allowed: checkInCount < maxDailyCheckIns,
+    count: checkInCount,
+    maxAllowed: maxDailyCheckIns,
+  };
 }

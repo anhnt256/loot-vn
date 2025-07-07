@@ -2,6 +2,7 @@
 
 import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
 import { createSafeAction } from "@/lib/create-safe-action";
+import { checkCheckInRateLimit, checkDailyCheckInLimit } from "@/lib/rate-limit";
 
 import { CreateCheckInResult } from "./schema";
 import { InputType, ReturnType } from "./type";
@@ -10,36 +11,72 @@ import {
   calculateDailyUsageTime,
   getCurrentDayOfWeekVN,
 } from "@/lib/battle-pass-utils";
+import { 
+  getCurrentTimeVN,
+  getVNTimeForPrisma,
+  getVNStartOfDayForPrisma
+} from "@/lib/timezone-utils";
+import { cookies } from "next/headers";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
-  const { userId, branch, addedStar } = data;
+  const { userId } = data; // Remove addedStar from client input
   let checkIn;
+
+  const cookieStore = await cookies();
+  const branch = cookieStore.get("branch")?.value;
+
+  if (!branch) {
+    return {
+      error: "Branch cookie is required but not found",
+    };
+  }
+
+  // Rate limiting: Max 5 check-ins per hour per user
+  const rateLimitResult = await checkCheckInRateLimit(String(userId), branch);
+  if (!rateLimitResult.allowed) {
+    const resetTime = new Date(rateLimitResult.resetTime).toLocaleString("vi-VN");
+    return {
+      error: `Quá nhiều lần check-in. Vui lòng thử lại sau ${resetTime}`,
+    };
+  }
+
+  // Daily check-in limit
+  const dailyLimitResult = await checkDailyCheckInLimit(String(userId), branch);
+  if (!dailyLimitResult.allowed) {
+    return {
+      error: `Bạn đã check-in ${dailyLimitResult.count}/${dailyLimitResult.maxAllowed} lần hôm nay. Vui lòng thử lại vào ngày mai!`,
+    };
+  }
 
   const fnetDB = await getFnetDB();
   const fnetPrisma = await getFnetPrisma();
 
-  const startOfDayVN = dayjs()
-    .tz("Asia/Ho_Chi_Minh")
-    .startOf("day")
-    .toISOString();
+  const startOfDayVN = getVNStartOfDayForPrisma();
 
-  // Anti-spam: Prevent check-in if last check-in was less than 10 minutes ago
+  console.log('Start of day VN (Date object):', startOfDayVN);
+  console.log('Current time VN (Date object):', getVNTimeForPrisma());
+
+  // Enhanced anti-spam: Prevent check-in if last check-in was less than 30 minutes ago
   const lastCheckIn = await db.checkInResult.findFirst({
     where: { userId, branch },
     orderBy: { createdAt: "desc" },
   });
+
   if (lastCheckIn) {
-    const now = dayjs();
+    const now = getCurrentTimeVN();
     const last = dayjs(lastCheckIn.createdAt);
-    if (now.diff(last, "minute") < 10) {
+    const minutesSinceLastCheckIn = now.diff(last, "minute");
+    
+    if (minutesSinceLastCheckIn < 30) {
+      const remainingMinutes = 30 - minutesSinceLastCheckIn;
       return {
-        error:
-          "Bạn vừa check-in xong, vui lòng chờ 10 phút trước khi check-in tiếp!",
+        error: `Bạn vừa check-in xong, vui lòng chờ ${remainingMinutes} phút trước khi check-in tiếp!`,
       };
     }
   }
 
   try {
+    // Get user's play sessions from fnet database
     const query = fnetPrisma.sql`
       SELECT *
       FROM fnet.systemlogtb AS t1
@@ -61,24 +98,34 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         ) AS t2`;
     const result = await fnetDB.$queryRaw<any[]>(query);
 
-    // Sử dụng utility function để tính thời gian sử dụng
+    // Calculate total play time using utility function
     const totalPlayTime = calculateDailyUsageTime(result);
 
-    const checkInItems = await db.checkInItem.findMany();
+    console.log('Total play time:', totalPlayTime);
 
+    // Get check-in configuration for today
+    const checkInItems = await db.checkInItem.findMany();
     const today = getCurrentDayOfWeekVN();
     const todayCheckIn = checkInItems.find((item) => item.dayName === today);
     const starsPerHour = todayCheckIn ? todayCheckIn.stars : 1000;
 
-    const canClaim = totalPlayTime * starsPerHour;
+    console.log('Today:', today);
+    console.log('Stars per hour:', starsPerHour);
+    console.log('Check-in items:', checkInItems);
 
+    // Server-side calculation of stars to earn (don't trust client input)
+    const starsToEarn = Math.floor(totalPlayTime * starsPerHour);
+
+    console.log('Stars to earn (totalPlayTime * starsPerHour):', starsToEarn);
+
+    // Check if user has already claimed maximum stars for today
     const userClaim = await db.userStarHistory.findMany({
       where: {
         userId: userId,
         branch: branch,
         type: "CHECK_IN",
         createdAt: {
-          gte: startOfDayVN, // Check if createdAt is greater than or equal to today at 00:00:00
+          gte: startOfDayVN,
         },
       },
     });
@@ -88,9 +135,26 @@ const handler = async (data: InputType): Promise<ReturnType> => {
       return acc + difference;
     }, 0);
 
-    if (totalClaimed >= canClaim) {
+    console.log('Total claimed today:', totalClaimed);
+    console.log('User claim history:', userClaim);
+
+    if (totalClaimed >= starsToEarn) {
       return {
         error: "Bạn chưa có sao để nhận, hãy chơi thêm để nhận sao nhé!",
+      };
+    }
+
+    // Calculate actual stars to add (remaining stars)
+    const actualStarsToAdd = starsToEarn - totalClaimed;
+
+    console.log('Actual stars to add:', actualStarsToAdd);
+    console.log('Remaining stars (starsToEarn - totalClaimed):', starsToEarn - totalClaimed);
+    console.log('Stars per hour limit:', starsPerHour);
+
+    // Additional validation: Ensure user has played at least 1 hour
+    if (totalPlayTime < 1) {
+      return {
+        error: "Bạn cần chơi ít nhất 1 giờ để có thể check-in!",
       };
     }
 
@@ -99,7 +163,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         data: {
           userId,
           branch,
-          createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
+          createdAt: getVNTimeForPrisma(),
         },
       });
 
@@ -112,8 +176,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
 
         if (user) {
           const { stars: oldStars } = user;
-
-          const newStars = oldStars + addedStar;
+          const newStars = oldStars + actualStarsToAdd;
 
           await tx.userStarHistory.create({
             data: {
@@ -122,7 +185,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
               oldStars,
               newStars,
               targetId: id,
-              createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
+              createdAt: getVNTimeForPrisma(),
               branch,
             },
           });
@@ -131,7 +194,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
             where: { id: user.id },
             data: {
               stars: newStars,
-              updatedAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
+              updatedAt: getVNTimeForPrisma(),
             },
           });
         }

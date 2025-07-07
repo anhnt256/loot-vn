@@ -3,17 +3,33 @@
 import { Reward } from "@/prisma/generated/prisma-client";
 import { fetcher } from "@/lib/fetcher";
 import { useQuery } from "@tanstack/react-query";
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import VoucherList from "@/app/(dashboard)/voucher/VoucherList/VoucherList";
 import { getCookie } from "cookies-next";
 import { BRANCH } from "@/constants/enum.constant";
 import Image from "next/image";
-import { useUserInfo } from "@/hooks/use-user-info";
+import { CURRENT_USER } from "@/constants/token.constant";
 
 const Voucher = () => {
   const router = useRouter();
-  const { userData, isNewUser } = useUserInfo();
+  const [userData, setUserData] = useState<any>(null);
+  const [isNewUser, setIsNewUser] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const userDataString = localStorage.getItem(CURRENT_USER);
+      if (userDataString) {
+        try {
+          const parsedUserData = JSON.parse(userDataString);
+          setUserData(parsedUserData);
+          setIsNewUser(parsedUserData.isNewUser || false);
+        } catch (error) {
+          console.error("Error parsing user data from localStorage:", error);
+        }
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (!isNewUser) {

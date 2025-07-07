@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import MeteorEffect from "@/app/(dashboard)/game/_component/MeteorEffect/MeteorEffect";
 import { WishResult } from "@/app/(dashboard)/game/_component/WishResult/WishResult";
-import { useUserInfo } from "@/hooks/use-user-info";
+
 import { Rules } from "@/app/(dashboard)/game/_component/Rules/Rules";
 import CircleSegments from "@/app/(dashboard)/game/_component/CirclePrize/CirclePrize";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -12,6 +12,8 @@ import { fetcher } from "@/lib/fetcher";
 import { useAction } from "@/hooks/use-action";
 import { toast } from "sonner";
 import { createGameResult } from "@/actions/create-gameResult";
+import { CURRENT_USER } from "@/constants/token.constant";
+import { useLocalStorageValue } from "@/hooks/useLocalStorageValue";
 
 const Game = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,36 +24,35 @@ const Game = () => {
   const [isRolling, setIsRolling] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  const { userData, branch } = useUserInfo();
-  const queryClient = useQueryClient();
+  // Sử dụng hook để lấy userData từ localStorage
+  const userData: any = useLocalStorageValue(CURRENT_USER, null);
+  const [round, setRound] = useState<number>(0);
+  const [giftRound, setGiftRound] = useState<number>(0);
+  const [branch, setBranch] = useState<string | null>(null);
+  const [selectedType, setSelectedType] = useState<"round" | "giftRound">(
+    "round",
+  );
 
-  const {
-    stars,
-    userId,
-    id: currentUserId,
-    magicStone,
-    totalPayment,
-  } = userData || {};
+  // Đồng bộ round, giftRound, branch khi userData thay đổi
+  useEffect(() => {
+    if (userData) {
+      setRound(userData.round || 0);
+      setGiftRound(userData.giftRound || 0);
+    }
+    if (typeof window !== "undefined") {
+      const branchData = localStorage.getItem("branch") || "GO_VAP";
+      setBranch(branchData);
+    }
+  }, [userData]);
+
+  const { userId, totalPayment } = userData || {};
 
   const { data: segments } = useQuery<[any]>({
     queryKey: ["game-items"],
     queryFn: () => fetcher(`/api/game/items`),
   });
 
-  const { data: rounds, isSuccess } = useQuery<[any]>({
-    queryKey: ["calc-round"],
-    queryFn: () => fetcher(`/api/game/${userId}/calc-round`),
-    enabled: !!userId && !!branch,
-  });
-
-  // Cập nhật user data sau khi calc-round thành công
-  useEffect(() => {
-    if (isSuccess && rounds) {
-      queryClient.invalidateQueries({ queryKey: ["user", currentUserId] });
-    }
-  }, [isSuccess, rounds, queryClient, currentUserId]);
-
-  const { execute: executeRoll, data } = useAction(createGameResult, {
+  const { execute: executeRoll } = useAction(createGameResult, {
     onSuccess: (data) => {
       setIsRolling(false);
       handleMeteorAnimation(data);
@@ -84,10 +85,6 @@ const Game = () => {
 
     setShowMeteor(true);
     setIsAnimating(true);
-
-    // Cập nhật magicStone sau khi quay
-    queryClient.invalidateQueries({ queryKey: ["calc-round"] });
-    queryClient.invalidateQueries({ queryKey: ["user", currentUserId] });
   };
 
   const handleRoll = async (rolls: number) => {
@@ -99,27 +96,42 @@ const Game = () => {
       userId: Number(userId),
       branch: String(branch),
       rolls,
+      type: selectedType === "round" ? "Wish" : "Gift",
     });
   };
 
-  const WishButton = ({ count }: { count: number }) => {
-    const isDisabled = isRolling || isAnimating;
-    return (
-      <button
-        className={`bg-white rounded-full p-2 shadow-lg flex flex-col items-center w-48 ${
-          isDisabled ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"
-        }`}
-        onClick={() => handleRoll(count)}
-        disabled={isDisabled}
-      >
-        <span className="text-gray-600 text-sm">Wish ×{count}</span>
-        <div className="flex items-center space-x-1 mt-1">
-          <Image src={"/rock.png"} alt="wish" width="24" height="24" />
-          <span className="text-gray-500 text-sm">x {count}</span>
-        </div>
-      </button>
-    );
+  // Hàm gọi user-calculator để cập nhật lại user info
+  const updateUserInfo = async () => {
+    if (!userId) return;
+    try {
+      const res = await fetch("/api/user-calculator", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ listUsers: [Number(userId)] }),
+      });
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+        const newUser = json.data[0];
+        localStorage.setItem(CURRENT_USER, JSON.stringify(newUser));
+        setRound(newUser.round || 0);
+        setGiftRound(newUser.giftRound || 0);
+      }
+    } catch (err) {
+      // Có thể toast lỗi nếu muốn
+      // toast.error("Không thể cập nhật thông tin user");
+    }
   };
+
+  // Lắng nghe khi hiệu ứng meteor kết thúc (showMeteor từ true về false)
+  useEffect(() => {
+    if (!showMeteor && !isAnimating) {
+      // Hiệu ứng vừa kết thúc, cập nhật lại user info
+      updateUserInfo();
+      setIsAnimating(false); // reset lại trạng thái animating
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showMeteor]);
 
   if (!userData || !branch) return null;
 
@@ -134,11 +146,25 @@ const Game = () => {
                 {`Tổng tiền nạp: ${totalPayment?.toLocaleString()}`}
               </span>
             </div>
-            <div className="flex items-center gap-2 bg-gray-600/80 rounded-full px-3 py-1.5">
+            <div
+              className={`flex items-center gap-2 rounded-full px-3 py-1.5 cursor-pointer transition-all ${selectedType === "round" ? "bg-gray-800 border-2 border-yellow-400 shadow-lg" : "bg-gray-600/80"}`}
+              onClick={() => setSelectedType("round")}
+            >
               <span className="text-white font-semibold">
-                {magicStone?.toLocaleString()}
+                {round?.toLocaleString()}
               </span>
               <Image src={"/rock.png"} alt="wish" width="24" height="24" />
+            </div>
+            <div
+              className={`flex items-center gap-2 rounded-full px-3 py-1.5 cursor-pointer transition-all ${selectedType === "giftRound" ? "bg-green-700 border-2 border-yellow-400 shadow-lg" : "bg-green-600/80"}`}
+              onClick={() => setSelectedType("giftRound")}
+            >
+              <span className="text-white font-semibold">
+                {giftRound?.toLocaleString()}
+              </span>
+              <span role="img" aria-label="gift">
+                🎁
+              </span>
             </div>
           </div>
         </div>
@@ -155,26 +181,67 @@ const Game = () => {
           />
         </div>
 
-        <div className="absolute bottom-5 left-0 right-0 flex justify-between items-center px-4">
-          <div className="flex space-x-4">
+        {/* Container trắng bo góc, border cam, center, chứa 4 nút */}
+        <div className="flex justify-center items-center bg-gray-200 pt-4 pb-6">
+          <div className="bg-white rounded-2xl shadow-md flex gap-4 px-8 py-4">
             <button
-              className="bg-yellow-500 hover:bg-yellow-700 text-white px-4 py-2 rounded"
+              className="bg-yellow-500 hover:bg-yellow-700 text-white px-3 py-1.5 rounded text-sm"
               onClick={() => openModal()}
             >
               Lịch sử
             </button>
-
             <button
-              className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded"
+              className="bg-blue-500 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm"
               onClick={() => openRuleModal()}
             >
               Thể lệ
             </button>
-          </div>
-
-          <div className="flex space-x-4">
-            <WishButton count={1} />
-            <WishButton count={10} />
+            {/* Wish x1: icon theo selectedType, luôn w-40 */}
+            <button
+              className="border-2 border-orange-400 text-orange-500 px-6 py-2 rounded-full text-base flex items-center gap-2 bg-white hover:shadow-md transition w-40 justify-center"
+              onClick={() => {
+                setSelectedType("round");
+                handleRoll(1);
+              }}
+              disabled={
+                isRolling ||
+                isAnimating ||
+                (selectedType === "round" && round <= 0) ||
+                (selectedType === "giftRound" && giftRound <= 0)
+              }
+            >
+              {selectedType === "giftRound" ? (
+                <span role="img" aria-label="gift">
+                  🎁
+                </span>
+              ) : (
+                <Image src={"/rock.png"} alt="wish" width={18} height={18} />
+              )}
+              Wish
+            </button>
+            {/* Wish x10: icon theo selectedType, luôn w-40 */}
+            <button
+              className="border-2 border-orange-400 text-orange-500 px-6 py-2 rounded-full text-base flex items-center gap-2 bg-white hover:shadow-md transition w-40 justify-center"
+              onClick={() => {
+                setSelectedType("giftRound");
+                handleRoll(10);
+              }}
+              disabled={
+                isRolling ||
+                isAnimating ||
+                (selectedType === "round" && round < 10) ||
+                (selectedType === "giftRound" && giftRound < 10)
+              }
+            >
+              {selectedType === "giftRound" ? (
+                <span role="img" aria-label="gift">
+                  🎁
+                </span>
+              ) : (
+                <Image src={"/rock.png"} alt="wish" width={18} height={18} />
+              )}
+              Wish x10
+            </button>
           </div>
         </div>
 
@@ -208,3 +275,4 @@ const Game = () => {
 };
 
 export default Game;
+

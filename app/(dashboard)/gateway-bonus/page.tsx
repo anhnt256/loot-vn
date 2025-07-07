@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useUserInfo } from "@/hooks/use-user-info";
+
 import { toast } from "sonner";
 import Image from "next/image";
 import dayjs from "@/lib/dayjs";
+import { CURRENT_USER } from "@/constants/token.constant";
 
 interface GatewayBonusStatus {
   available: boolean;
@@ -15,7 +16,8 @@ interface GatewayBonusStatus {
 }
 
 export default function GatewayBonusPage() {
-  const { currentUserId, userData, refreshUserData } = useUserInfo();
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [userData, setUserData] = useState<any>(null);
   const [status, setStatus] = useState<GatewayBonusStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isClaiming, setIsClaiming] = useState(false);
@@ -41,6 +43,22 @@ export default function GatewayBonusPage() {
     }
   };
 
+  // Load user data from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const userDataString = localStorage.getItem(CURRENT_USER);
+      if (userDataString) {
+        try {
+          const parsedUserData = JSON.parse(userDataString);
+          setCurrentUserId(parsedUserData.userId || parsedUserData.id);
+          setUserData(parsedUserData);
+        } catch (error) {
+          console.error('Error parsing user data:', error);
+        }
+      }
+    }
+  }, []);
+
   // Claim Gateway Bonus
   const handleClaim = async () => {
     try {
@@ -56,7 +74,6 @@ export default function GatewayBonusPage() {
         throw new Error(data.error || "Claim failed");
       }
       toast.success(data.message || "Nhận Gateway Bonus thành công!");
-      refreshUserData();
       fetchStatus();
     } catch (error) {
       console.error("Error claiming bonus:", error);
