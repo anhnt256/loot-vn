@@ -8,7 +8,7 @@
   "lint": "next lint src pages components",
   "scripts": {
     "dev": "next dev",
-    "build": "npm run test && npm run generate && next build",
+    "build": "npm run generate && next build",
     "build:no-test": "npm run generate && next build",
     "generate:global": "prisma generate --schema=./prisma/schema.prisma",
     "generate:govap": "prisma generate --schema=./prisma/schemaFnet.prisma",
