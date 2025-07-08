@@ -38,3 +38,5 @@ next-env.d.ts
 
 # generated
 /prisma/generated
+
+google-credentials.json

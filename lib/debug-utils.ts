@@ -29,8 +29,8 @@ export function getDebugConfig(): DebugConfig {
 
   // Default values for Tan Phu branch
   const tanPhuDefaults = {
-    macAddress: "EC-D6-8A-DE-89-55",
-    userId: 1214,
+    macAddress: "00-CF-E0-46-C8-81",
+    userId: 5264,
     machineName: "TAN_PHU_01",
   };
 

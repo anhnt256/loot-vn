@@ -428,3 +428,43 @@ model BattlePassPremiumOrder {
   package        BattlePassPremiumPackage @relation(fields: [packageId], references: [id])
   promotion      PromotionSetting? @relation(fields: [promotionId], references: [id])
 }
+
+enum Shift {
+  SANG
+  CHIEU
+  TOI
+}
+
+enum ReportDetailType {
+  GIO
+  DICH_VU
+  MOMO
+  CHI
+  TONG
+}
+
+model ReportDetail {
+  id        Int              @id @default(autoincrement())
+  report    Report           @relation(fields: [reportId], references: [id])
+  reportId  Int
+  type      ReportDetailType
+  value     Float
+}
+
+model Report {
+  id                Int           @id @default(autoincrement())
+  date              DateTime
+  shift             Shift
+  branch            String
+  fileUrl           Json
+  note              String?
+  details           ReportDetail[]
+  counterStaffId    Int
+  kitchenStaffId    Int
+  securityStaffId   Int
+  counterStaff      Staff         @relation("CounterStaff", fields: [counterStaffId], references: [id])
+  kitchenStaff      Staff         @relation("KitchenStaff", fields: [kitchenStaffId], references: [id])
+  securityStaff     Staff         @relation("SecurityStaff", fields: [securityStaffId], references: [id])
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+}

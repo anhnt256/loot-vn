@@ -32,6 +32,12 @@ const menuItems = [
     icon: "💎",
     adminOnly: true,
   },
+  {
+    title: "Báo cáo Gateway",
+    href: "/admin/reports",
+    icon: "📝",
+    adminOnly: true,
+  },
   // {
   //   title: "Lịch sử giao dịch",
   //   href: "/admin/transactions",
