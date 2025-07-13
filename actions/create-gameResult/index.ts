@@ -210,8 +210,8 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         // Lấy user và item rate ban đầu
         const user = await tx.user.findFirst({ where: { userId, branch } });
         if (!user) return { error: "User not found" };
-        // if (user.magicStone < rolls)
-        //   return { error: "Bạn không đủ đá năng lượng." };
+        if (user.magicStone < rolls)
+          return { error: "Bạn không đủ đá năng lượng." };
 
         let itemRates = await getItemRates(tx);
         const { totalFund } = await getJackpotInfo(tx);
