@@ -114,16 +114,16 @@ const CheckInCalendar = () => {
 
   if (!days?.length) {
     return (
-      <div className="w-full mx-auto p-4 mt-8 pt-8">
-        <div className="grid grid-cols-7 gap-4 mb-4">
+      <div className="w-full mx-auto p-2">
+        <div className="grid grid-cols-7 gap-2 mb-3">
           {[...Array(14)].map((_, index) => (
             <Card
               key={`skeleton-${index}`}
-              className="bg-moccasin shadow-lg rounded-lg p-4 h-20"
+              className="bg-moccasin shadow-lg rounded-lg p-2 h-16"
             >
               <div className="flex flex-col items-center justify-center">
-                <Skeleton className="h-5 w-full mb-2" />
-                <Skeleton className="h-5 w-full" />
+                <Skeleton className="h-4 w-full mb-1" />
+                <Skeleton className="h-4 w-full" />
               </div>
             </Card>
           ))}
@@ -133,29 +133,30 @@ const CheckInCalendar = () => {
   }
 
   return (
-    <div className="mt-8 pt-8 border-t border-gray-800">
+    <div className="h-full flex flex-col">
       {/* Header with total rewards */}
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-gray-400">{`Lịch điểm danh tháng ${
+      <div className="flex justify-between items-center mb-3 flex-shrink-0">
+        <h2 className="text-gray-400 text-base font-medium">{`Lịch điểm danh tháng ${
           new Date().getMonth() + 1
         }`}</h2>
-        <div className="flex items-center gap-2 bg-gray-800/50 px-4 py-2 rounded-lg">
-          <span className="text-gray-400">Tổng nhận:</span>
+        <div className="flex items-center gap-2 bg-gray-800/50 px-3 py-1 rounded-lg">
+          <span className="text-gray-400 text-sm">Tổng nhận:</span>
           <div className="flex items-center">
-            <span className="text-yellow-500 font-bold flex items-center gap-2">
+            <span className="text-yellow-500 font-bold flex items-center gap-1 text-base">
               {totalRewards?.toLocaleString()}
-              <Image src="/star.png" width="24" height="24" alt="stars" />
+              <Image src="/star.png" width="18" height="18" alt="stars" />
             </span>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-3">
+      {/* Calendar Grid */}
+      <div className="grid grid-cols-7 gap-2 flex-1 min-h-0">
         {days.map((day) => (
           <div
             key={day.date}
             className={`
-              relative p-3 rounded-lg text-center
+              relative p-2 rounded-lg text-center flex flex-col justify-center
               ${
                 day.status === "expired"
                   ? "bg-light-pink"
@@ -173,9 +174,9 @@ const CheckInCalendar = () => {
                 {day.date.split("-")[0]}
               </span>
               <div className="flex items-center">
-                <span className="text-black font-bold flex items-center gap-2">
+                <span className="text-black font-bold flex items-center gap-1 text-sm">
                   {day.rewards?.toLocaleString()}
-                  <Image src="/star.png" width="24" height="24" alt="stars" />
+                  <Image src="/star.png" width="14" height="14" alt="stars" />
                 </span>
               </div>
             </div>
@@ -184,20 +185,20 @@ const CheckInCalendar = () => {
       </div>
 
       {/* Legend */}
-      <div className="flex justify-end items-center gap-4 mt-4 text-sm">
-        <div className="flex items-center gap-2">
+      <div className="flex justify-end items-center gap-3 mt-3 text-sm flex-shrink-0">
+        <div className="flex items-center gap-1">
           <div className="w-3 h-3 rounded-full bg-light-pink"></div>
           <span className="text-white">Đã quá hạn</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <div className="w-3 h-3 rounded-full bg-pale-green"></div>
           <span className="text-white">Đã điểm danh</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <div className="w-3 h-3 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
           <span className="text-white">Có thể điểm danh</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <div className="w-3 h-3 rounded-full bg-moccasin"></div>
           <span className="text-white">Sắp mở</span>
         </div>

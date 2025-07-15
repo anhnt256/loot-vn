@@ -262,6 +262,8 @@ export async function POST(req: Request, res: Response): Promise<any> {
             // Không fail login nếu user-calculator lỗi
           }
 
+          console.log('userCalculatorData', userCalculatorData)
+
           // Nếu không có userCalculatorData, trả về lỗi
           if (!userCalculatorData) {
             return NextResponse.json(

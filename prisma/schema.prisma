@@ -94,31 +94,31 @@ model GameResult {
 }
 
 model User {
-  id            Int             @id @default(autoincrement())
-  userName      String?         @db.VarChar(45)
+  id            Int                      @id @default(autoincrement())
+  userName      String?                  @db.VarChar(45)
   userId        Int
   rankId        Int
   stars         Int
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  magicStone    Int             @default(0)
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+  magicStone    Int                      @default(0)
   branch        String
-  note          String? @db.VarChar(1000) @default("")
-  isUseApp      Boolean         @default(true)
-  totalPayment  Float?          @db.Float
+  totalPayment  Float?                   @db.Float
+  note          String?                  @default("") @db.VarChar(1000)
+  isUseApp      Boolean                  @default(true)
   UserRewardMap UserRewardMap[]
   GameResults   GameResult[]
   premiumOrders BattlePassPremiumOrder[]
 }
 
 model Mission {
-  id          Int          @id @default(autoincrement())
+  id          Int         @id @default(autoincrement())
   name        String
   description String
   reward      Float
   startHours  Int
   endHours    Int
-  createdAt   DateTime     @default(now())
+  createdAt   DateTime    @default(now())
   quantity    Int
   type        MissionType
 }
@@ -133,6 +133,8 @@ model UserRewardMap {
   updatedAt       DateTime?      @updatedAt
   isUsed          Boolean        @default(false)
   branch          String?        @default("GO_VAP")
+  note            String?        @db.Text
+  status          UserRewardMapStatus? @default(INITIAL)
   promotionCode   PromotionCode? @relation(fields: [promotionCodeId], references: [id])
   user            User?          @relation(fields: [userId], references: [id])
   reward          Reward?        @relation(fields: [rewardId], references: [id])
@@ -167,16 +169,16 @@ model PromotionCode {
 }
 
 model UserStarHistory {
-  id           Int                   @id @default(autoincrement())
+  id           Int                  @id @default(autoincrement())
   userId       Int?
   oldStars     Int?
   newStars     Int?
   type         UserStarHistoryType?
-  createdAt    DateTime?             @default(now())
+  createdAt    DateTime?            @default(now())
   targetId     Int?
-  branch       String?               @db.VarChar(45)
+  branch       String?              @db.VarChar(45)
   gameResultId Int?
-  gameResult   GameResult?           @relation(fields: [gameResultId], references: [id])
+  gameResult   GameResult?          @relation(fields: [gameResultId], references: [id])
 
   @@index([userId])
   @@index([gameResultId])
@@ -204,28 +206,42 @@ model Computer {
 }
 
 model Staff {
-  id        Int      @id @default(autoincrement())
-  userName  String
-  password  String
-  isDeleted Boolean  @default(false)
-  isAdmin   Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime
-  branch    String   @default("GO_VAP")
+  id                  Int             @id @default(autoincrement())
+  userName            String          @unique
+  password            String
+  isDeleted           Boolean         @default(false)
+  isAdmin             Boolean         @default(false)
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime
+  branch              String          @default("GO_VAP")
+  address             String?         @db.Text
+  dateOfBirth         DateTime?
+  email               String?         @db.VarChar(255)
+  fullName            String          @db.VarChar(255)
+  gender              Staff_gender    @default(OTHER)
+  hireDate            DateTime?
+  idCard              String?         @db.VarChar(20)
+  idCardExpiryDate    DateTime?
+  idCardIssueDate     DateTime?
+  note                String?         @db.Text
+  phone               String?         @db.VarChar(15)
+  resignDate          DateTime?
+  staffType           Staff_staffType @default(STAFF)
+  needCheckMacAddress Boolean         @default(true)
 }
 
 model GiftRound {
-  id        Int       @id @default(autoincrement())
-  userId    Int
-  amount    Int
-  reason    String    @db.VarChar(255)
-  staffId   Int
-  branch    String    @default("GO_VAP")
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @default(now())
-  expiredAt DateTime?
-  usedAmount Int      @default(0)
-  isUsed    Boolean   @default(false)
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  amount     Int
+  reason     String    @db.VarChar(255)
+  staffId    Int
+  createdAt  DateTime  @default(now())
+  expiredAt  DateTime?
+  isUsed     Boolean   @default(false)
+  updatedAt  DateTime  @default(now())
+  branch     String    @default("GO_VAP")
+  usedAmount Int       @default(0)
 }
 
 model Device {
@@ -269,17 +285,17 @@ model DeviceHistory {
 }
 
 model BattlePassSeason {
-  id             Int                @id @default(autoincrement())
-  name           String
-  description    String?
-  startDate      DateTime
-  endDate        DateTime
-  isActive       Boolean            @default(false)
-  maxLevel       Int                @default(100)
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
-  rewards        BattlePassReward[]
-  userBattlePass UserBattlePass[]
+  id              Int                        @id @default(autoincrement())
+  name            String
+  description     String?
+  startDate       DateTime
+  endDate         DateTime
+  isActive        Boolean                    @default(false)
+  maxLevel        Int                        @default(100)
+  createdAt       DateTime                   @default(now())
+  updatedAt       DateTime                   @updatedAt
+  rewards         BattlePassReward[]
+  userBattlePass  UserBattlePass[]
   premiumPackages BattlePassPremiumPackage[]
 
   @@map("BattlePassSeason")
@@ -298,8 +314,8 @@ model BattlePassReward {
   isBonus     Boolean          @default(false)
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
-  season      BattlePassSeason @relation(fields: [seasonId], references: [id])
   experience  Int              @default(0)
+  season      BattlePassSeason @relation(fields: [seasonId], references: [id])
 
   @@index([seasonId])
   @@map("BattlePassReward")
@@ -308,7 +324,6 @@ model BattlePassReward {
 model UserBattlePass {
   id         Int              @id @default(autoincrement())
   userId     Int
-  branch     String
   seasonId   Int
   level      Int              @default(0)
   experience Int              @default(0)
@@ -316,6 +331,7 @@ model UserBattlePass {
   totalSpent Float            @default(0)
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @updatedAt
+  branch     String
   season     BattlePassSeason @relation(fields: [seasonId], references: [id])
 
   @@unique([userId, seasonId])
@@ -334,6 +350,69 @@ model UserBattlePassReward {
   @@unique([userId, rewardId])
   @@index([seasonId])
   @@index([userId])
+}
+
+model BattlePassPremiumPackage {
+  id          Int                      @id @default(autoincrement())
+  seasonId    Int
+  name        String
+  basePrice   Int
+  description String?
+  benefits    String?
+  maxQuantity Int?
+  sold        Int                      @default(0)
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+  season      BattlePassSeason         @relation(fields: [seasonId], references: [id])
+  promotions  PromotionSetting[]       @relation("PackagePromotions")
+  orders      BattlePassPremiumOrder[]
+}
+
+model PromotionSetting {
+  id            Int                       @id @default(autoincrement())
+  name          String
+  type          PromotionType
+  targetId      Int?
+  discountType  DiscountType
+  discountValue Float
+  startDate     DateTime
+  endDate       DateTime
+  maxQuantity   Int?
+  used          Int                       @default(0)
+  isActive      Boolean                   @default(true)
+  rule          Json?
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+  package       BattlePassPremiumPackage? @relation("PackagePromotions", fields: [targetId], references: [id])
+  orders        BattlePassPremiumOrder[]
+}
+
+model BattlePassPremiumOrder {
+  id          Int                      @id @default(autoincrement())
+  userId      Int
+  packageId   Int
+  promotionId Int?
+  price       Int
+  status      OrderStatus              @default(PENDING)
+  createdAt   DateTime                 @default(now())
+  approvedAt  DateTime?
+  approvedBy  Int?
+  note        String?
+  user        User                     @relation(fields: [userId], references: [id])
+  package     BattlePassPremiumPackage @relation(fields: [packageId], references: [id])
+  promotion   PromotionSetting?        @relation(fields: [promotionId], references: [id])
+}
+
+model ChatMessage {
+  id          Int      @id @default(autoincrement())
+  content     String   @db.Text
+  userId      Int?
+  machineName String   @db.VarChar(255)
+  branch      String   @db.VarChar(45)
+  createdAt   DateTime @default(now())
+  staffId     Int?
+
+  @@index([createdAt])
 }
 
 enum MissionType {
@@ -375,56 +454,20 @@ enum OrderStatus {
   CANCELLED
 }
 
-model BattlePassPremiumPackage {
-  id           Int      @id @default(autoincrement())
-  seasonId     Int
-  name         String
-  basePrice    Int
-  description  String?
-  benefits     String?
-  maxQuantity  Int?
-  sold         Int      @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  season       BattlePassSeason @relation(fields: [seasonId], references: [id])
-  promotions   PromotionSetting[] @relation("PackagePromotions")
-  orders       BattlePassPremiumOrder[]
+enum Staff_gender {
+  MALE
+  FEMALE
+  OTHER
 }
 
-model PromotionSetting {
-  id           Int      @id @default(autoincrement())
-  name         String
-  type         PromotionType
-  targetId     Int?
-  discountType DiscountType
-  discountValue Float
-  startDate    DateTime
-  endDate      DateTime
-  maxQuantity  Int?
-  used         Int      @default(0)
-  isActive     Boolean  @default(true)
-  rule         Json?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  package      BattlePassPremiumPackage? @relation("PackagePromotions", fields: [targetId], references: [id])
-  orders       BattlePassPremiumOrder[]
+enum Staff_staffType {
+  SUPER_ADMIN
+  BRANCH_ADMIN
+  STAFF
 }
 
-model BattlePassPremiumOrder {
-  id             Int      @id @default(autoincrement())
-  userId         Int
-  packageId      Int
-  promotionId    Int?
-  price          Int
-  status         OrderStatus @default(PENDING)
-  createdAt      DateTime @default(now())
-  approvedAt     DateTime?
-  approvedBy     Int?
-  note           String?
-
-  user           User     @relation(fields: [userId], references: [id])
-  package        BattlePassPremiumPackage @relation(fields: [packageId], references: [id])
-  promotion      PromotionSetting? @relation(fields: [promotionId], references: [id])
+enum UserRewardMapStatus {
+  INITIAL
+  APPROVE
+  REJECT
 }

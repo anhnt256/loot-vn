@@ -1,5 +1,68 @@
 # System Patterns
 
+## User Table Joins Pattern
+
+### Rule: No Foreign Key Relationships with User Table
+- **NEVER** use foreign key relationships with the User table
+- **ALWAYS** join manually using `userId` and `branch` from cookie
+- Pattern: `user.userId = table.userId AND user.branch = branch (from cookie)`
+
+### Implementation Pattern
+```typescript
+// ❌ WRONG - Using foreign key relationship
+const data = await db.userRewardMap.findMany({
+  include: {
+    user: true, // This uses foreign key relationship
+  }
+});
+
+// ✅ CORRECT - Manual join
+const rewards = await db.userRewardMap.findMany({
+  where: { branch: branch },
+  include: {
+    reward: true,
+    promotionCode: true,
+  }
+});
+
+// Manual join with User table
+const rewardsWithUser = await Promise.all(
+  rewards.map(async (reward) => {
+    let user = null;
+    if (reward.userId) {
+      user = await db.user.findFirst({
+        where: {
+          userId: reward.userId,
+          branch: branch, // From cookie
+        },
+        select: {
+          id: true,
+          userId: true,
+          userName: true,
+          stars: true,
+          branch: true,
+        },
+      });
+    }
+    return {
+      ...reward,
+      user,
+    };
+  })
+);
+```
+
+### Why This Pattern?
+- User table has both `id` and `userId` fields
+- `userId` is the business identifier, `id` is just auto-increment
+- Branch isolation: users from different branches should not be mixed
+- Security: ensures data isolation between branches
+
+### Files Using This Pattern
+- `app/api/reward-exchange/history/route.ts`
+- `app/api/reward-exchange/pending/route.ts` 
+- `app/api/reward-exchange/approve/route.ts`
+
 ## Architecture Overview
 
 The application follows a modern Next.js architecture with the following key patterns:

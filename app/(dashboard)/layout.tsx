@@ -119,30 +119,30 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   );
 
   // Chỉ gọi checkGatewayBonus sau khi user-calculator fetch xong và currentUser đã ổn định
-  useEffect(() => {
-    if (!currentUser) return;
-    const checkGatewayBonus = async () => {
-      try {
-        let userId = null;
-        const user = currentUser as any;
-        userId = user.userId || user.id;
-        if (!userId) {
-          setShowGatewayBonus(false);
-          return;
-        }
-        const res = await fetch(`/api/gateway-bonus?userId=${userId}`);
-        if (res.ok) {
-          const data = await res.json();
-          setShowGatewayBonus(!!data.available);
-        } else {
-          setShowGatewayBonus(false);
-        }
-      } catch (err) {
-        setShowGatewayBonus(false);
-      }
-    };
-    checkGatewayBonus();
-  }, [currentUser]);
+  // useEffect(() => {
+  //   if (!currentUser) return;
+  //   const checkGatewayBonus = async () => {
+  //     try {
+  //       let userId = null;
+  //       const user = currentUser as any;
+  //       userId = user.userId || user.id;
+  //       if (!userId) {
+  //         setShowGatewayBonus(false);
+  //         return;
+  //       }
+  //       const res = await fetch(`/api/gateway-bonus?userId=${userId}`);
+  //       if (res.ok) {
+  //         const data = await res.json();
+  //         setShowGatewayBonus(!!data.available);
+  //       } else {
+  //         setShowGatewayBonus(false);
+  //       }
+  //     } catch (err) {
+  //       setShowGatewayBonus(false);
+  //     }
+  //   };
+  //   checkGatewayBonus();
+  // }, [currentUser]);
 
   useEffect(() => {
     setIsClient(true);
@@ -235,7 +235,16 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
           >
             Trò chơi
           </Link>
-          {showGatewayBonus && (
+          <Link
+            className={cn(
+              "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
+              pathname === "/store" ? "bg-gray-700" : "transparent",
+            )}
+            href="/store"
+          >
+            Đổi thưởng
+          </Link>
+          {/* {showGatewayBonus && (
             <Link
               className={cn(
                 "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center gap-2 font-bold",
@@ -259,7 +268,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
                 <span className="ml-2 animate-ping inline-flex h-3 w-3 rounded-full bg-yellow-400 opacity-75"></span>
               )}
             </Link>
-          )}
+          )} */}
           <div
             onClick={handleLogout}
             className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 cursor-pointer"
@@ -269,12 +278,14 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
         </nav>
       </div>
 
-      <div className="flex-1 p-10 text-2xl font-bold bg-gray-400">
+      <div className="flex-1 overflow-hidden">
         {IS_MAINTENANCE ? (
-          <h1>
-            Website bảo trì để nâng cấp phần mềm mới. Chúng tôi sẽ quay trở lại
-            sớm. Rất mong các bạn thông cảm.
-          </h1>
+          <div className="flex items-center justify-center h-full p-10 text-2xl font-bold bg-gray-400">
+            <h1>
+              Website bảo trì để nâng cấp phần mềm mới. Chúng tôi sẽ quay trở lại
+              sớm. Rất mong các bạn thông cảm.
+            </h1>
+          </div>
         ) : (
           children
         )}

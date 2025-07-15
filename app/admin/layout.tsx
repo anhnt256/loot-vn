@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Toaster } from "sonner";
 
-import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { AdminSidebar, PendingCountProvider } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 
 export const metadata: Metadata = {
@@ -16,20 +16,22 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen bg-gray-900">
-      <Toaster richColors position="top-right" />
-      {/* Sidebar */}
-      <AdminSidebar />
+    <PendingCountProvider>
+      <div className="flex h-screen bg-gray-900">
+        <Toaster richColors position="top-right" />
+        {/* Sidebar */}
+        <AdminSidebar />
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <AdminHeader />
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <AdminHeader />
 
-        {/* Main Content Area */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-900 p-6">
-          {children}
-        </main>
+          {/* Main Content Area */}
+          <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-900 p-6">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </PendingCountProvider>
   );
 }

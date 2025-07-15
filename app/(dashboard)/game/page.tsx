@@ -135,69 +135,80 @@ const Game = () => {
   if (!userData || !branch) return null;
 
   return (
-    <div className="flex flex-col p-5 gap-4">
-      <div className="shadow-lg rounded-lg w-full overflow-auto max-h-[89vh] relative">
+    <div className="flex flex-col p-4 gap-4">
+      <div className="bg-white rounded-lg shadow-sm w-full overflow-auto max-h-[89vh] relative">
+        {/* Header */}
         <div className="flex justify-between p-4 bg-blue-600 text-white">
-          <h2>Đền Nguyện Ước</h2>
+          <h2 className="text-lg font-semibold">Đền Nguyện Ước</h2>
           <div className="flex gap-2">
-            <div className="flex items-center gap-2 bg-orange-600/80 rounded-full px-3 py-1.5">
-              <span className="text-white font-semibold">
-                {`Tổng tiền nạp: ${totalPayment?.toLocaleString()}`}
+            <div className="bg-orange-500 rounded px-3 py-1">
+              <span className="text-white text-sm font-medium">
+                Tổng tiền nạp: {totalPayment?.toLocaleString() || 0}
               </span>
             </div>
             <div
-              className={`flex items-center gap-2 rounded-full px-3 py-1.5 cursor-pointer transition-all ${selectedType === "round" ? "bg-gray-800 border-2 border-yellow-400 shadow-lg" : "bg-gray-600/80"}`}
+              className={`flex items-center gap-1 rounded px-3 py-1 cursor-pointer transition-colors ${
+                selectedType === "round" 
+                  ? "bg-white text-blue-600 border border-blue-600" 
+                  : "bg-gray-600"
+              }`}
               onClick={() => setSelectedType("round")}
             >
-              <span className="text-white font-semibold">
-                {round?.toLocaleString()}
+              <span className="text-sm font-medium">
+                {round?.toLocaleString() || 0}
               </span>
-              <Image src={"/rock.png"} alt="wish" width="24" height="24" />
+              <Image src={"/rock.png"} alt="wish" width="16" height="16" />
             </div>
             <div
-              className={`flex items-center gap-2 rounded-full px-3 py-1.5 cursor-pointer transition-all ${selectedType === "giftRound" ? "bg-green-700 border-2 border-yellow-400 shadow-lg" : "bg-green-600/80"}`}
+              className={`flex items-center gap-1 rounded px-3 py-1 cursor-pointer transition-colors ${
+                selectedType === "giftRound" 
+                  ? "bg-white text-blue-600 border border-blue-600" 
+                  : "bg-gray-600"
+              }`}
               onClick={() => setSelectedType("giftRound")}
             >
-              <span className="text-white font-semibold">
-                {giftRound?.toLocaleString()}
+              <span className="text-sm font-medium">
+                {giftRound?.toLocaleString() || 0}
               </span>
-              <span role="img" aria-label="gift">
+              <span role="img" aria-label="gift" className="text-sm">
                 🎁
               </span>
             </div>
           </div>
         </div>
 
-        <div className="bg-red-200">
-          <span className="text-sm p-4">
+        {/* Warning Banner */}
+        <div className="bg-red-100 p-4">
+          <p className="text-red-800 text-sm">
             Số lượt quay được tính theo tổng tiền nạp trong tuần, và reset vào
             0h mỗi thứ 2 hàng tuần. Vui lòng sử dụng sớm để tránh mất lượt.
-          </span>
+          </p>
         </div>
-        <div className="flex justify-center items-center bg-gray-200">
+
+        {/* Game Wheel Section */}
+        <div className="flex justify-center items-center bg-gray-100 p-6">
           <CircleSegments
             segments={Array.isArray(segments) ? [...segments].slice(0, 7) : []}
           />
         </div>
 
-        {/* Container trắng bo góc, border cam, center, chứa 4 nút */}
-        <div className="flex justify-center items-center bg-gray-200 pt-4 pb-6">
-          <div className="bg-white rounded-2xl shadow-md flex gap-4 px-8 py-4">
+        {/* Action Buttons */}
+        <div className="flex justify-center items-center bg-gray-100 p-4">
+          <div className="flex gap-3">
             <button
-              className="bg-yellow-500 hover:bg-yellow-700 text-white px-3 py-1.5 rounded text-sm"
+              className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded text-sm font-medium transition-colors"
               onClick={() => openModal()}
             >
               Lịch sử
             </button>
             <button
-              className="bg-blue-500 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm"
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium transition-colors"
               onClick={() => openRuleModal()}
             >
               Thể lệ
             </button>
-            {/* Wish x1: icon theo selectedType, luôn w-40 */}
             <button
-              className="border-2 border-orange-400 text-orange-500 px-6 py-2 rounded-full text-base flex items-center gap-2 bg-white hover:shadow-md transition w-40 justify-center"
+              className="bg-pink-400 hover:bg-pink-500 text-white px-6 py-2 rounded text-sm font-medium flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => {
                 setSelectedType("round");
                 handleRoll(1);
@@ -210,17 +221,16 @@ const Game = () => {
               }
             >
               {selectedType === "giftRound" ? (
-                <span role="img" aria-label="gift">
+                <span role="img" aria-label="gift" className="text-sm">
                   🎁
                 </span>
               ) : (
-                <Image src={"/rock.png"} alt="wish" width={18} height={18} />
+                <Image src={"/rock.png"} alt="wish" width="16" height="16" />
               )}
               Ước
             </button>
-            {/* Wish x10: icon theo selectedType, luôn w-40 */}
             <button
-              className="border-2 border-orange-400 text-orange-500 px-6 py-2 rounded-full text-base flex items-center gap-2 bg-white hover:shadow-md transition w-40 justify-center"
+              className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded text-sm font-medium flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => {
                 setSelectedType("giftRound");
                 handleRoll(10);
@@ -233,11 +243,11 @@ const Game = () => {
               }
             >
               {selectedType === "giftRound" ? (
-                <span role="img" aria-label="gift">
+                <span role="img" aria-label="gift" className="text-sm">
                   🎁
                 </span>
               ) : (
-                <Image src={"/rock.png"} alt="wish" width={18} height={18} />
+                <Image src={"/rock.png"} alt="wish" width="16" height="16" />
               )}
               Ước x10
             </button>
