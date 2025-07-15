@@ -290,10 +290,10 @@ export async function calculateActiveUsersInfo(
         if (sessions.length > 0) {
           const latestSession = sessions.reduce((latest, current) => {
             const latestTime = new Date(
-              `${latest.EnterDate}T${latest.EnterTime || "00:00:00"}`
+              `${latest.EnterDate}T${latest.EnterTime || "00:00:00"}`,
             ).getTime();
             const currentTime = new Date(
-              `${current.EnterDate}T${current.EnterTime || "00:00:00"}`
+              `${current.EnterDate}T${current.EnterTime || "00:00:00"}`,
             ).getTime();
             return currentTime > latestTime ? current : latest;
           });

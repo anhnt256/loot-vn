@@ -67,9 +67,24 @@ const handler = async (data: InputType): Promise<any> => {
     };
   }
 
-  // Tìm promotionCode hợp lệ
+  // Tìm reward trước để lấy name
+  const reward = await db.reward.findUnique({
+    where: { id: rewardId }
+  });
+
+  if (!reward) {
+    return {
+      error: "Reward không tồn tại.",
+    };
+  }
+
+  // Tìm promotionCode hợp lệ - tìm theo name của reward và branch
   const promotion = await db.promotionCode.findFirst({
-    where: { value, branch, isUsed: false },
+    where: { 
+      name: reward.name,
+      branch: branch, 
+      isUsed: false 
+    },
   });
 
   console.log("promotion found:", promotion);

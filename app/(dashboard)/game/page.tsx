@@ -148,8 +148,8 @@ const Game = () => {
             </div>
             <div
               className={`flex items-center gap-1 rounded px-3 py-1 cursor-pointer transition-colors ${
-                selectedType === "round" 
-                  ? "bg-white text-blue-600 border border-blue-600" 
+                selectedType === "round"
+                  ? "bg-white text-blue-600 border border-blue-600"
                   : "bg-gray-600"
               }`}
               onClick={() => setSelectedType("round")}
@@ -161,8 +161,8 @@ const Game = () => {
             </div>
             <div
               className={`flex items-center gap-1 rounded px-3 py-1 cursor-pointer transition-colors ${
-                selectedType === "giftRound" 
-                  ? "bg-white text-blue-600 border border-blue-600" 
+                selectedType === "giftRound"
+                  ? "bg-white text-blue-600 border border-blue-600"
                   : "bg-gray-600"
               }`}
               onClick={() => setSelectedType("giftRound")}

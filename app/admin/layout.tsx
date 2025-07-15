@@ -2,7 +2,10 @@ import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Toaster } from "sonner";
 
-import { AdminSidebar, PendingCountProvider } from "@/components/admin/AdminSidebar";
+import {
+  AdminSidebar,
+  PendingCountProvider,
+} from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 
 export const metadata: Metadata = {

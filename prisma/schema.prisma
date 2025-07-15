@@ -124,20 +124,20 @@ model Mission {
 }
 
 model UserRewardMap {
-  id              Int            @id @default(autoincrement())
+  id              Int                  @id @default(autoincrement())
   userId          Int?
   rewardId        Int?
   promotionCodeId Int?
   duration        Int?
-  createdAt       DateTime?      @default(now())
-  updatedAt       DateTime?      @updatedAt
-  isUsed          Boolean        @default(false)
-  branch          String?        @default("GO_VAP")
-  note            String?        @db.Text
+  createdAt       DateTime?            @default(now())
+  updatedAt       DateTime?            @updatedAt
+  isUsed          Boolean              @default(false)
+  branch          String?              @default("GO_VAP")
+  note            String?              @db.Text
   status          UserRewardMapStatus? @default(INITIAL)
-  promotionCode   PromotionCode? @relation(fields: [promotionCodeId], references: [id])
-  user            User?          @relation(fields: [userId], references: [id])
-  reward          Reward?        @relation(fields: [rewardId], references: [id])
+  promotionCode   PromotionCode?       @relation(fields: [promotionCodeId], references: [id])
+  user            User?                @relation(fields: [userId], references: [id])
+  reward          Reward?              @relation(fields: [rewardId], references: [id])
 
   @@index([promotionCodeId])
   @@index([userId])

@@ -17,14 +17,14 @@ const Store = () => {
   const userData = useLocalStorageValue(CURRENT_USER, null) as any;
   const userId = userData?.userId || userData?.id;
   const [refreshKey, setRefreshKey] = useState(0);
-  
+
   const { data: rewards, isLoading } = useQuery<[Reward]>({
     queryKey: ["reward"],
     queryFn: () => fetcher(`/api/reward/${branch}`),
   });
 
   const handleRewardSuccess = () => {
-    setRefreshKey(prev => prev + 1);
+    setRefreshKey((prev) => prev + 1);
   };
 
   // return (
@@ -58,9 +58,9 @@ const Store = () => {
               <div className="text-sm text-orange-800">
                 <p className="font-medium mb-1">Thông báo quan trọng:</p>
                 <p className="text-xs leading-relaxed">
-                  Sau khi đổi thưởng, phần thưởng sẽ được cộng trực tiếp vào số dư tài
-                  khoản. Vui lòng đăng nhập lại để cập nhật số giờ chơi chính xác. Xin
-                  cảm ơn.
+                  Sau khi đổi thưởng, phần thưởng sẽ được cộng trực tiếp vào số
+                  dư tài khoản. Vui lòng đăng nhập lại để cập nhật số giờ chơi
+                  chính xác. Xin cảm ơn.
                 </p>
               </div>
             </div>
@@ -76,11 +76,14 @@ const Store = () => {
               </div>
             </div>
           ) : (
-            <RewardList rewards={rewards} onRewardSuccess={handleRewardSuccess} />
+            <RewardList
+              rewards={rewards}
+              onRewardSuccess={handleRewardSuccess}
+            />
           )}
         </div>
       </div>
-      
+
       {/* Cột phải - Lịch sử đổi thưởng */}
       <div className="w-96 bg-white shadow-xl rounded-2xl overflow-hidden flex flex-col border border-gray-200">
         {userId ? (
@@ -91,8 +94,12 @@ const Store = () => {
               <div className="w-16 h-16 bg-gradient-to-br from-gray-400 to-gray-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-white text-2xl">🔐</span>
               </div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Cần đăng nhập</h3>
-              <p className="text-gray-500 text-sm">Vui lòng đăng nhập để xem lịch sử đổi thưởng</p>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                Cần đăng nhập
+              </h3>
+              <p className="text-gray-500 text-sm">
+                Vui lòng đăng nhập để xem lịch sử đổi thưởng
+              </p>
             </div>
           </div>
         )}

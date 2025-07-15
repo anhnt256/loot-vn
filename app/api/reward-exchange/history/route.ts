@@ -20,20 +20,20 @@ export async function GET(request: Request) {
     if (!branch) {
       return NextResponse.json(
         { error: "Branch is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Tạo điều kiện date filter nếu có
     let dateFilter = {};
-    
+
     if (startDate && endDate) {
       // Sử dụng date range
       dateFilter = {
         createdAt: {
           gte: new Date(startDate + "T00:00:00.000Z"),
           lte: new Date(endDate + "T23:59:59.999Z"),
-        }
+        },
       };
     } else if (date) {
       // Fallback cho single date (backward compatibility)
@@ -41,7 +41,7 @@ export async function GET(request: Request) {
         createdAt: {
           gte: new Date(date + "T00:00:00.000Z"),
           lt: new Date(date + "T23:59:59.999Z"),
-        }
+        },
       };
     }
 
@@ -66,6 +66,7 @@ export async function GET(request: Request) {
               id: true,
               name: true,
               value: true,
+              stars: true,
             },
           },
           promotionCode: {
@@ -112,7 +113,7 @@ export async function GET(request: Request) {
           ...reward,
           user,
         };
-      })
+      }),
     );
 
     return NextResponse.json({
@@ -128,7 +129,7 @@ export async function GET(request: Request) {
     console.error("[REWARD_EXCHANGE_HISTORY_GET]", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

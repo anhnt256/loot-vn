@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     if (!branch) {
       return NextResponse.json(
         { error: "Branch is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
           branch: branch,
         },
       });
-      
+
       if (user) {
         whereClause.userId = user.id; // user.id là foreign key trong UserRewardMap
       }
@@ -45,6 +45,7 @@ export async function GET(request: Request) {
             id: true,
             name: true,
             value: true,
+            stars: true,
           },
         },
         promotionCode: {
@@ -85,7 +86,7 @@ export async function GET(request: Request) {
           ...reward,
           user,
         };
-      })
+      }),
     );
 
     return NextResponse.json(rewardsWithUser);
@@ -93,7 +94,7 @@ export async function GET(request: Request) {
     console.error("[REWARD_EXCHANGE_PENDING_GET]", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     if (!branch) {
       return NextResponse.json(
         { error: "Branch cookie is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -30,14 +30,14 @@ export async function POST(request: Request) {
     if (!rewardMapId || !action) {
       return NextResponse.json(
         { error: "Reward map ID and action are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!["APPROVE", "REJECT"].includes(action)) {
       return NextResponse.json(
         { error: "Invalid action. Must be APPROVE or REJECT" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     if (!rewardMap) {
       return NextResponse.json(
         { error: "Reward exchange not found or already processed" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -81,10 +81,7 @@ export async function POST(request: Request) {
     }
 
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     await db.$transaction(async (tx) => {
@@ -118,10 +115,22 @@ export async function POST(request: Request) {
           },
         });
 
+        await tx.userStarHistory.create({
+          data: {
+            userId: user.userId,
+            type: "REWARD",
+            oldStars: user?.stars + (rewardMap?.reward?.stars || 0),
+            newStars: user?.stars,
+            targetId: rewardMap?.reward?.id,
+            createdAt: getVNTimeForPrisma(),
+            branch,
+          },
+        });
+
         // Update money in fnet database
         if (rewardMap.reward?.value && user.userId) {
           const fnetDB = await getFnetDB();
-          
+
           const fnetUser = await fnetDB.usertb.findFirst({
             where: {
               UserId: user.userId,
@@ -148,7 +157,8 @@ export async function POST(request: Request) {
                 UserId: user.userId,
               },
               data: {
-                RemainMoney: Number(fnetUser.RemainMoney) + Number(rewardMap.reward.value),
+                RemainMoney:
+                  Number(fnetUser.RemainMoney) + Number(rewardMap.reward.value),
                 Birthdate: todayFormatted,
                 ExpiryDate: expiryDateFormatted,
               },
@@ -157,13 +167,13 @@ export async function POST(request: Request) {
         }
       } else if (action === "REJECT") {
         // Hoàn trả số sao cho user khi từ chối
-        if (rewardMap.reward?.value) {
+        if (rewardMap.reward?.stars) {
           await tx.user.update({
             where: {
               id: user.id,
             },
             data: {
-              stars: Number(user.stars) + Number(rewardMap.reward.value),
+              stars: Number(user.stars) + Number(rewardMap.reward.stars),
             },
           });
         }
@@ -174,10 +184,15 @@ export async function POST(request: Request) {
     try {
       if (user.userId) {
         await calculateActiveUsersInfo([user.userId], branch);
-        console.log(`User calculator called for userId: ${user.userId} after ${action.toLowerCase()}ing reward exchange`);
+        console.log(
+          `User calculator called for userId: ${user.userId} after ${action.toLowerCase()}ing reward exchange`,
+        );
       }
     } catch (calculatorError) {
-      console.error("Error calling user-calculator after reward exchange approval:", calculatorError);
+      console.error(
+        "Error calling user-calculator after reward exchange approval:",
+        calculatorError,
+      );
       // Không fail request nếu user-calculator lỗi, chỉ log lỗi
     }
 
@@ -189,7 +204,7 @@ export async function POST(request: Request) {
     console.error("[REWARD_EXCHANGE_APPROVE_POST]", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

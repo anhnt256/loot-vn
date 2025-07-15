@@ -282,8 +282,8 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
         {IS_MAINTENANCE ? (
           <div className="flex items-center justify-center h-full p-10 text-2xl font-bold bg-gray-400">
             <h1>
-              Website bảo trì để nâng cấp phần mềm mới. Chúng tôi sẽ quay trở lại
-              sớm. Rất mong các bạn thông cảm.
+              Website bảo trì để nâng cấp phần mềm mới. Chúng tôi sẽ quay trở
+              lại sớm. Rất mong các bạn thông cảm.
             </h1>
           </div>
         ) : (

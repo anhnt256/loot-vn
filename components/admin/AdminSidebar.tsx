@@ -12,7 +12,9 @@ interface PendingCountContextType {
   setPendingCount: (count: number) => void;
 }
 
-const PendingCountContext = createContext<PendingCountContextType | undefined>(undefined);
+const PendingCountContext = createContext<PendingCountContextType | undefined>(
+  undefined,
+);
 
 export const usePendingCount = () => {
   const context = useContext(PendingCountContext);
@@ -22,9 +24,13 @@ export const usePendingCount = () => {
   return context;
 };
 
-export const PendingCountProvider = ({ children }: { children: React.ReactNode }) => {
+export const PendingCountProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const [pendingCount, setPendingCount] = useState(0);
-  
+
   return (
     <PendingCountContext.Provider value={{ pendingCount, setPendingCount }}>
       {children}
@@ -99,18 +105,21 @@ export function AdminSidebar() {
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, [branch]);
 
   // Polling for pending rewards count
-  const pendingCountPolling = usePolling<{ pending: number }>(`/api/reward-exchange/stats?branch=${branch}&startDate=${new Date().toISOString().split('T')[0]}&endDate=${new Date().toISOString().split('T')[0]}`, {
-    interval: 60000, // 60 seconds
-    enabled: true,
-    onSuccess: (data) => {
-      setPendingCount(data.pending || 0);
+  const pendingCountPolling = usePolling<{ pending: number }>(
+    `/api/reward-exchange/stats?branch=${branch}&startDate=${new Date().toISOString().split("T")[0]}&endDate=${new Date().toISOString().split("T")[0]}`,
+    {
+      interval: 60000, // 60 seconds
+      enabled: true,
+      onSuccess: (data) => {
+        setPendingCount(data.pending || 0);
+      },
     },
-  });
+  );
 
   // Filter menu items based on login type and admin role
   const filteredMenuItems = menuItems.filter((item) => {
@@ -132,7 +141,7 @@ export function AdminSidebar() {
       <nav className="mt-4">
         {filteredMenuItems.map((item) => {
           const isActive = pathname === item.href;
-          
+
           return (
             <Link
               key={item.href}
