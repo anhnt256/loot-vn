@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     // Find or create user progress
     let userProgress = await db.userBattlePass.findFirst({
       where: {
-        userId: decoded.userId,
+        userId: parseInt(decoded.userId),
         seasonId: currentSeason.id,
       },
     });
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
       // Create new user progress
       userProgress = await db.userBattlePass.create({
         data: {
-          userId: decoded.userId,
+          userId: parseInt(decoded.userId),
           seasonId: currentSeason.id,
           level: 0,
           experience: experience || 0,

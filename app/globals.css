@@ -199,31 +199,87 @@
 }
 
 /* Custom branch select styles */
-.custom-branch-select .ant-select-selector {
-  background: #23272f !important;
-  color: #fff !important;
-  border: 1px solid #374151 !important;
-  font-weight: 600;
-  border-radius: 8px !important;
-}
-.custom-branch-select .ant-select-selection-item {
-  color: #fff !important;
-}
-.custom-branch-select .ant-select-arrow {
-  color: #fff !important;
-  font-weight: 600;
-}
-.custom-branch-select.ant-select-disabled .ant-select-selection-item {
-  color: #bfbfbf !important;
-  opacity: 1 !important;
-}
-.custom-branch-dropdown .ant-select-item {
-  color: #fff !important;
+.branch-select {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
   font-weight: 500;
-  padding: 10px 16px !important;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
-.custom-branch-dropdown .ant-select-item-option-selected,
-.custom-branch-dropdown .ant-select-item-option-active {
-  background: #2563eb !important;
-  color: #fff !important;
+
+.branch-select:hover {
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.branch-select option {
+  background: #1f2937;
+  color: white;
+}
+
+/* Line clamp utilities */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* Mission card responsive improvements */
+@media (max-width: 640px) {
+  .mission-card {
+    padding: 0.75rem;
+  }
+  
+  .mission-card h3 {
+    font-size: 0.875rem;
+  }
+  
+  .mission-card p {
+    font-size: 0.75rem;
+  }
+  
+  .mission-card button {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+/* Ensure proper flex layout for mission container */
+.mission-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.mission-scroll-container {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.mission-scroll-content {
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 0.25rem;
 }

@@ -121,6 +121,22 @@ model Mission {
   createdAt   DateTime    @default(now())
   quantity    Int
   type        MissionType
+  completions UserMissionCompletion[]
+}
+
+model UserMissionCompletion {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  missionId   Int
+  branch      String   @default("GO_VAP")
+  completedAt DateTime @default(now())
+  actualValue Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  mission     Mission  @relation(fields: [missionId], references: [id])
+
+  @@index([userId])
+  @@index([branch])
 }
 
 model UserRewardMap {

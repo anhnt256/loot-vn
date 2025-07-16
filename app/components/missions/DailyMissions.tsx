@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -10,6 +12,7 @@ import {
   ShoppingCart,
   Timer,
   Zap,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import dayjs from "@/lib/dayjs";
@@ -32,6 +35,12 @@ interface Mission {
     createdAt: string;
     updatedAt: string;
   } | null;
+  progress?: {
+    actual: number;
+    required: number;
+    percentage: number;
+    canClaim: boolean;
+  };
 }
 
 interface DailyMissionsProps {
@@ -88,7 +97,7 @@ export function DailyMissions({ className }: DailyMissionsProps) {
   };
 
   // Fetch daily missions
-  const { data: missions = [], isLoading } = useQuery<Mission[]>({
+  const { data: missions = [], isLoading, refetch } = useQuery<Mission[]>({
     queryKey: ["dailyMissions"],
     queryFn: async () => {
       let token = localStorage.getItem("token");
@@ -110,7 +119,7 @@ export function DailyMissions({ className }: DailyMissionsProps) {
       console.log("Missions API response:", data);
       return data;
     },
-    refetchInterval: 60000,
+    refetchInterval: false, // Manual refresh only
   });
 
   console.log("Missions data:", missions);
@@ -286,14 +295,52 @@ export function DailyMissions({ className }: DailyMissionsProps) {
       if (!response.ok) throw new Error("Không thể hoàn thành nhiệm vụ");
       return response.json();
     },
-    onSuccess: (data) => {
+    onMutate: async (missionId) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["dailyMissions"] });
+
+      // Snapshot the previous value
+      const previousMissions = queryClient.getQueryData(["dailyMissions"]);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(["dailyMissions"], (old: Mission[] | undefined) => {
+        if (!old) return old;
+        return old.map(mission => 
+          mission.id === missionId 
+            ? {
+                ...mission,
+                userCompletion: {
+                  id: Date.now(), // Temporary ID
+                  isDone: true,
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                },
+                progress: {
+                  ...mission.progress!,
+                  canClaim: false,
+                }
+              }
+            : mission
+        );
+      });
+
+      // Return a context object with the snapshotted value
+      return { previousMissions };
+    },
+    onError: (err, missionId, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousMissions) {
+        queryClient.setQueryData(["dailyMissions"], context.previousMissions);
+      }
+      toast.error("Không thể hoàn thành nhiệm vụ");
+    },
+    onSettled: () => {
+      // Always refetch after error or success
       queryClient.invalidateQueries({ queryKey: ["dailyMissions"] });
       queryClient.invalidateQueries({ queryKey: ["userProgress"] });
-      toast.success(`🎉 Hoàn thành nhiệm vụ! +${data.xpReward} XP`);
     },
-    onError: (error) => {
-      toast.error("Không thể hoàn thành nhiệm vụ");
-      console.error("Failed to claim mission:", error);
+    onSuccess: (data) => {
+      toast.success(`🎉 Hoàn thành nhiệm vụ! +${data.xpReward} XP`);
     },
   });
 
@@ -320,23 +367,34 @@ export function DailyMissions({ className }: DailyMissionsProps) {
     return mission.reward || 50;
   };
 
-  // Calculate progress
+  // Calculate progress based on current tab
   const totalMissions = sortedMissions.length;
   const totalAvailableXP = sortedMissions.reduce(
     (sum, m) => sum + getMissionXP(m),
     0,
   );
 
-  // Calculate completion status from userCompletion data
-  const completedMissions = missions.filter(
+  // Calculate completion status from userCompletion data for current tab only
+  const completedMissions = sortedMissions.filter(
     (m) => m.userCompletion?.isDone,
   ).length;
-  const earnedXP = missions
+  const earnedXP = sortedMissions
     .filter((m) => m.userCompletion?.isDone)
     .reduce((sum, m) => sum + getMissionXP(m), 0);
 
   const handleClaimMission = (missionId: number) => {
     claimMissionMutation.mutate(missionId);
+  };
+
+  const handleRefresh = async () => {
+    try {
+      // Force clear cache and refetch
+      queryClient.removeQueries({ queryKey: ["dailyMissions"] });
+      await refetch();
+      toast.success("Đã cập nhật tiến độ nhiệm vụ!");
+    } catch (error) {
+      toast.error("Không thể cập nhật dữ liệu");
+    }
   };
 
   if (isLoading) {
@@ -356,18 +414,28 @@ export function DailyMissions({ className }: DailyMissionsProps) {
 
   return (
     <Card
-      className={`bg-gray-900/50 backdrop-blur-sm border-gray-700 ${className}`}
+      className={`bg-gray-900/50 backdrop-blur-sm border-gray-700 h-full flex flex-col ${className}`}
     >
-      <div className="p-4">
-        {/* Header - Đơn giản hóa */}
-        <div className="mb-4">
-          <h2 className="text-xl font-bold text-white">
+      <div className="p-4 flex-1 flex flex-col min-h-0">
+        {/* Header với nút Refresh */}
+        <div className="mb-4 flex items-center justify-between flex-shrink-0">
+          <h2 className="text-lg font-bold text-white truncate">
             Nhiệm Vụ Ngày {dayjs().tz("Asia/Ho_Chi_Minh").format("DD/MM/YYYY")}
           </h2>
+          <Button
+            onClick={handleRefresh}
+            disabled={isLoading}
+            size="sm"
+            variant="outline"
+            className="bg-blue-600 hover:bg-blue-700 text-white border-blue-500 hover:border-blue-600 flex-shrink-0 shadow-md"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Cập nhật</span>
+          </Button>
         </div>
 
         {/* Mission Type Tabs - 3 tabs trên 1 hàng */}
-        <div className="mb-4">
+        <div className="mb-4 flex-shrink-0">
           <div className="grid grid-cols-3 gap-2">
             {(["HOURS", "ORDER", "TOPUP"] as MissionTab[]).map((tab) => {
               const config = getTabConfig(tab);
@@ -378,14 +446,14 @@ export function DailyMissions({ className }: DailyMissionsProps) {
                 <Button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`flex items-center justify-center gap-2 transition-all text-sm py-3 px-3 font-medium ${
+                  className={`flex items-center justify-center gap-1 transition-all text-xs py-2 px-2 font-medium ${
                     isActive
                       ? `bg-gradient-to-r ${config.color} text-white border-0 shadow-lg transform scale-105`
                       : "bg-gray-800/70 border border-gray-600 text-gray-300"
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
-                  <span className="text-sm font-medium">{config.label}</span>
+                  <Icon className="w-3 h-3" />
+                  <span className="text-xs font-medium truncate">{config.label}</span>
                 </Button>
               );
             })}
@@ -393,15 +461,15 @@ export function DailyMissions({ className }: DailyMissionsProps) {
         </div>
 
         {/* Summary with Progress và Reset Timer */}
-        <div className="mb-4 p-4 bg-gradient-to-r from-slate-800/50 to-slate-700/50 rounded-lg border border-slate-600/30">
+        <div className="mb-4 p-3 bg-gradient-to-r from-slate-800/50 to-slate-700/50 rounded-lg border border-slate-600/30 flex-shrink-0">
           <div className="flex items-center justify-between mb-3">
-            <div>
-              <span className="text-white font-medium text-base">
+            <div className="min-w-0 flex-1">
+              <span className="text-white font-medium text-sm truncate block">
                 {activeTab === "ALL"
                   ? "Tất Cả Nhiệm Vụ"
                   : getTabConfig(activeTab).label}
               </span>
-              <div className="text-sm text-gray-300 mt-1">
+              <div className="text-xs text-gray-300 mt-1">
                 <span className="text-green-400 font-semibold">
                   {completedMissions}
                 </span>
@@ -410,8 +478,8 @@ export function DailyMissions({ className }: DailyMissionsProps) {
                 </span>
               </div>
             </div>
-            <div className="text-right">
-              <div className="text-slate-300 font-bold text-lg">
+            <div className="text-right flex-shrink-0 ml-2">
+              <div className="text-slate-300 font-bold text-sm">
                 <span className="text-green-400">{earnedXP}</span>
                 <span className="text-gray-400">/{totalAvailableXP} XP</span>
               </div>
@@ -431,9 +499,9 @@ export function DailyMissions({ className }: DailyMissionsProps) {
           </div>
 
           {/* Reset Timer - Đổi màu để tránh trùng */}
-          <div className="bg-gradient-to-r from-amber-600/20 to-orange-600/20 border border-amber-500/30 rounded-lg p-3">
+          <div className="bg-gradient-to-r from-amber-600/20 to-orange-600/20 border border-amber-500/30 rounded-lg p-2">
             <div className="text-center">
-              <div className="text-amber-400 font-bold text-sm mb-2">
+              <div className="text-amber-400 font-bold text-xs mb-1">
                 Nhiệm Vụ Reset Sau: {timeLeft || "Đang tải..."}
               </div>
               <div className="text-xs">
@@ -448,187 +516,228 @@ export function DailyMissions({ className }: DailyMissionsProps) {
           </div>
         </div>
 
-        {/* Missions List */}
-        <div className="space-y-4 max-h-[600px] overflow-y-auto missions-scroll">
-          {sortedMissions && sortedMissions.length > 0 ? (
-            sortedMissions.map((mission) => {
-              if (!mission || !mission.name || !mission.description) {
-                console.warn("Invalid mission object:", mission);
-                return null;
-              }
-
-              const config = getMissionTypeConfig(mission.type);
-              const Icon = config.icon;
-              const isActive = isMissionActive(mission);
-              const missionStatus = getMissionStatus(mission);
-              const timePeriod = getTimePeriodFromMission(mission);
-
-              const getTimeRangeText = (mission: Mission) => {
-                const { startHours, endHours } = mission;
-                if (startHours === 0 && endHours === 23) return "Cả ngày";
-                return `${startHours}h-${endHours}h`;
-              };
-
-              const getStatusInfo = (status: string) => {
-                switch (status) {
-                  case "ACTIVE":
-                    return { canComplete: true };
-                  case "UPCOMING":
-                    return { canComplete: false };
-                  case "EXPIRED":
-                    return { canComplete: false };
-                  default:
-                    return { canComplete: false };
+        {/* Missions List - Scrollable area */}
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <div className="space-y-3 h-full overflow-y-auto missions-scroll pr-1">
+            {sortedMissions && sortedMissions.length > 0 ? (
+              sortedMissions.map((mission) => {
+                if (!mission || !mission.name || !mission.description) {
+                  console.warn("Invalid mission object:", mission);
+                  return null;
                 }
-              };
 
-              const statusInfo = getStatusInfo(missionStatus);
-              const isCompleted = mission.userCompletion?.isDone || false;
-              const canClaim = statusInfo.canComplete && !isCompleted;
+                const config = getMissionTypeConfig(mission.type);
+                const Icon = config.icon;
+                const isActive = isMissionActive(mission);
+                const missionStatus = getMissionStatus(mission);
 
-              return (
-                <div
-                  key={mission.id}
-                  className={`mission-card p-4 rounded-lg border transition-all ${
-                    isCompleted
-                      ? "bg-green-900/30 border-green-500/30"
-                      : missionStatus === "ACTIVE"
-                        ? `${config.bgColor} ${config.borderColor}`
-                        : missionStatus === "UPCOMING"
-                          ? `${config.bgColor} ${config.borderColor} opacity-75`
-                          : "bg-gray-800/30 border-gray-700/50 opacity-75"
-                  }`}
-                >
-                  {/* Header compact - 1 dòng */}
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`p-2 rounded-lg flex-shrink-0 ${
-                          missionStatus === "ACTIVE"
-                            ? `bg-gradient-to-r ${config.color}`
-                            : missionStatus === "UPCOMING"
-                              ? `bg-gradient-to-r ${config.color} opacity-75`
-                              : "bg-gray-600"
-                        }`}
-                      >
-                        <Icon
-                          className={`w-5 h-5 ${
-                            missionStatus === "EXPIRED"
-                              ? "text-gray-400"
-                              : "text-white"
-                          }`}
-                        />
-                      </div>
-                      <div>
-                        <h3
-                          className={`font-semibold text-base ${
+                const getTimeRangeText = (mission: Mission) => {
+                  const { startHours, endHours } = mission;
+                  if (startHours === 0 && endHours === 23) return "Cả ngày";
+                  return `${startHours}h-${endHours}h`;
+                };
+
+                const getProgressText = (mission: Mission) => {
+                  if (!mission.progress) return "";
+                  
+                  if (mission.type === "HOURS") {
+                    // Convert hours to minutes for display
+                    const actualMinutes = Math.round(mission.progress.actual * 60);
+                    const requiredMinutes = Math.round(mission.progress.required * 60);
+                    return `${actualMinutes} phút/${requiredMinutes} phút`;
+                  } else {
+                    // For ORDER and TOPUP, use locale string with comma
+                    return `${mission.progress.actual.toLocaleString()}/${mission.progress.required.toLocaleString()}`;
+                  }
+                };
+
+                const getStatusInfo = (status: string) => {
+                  switch (status) {
+                    case "ACTIVE":
+                      return { canComplete: true };
+                    case "UPCOMING":
+                      return { canComplete: false };
+                    case "EXPIRED":
+                      return { canComplete: false };
+                    default:
+                      return { canComplete: false };
+                  }
+                };
+
+                const statusInfo = getStatusInfo(missionStatus);
+                const isCompleted = mission.userCompletion?.isDone || false;
+                const canClaim = Boolean(statusInfo.canComplete && !isCompleted && mission.progress?.canClaim);
+
+                return (
+                  <div
+                    key={mission.id}
+                    className={`mission-card p-3 rounded-lg border transition-all ${
+                      isCompleted
+                        ? "bg-green-900/30 border-green-500/30"
+                        : missionStatus === "ACTIVE"
+                          ? `${config.bgColor} ${config.borderColor}`
+                          : missionStatus === "UPCOMING"
+                            ? `${config.bgColor} ${config.borderColor} opacity-75`
+                            : "bg-gray-800/30 border-gray-700/50 opacity-75"
+                    }`}
+                  >
+                    {/* Header compact */}
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-start gap-2 min-w-0 flex-1">
+                        <div
+                          className={`p-1.5 rounded-lg flex-shrink-0 ${
                             missionStatus === "ACTIVE"
-                              ? "text-white"
+                              ? `bg-gradient-to-r ${config.color}`
                               : missionStatus === "UPCOMING"
-                                ? "text-gray-200"
-                                : "text-gray-400"
+                                ? `bg-gradient-to-r ${config.color} opacity-75`
+                                : "bg-gray-600"
                           }`}
                         >
-                          {mission.name}
-                        </h3>
-                        {/* Chỉ hiển thị khung thời gian */}
-                        <div className="mt-1">
-                          <span
-                            className={`text-xs px-2 py-0.5 rounded border ${
+                          <Icon
+                            className={`w-4 h-4 ${
+                              missionStatus === "EXPIRED"
+                                ? "text-gray-400"
+                                : "text-white"
+                            }`}
+                          />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3
+                            className={`font-semibold text-sm truncate ${
                               missionStatus === "ACTIVE"
-                                ? `${config.bgColor} ${config.textColor} ${config.borderColor}`
+                                ? "text-white"
                                 : missionStatus === "UPCOMING"
-                                  ? `${config.bgColor} ${config.textColor} ${config.borderColor} opacity-75`
-                                  : "bg-gray-700/50 text-gray-500 border-gray-600"
+                                  ? "text-gray-200"
+                                  : "text-gray-400"
                             }`}
                           >
-                            {getTimeRangeText(mission)}
-                          </span>
+                            {mission.name}
+                          </h3>
+                          <div className="mt-1">
+                            <span
+                              className={`text-xs px-1.5 py-0.5 rounded border ${
+                                missionStatus === "ACTIVE"
+                                  ? `${config.bgColor} ${config.textColor} ${config.borderColor}`
+                                  : missionStatus === "UPCOMING"
+                                    ? `${config.bgColor} ${config.textColor} ${config.borderColor} opacity-75`
+                                    : "bg-gray-700/50 text-gray-500 border-gray-600"
+                              }`}
+                            >
+                              {getTimeRangeText(mission)}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <span
-                      className={`text-sm font-bold ${
-                        missionStatus === "ACTIVE"
-                          ? config.textColor
-                          : missionStatus === "UPCOMING"
-                            ? config.textColor + " opacity-75"
-                            : "text-gray-500"
-                      }`}
-                    >
-                      +{getMissionXP(mission)} XP
-                    </span>
-                  </div>
-
-                  {/* Description full width */}
-                  <div className="mb-4">
-                    <p
-                      className={`text-sm leading-relaxed ${
-                        missionStatus === "ACTIVE"
-                          ? "text-gray-300"
-                          : missionStatus === "UPCOMING"
-                            ? "text-gray-400"
-                            : "text-gray-500"
-                      }`}
-                    >
-                      {mission.description}
-                    </p>
-                  </div>
-
-                  {/* Button claim phần thưởng */}
-                  <div className="flex justify-end">
-                    {isCompleted ? (
-                      <Button
-                        disabled
-                        className="bg-green-600/50 text-green-200 px-6 py-2 text-sm font-medium cursor-not-allowed"
-                      >
-                        ✓ Đã Hoàn Thành
-                      </Button>
-                    ) : canClaim ? (
-                      <Button
-                        onClick={() =>
-                          handleClaimMission(
-                            mission.userCompletion?.id || mission.id,
-                          )
-                        }
-                        disabled={claimMissionMutation.isPending}
-                        className={`bg-gradient-to-r ${config.color} text-white px-6 py-2 text-sm font-medium transition-all ${
-                          claimMissionMutation.isPending
-                            ? "opacity-75"
-                            : "hover:opacity-90"
+                      <span
+                        className={`text-xs font-bold flex-shrink-0 ml-2 ${
+                          missionStatus === "ACTIVE"
+                            ? config.textColor
+                            : missionStatus === "UPCOMING"
+                              ? config.textColor + " opacity-75"
+                              : "text-gray-500"
                         }`}
                       >
-                        {claimMissionMutation.isPending ? (
-                          <span className="flex items-center gap-2">
-                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                            Đang nhận thưởng...
-                          </span>
-                        ) : (
-                          "Nhận Thưởng"
-                        )}
-                      </Button>
-                    ) : (
-                      <Button
-                        disabled
-                        className="bg-gray-600/50 text-gray-400 px-6 py-2 text-sm font-medium cursor-not-allowed"
+                        +{getMissionXP(mission)} XP
+                      </span>
+                    </div>
+
+                    {/* Description */}
+                    <div className="mb-3">
+                      <p
+                        className={`text-xs leading-relaxed line-clamp-2 ${
+                          missionStatus === "ACTIVE"
+                            ? "text-gray-300"
+                            : missionStatus === "UPCOMING"
+                              ? "text-gray-400"
+                              : "text-gray-500"
+                        }`}
                       >
-                        {missionStatus === "UPCOMING"
-                          ? "Chưa Đến Giờ"
-                          : "Không Khả Dụng"}
-                      </Button>
-                    )}
+                        {mission.description}
+                      </p>
+                      
+                      {/* Progress bar for active missions */}
+                      {missionStatus === "ACTIVE" && mission.progress && (
+                        <div className="mt-2">
+                          <div className="flex justify-between text-xs mb-1">
+                            <span className="text-gray-400">
+                              Tiến độ: {getProgressText(mission)}
+                            </span>
+                            <span className="text-gray-400">
+                              {mission.progress.percentage.toFixed(0)}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-700 rounded-full h-1.5">
+                            <div 
+                              className={`h-1.5 rounded-full transition-all duration-300 ${
+                                mission.progress.canClaim 
+                                  ? "bg-gradient-to-r from-green-500 to-emerald-500" 
+                                  : "bg-gradient-to-r from-blue-500 to-cyan-500"
+                              }`}
+                              style={{ width: `${mission.progress.percentage}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Button claim phần thưởng */}
+                    <div className="flex justify-end">
+                      {isCompleted ? (
+                        <Button
+                          disabled
+                          size="sm"
+                          className="bg-green-600/50 text-green-200 px-3 py-1 text-xs font-medium cursor-not-allowed"
+                        >
+                          ✓ Đã Hoàn Thành
+                        </Button>
+                      ) : canClaim ? (
+                        <Button
+                          onClick={() => handleClaimMission(mission.id)}
+                          disabled={claimMissionMutation.isPending}
+                          size="sm"
+                          className={`bg-gradient-to-r ${config.color} text-white px-3 py-1 text-xs font-medium transition-all ${
+                            claimMissionMutation.isPending
+                              ? "opacity-75"
+                              : "hover:opacity-90"
+                          }`}
+                        >
+                          {claimMissionMutation.isPending ? (
+                            <span className="flex items-center gap-1">
+                              <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                              <span className="hidden sm:inline">Đang nhận...</span>
+                            </span>
+                          ) : (
+                            "Nhận Thưởng"
+                          )}
+                        </Button>
+                      ) : (
+                        <Button
+                          disabled
+                          size="sm"
+                          className="bg-gray-600/50 text-gray-400 px-3 py-1 text-xs font-medium cursor-not-allowed"
+                        >
+                          {missionStatus === "UPCOMING"
+                            ? "Chưa Đến Giờ"
+                            : mission.progress && mission.progress.actual > 0
+                              ? mission.type === "HOURS"
+                                ? `Cần thêm ${Math.round((mission.progress.required - mission.progress.actual) * 60)} phút`
+                                : `Cần thêm ${(mission.progress.required - mission.progress.actual).toLocaleString()}`
+                              : "Không Khả Dụng"}
+                        </Button>
+                      )}
+                    </div>
                   </div>
+                );
+              })
+            ) : (
+              <div className="text-center py-8 text-gray-400">
+                <div className="mb-2">
+                  <Star className="w-8 h-8 mx-auto text-gray-600" />
                 </div>
-              );
-            })
-          ) : (
-            <div className="text-center py-8 text-gray-400">
-              <div className="mb-2">
-                <Star className="w-12 h-12 mx-auto text-gray-600" />
+                <p className="text-sm">Không có nhiệm vụ nào trong danh mục này</p>
               </div>
-              <p>Không có nhiệm vụ nào trong danh mục này</p>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </Card>

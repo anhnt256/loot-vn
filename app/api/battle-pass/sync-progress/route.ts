@@ -21,6 +21,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid user data" }, { status: 401 });
     }
 
+    // Convert userId to number for Prisma
+    const userId = parseInt(decoded.userId.toString(), 10);
+    if (isNaN(userId)) {
+      return NextResponse.json({ error: "Invalid userId" }, { status: 400 });
+    }
+
     // Get current active season
     console.log("Getting current season...");
     const currentSeason = await db.battlePassSeason.findFirst({
@@ -48,7 +54,7 @@ export async function POST(request: Request) {
     console.log("Finding user progress...");
     let userProgress = await db.userBattlePass.findFirst({
       where: {
-        userId: decoded.userId,
+        userId: userId,
         seasonId: currentSeason.id,
       },
     });
@@ -60,7 +66,7 @@ export async function POST(request: Request) {
       // Create new user progress with default values
       userProgress = await db.userBattlePass.create({
         data: {
-          userId: decoded.userId,
+          userId: userId,
           seasonId: currentSeason.id,
           level: 0,
           experience: 0,

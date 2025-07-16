@@ -16,6 +16,12 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Invalid user data" }, { status: 401 });
     }
 
+    // Convert userId to number for Prisma
+    const userId = parseInt(decoded.userId.toString(), 10);
+    if (isNaN(userId)) {
+      return NextResponse.json({ error: "Invalid userId" }, { status: 400 });
+    }
+
     const currentSeason = await db.battlePassSeason.findFirst({
       where: {
         isActive: true,
@@ -38,7 +44,7 @@ export async function GET(request: Request) {
     // Tìm hoặc tạo user battle pass progress
     let userProgress = await db.userBattlePass.findFirst({
       where: {
-        userId: decoded.userId,
+        userId: userId,
         seasonId: currentSeason.id,
       },
     });
@@ -54,7 +60,7 @@ export async function GET(request: Request) {
 
       userProgress = await db.userBattlePass.create({
         data: {
-          userId: decoded.userId,
+          userId: userId,
           seasonId: currentSeason.id,
           level: calculatedLevel,
           experience: experience,
@@ -68,7 +74,7 @@ export async function GET(request: Request) {
     // Lấy danh sách rewards đã claim
     const claimedRewards = await db.userBattlePassReward.findMany({
       where: {
-        userId: decoded.userId,
+        userId: userId,
         seasonId: currentSeason.id,
       },
       select: {

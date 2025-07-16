@@ -118,6 +118,71 @@ export const calculateDailyUsageHours = (
 };
 
 /**
+ * Tính tổng thời gian sử dụng trong khoảng thời gian cụ thể của mission
+ * @param sessions - Danh sách session từ database
+ * @param targetDate - Chuỗi ngày cần tính (YYYY-MM-DD)
+ * @param startHours - Giờ bắt đầu của mission (0-23)
+ * @param endHours - Giờ kết thúc của mission (0-23)
+ * @returns Tổng thời gian sử dụng tính bằng giờ
+ */
+export const calculateMissionUsageHours = (
+  sessions: any[],
+  targetDate: string,
+  startHours: number,
+  endHours: number,
+): number => {
+  const day = dayjs.tz(targetDate, "Asia/Ho_Chi_Minh");
+  const dayStart = day.startOf("day");
+  
+  // Tính thời gian bắt đầu và kết thúc của mission trong ngày
+  let missionStart = dayStart.add(startHours, "hour");
+  let missionEnd = dayStart.add(endHours, "hour");
+  
+  // Xử lý trường hợp mission qua đêm (ví dụ: 22h-6h)
+  if (startHours > endHours) {
+    missionEnd = missionEnd.add(1, "day");
+  }
+
+  let totalMinutes = 0;
+
+  for (const session of sessions) {
+    if (!session.EnterDate || !session.EnterTime) continue;
+
+    const enter = combineDateTime(session.EnterDate, session.EnterTime);
+    let end;
+    if (session.EndDate && session.EndTime) {
+      end = combineDateTime(session.EndDate, session.EndTime);
+    } else {
+      end = dayjs(); // now
+    }
+
+    // Xử lý session qua đêm: nếu session bắt đầu từ ngày trước và kết thúc trong ngày hiện tại
+    // Chỉ tính phần từ 00:00:00 của ngày hiện tại
+    if (enter.isBefore(dayStart) && end.isAfter(dayStart)) {
+      const sessionStart = dayStart; // Bắt đầu từ 00:00:00 của ngày hiện tại
+      const sessionEnd = end.isAfter(missionEnd) ? missionEnd : end;
+      
+      // Chỉ tính nếu session thực sự overlap với khoảng thời gian mission
+      if (sessionEnd.isAfter(sessionStart) && sessionStart.isBefore(missionEnd) && sessionEnd.isAfter(missionStart)) {
+        const minutes = sessionEnd.diff(sessionStart, "minute");
+        totalMinutes += minutes;
+      }
+    } else {
+      // Session bình thường trong cùng ngày
+      const sessionStart = enter.isBefore(missionStart) ? missionStart : enter;
+      const sessionEnd = end.isAfter(missionEnd) ? missionEnd : end;
+      
+      // Chỉ tính nếu session thực sự overlap với khoảng thời gian mission
+      if (sessionEnd.isAfter(sessionStart) && sessionStart.isBefore(missionEnd) && sessionEnd.isAfter(missionStart)) {
+        const minutes = sessionEnd.diff(sessionStart, "minute");
+        totalMinutes += minutes;
+      }
+    }
+  }
+  return Math.floor(totalMinutes / 60);
+};
+
+/**
  * @deprecated Use calculateDailyUsageMinutes or calculateDailyUsageHours instead
  */
 export const calculateDailyUsageTime = (sessions: any[]): number => {

@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     }
 
     const fnetDB = await getFnetDB();
-    const userId = decoded.userId;
+    const userId = parseInt(decoded.userId);
 
     // Get current active season
     const currentSeason = await db.battlePassSeason.findFirst({
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     const userProgress = await db.userBattlePass.upsert({
       where: {
         userId_seasonId: {
-          userId: decoded.userId,
+          userId: parseInt(decoded.userId),
           seasonId: currentSeason.id,
         },
       },
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
         totalSpent: totalSpending,
       },
       create: {
-        userId: decoded.userId,
+        userId: parseInt(decoded.userId),
         seasonId: currentSeason.id,
         level: calculateLevel(0, currentSeason.maxLevel), // Level 1 cho user mới (0 experience)
         experience: 0,

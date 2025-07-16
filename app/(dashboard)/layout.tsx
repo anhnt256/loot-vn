@@ -244,6 +244,15 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
           >
             Đổi thưởng
           </Link>
+          <Link
+            className={cn(
+              "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
+              pathname === "/battle-pass" ? "bg-gray-700" : "transparent",
+            )}
+            href="/battle-pass"
+          >
+            Battle Pass
+          </Link>
           {/* {showGatewayBonus && (
             <Link
               className={cn(
@@ -269,6 +278,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
               )}
             </Link>
           )} */}
+          
           <div
             onClick={handleLogout}
             className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 cursor-pointer"

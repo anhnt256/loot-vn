@@ -63,7 +63,7 @@ export async function POST(
     // Get user progress
     const userProgress = await db.userBattlePass.findFirst({
       where: {
-        userId: decoded.userId,
+        userId: parseInt(decoded.userId),
         seasonId: currentSeason.id,
       },
     });
@@ -78,7 +78,7 @@ export async function POST(
     // Check if reward is already claimed
     const claimedReward = await db.userBattlePassReward.findFirst({
       where: {
-        userId: decoded.userId,
+        userId: parseInt(decoded.userId),
         rewardId: rewardId,
       },
     });
@@ -111,7 +111,7 @@ export async function POST(
     // Create claimed reward record
     await db.userBattlePassReward.create({
       data: {
-        userId: decoded.userId,
+        userId: parseInt(decoded.userId),
         seasonId: currentSeason.id,
         rewardId: rewardId,
       },
