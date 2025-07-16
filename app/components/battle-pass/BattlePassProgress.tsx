@@ -702,7 +702,7 @@ export function BattlePassProgress({
         </div>
 
         {/* Daily Missions Panel */}
-        <div className="w-80 min-w-[18rem] max-w-full h-full flex-shrink-0 sm:w-72 sm:min-w-0">
+        <div className="w-[432px] min-w-[21.5rem] max-w-full h-full flex-shrink-0 sm:w-[352px] sm:min-w-0">
           <DailyMissions className="h-full" />
         </div>
       </div>

@@ -401,10 +401,10 @@ export function DailyMissions({ className }: DailyMissionsProps) {
     return (
       <Card className={`p-4 ${className}`}>
         <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="space-y-3">
+          <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="space-y-4">
             {Array.from({ length: 5 }, (_, i) => (
-              <div key={i} className="h-16 bg-gray-200 rounded"></div>
+              <div key={i} className="h-20 bg-gray-200 rounded"></div>
             ))}
           </div>
         </div>
@@ -417,21 +417,82 @@ export function DailyMissions({ className }: DailyMissionsProps) {
       className={`bg-gray-900/50 backdrop-blur-sm border-gray-700 h-full flex flex-col ${className}`}
     >
       <div className="p-4 flex-1 flex flex-col min-h-0">
-        {/* Header với nút Refresh */}
+        {/* Header với ngày rõ ràng và nút Refresh nhỏ */}
         <div className="mb-4 flex items-center justify-between flex-shrink-0">
-          <h2 className="text-lg font-bold text-white truncate">
-            Nhiệm Vụ Ngày {dayjs().tz("Asia/Ho_Chi_Minh").format("DD/MM/YYYY")}
-          </h2>
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-1">
+              Nhiệm Vụ Ngày
+            </h2>
+            <div className="text-lg text-blue-300 font-semibold">
+              {dayjs().tz("Asia/Ho_Chi_Minh").format("DD/MM/YYYY")}
+            </div>
+          </div>
           <Button
             onClick={handleRefresh}
             disabled={isLoading}
             size="sm"
             variant="outline"
-            className="bg-blue-600 hover:bg-blue-700 text-white border-blue-500 hover:border-blue-600 flex-shrink-0 shadow-md"
+            className="bg-blue-600 hover:bg-blue-700 text-white border-blue-500 hover:border-blue-600 flex-shrink-0 shadow-md h-8 px-3"
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">Cập nhật</span>
+            <RefreshCw className={`w-3 h-3 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
+            <span className="text-xs">Cập nhật</span>
           </Button>
+        </div>
+
+        {/* Summary with Progress và Reset Timer - Đưa lên trên */}
+        <div className="mb-4 p-4 bg-gradient-to-r from-slate-800/50 to-slate-700/50 rounded-lg border border-slate-600/30 flex-shrink-0">
+          <div className="flex items-center justify-between mb-4">
+            <div className="min-w-0 flex-1">
+              <span className="text-white font-medium text-base truncate block">
+                {activeTab === "ALL"
+                  ? "Tất Cả Nhiệm Vụ"
+                  : getTabConfig(activeTab).label}
+              </span>
+              <div className="text-sm text-gray-300 mt-1">
+                <span className="text-green-400 font-semibold">
+                  {completedMissions}
+                </span>
+                <span className="text-gray-400">
+                  /{totalMissions} nhiệm vụ hoàn thành
+                </span>
+              </div>
+            </div>
+            <div className="text-right flex-shrink-0 ml-3">
+              <div className="text-slate-300 font-bold text-base">
+                <span className="text-green-400">{earnedXP}</span>
+                <span className="text-gray-400">/{totalAvailableXP} XP</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="mb-4">
+            <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-green-400 to-blue-400 rounded-full transition-all duration-500"
+                style={{
+                  width: `${totalMissions > 0 ? (completedMissions / totalMissions) * 100 : 0}%`,
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Reset Timer - Đổi màu để tránh trùng */}
+          <div className="bg-gradient-to-r from-amber-600/20 to-orange-600/20 border border-amber-500/30 rounded-lg p-3">
+            <div className="text-center">
+              <div className="text-amber-400 font-bold text-sm mb-1">
+                Nhiệm Vụ Reset Sau: {timeLeft || "Đang tải..."}
+              </div>
+              <div className="text-sm">
+                <span className="text-red-400 font-bold">
+                  ⚠️ NHIỆM VỤ LÀM MỚI MỖI NGÀY
+                </span>
+                <span className="text-amber-300 ml-1">
+                  - Phần thưởng chưa nhận sẽ bị mất!
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Mission Type Tabs - 3 tabs trên 1 hàng */}
@@ -446,73 +507,17 @@ export function DailyMissions({ className }: DailyMissionsProps) {
                 <Button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`flex items-center justify-center gap-1 transition-all text-xs py-2 px-2 font-medium ${
+                  className={`flex items-center justify-center gap-2 transition-all text-sm py-2.5 px-3 font-medium ${
                     isActive
                       ? `bg-gradient-to-r ${config.color} text-white border-0 shadow-lg transform scale-105`
                       : "bg-gray-800/70 border border-gray-600 text-gray-300"
                   }`}
                 >
-                  <Icon className="w-3 h-3" />
-                  <span className="text-xs font-medium truncate">{config.label}</span>
+                  <Icon className="w-4 h-4" />
+                  <span className="text-sm font-medium truncate">{config.label}</span>
                 </Button>
               );
             })}
-          </div>
-        </div>
-
-        {/* Summary with Progress và Reset Timer */}
-        <div className="mb-4 p-3 bg-gradient-to-r from-slate-800/50 to-slate-700/50 rounded-lg border border-slate-600/30 flex-shrink-0">
-          <div className="flex items-center justify-between mb-3">
-            <div className="min-w-0 flex-1">
-              <span className="text-white font-medium text-sm truncate block">
-                {activeTab === "ALL"
-                  ? "Tất Cả Nhiệm Vụ"
-                  : getTabConfig(activeTab).label}
-              </span>
-              <div className="text-xs text-gray-300 mt-1">
-                <span className="text-green-400 font-semibold">
-                  {completedMissions}
-                </span>
-                <span className="text-gray-400">
-                  /{totalMissions} nhiệm vụ hoàn thành
-                </span>
-              </div>
-            </div>
-            <div className="text-right flex-shrink-0 ml-2">
-              <div className="text-slate-300 font-bold text-sm">
-                <span className="text-green-400">{earnedXP}</span>
-                <span className="text-gray-400">/{totalAvailableXP} XP</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="mb-3">
-            <div className="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-green-400 to-blue-400 rounded-full transition-all duration-500"
-                style={{
-                  width: `${totalMissions > 0 ? (completedMissions / totalMissions) * 100 : 0}%`,
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Reset Timer - Đổi màu để tránh trùng */}
-          <div className="bg-gradient-to-r from-amber-600/20 to-orange-600/20 border border-amber-500/30 rounded-lg p-2">
-            <div className="text-center">
-              <div className="text-amber-400 font-bold text-xs mb-1">
-                Nhiệm Vụ Reset Sau: {timeLeft || "Đang tải..."}
-              </div>
-              <div className="text-xs">
-                <span className="text-red-400 font-bold">
-                  ⚠️ NHIỆM VỤ LÀM MỚI MỖI NGÀY
-                </span>
-                <span className="text-amber-300 ml-1">
-                  - Phần thưởng chưa nhận sẽ bị mất!
-                </span>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -571,7 +576,7 @@ export function DailyMissions({ className }: DailyMissionsProps) {
                 return (
                   <div
                     key={mission.id}
-                    className={`mission-card p-3 rounded-lg border transition-all ${
+                    className={`mission-card p-4 rounded-lg border transition-all ${
                       isCompleted
                         ? "bg-green-900/30 border-green-500/30"
                         : missionStatus === "ACTIVE"
@@ -582,10 +587,10 @@ export function DailyMissions({ className }: DailyMissionsProps) {
                     }`}
                   >
                     {/* Header compact */}
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-start gap-2 min-w-0 flex-1">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-start gap-3 min-w-0 flex-1">
                         <div
-                          className={`p-1.5 rounded-lg flex-shrink-0 ${
+                          className={`p-2 rounded-lg flex-shrink-0 ${
                             missionStatus === "ACTIVE"
                               ? `bg-gradient-to-r ${config.color}`
                               : missionStatus === "UPCOMING"
@@ -594,7 +599,7 @@ export function DailyMissions({ className }: DailyMissionsProps) {
                           }`}
                         >
                           <Icon
-                            className={`w-4 h-4 ${
+                            className={`w-5 h-5 ${
                               missionStatus === "EXPIRED"
                                 ? "text-gray-400"
                                 : "text-white"
@@ -603,7 +608,7 @@ export function DailyMissions({ className }: DailyMissionsProps) {
                         </div>
                         <div className="min-w-0 flex-1">
                           <h3
-                            className={`font-semibold text-sm truncate ${
+                            className={`font-semibold text-base truncate ${
                               missionStatus === "ACTIVE"
                                 ? "text-white"
                                 : missionStatus === "UPCOMING"
@@ -613,9 +618,9 @@ export function DailyMissions({ className }: DailyMissionsProps) {
                           >
                             {mission.name}
                           </h3>
-                          <div className="mt-1">
+                          <div className="mt-2">
                             <span
-                              className={`text-xs px-1.5 py-0.5 rounded border ${
+                              className={`text-sm px-2 py-1 rounded border ${
                                 missionStatus === "ACTIVE"
                                   ? `${config.bgColor} ${config.textColor} ${config.borderColor}`
                                   : missionStatus === "UPCOMING"
@@ -629,7 +634,7 @@ export function DailyMissions({ className }: DailyMissionsProps) {
                         </div>
                       </div>
                       <span
-                        className={`text-xs font-bold flex-shrink-0 ml-2 ${
+                        className={`text-sm font-bold flex-shrink-0 ml-3 ${
                           missionStatus === "ACTIVE"
                             ? config.textColor
                             : missionStatus === "UPCOMING"
@@ -642,9 +647,9 @@ export function DailyMissions({ className }: DailyMissionsProps) {
                     </div>
 
                     {/* Description */}
-                    <div className="mb-3">
+                    <div className="mb-4">
                       <p
-                        className={`text-xs leading-relaxed line-clamp-2 ${
+                        className={`text-sm leading-relaxed line-clamp-2 ${
                           missionStatus === "ACTIVE"
                             ? "text-gray-300"
                             : missionStatus === "UPCOMING"
@@ -657,8 +662,8 @@ export function DailyMissions({ className }: DailyMissionsProps) {
                       
                       {/* Progress bar for active missions */}
                       {missionStatus === "ACTIVE" && mission.progress && (
-                        <div className="mt-2">
-                          <div className="flex justify-between text-xs mb-1">
+                        <div className="mt-3">
+                          <div className="flex justify-between text-sm mb-2">
                             <span className="text-gray-400">
                               Tiến độ: {getProgressText(mission)}
                             </span>
@@ -666,9 +671,9 @@ export function DailyMissions({ className }: DailyMissionsProps) {
                               {mission.progress.percentage.toFixed(0)}%
                             </span>
                           </div>
-                          <div className="w-full bg-gray-700 rounded-full h-1.5">
+                          <div className="w-full bg-gray-700 rounded-full h-2">
                             <div 
-                              className={`h-1.5 rounded-full transition-all duration-300 ${
+                              className={`h-2 rounded-full transition-all duration-300 ${
                                 mission.progress.canClaim 
                                   ? "bg-gradient-to-r from-green-500 to-emerald-500" 
                                   : "bg-gradient-to-r from-blue-500 to-cyan-500"
@@ -686,7 +691,7 @@ export function DailyMissions({ className }: DailyMissionsProps) {
                         <Button
                           disabled
                           size="sm"
-                          className="bg-green-600/50 text-green-200 px-3 py-1 text-xs font-medium cursor-not-allowed"
+                          className="bg-green-600/50 text-green-200 px-4 py-2 text-sm font-medium cursor-not-allowed"
                         >
                           ✓ Đã Hoàn Thành
                         </Button>
@@ -695,15 +700,15 @@ export function DailyMissions({ className }: DailyMissionsProps) {
                           onClick={() => handleClaimMission(mission.id)}
                           disabled={claimMissionMutation.isPending}
                           size="sm"
-                          className={`bg-gradient-to-r ${config.color} text-white px-3 py-1 text-xs font-medium transition-all ${
+                          className={`bg-gradient-to-r ${config.color} text-white px-4 py-2 text-sm font-medium transition-all ${
                             claimMissionMutation.isPending
                               ? "opacity-75"
                               : "hover:opacity-90"
                           }`}
                         >
                           {claimMissionMutation.isPending ? (
-                            <span className="flex items-center gap-1">
-                              <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            <span className="flex items-center gap-2">
+                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                               <span className="hidden sm:inline">Đang nhận...</span>
                             </span>
                           ) : (
@@ -714,7 +719,7 @@ export function DailyMissions({ className }: DailyMissionsProps) {
                         <Button
                           disabled
                           size="sm"
-                          className="bg-gray-600/50 text-gray-400 px-3 py-1 text-xs font-medium cursor-not-allowed"
+                          className="bg-gray-600/50 text-gray-400 px-4 py-2 text-sm font-medium cursor-not-allowed"
                         >
                           {missionStatus === "UPCOMING"
                             ? "Chưa Đến Giờ"
@@ -730,11 +735,11 @@ export function DailyMissions({ className }: DailyMissionsProps) {
                 );
               })
             ) : (
-              <div className="text-center py-8 text-gray-400">
-                <div className="mb-2">
-                  <Star className="w-8 h-8 mx-auto text-gray-600" />
+              <div className="text-center py-12 text-gray-400">
+                <div className="mb-3">
+                  <Star className="w-12 h-12 mx-auto text-gray-600" />
                 </div>
-                <p className="text-sm">Không có nhiệm vụ nào trong danh mục này</p>
+                <p className="text-base">Không có nhiệm vụ nào trong danh mục này</p>
               </div>
             )}
           </div>
