@@ -93,11 +93,12 @@ export async function GET(request: Request) {
     const rewardsWithUser = await Promise.all(
       rewards.map(async (reward) => {
         let user = null;
+
         if (reward.userId) {
           // reward.userId là User.id (foreign key), cần tìm user thực tế
           user = await db.user.findFirst({
             where: {
-              userId: reward.userId, // Tìm theo User.id (foreign key)
+              id: reward.userId, // Tìm theo User.id (foreign key)
               branch: branch,
             },
             select: {
