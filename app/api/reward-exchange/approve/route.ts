@@ -121,7 +121,7 @@ export async function POST(request: Request) {
             type: "REWARD",
             oldStars: user?.stars + (rewardMap?.reward?.stars || 0),
             newStars: user?.stars,
-            targetId: rewardMap?.reward?.id,
+            targetId: rewardMapId,
             createdAt: getVNTimeForPrisma(),
             branch,
           },

@@ -47,58 +47,46 @@ export async function GET(request: Request) {
 
     const whereClause: any = {
       branch: branch,
-      status: {
-        in: ["APPROVE", "REJECT"],
-      },
       ...dateFilter,
     };
 
-    if (status && status !== "ALL" && ["APPROVE", "REJECT"].includes(status)) {
+    // Add status filter if provided
+    if (status && status !== "ALL") {
       whereClause.status = status;
     }
 
-    const [rewards, total] = await Promise.all([
-      db.userRewardMap.findMany({
-        where: whereClause,
-        include: {
-          reward: {
-            select: {
-              id: true,
-              name: true,
-              value: true,
-              stars: true,
-            },
-          },
-          promotionCode: {
-            select: {
-              id: true,
-              code: true,
-              name: true,
-              value: true,
-            },
-          },
-        },
-        orderBy: {
-          updatedAt: "desc",
-        },
-        skip: offset,
-        take: limit,
-      }),
-      db.userRewardMap.count({
-        where: whereClause,
-      }),
-    ]);
+    // Get UserRewardMap records first
+    const allUserRewardMaps = await db.userRewardMap.findMany({
+      where: whereClause,
+      include: {
+        reward: {
+          select: {
+            id: true,
+            name: true,
+            value: true,
+          }
+        }
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
-    // Join with User table manually
-    const rewardsWithUser = await Promise.all(
-      rewards.map(async (reward) => {
+    // Apply pagination
+    const total = allUserRewardMaps.length;
+    const paginatedUserRewardMaps = allUserRewardMaps.slice(offset, offset + limit);
+
+    // Join with User table and UserStarHistory (only for APPROVE status)
+    const historiesWithUser = await Promise.all(
+      paginatedUserRewardMaps.map(async (userRewardMap) => {
         let user = null;
+        let userStarHistory = null;
 
-        if (reward.userId) {
-          // reward.userId là User.id (foreign key), cần tìm user thực tế
+        // Get user information
+        if (userRewardMap.userId) {
           user = await db.user.findFirst({
             where: {
-              id: reward.userId, // Tìm theo User.id (foreign key)
+              id: userRewardMap.userId, // Tìm theo User.id (foreign key)
               branch: branch,
             },
             select: {
@@ -110,19 +98,48 @@ export async function GET(request: Request) {
             },
           });
         }
+
+        // Get UserStarHistory only if status is APPROVE
+        if (userRewardMap.status === "APPROVE" && userRewardMap.id) {
+          userStarHistory = await db.userStarHistory.findFirst({
+            where: {
+              targetId: userRewardMap.id,
+              branch: branch,
+              type: "REWARD",
+            },
+            select: {
+              id: true,
+              oldStars: true,
+              newStars: true,
+              createdAt: true,
+            },
+          });
+        }
+
         return {
-          ...reward,
+          id: userRewardMap.id,
+          userId: userRewardMap.userId,
+          rewardId: userRewardMap.rewardId,
+          status: userRewardMap.status,
+          note: userRewardMap.note,
+          createdAt: userRewardMap.createdAt,
+          updatedAt: userRewardMap.updatedAt,
+          reward: userRewardMap.reward,
           user,
+          userStarHistory, // oldStars, newStars info for APPROVE status
         };
       }),
     );
 
+    console.log('histories', historiesWithUser)
+    console.log('total', total)
+
     return NextResponse.json({
-      rewards: rewardsWithUser,
+      histories: historiesWithUser,
       pagination: {
         page,
         limit,
-        total,
+        total: total,
         totalPages: Math.ceil(total / limit),
       },
     });
