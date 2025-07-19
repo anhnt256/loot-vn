@@ -175,17 +175,12 @@ export const getCurrentDayOfWeekVN = () => {
 // ===== PRISMA HELPER FUNCTIONS =====
 // Các function đơn giản để lấy thời gian Vietnam cho Prisma
 
-// Lấy thời gian hiện tại + 7 tiếng cho Prisma
+// Lấy thời gian hiện tại Vietnam cho Prisma
 export const getVNTimeForPrisma = () => {
-  const now = new Date();
-  now.setHours(now.getHours() + 7);
-  return now;
+  return dayjs().utcOffset(7).toDate();
 };
 
 // Lấy start of day Vietnam cho Prisma
 export const getVNStartOfDayForPrisma = () => {
-  const now = new Date();
-  now.setHours(now.getHours() + 7);
-  now.setHours(0, 0, 0, 0);
-  return now;
+  return dayjs().utcOffset(7).startOf("day").toDate();
 };
