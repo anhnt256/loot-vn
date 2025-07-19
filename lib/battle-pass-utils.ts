@@ -64,7 +64,13 @@ function combineDateTime(dateVal: string | Date, timeVal: string | Date) {
   const timeStr = typeof timeVal === "string" ? timeVal : timeVal.toISOString();
 
   const a = dateStr.split("T")[0];
-  const b = timeStr.split("T")[1].replace("Z", ""); // loại bỏ Z nếu có
+  let b;
+  
+  if (timeStr.includes("T")) {
+    b = timeStr.split("T")[1].replace("Z", ""); // loại bỏ Z nếu có
+  } else {
+    b = timeStr;
+  }
 
   const fullDate = `${a}T${b}`;
   return dayjs(fullDate);
@@ -85,6 +91,7 @@ export const calculateDailyUsageMinutes = (
     : dayjs().tz("Asia/Ho_Chi_Minh").startOf("day");
   const dayStart = day.startOf("day");
   const dayEnd = day.endOf("day");
+  const now = getCurrentTimeVN();
 
   let totalMinutes = 0;
 
@@ -93,17 +100,44 @@ export const calculateDailyUsageMinutes = (
 
     const enter = combineDateTime(session.EnterDate, session.EnterTime);
     let end;
-    if (session.EndDate && session.EndTime) {
-      end = combineDateTime(session.EndDate, session.EndTime);
-    } else {
-      end = dayjs(); // now
+    
+    // Trường hợp 1: start-date là ngày hôm trước và end-date null (chưa nghỉ)
+    if (enter.isBefore(dayStart) && (!session.EndDate || !session.EndTime)) {
+      // Tính từ 0h ngày hôm nay đến giờ hiện tại
+      end = now;
+      const sessionStart = dayStart;
+      const sessionEnd = end.isAfter(dayEnd) ? dayEnd : end;
+      
+      if (sessionEnd.isAfter(sessionStart)) {
+        totalMinutes += sessionEnd.diff(sessionStart, "minute");
+      }
     }
+    // Trường hợp 2: start-date là ngày hôm trước và end-date là ngày hiện tại
+    else if (enter.isBefore(dayStart) && session.EndDate && session.EndTime) {
+      end = combineDateTime(session.EndDate, session.EndTime);
+      // Tính từ 0h ngày hôm nay đến end time
+      const sessionStart = dayStart;
+      const sessionEnd = end.isAfter(dayEnd) ? dayEnd : end;
+      
+      if (sessionEnd.isAfter(sessionStart)) {
+        totalMinutes += sessionEnd.diff(sessionStart, "minute");
+      }
+    }
+    // Trường hợp 3: Các session khác (logic như hiện tại)
+    else {
+      if (session.EndDate && session.EndTime) {
+        end = combineDateTime(session.EndDate, session.EndTime);
+      } else {
+        end = now;
+      }
 
-    const sessionStart = enter.isBefore(dayStart) ? dayStart : enter;
-    const sessionEnd = end.isAfter(dayEnd) ? dayEnd : end;
+      const sessionStart = enter.isBefore(dayStart) ? dayStart : enter;
+      const sessionEnd = end.isAfter(dayEnd) ? dayEnd : end;
 
-    if (sessionEnd.isAfter(sessionStart)) {
-      totalMinutes += sessionEnd.diff(sessionStart, "minute");
+      // Chỉ tính nếu session kết thúc sau session bắt đầu và session bắt đầu không phải trong tương lai
+      if (sessionEnd.isAfter(sessionStart) && !sessionStart.isAfter(now)) {
+        totalMinutes += sessionEnd.diff(sessionStart, "minute");
+      }
     }
   }
 
