@@ -28,25 +28,26 @@ const ITEM_RATE_DEFAULT = [
 
 // Hàm lấy danh sách item và rate hiện tại
 async function getItemRates(txOrDb: any): Promise<any[]> {
-  return await txOrDb.item.findMany();
+  return await txOrDb.$queryRaw`SELECT * FROM "Item"`;
 }
 
 // Hàm lấy thông tin jackpot gần nhất và tổng quỹ
 async function getJackpotInfo(
   txOrDb: any,
 ): Promise<{ lastJackPot: any; totalFund: number }> {
-  const lastJackPot = await txOrDb.gameResult.findFirst({
-    where: { itemId: JACKPOT_ID },
-    select: { createdAt: true },
-    orderBy: { createdAt: "desc" },
-  });
-  const totalRound = await txOrDb.gameResult.count({
-    where: {
-      ...(lastJackPot?.createdAt && {
-        createdAt: { gt: lastJackPot.createdAt },
-      }),
-    },
-  });
+  const lastJackPots = await txOrDb.$queryRaw`
+    SELECT "createdAt" FROM "GameResult" 
+    WHERE "itemId" = ${JACKPOT_ID}
+    ORDER BY "createdAt" DESC
+    LIMIT 1
+  `;
+  const lastJackPot = (lastJackPots as any[])[0];
+  
+  const totalRounds = await txOrDb.$queryRaw`
+    SELECT COUNT(*) as count FROM "GameResult"
+    WHERE ${lastJackPot?.createdAt ? `"createdAt" > ${lastJackPot.createdAt}` : '1=1'}
+  `;
+  const totalRound = (totalRounds as any[])[0]?.count || 0;
   const totalFund = totalRound * Number(ROUND_COST) * RATE;
   return { lastJackPot, totalFund };
 }
@@ -77,10 +78,11 @@ async function updateRates(
       return def ? { ...item, rating: def.rating } : item;
     });
     for (const item of itemRates) {
-      await txOrDb.item.update({
-        where: { id: item.id },
-        data: { rating: item.rating },
-      });
+      await txOrDb.$executeRaw`
+        UPDATE "Item" 
+        SET "rating" = ${item.rating}
+        WHERE "id" = ${item.id}
+      `;
     }
   } else if (totalFund >= Number(UP_RATE_AMOUNT)) {
     const jackpotItem = itemRates.find((x: any) => x.id === JACKPOT_ID);
@@ -91,10 +93,11 @@ async function updateRates(
       others.forEach((x: any) => (x.rating -= reduce));
     }
     for (const item of itemRates) {
-      await txOrDb.item.update({
-        where: { id: item.id },
-        data: { rating: item.rating },
-      });
+      await txOrDb.$executeRaw`
+        UPDATE "Item" 
+        SET "rating" = ${item.rating}
+        WHERE "id" = ${item.id}
+      `;
     }
   }
   return itemRates;
@@ -112,7 +115,6 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     return { error: "Không tìm thấy thông tin chi nhánh (branch) trong cookie." };
   }
 
-
   // Rate limiting check
   const rateLimitResult = await checkGameRollRateLimit(String(userId), branch);
   if (!rateLimitResult.allowed) {
@@ -126,19 +128,26 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   }
 
   if (type === "Gift") {
-
     // Tìm GiftRound còn lượt
-    const giftRound = await db.giftRound.findFirst({
-      where: { userId, branch, isUsed: false },
-      orderBy: { createdAt: "asc" },
-    });
+    const giftRounds = await db.$queryRaw`
+      SELECT * FROM "GiftRound" 
+      WHERE "userId" = ${userId} AND "branch" = ${branch} AND "isUsed" = false
+      ORDER BY "createdAt" ASC
+      LIMIT 1
+    `;
+    const giftRound = (giftRounds as any[])[0];
     if (!giftRound) return { error: "Bạn không còn lượt Tinh Cầu Thưởng." };
     const available = giftRound.amount - giftRound.usedAmount;
     if (available <= 0) return { error: "Bạn không còn lượt Tinh Cầu Thưởng." };
     const use = Math.min(rolls, available);
 
     // Lấy user
-    const user = await db.user.findFirst({ where: { userId, branch } });
+    const users = await db.$queryRaw`
+      SELECT * FROM "User" 
+      WHERE "userId" = ${userId} AND "branch" = ${branch}
+      LIMIT 1
+    `;
+    const user = (users as any[])[0];
     if (!user) return { error: "User not found" };
 
     // Lấy itemRates và các logic random như Wish
@@ -156,26 +165,19 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         jackpotHit = true;
       }
       // Lưu gameResult
-      const gameResult = await db.gameResult.create({
-        data: {
-          userId,
-          itemId: selectedItem.id,
-          createdAt: getVNTimeForPrisma(),
-        },
-      });
+      const gameResultResults = await db.$queryRaw`
+        INSERT INTO "GameResult" ("userId", "itemId", "createdAt", "updatedAt")
+        VALUES (${userId}, ${selectedItem.id}, ${getVNTimeForPrisma()}, ${getVNTimeForPrisma()})
+        RETURNING *
+      `;
+      const gameResult = (gameResultResults as any[])[0];
+      
       // Lưu UserStarHistory
       const currentStars = user.stars + totalAddedStars;
-      await db.userStarHistory.create({
-        data: {
-          userId,
-          type: "GIFT_ROUND",
-          oldStars: currentStars,
-          newStars: currentStars + addedStar,
-          targetId: gameResult.id,
-          createdAt: getVNTimeForPrisma(),
-          branch,
-        },
-      });
+      await db.$executeRaw`
+        INSERT INTO "UserStarHistory" ("userId", "type", "oldStars", "newStars", "targetId", "createdAt", "branch", "updatedAt")
+        VALUES (${userId}, 'GIFT_ROUND', ${currentStars}, ${currentStars + addedStar}, ${gameResult.id}, ${getVNTimeForPrisma()}, ${branch}, ${getVNTimeForPrisma()})
+      `;
       totalAddedStars += addedStar;
       results.push({
         id: selectedItem.id,
@@ -187,28 +189,30 @@ const handler = async (data: InputType): Promise<ReturnType> => {
       itemRates = await updateRates(db, itemRates, jackpotHit, totalFund);
     }
     // Update user cuối cùng
-    await db.user.update({
-      where: { id: user.id },
-      data: {
-        stars: user.stars + totalAddedStars,
-        updatedAt: getVNTimeForPrisma(),
-      },
-    });
+    await db.$executeRaw`
+      UPDATE "User" 
+      SET "stars" = ${user.stars + totalAddedStars}, "updatedAt" = ${getVNTimeForPrisma()}
+      WHERE "id" = ${user.id}
+    `;
     // Update GiftRound
-    await db.giftRound.update({
-      where: { id: giftRound.id },
-      data: {
-        usedAmount: giftRound.usedAmount + use,
-        isUsed: giftRound.usedAmount + use >= giftRound.amount,
-        updatedAt: getVNTimeForPrisma(),
-      },
-    });
+    await db.$executeRaw`
+      UPDATE "GiftRound" 
+      SET "usedAmount" = ${giftRound.usedAmount + use}, 
+          "isUsed" = ${giftRound.usedAmount + use >= giftRound.amount}, 
+          "updatedAt" = ${getVNTimeForPrisma()}
+      WHERE "id" = ${giftRound.id}
+    `;
     return { data: results };
   } else {
     try {
       return await db.$transaction(async (tx) => {
         // Lấy user và item rate ban đầu
-        const user = await tx.user.findFirst({ where: { userId, branch } });
+        const users = await tx.$queryRaw`
+          SELECT * FROM "User" 
+          WHERE "userId" = ${userId} AND "branch" = ${branch}
+          LIMIT 1
+        `;
+        const user = (users as any[])[0];
         if (!user) return { error: "User not found" };
         if (user.magicStone < rolls)
           return { error: "Bạn không đủ đá năng lượng." };
@@ -227,26 +231,19 @@ const handler = async (data: InputType): Promise<ReturnType> => {
             jackpotHit = true;
           }
           // Lưu gameResult trước
-          const gameResult = await tx.gameResult.create({
-            data: {
-              userId,
-              itemId: selectedItem.id,
-              createdAt: getVNTimeForPrisma(),
-            },
-          });
+          const gameResultResults = await tx.$queryRaw`
+            INSERT INTO "GameResult" ("userId", "itemId", "createdAt", "updatedAt")
+            VALUES (${userId}, ${selectedItem.id}, ${getVNTimeForPrisma()}, ${getVNTimeForPrisma()})
+            RETURNING *
+          `;
+          const gameResult = (gameResultResults as any[])[0];
+          
           // Lưu UserStarHistory với stars hiện tại
           const currentStars = user.stars + totalAddedStars;
-          await tx.userStarHistory.create({
-            data: {
-              userId,
-              type: "GAME",
-              oldStars: currentStars,
-              newStars: currentStars + addedStar,
-              targetId: gameResult.id,
-              createdAt: getVNTimeForPrisma(),
-              branch,
-            },
-          });
+          await tx.$executeRaw`
+            INSERT INTO "UserStarHistory" ("userId", "type", "oldStars", "newStars", "targetId", "createdAt", "branch", "updatedAt")
+            VALUES (${userId}, 'GAME', ${currentStars}, ${currentStars + addedStar}, ${gameResult.id}, ${getVNTimeForPrisma()}, ${branch}, ${getVNTimeForPrisma()})
+          `;
           totalAddedStars += addedStar;
           results.push({
             id: selectedItem.id,
@@ -258,14 +255,13 @@ const handler = async (data: InputType): Promise<ReturnType> => {
           itemRates = await updateRates(tx, itemRates, jackpotHit, totalFund);
         }
         // Update user cuối cùng
-        await tx.user.update({
-          where: { id: user.id },
-          data: {
-            stars: user.stars + totalAddedStars,
-            magicStone: user.magicStone - rolls,
-            updatedAt: getVNTimeForPrisma(),
-          },
-        });
+        await tx.$executeRaw`
+          UPDATE "User" 
+          SET "stars" = ${user.stars + totalAddedStars}, 
+              "magicStone" = ${user.magicStone - rolls}, 
+              "updatedAt" = ${getVNTimeForPrisma()}
+          WHERE "id" = ${user.id}
+        `;
         // Trả về kết quả roll
         resultFilters = results.map((item) => ({
           id: item.id,

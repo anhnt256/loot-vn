@@ -8,7 +8,7 @@ import dayjs from "@/lib/dayjs";
 
 // Convert datetime string sang Date object cho Prisma DateTime field
 export function toVNDate(datetimeString: string): Date {
-  return dayjs.utc(datetimeString).utcOffset(7).toDate();
+  return dayjs(datetimeString).utcOffset(7).toDate();
 }
 
 // Lấy ngày hiện tại cho Prisma DateTime field
@@ -177,7 +177,8 @@ export const getCurrentDayOfWeekVN = () => {
 
 // Lấy thời gian hiện tại Vietnam cho Prisma
 export const getVNTimeForPrisma = () => {
-  return dayjs().utcOffset(7).toDate();
+  const nowVN = dayjs().utcOffset(7);
+  return new Date(nowVN.format());
 };
 
 // Lấy start of day Vietnam cho Prisma

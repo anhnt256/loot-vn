@@ -5,27 +5,26 @@ import { db } from "@/lib/db";
 export async function GET() {
   try {
     const currentVNTime = getVNTimeForPrisma();
+    const testName = `Test Rank ${new Date().getTime()}`;
     
-    // Test insert vào table Rank
-    const testRank = await db.rank.create({
-      data: {
-        name: `Test Rank ${new Date().getTime()}`,
-        fromValue: 100.0,
-        toValue: 200.0,
-        discount: 10.0,
-        foodVoucher: 5,
-        drinkVoucher: 3,
-        createdAt: currentVNTime,
-        updatedAt: currentVNTime,
-      },
-    });
+    // Test insert vào table Rank bằng raw SQL
+    const result = await db.$executeRaw`
+      INSERT INTO Rank (name, fromValue, toValue, discount, foodVoucher, drinkVoucher, createdAt, updatedAt)
+      VALUES (${testName}, 100.0, 200.0, 10.0, 5, 3, ${currentVNTime}, ${currentVNTime})
+    `;
+
+    // Lấy record vừa insert để trả về
+    const insertedRank = await db.$queryRaw`
+      SELECT * FROM Rank WHERE name = ${testName} ORDER BY createdAt DESC LIMIT 1
+    `;
 
     return NextResponse.json({
       success: true,
-      message: "Test timezone API with Rank insert",
+      message: "Test timezone API with Rank insert using raw SQL",
       data: {
         currentVNTime,
-        insertedRank: testRank,
+        insertedRank: Array.isArray(insertedRank) ? insertedRank[0] : insertedRank,
+        rawResult: result,
       },
     });
   } catch (error) {
