@@ -146,6 +146,9 @@ const AdminDashboard = () => {
   const [editedNote, setEditedNote] = useState("");
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [noteModalContent, setNoteModalContent] = useState("");
+  const [showTimezoneModal, setShowTimezoneModal] = useState(false);
+  const [timezoneData, setTimezoneData] = useState<any>(null);
+  const [loadingTimezone, setLoadingTimezone] = useState(false);
 
   const deviceList = [
     {
@@ -546,6 +549,25 @@ const AdminDashboard = () => {
     setIsEditingNote(false);
   };
 
+  // Thêm hàm test timezone
+  const handleTestTimezone = async () => {
+    try {
+      setLoadingTimezone(true);
+      const res = await fetch("/api/test-timezone");
+      const data = await res.json();
+      if (data.success) {
+        setTimezoneData(data.data);
+        setShowTimezoneModal(true);
+      } else {
+        message.error(data.message || "Có lỗi xảy ra khi test timezone");
+      }
+    } catch (e: any) {
+      message.error(e.message || "Có lỗi xảy ra khi test timezone");
+    } finally {
+      setLoadingTimezone(false);
+    }
+  };
+
   return (
     <div className="flex flex-col p-5 gap-4">
       <div className="shadow-lg rounded-lg w-full overflow-auto max-h-[89vh] relative">
@@ -581,6 +603,13 @@ const AdminDashboard = () => {
               onClick={() => setShowCheckLoginModal(true)}
             >
               Kiểm tra đăng nhập
+            </Button>
+            <Button
+              className="ml-2 bg-purple-600 hover:bg-purple-700 text-white"
+              onClick={handleTestTimezone}
+              loading={loadingTimezone}
+            >
+              Test Timezone
             </Button>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
@@ -2000,6 +2029,67 @@ const AdminDashboard = () => {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* Modal Test Timezone */}
+      <Modal
+        title={<span className="text-white">Test Timezone API</span>}
+        open={showTimezoneModal}
+        onCancel={() => {
+          setShowTimezoneModal(false);
+          setTimezoneData(null);
+        }}
+        footer={null}
+        className="dark-modal"
+        width={500}
+        styles={{
+          header: {
+            background: "#1f2937",
+            color: "white",
+            borderBottom: "1px solid #374151",
+            paddingBottom: "12px",
+          },
+          content: {
+            background: "#1f2937",
+          },
+          body: {
+            background: "#1f2937",
+            padding: "20px",
+          },
+          mask: {
+            background: "rgba(0, 0, 0, 0.6)",
+          },
+          footer: {
+            background: "#1f2937",
+            borderTop: "1px solid #374151",
+          },
+        }}
+      >
+        {timezoneData && (
+          <div className="text-gray-200">
+            <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
+              <div className="mb-4">
+                <h3 className="text-lg font-bold text-white mb-2">
+                  Kết quả Test Timezone:
+                </h3>
+                <div className="space-y-2">
+                  <div>
+                    <span className="text-gray-400">Current VN Time:</span>
+                    <div className="text-green-400 font-mono text-lg font-bold">
+                      {timezoneData.currentVNTime}
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <span className="text-gray-400">Raw Data:</span>
+                    <pre className="bg-gray-900 p-2 rounded text-xs text-green-300 overflow-auto">
+                      {JSON.stringify(timezoneData, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );

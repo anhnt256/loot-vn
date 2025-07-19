@@ -33,7 +33,6 @@ function useAutoLogout(onLogout: () => void, timeout = 60 * 60 * 1000) {
 const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   const loginMutation = useLogout();
   const pathname = usePathname();
-  const [showGatewayBonus, setShowGatewayBonus] = useState(true);
   const currentUser = useLocalStorageValue(CURRENT_USER, null);
   const [isClient, setIsClient] = useState(false);
 
@@ -84,24 +83,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
 
   // Load currentUser và refresh data khi mount
   useEffect(() => {
-    console.log("Client time:", new Date().toString());
     refreshUserData();
-  }, []);
-
-  // Debug: Log server time để so sánh với client time
-  useEffect(() => {
-    const logServerTime = async () => {
-      try {
-        const response = await fetch("/api/test-timezone");
-        if (response.ok) {
-          const data = await response.json();
-          console.log("Server time:", data.serverTime || new Date().toISOString());
-        }
-      } catch (error) {
-        console.error("Error fetching server time:", error);
-      }
-    };
-    logServerTime();
   }, []);
 
   const handleLogout = async () => {
