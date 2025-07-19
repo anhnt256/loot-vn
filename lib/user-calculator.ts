@@ -113,19 +113,10 @@ export async function calculateActiveUsersInfo(
           s.MachineName
         FROM fnet.systemlogtb s
         JOIN usertb u ON s.UserId = u.UserId
-        JOIN (
-            SELECT UserId, MAX(CONCAT(EnterDate, ' ', EnterTime)) AS MaxEnterDateTime
-            FROM fnet.systemlogtb
-            WHERE status = 3
-              AND EnterDate < '${curDate}'
-              AND (
-                EndDate IS NULL
-                OR CONCAT(EndDate, ' ', COALESCE(EndTime, '23:59:59')) >= CONCAT('${curDate}', ' 00:00:00')
-              )
-              AND FIND_IN_SET(UserId, '${userIdsStr}')
-            GROUP BY UserId
-        ) latest ON s.UserId = latest.UserId 
-               AND CONCAT(s.EnterDate, ' ', s.EnterTime) = latest.MaxEnterDateTime;
+        WHERE FIND_IN_SET(s.UserId, '${userIdsStr}')
+          AND s.status = 3
+          AND s.EnterDate = DATE_SUB('${curDate}', INTERVAL 1 DAY)
+          AND s.EndDate IS NULL
         `;
 
         const result = await fnetDB.$queryRawUnsafe(queryString);
