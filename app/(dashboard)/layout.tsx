@@ -242,6 +242,16 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
           >
             Đổi thưởng
           </Link>
+          <Link
+            className={cn(
+              "block py-2.5 px-4 rounded transition-all duration-300 hover:bg-gray-700 relative overflow-hidden group",
+              pathname === "/birthday" ? "bg-orange-500" : "bg-orange-400",
+            )}
+            href="/birthday"
+          >
+            <span className="relative z-10">Sinh nhật</span>
+            <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 via-orange-500/20 via-yellow-500/20 via-green-500/20 via-blue-500/20 via-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          </Link>
           {/* <Link
             className={cn(
               "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",

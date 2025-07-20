@@ -431,7 +431,64 @@ model ChatMessage {
   @@index([createdAt])
 }
 
+// Birthday promotion models
+model BirthdayTier {
+  id              Int      @id @default(autoincrement())
+  tierName        String   @db.VarChar(100)
+  discountPercent Int      // Phần trăm khuyến mãi (600%, 400%, etc.)
+  milestoneAmount Int      // Mốc nhận thưởng (VNĐ)
+  additionalAmount Int     // Số tiền cần nạp thêm
+  bonusAmount     Int      // Tiền thưởng nhận được
+  totalAtTier     Int      // Tổng tại từng mốc
+  totalReceived   Int      // Tổng nhận được
+  freeSpins       Int      // Lượt quay tặng
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  userBirthdayProgress UserBirthdayProgress[]
 
+  @@map("BirthdayTier")
+}
+
+model UserBirthdayProgress {
+  id            Int           @id @default(autoincrement())
+  userId        Int
+  tierId        Int
+  branch        String        @db.VarChar(45)
+  isClaimed     Boolean       @default(false)
+  claimedAt     DateTime?
+  totalSpent    Int           @default(0) // Tổng tiền đã nạp trong thời gian sinh nhật
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  tier          BirthdayTier  @relation(fields: [tierId], references: [id])
+
+  @@unique([userId, tierId, branch])
+  @@index([userId])
+  @@index([branch])
+  @@map("UserBirthdayProgress")
+}
+
+model BirthdayTransaction {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  branch        String   @db.VarChar(45)
+  amount        Int      // Số tiền nạp
+  tierId        Int?     // Tier tương ứng nếu có
+  transactionType BirthdayTransactionType
+  description   String?  @db.VarChar(500)
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+  @@index([branch])
+  @@index([createdAt])
+  @@map("BirthdayTransaction")
+}
+
+enum BirthdayTransactionType {
+  TOPUP
+  BONUS
+  FREE_SPIN
+}
 
 enum MissionType {
   HOURS

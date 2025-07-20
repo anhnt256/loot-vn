@@ -135,22 +135,34 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   if (type === "Gift") {
     console.log(`[DEBUG] Processing Gift type game`);
     
-    // Tìm GiftRound còn lượt
-    console.log(`[DEBUG] Searching for GiftRound - userId: ${userId}, branch: ${branch}`);
+    // Tìm tất cả GiftRound còn lượt theo thứ tự FIFO
+    console.log(`[DEBUG] Searching for all available GiftRounds - userId: ${userId}, branch: ${branch}`);
     const giftRounds = await db.$queryRaw`
       SELECT * FROM GiftRound 
       WHERE userId = ${userId} AND branch = ${branch} AND isUsed = false
       ORDER BY createdAt ASC
-      LIMIT 1
     `;
-    console.log(`[DEBUG] GiftRound query result:`, giftRounds);
+    console.log(`[DEBUG] GiftRounds query result:`, giftRounds);
     
-    const giftRound = (giftRounds as any[])[0];
-    if (!giftRound) return { error: "Bạn không còn lượt Tinh Cầu Thưởng." };
-    const available = giftRound.amount - giftRound.usedAmount;
-    if (available <= 0) return { error: "Bạn không còn lượt Tinh Cầu Thưởng." };
-    const use = Math.min(rolls, available);
-    console.log(`[DEBUG] GiftRound found - available: ${available}, use: ${use}`);
+    const availableGiftRounds = (giftRounds as any[]).filter(gr => {
+      const available = gr.amount - gr.usedAmount;
+      return available > 0;
+    });
+    
+    if (availableGiftRounds.length === 0) {
+      return { error: "Bạn không còn lượt Tinh Cầu Thưởng." };
+    }
+    
+    // Tính tổng lượt có thể sử dụng
+    const totalAvailable = availableGiftRounds.reduce((sum, gr) => {
+      return sum + (gr.amount - gr.usedAmount);
+    }, 0);
+    
+    if (totalAvailable < rolls) {
+      return { error: `Bạn chỉ còn ${totalAvailable} lượt Tinh Cầu Thưởng, không đủ ${rolls} lượt.` };
+    }
+    
+    console.log(`[DEBUG] Total available rounds: ${totalAvailable}, requested rolls: ${rolls}`);
 
     // Lấy user
     console.log(`[DEBUG] Fetching user - userId: ${userId}, branch: ${branch}`);
@@ -175,58 +187,90 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     let jackpotHit = false;
     let totalAddedStars = 0;
     const results = [];
-    for (let i = 0; i < use; i++) {
-      console.log(`[DEBUG] Processing roll ${i + 1}/${use}`);
+    let remainingRolls = rolls;
+    let currentGiftRoundIndex = 0;
+    
+    while (remainingRolls > 0 && currentGiftRoundIndex < availableGiftRounds.length) {
+      const currentGiftRound = availableGiftRounds[currentGiftRoundIndex];
+      const availableInCurrentRound = currentGiftRound.amount - currentGiftRound.usedAmount;
+      const rollsToUse = Math.min(remainingRolls, availableInCurrentRound);
       
-      // Roll random item
-      let selectedItem = randomItem(itemRates);
-      let addedStar = selectedItem.value;
-      if (selectedItem.id === JACKPOT_ID) {
-        addedStar = totalFund;
-        jackpotHit = true;
+      console.log(`[DEBUG] Using GiftRound ${currentGiftRoundIndex + 1} - available: ${availableInCurrentRound}, using: ${rollsToUse}, remaining: ${remainingRolls}`);
+      
+      for (let i = 0; i < rollsToUse; i++) {
+        console.log(`[DEBUG] Processing roll ${rolls - remainingRolls + i + 1}/${rolls}`);
+        
+        // Roll random item
+        let selectedItem = randomItem(itemRates);
+        let addedStar = selectedItem.value;
+        if (selectedItem.id === JACKPOT_ID) {
+          addedStar = totalFund;
+          jackpotHit = true;
+        }
+        console.log(`[DEBUG] Selected item:`, selectedItem, `addedStar: ${addedStar}`);
+        
+        // Lưu gameResult
+        console.log(`[DEBUG] Inserting GameResult - userId: ${userId}, itemId: ${selectedItem.id}`);
+        try {
+          await db.$executeRaw`
+            INSERT INTO GameResult (userId, itemId, createdAt, updatedAt)
+            VALUES (${userId}, ${selectedItem.id}, ${getCurrentTimeVNISO()}, ${getCurrentTimeVNISO()})
+          `;
+          console.log(`[DEBUG] GameResult inserted successfully`);
+        } catch (error) {
+          console.error(`[ERROR] Failed to insert GameResult:`, error);
+          throw error;
+        }
+        
+        const gameResultResults = await db.$queryRaw`SELECT LAST_INSERT_ID() as id`;
+        const gameResult = (gameResultResults as any[])[0];
+        console.log(`[DEBUG] GameResult ID:`, gameResult);
+        
+        // Lưu UserStarHistory
+        const currentStars = user.stars + totalAddedStars;
+        console.log(`[DEBUG] Inserting UserStarHistory - currentStars: ${currentStars}, newStars: ${currentStars + addedStar}, gameResultId: ${gameResult.id}`);
+        try {
+          await db.$executeRaw`
+            INSERT INTO UserStarHistory (userId, type, oldStars, newStars, targetId, createdAt, branch)
+            VALUES (${userId}, 'GIFT_ROUND', ${currentStars}, ${currentStars + addedStar}, ${gameResult.id}, ${getCurrentTimeVNISO()}, ${branch})
+          `;
+          console.log(`[DEBUG] UserStarHistory inserted successfully`);
+        } catch (error) {
+          console.error(`[ERROR] Failed to insert UserStarHistory:`, error);
+          throw error;
+        }
+        
+        totalAddedStars += addedStar;
+        results.push({
+          id: selectedItem.id,
+          image_url: selectedItem.image_url,
+          title: selectedItem.title,
+          value: addedStar,
+        });
+        // Update rate nếu cần
+        itemRates = await updateRates(db, itemRates, jackpotHit, totalFund);
       }
-      console.log(`[DEBUG] Selected item:`, selectedItem, `addedStar: ${addedStar}`);
       
-      // Lưu gameResult
-      console.log(`[DEBUG] Inserting GameResult - userId: ${userId}, itemId: ${selectedItem.id}`);
+      // Update GiftRound hiện tại
+      const newUsedAmount = currentGiftRound.usedAmount + rollsToUse;
+      const isUsed = newUsedAmount >= currentGiftRound.amount;
+      console.log(`[DEBUG] Updating GiftRound ${currentGiftRound.id} - new usedAmount: ${newUsedAmount}, isUsed: ${isUsed}`);
       try {
         await db.$executeRaw`
-          INSERT INTO GameResult (userId, itemId, createdAt, updatedAt)
-          VALUES (${userId}, ${selectedItem.id}, ${getCurrentTimeVNISO()}, ${getCurrentTimeVNISO()})
+          UPDATE GiftRound 
+          SET usedAmount = ${newUsedAmount}, 
+              isUsed = ${isUsed}, 
+              updatedAt = ${getCurrentTimeVNISO()}
+          WHERE id = ${currentGiftRound.id}
         `;
-        console.log(`[DEBUG] GameResult inserted successfully`);
+        console.log(`[DEBUG] GiftRound ${currentGiftRound.id} updated successfully`);
       } catch (error) {
-        console.error(`[ERROR] Failed to insert GameResult:`, error);
+        console.error(`[ERROR] Failed to update GiftRound ${currentGiftRound.id}:`, error);
         throw error;
       }
       
-      const gameResultResults = await db.$queryRaw`SELECT LAST_INSERT_ID() as id`;
-      const gameResult = (gameResultResults as any[])[0];
-      console.log(`[DEBUG] GameResult ID:`, gameResult);
-      
-      // Lưu UserStarHistory
-      const currentStars = user.stars + totalAddedStars;
-      console.log(`[DEBUG] Inserting UserStarHistory - currentStars: ${currentStars}, newStars: ${currentStars + addedStar}, gameResultId: ${gameResult.id}`);
-      try {
-        await db.$executeRaw`
-          INSERT INTO UserStarHistory (userId, type, oldStars, newStars, targetId, createdAt, branch)
-          VALUES (${userId}, 'GIFT_ROUND', ${currentStars}, ${currentStars + addedStar}, ${gameResult.id}, ${getCurrentTimeVNISO()}, ${branch})
-        `;
-        console.log(`[DEBUG] UserStarHistory inserted successfully`);
-      } catch (error) {
-        console.error(`[ERROR] Failed to insert UserStarHistory:`, error);
-        throw error;
-      }
-      
-      totalAddedStars += addedStar;
-      results.push({
-        id: selectedItem.id,
-        image_url: selectedItem.image_url,
-        title: selectedItem.title,
-        value: addedStar,
-      });
-      // Update rate nếu cần
-      itemRates = await updateRates(db, itemRates, jackpotHit, totalFund);
+      remainingRolls -= rollsToUse;
+      currentGiftRoundIndex++;
     }
     // Update user cuối cùng
     console.log(`[DEBUG] Updating User - new stars: ${user.stars + totalAddedStars}`);
@@ -239,22 +283,6 @@ const handler = async (data: InputType): Promise<ReturnType> => {
       console.log(`[DEBUG] User updated successfully`);
     } catch (error) {
       console.error(`[ERROR] Failed to update User:`, error);
-      throw error;
-    }
-    
-    // Update GiftRound
-    console.log(`[DEBUG] Updating GiftRound - new usedAmount: ${giftRound.usedAmount + use}`);
-    try {
-      await db.$executeRaw`
-        UPDATE GiftRound 
-        SET usedAmount = ${giftRound.usedAmount + use}, 
-            isUsed = ${giftRound.usedAmount + use >= giftRound.amount}, 
-            updatedAt = ${getCurrentTimeVNISO()}
-        WHERE id = ${giftRound.id}
-      `;
-      console.log(`[DEBUG] GiftRound updated successfully`);
-    } catch (error) {
-      console.error(`[ERROR] Failed to update GiftRound:`, error);
       throw error;
     }
     
