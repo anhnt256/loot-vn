@@ -51,6 +51,35 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
     }
 
+    // Get admin info from request headers (set by middleware)
+    const userHeader = request.headers.get("user");
+    const user = userHeader ? JSON.parse(userHeader) : null;
+
+    if (!user?.role || user.role !== "admin") {
+      return NextResponse.json(
+        { error: "Unauthorized - Admin access required" },
+        { status: 401 },
+      );
+    }
+
+    // Get branch from cookie
+    const branch = request.cookies.get("branch")?.value || "GO_VAP";
+
+    // Check if gift round exists and belongs to current branch
+    const existingGiftRound = await db.giftRound.findFirst({
+      where: {
+        id: id,
+        branch: branch,
+      },
+    });
+
+    if (!existingGiftRound) {
+      return NextResponse.json(
+        { error: "GiftRound not found" },
+        { status: 404 },
+      );
+    }
+
     const json = await request.json();
     const body = updateGiftRoundSchema.parse(json);
 
@@ -87,6 +116,35 @@ export async function DELETE(
     const id = parseInt(params.id);
     if (isNaN(id)) {
       return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+    }
+
+    // Get admin info from request headers (set by middleware)
+    const userHeader = request.headers.get("user");
+    const user = userHeader ? JSON.parse(userHeader) : null;
+
+    if (!user?.role || user.role !== "admin") {
+      return NextResponse.json(
+        { error: "Unauthorized - Admin access required" },
+        { status: 401 },
+      );
+    }
+
+    // Get branch from cookie
+    const branch = request.cookies.get("branch")?.value || "GO_VAP";
+
+    // Check if gift round exists and belongs to current branch
+    const giftRound = await db.giftRound.findFirst({
+      where: {
+        id: id,
+        branch: branch,
+      },
+    });
+
+    if (!giftRound) {
+      return NextResponse.json(
+        { error: "GiftRound not found" },
+        { status: 404 },
+      );
     }
 
     await db.giftRound.delete({

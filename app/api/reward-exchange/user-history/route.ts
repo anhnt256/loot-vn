@@ -27,52 +27,42 @@ export async function GET(request: Request) {
     }
 
     // Tìm user theo userId và branch
-    const user = await db.user.findFirst({
-      where: {
-        userId: parseInt(userId, 10),
-        branch: branch,
-      },
-    });
+    const user = await db.$queryRaw<any[]>`
+      SELECT * FROM User 
+      WHERE userId = ${parseInt(userId, 10)} 
+      AND branch = ${branch}
+      LIMIT 1
+    `;
 
-    if (!user) {
+    if (user.length === 0) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const whereClause = {
-      userId: user.id, // user.id là foreign key trong UserRewardMap
-      branch: branch,
-    };
-
     const [rewards, total] = await Promise.all([
-      db.userRewardMap.findMany({
-        where: whereClause,
-        include: {
-          reward: {
-            select: {
-              id: true,
-              name: true,
-              value: true,
-              stars: true,
-            },
-          },
-          promotionCode: {
-            select: {
-              id: true,
-              code: true,
-              name: true,
-              value: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-        skip: offset,
-        take: limit,
-      }),
-      db.userRewardMap.count({
-        where: whereClause,
-      }),
+      db.$queryRaw<any[]>`
+        SELECT 
+          urm.*,
+          r.id as reward_id,
+          r.name as reward_name,
+          r.value as reward_value,
+          r.stars as reward_stars,
+          pc.id as promotionCode_id,
+          pc.code as promotionCode_code,
+          pc.name as promotionCode_name,
+          pc.value as promotionCode_value
+        FROM UserRewardMap urm
+        LEFT JOIN Reward r ON urm.rewardId = r.id
+        LEFT JOIN PromotionCode pc ON urm.promotionCodeId = pc.id
+        WHERE urm.userId = ${user[0].id}
+          AND urm.branch = ${branch}
+        ORDER BY urm.createdAt DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `,
+      db.$queryRaw<any[]>`
+        SELECT COUNT(*) as count FROM UserRewardMap 
+        WHERE userId = ${user[0].id}
+          AND branch = ${branch}
+      `,
     ]);
 
     return NextResponse.json({
@@ -80,8 +70,8 @@ export async function GET(request: Request) {
       pagination: {
         page,
         limit,
-        total,
-        totalPages: Math.ceil(total / limit),
+        total: Number(total[0].count),
+        totalPages: Math.ceil(Number(total[0].count) / limit),
       },
     });
   } catch (error) {

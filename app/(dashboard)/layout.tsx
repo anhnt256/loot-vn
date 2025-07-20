@@ -33,7 +33,6 @@ function useAutoLogout(onLogout: () => void, timeout = 60 * 60 * 1000) {
 const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   const loginMutation = useLogout();
   const pathname = usePathname();
-  const [showGatewayBonus, setShowGatewayBonus] = useState(true);
   const currentUser = useLocalStorageValue(CURRENT_USER, null);
   const [isClient, setIsClient] = useState(false);
 
@@ -84,7 +83,6 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
 
   // Load currentUser và refresh data khi mount
   useEffect(() => {
-    console.log(new Date().toString());
     refreshUserData();
   }, []);
 

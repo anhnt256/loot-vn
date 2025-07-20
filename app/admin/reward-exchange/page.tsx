@@ -513,52 +513,74 @@ const RewardExchangePage = () => {
                                 {reward.user?.branch || "Không xác định"}
                               </span>
                             </div>
-                            
-                                                              {/* User stats grid */}
-                                  <div className="grid grid-cols-4 gap-4">
-                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
-                                      <p className="text-xs text-gray-500 font-medium mb-1">User ID</p>
-                                      <p className="text-lg font-bold text-blue-900">
-                                        {reward.user?.userId || "Không xác định"}
-                                      </p>
-                                    </div>
-                                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-center">
-                                      <p className="text-xs text-gray-500 font-medium mb-1">Số sao ban đầu</p>
-                                      <p className="text-lg font-bold text-orange-700">
-                                        {(reward.user?.stars + (reward.reward?.stars || 0))?.toLocaleString() || "0"}
-                                      </p>
-                                    </div>
-                                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-                                      <p className="text-xs text-gray-500 font-medium mb-1">Số sao hiện tại</p>
-                                      <p className="text-lg font-bold text-green-700">
-                                        {reward.user?.stars?.toLocaleString() || "0"}
-                                      </p>
-                                    </div>
-                                    <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg p-3 text-center">
-                                      <p className="text-xs opacity-90 font-medium mb-1">Phần thưởng</p>
-                                      <p className="text-lg font-bold">
-                                        {reward.reward.name}
-                                      </p>
-                                      <p className="text-xs opacity-90">
-                                        {(reward.reward?.stars || 0)?.toLocaleString()} sao
-                                      </p>
-                                    </div>
-                                  </div>
-                            
+
+                            {/* User stats grid */}
+                            <div className="grid grid-cols-4 gap-4">
+                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+                                <p className="text-xs text-gray-500 font-medium mb-1">
+                                  User ID
+                                </p>
+                                <p className="text-lg font-bold text-blue-900">
+                                  {reward.user?.userId || "Không xác định"}
+                                </p>
+                              </div>
+                              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-center">
+                                <p className="text-xs text-gray-500 font-medium mb-1">
+                                  Số sao ban đầu
+                                </p>
+                                <p className="text-lg font-bold text-orange-700">
+                                  {(
+                                    reward.user?.stars +
+                                    (reward.reward?.stars || 0)
+                                  )?.toLocaleString() || "0"}
+                                </p>
+                              </div>
+                              <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+                                <p className="text-xs text-gray-500 font-medium mb-1">
+                                  Số sao hiện tại
+                                </p>
+                                <p className="text-lg font-bold text-green-700">
+                                  {reward.user?.stars?.toLocaleString() || "0"}
+                                </p>
+                              </div>
+                              <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg p-3 text-center">
+                                <p className="text-xs opacity-90 font-medium mb-1">
+                                  Phần thưởng
+                                </p>
+                                <p className="text-lg font-bold">
+                                  {reward.reward.name}
+                                </p>
+                                <p className="text-xs opacity-90">
+                                  {(
+                                    reward.reward?.stars || 0
+                                  )?.toLocaleString()}{" "}
+                                  sao
+                                </p>
+                              </div>
+                            </div>
+
                             {/* Transaction details */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600">
                               <div className="flex items-center space-x-2">
-                                <span className="font-medium">Ngày yêu cầu:</span>
-                                <span>{dayjs.utc(reward.createdAt).format("DD/MM/YYYY HH:mm")}</span>
+                                <span className="font-medium">
+                                  Ngày yêu cầu:
+                                </span>
+                                <span>
+                                  {dayjs
+                                    .utc(reward.createdAt)
+                                    .format("DD/MM/YYYY HH:mm")}
+                                </span>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <span className="font-medium">Mã khuyến mãi:</span>
+                                <span className="font-medium">
+                                  Mã khuyến mãi:
+                                </span>
                                 <span className="font-mono bg-gray-100 px-2 py-1 rounded text-xs">
                                   {reward.promotionCode?.code || "Không có mã"}
                                 </span>
                               </div>
                             </div>
-                            
+
                             {/* Status badge */}
                             <div className="flex justify-end">
                               {getStatusBadge(reward.status)}
@@ -631,61 +653,93 @@ const RewardExchangePage = () => {
                                 <div className="space-y-4">
                                   <div className="flex items-center space-x-3">
                                     <CardTitle className="text-xl font-bold text-gray-900">
-                                      {history.user?.userName || "Không xác định"}
+                                      {history.user?.userName ||
+                                        "Không xác định"}
                                     </CardTitle>
                                     <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
                                       {history.user?.branch || "Không xác định"}
                                     </span>
                                   </div>
-                                  
+
                                   {/* User stats grid */}
                                   <div className="grid grid-cols-4 gap-4">
                                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
-                                      <p className="text-xs text-gray-500 font-medium mb-1">User ID</p>
+                                      <p className="text-xs text-gray-500 font-medium mb-1">
+                                        User ID
+                                      </p>
                                       <p className="text-lg font-bold text-blue-900">
-                                        {history.user?.userId || "Không xác định"}
+                                        {history.user?.userId ||
+                                          "Không xác định"}
                                       </p>
                                     </div>
                                     <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-center">
-                                      <p className="text-xs text-gray-500 font-medium mb-1">Số sao ban đầu</p>
+                                      <p className="text-xs text-gray-500 font-medium mb-1">
+                                        Số sao ban đầu
+                                      </p>
                                       <p className="text-lg font-bold text-orange-700">
-                                        {history.userStarHistory?.oldStars ? 
-                                          history.userStarHistory.oldStars.toLocaleString() : 
-                                          history.user?.stars ? (history.user.stars + (history.reward?.value || 0)).toLocaleString() : "0"}
+                                        {history.userStarHistory?.oldStars
+                                          ? history.userStarHistory.oldStars.toLocaleString()
+                                          : history.user?.stars
+                                            ? (
+                                                history.user.stars +
+                                                (history.reward?.value || 0)
+                                              ).toLocaleString()
+                                            : "0"}
                                       </p>
                                     </div>
                                     <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-                                      <p className="text-xs text-gray-500 font-medium mb-1">Số sao còn lại</p>
+                                      <p className="text-xs text-gray-500 font-medium mb-1">
+                                        Số sao còn lại
+                                      </p>
                                       <p className="text-lg font-bold text-green-700">
-                                        {history.userStarHistory?.newStars ? 
-                                          history.userStarHistory.newStars.toLocaleString() : 
-                                          history.user?.stars?.toLocaleString() || "0"}
+                                        {history.userStarHistory?.newStars
+                                          ? history.userStarHistory.newStars.toLocaleString()
+                                          : history.user?.stars?.toLocaleString() ||
+                                            "0"}
                                       </p>
                                     </div>
                                     <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg p-3 text-center">
-                                      <p className="text-xs opacity-90 font-medium mb-1">Phần thưởng</p>
+                                      <p className="text-xs opacity-90 font-medium mb-1">
+                                        Phần thưởng
+                                      </p>
                                       <p className="text-lg font-bold">
-                                        {history.reward?.name || "Không xác định"}
+                                        {history.reward?.name ||
+                                          "Không xác định"}
                                       </p>
                                       <p className="text-xs opacity-90">
-                                        {history.userStarHistory?.oldStars && history.userStarHistory?.newStars ? 
-                                          (history.userStarHistory.oldStars - history.userStarHistory.newStars).toLocaleString() : 
-                                          (history.reward?.value || 0).toLocaleString()} sao
+                                        {history.userStarHistory?.oldStars &&
+                                        history.userStarHistory?.newStars
+                                          ? (
+                                              history.userStarHistory.oldStars -
+                                              history.userStarHistory.newStars
+                                            ).toLocaleString()
+                                          : (
+                                              history.reward?.value || 0
+                                            ).toLocaleString()}{" "}
+                                        sao
                                       </p>
                                     </div>
                                   </div>
-                                  
+
                                   {/* Transaction details */}
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600">
                                     <div className="flex items-center space-x-2">
-                                      <span className="font-medium">Ngày giao dịch:</span>
-                                      <span className="font-bold">{dayjs
-                                        .utc(history.userStarHistory?.createdAt ? 
-                                          history.userStarHistory.createdAt : history.createdAt || "")
-                                        .format("DD/MM/YYYY HH:mm")}</span>
+                                      <span className="font-medium">
+                                        Ngày giao dịch:
+                                      </span>
+                                      <span className="font-bold">
+                                        {dayjs
+                                          .utc(
+                                            history.userStarHistory?.createdAt
+                                              ? history.userStarHistory
+                                                  .createdAt
+                                              : history.createdAt || "",
+                                          )
+                                          .format("DD/MM/YYYY HH:mm")}
+                                      </span>
                                     </div>
                                   </div>
-                                  
+
                                   {/* Status badge */}
                                   <div className="flex justify-end">
                                     {getStatusBadge(history.status)}
@@ -697,7 +751,9 @@ const RewardExchangePage = () => {
                               {history.note && (
                                 <div className="bg-gray-50 p-3 rounded-lg mt-3">
                                   <p className="text-sm text-gray-700">
-                                    <span className="font-medium">Ghi chú:</span>{" "}
+                                    <span className="font-medium">
+                                      Ghi chú:
+                                    </span>{" "}
                                     {history.note}
                                   </p>
                                 </div>
@@ -782,7 +838,8 @@ const RewardExchangePage = () => {
               <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-200">
                 <div className="space-y-2">
                   <p className="font-semibold text-gray-900">
-                    Username: {selectedReward.user?.userName || "Không xác định"}
+                    Username:{" "}
+                    {selectedReward.user?.userName || "Không xác định"}
                   </p>
                   <p className="text-sm text-gray-600">
                     User ID: {selectedReward.user?.userId || "Không xác định"}
@@ -796,7 +853,8 @@ const RewardExchangePage = () => {
                   <p className="text-sm text-gray-600">
                     Giá trị:{" "}
                     <span className="font-medium">
-                      {(selectedReward.reward?.stars || 0)?.toLocaleString() || "0"}{" "}
+                      {(selectedReward.reward?.stars || 0)?.toLocaleString() ||
+                        "0"}{" "}
                       sao
                     </span>
                   </p>

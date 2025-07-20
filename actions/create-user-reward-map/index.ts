@@ -5,7 +5,7 @@ import { createSafeAction } from "@/lib/create-safe-action";
 import { CreateUserRewardMap } from "./schema";
 import { InputType } from "./type";
 import dayjs from "@/lib/dayjs";
-import { getVNTimeForPrisma } from "@/lib/timezone-utils";
+import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
 
 const expirationDuration = 1;
 
@@ -31,13 +31,13 @@ const handler = async (data: InputType): Promise<any> => {
 
   let createUserRewardMap;
 
-  // Verify user exists with correct userId and branch first
-  const user = await db.user.findFirst({
-    where: {
-      userId: userId,
-      branch: branch
-    }
-  });
+  // Verify user exists with correct userId and branch first using raw SQL
+  const users = await db.$queryRaw`
+    SELECT * FROM User 
+    WHERE userId = ${userId} AND branch = ${branch}
+    LIMIT 1
+  `;
+  const user = (users as any[])[0];
   
   if (!user) {
     return {
@@ -53,13 +53,12 @@ const handler = async (data: InputType): Promise<any> => {
   }
 
   // Kiểm tra xem user có đang có yêu cầu đổi thưởng đang chờ duyệt không
-  const pendingRewardExchange = await db.userRewardMap.findFirst({
-    where: {
-      userId: user.id,
-      branch: branch,
-      status: "INITIAL", // Chỉ kiểm tra những yêu cầu đang chờ duyệt
-    },
-  });
+  const pendingRewardExchanges = await db.$queryRaw`
+    SELECT * FROM UserRewardMap 
+    WHERE userId = ${user.id} AND branch = ${branch} AND status = 'INITIAL'
+    LIMIT 1
+  `;
+  const pendingRewardExchange = (pendingRewardExchanges as any[])[0];
 
   if (pendingRewardExchange) {
     return {
@@ -68,9 +67,10 @@ const handler = async (data: InputType): Promise<any> => {
   }
 
   // Tìm reward trước để lấy name
-  const reward = await db.reward.findUnique({
-    where: { id: rewardId }
-  });
+  const rewards = await db.$queryRaw`
+    SELECT * FROM Reward WHERE id = ${rewardId}
+  `;
+  const reward = (rewards as any[])[0];
 
   if (!reward) {
     return {
@@ -79,13 +79,12 @@ const handler = async (data: InputType): Promise<any> => {
   }
 
   // Tìm promotionCode hợp lệ - tìm theo name của reward và branch
-  const promotion = await db.promotionCode.findFirst({
-    where: { 
-      name: reward.name,
-      branch: branch, 
-      isUsed: false 
-    },
-  });
+  const promotions = await db.$queryRaw`
+    SELECT * FROM PromotionCode 
+    WHERE name = ${reward.name} AND branch = ${branch} AND isUsed = false
+    LIMIT 1
+  `;
+  const promotion = (promotions as any[])[0];
 
   console.log("promotion found:", promotion);
 
@@ -96,38 +95,37 @@ const handler = async (data: InputType): Promise<any> => {
         console.log("Updating promotionCode with id:", id);
         
         // Update promotionCode: set isUsed = true
-        await tx.promotionCode.update({
-          where: { id },
-          data: {
-            isUsed: true,
-            updatedAt: getVNTimeForPrisma(),
-          },
-        });
+        await tx.$executeRaw`
+          UPDATE PromotionCode 
+          SET isUsed = true, updatedAt = ${getCurrentTimeVNISO()}
+          WHERE id = ${id}
+        `;
         
         console.log("Creating userRewardMap...");
         // Insert vào userRewardMap với internal id của user để relation đúng
-        createUserRewardMap = await tx.userRewardMap.create({
-          data: {
-            userId: user.id, // Sử dụng internal id của user để relation đúng
-            rewardId,
-            promotionCodeId: id,
-            duration,
-            isUsed,
-            branch,
-            createdAt: getVNTimeForPrisma(),
-          },
-        });
+        await tx.$executeRaw`
+          INSERT INTO UserRewardMap (userId, rewardId, promotionCodeId, duration, isUsed, branch, createdAt, updatedAt)
+          VALUES (${user.id}, ${rewardId}, ${id}, ${duration}, ${isUsed}, ${branch}, ${getCurrentTimeVNISO()}, ${getCurrentTimeVNISO()})
+        `;
+        
+        // Get the inserted record ID
+        const userRewardMapResults = await tx.$queryRaw`SELECT LAST_INSERT_ID() as id`;
+        const userRewardMapId = (userRewardMapResults as any[])[0]?.id;
+        
+        // Get the full userRewardMap record
+        const userRewardMapRecords = await tx.$queryRaw`
+          SELECT * FROM UserRewardMap WHERE id = ${userRewardMapId}
+        `;
+        createUserRewardMap = (userRewardMapRecords as any[])[0];
         
         console.log("userRewardMap created:", createUserRewardMap);
         
         // Update số sao trong table User
-        await tx.user.update({
-          where: { id: user.id },
-          data: {
-            stars: newStars,
-            updatedAt: getVNTimeForPrisma(),
-          },
-        });
+        await tx.$executeRaw`
+          UPDATE User 
+          SET stars = ${newStars}, updatedAt = ${getCurrentTimeVNISO()}
+          WHERE id = ${user.id}
+        `;
         
         console.log(`Updated user stars from ${oldStars} to ${newStars}`);
       });

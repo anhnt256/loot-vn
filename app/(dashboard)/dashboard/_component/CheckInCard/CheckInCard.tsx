@@ -46,7 +46,6 @@ const CheckInCard = () => {
         toast.error("Lỗi khi nhận thưởng!");
       }
       setIsChecking(false);
-      window.location.reload();
     }
   }, [rewards, claim, isChecking, executeCheckIn, userId]);
 

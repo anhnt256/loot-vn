@@ -7,19 +7,21 @@ export async function GET(
   { params }: { params: { branch: string } },
 ) {
   try {
-    const rewards: any = await db.reward.findMany();
+    const rewards: any = await db.$queryRaw<any[]>`
+      SELECT * FROM Reward
+    `;
 
     if (rewards.length > 0) {
       await Promise.all(
         rewards.map(async (reward: any, index: number) => {
           const { value } = reward;
-          rewards[index].totalPromotion = await db.promotionCode.count({
-            where: {
-              value: value,
-              isUsed: false,
-              branch: params.branch,
-            },
-          });
+          const countResult = await db.$queryRaw<any[]>`
+            SELECT COUNT(*) as count FROM PromotionCode 
+            WHERE value = ${value} 
+            AND isUsed = false 
+            AND branch = ${params.branch}
+          `;
+          rewards[index].totalPromotion = Number(countResult[0].count);
         }),
       );
     }

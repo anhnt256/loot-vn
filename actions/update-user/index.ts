@@ -9,24 +9,60 @@ import apiClient from "@/lib/apiClient";
 import { MIN_LOGIN_TIME } from "@/constants/constant";
 import { checkReward } from "@/lib/utils";
 import dayjs from "dayjs";
-import { getVNTimeForPrisma } from "@/lib/timezone-utils";
+import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
   const { id, rankId, magicStone, userId, stars, branch, userName, mission } = data;
 
   try {
-    // Update user in database
-    const updatedUser = await db.user.update({
-      where: { id },
-      data: {
-        rankId: rankId !== undefined ? rankId : undefined,
-        magicStone: magicStone !== undefined ? magicStone : undefined,
-        stars: stars !== undefined ? stars : undefined,
-        branch: branch !== undefined ? branch : undefined,
-        userName: userName !== undefined ? userName : undefined,
-        updatedAt: getVNTimeForPrisma(),
-      },
-    });
+    // Build dynamic update query
+    const updateFields = [];
+    const updateValues = [];
+    let paramIndex = 1;
+
+    if (rankId !== undefined) {
+      updateFields.push(`rankId = $${paramIndex++}`);
+      updateValues.push(rankId);
+    }
+    if (magicStone !== undefined) {
+      updateFields.push(`magicStone = $${paramIndex++}`);
+      updateValues.push(magicStone);
+    }
+    if (stars !== undefined) {
+      updateFields.push(`stars = $${paramIndex++}`);
+      updateValues.push(stars);
+    }
+    if (branch !== undefined) {
+      updateFields.push(`branch = $${paramIndex++}`);
+      updateValues.push(branch);
+    }
+    if (userName !== undefined) {
+      updateFields.push(`userName = $${paramIndex++}`);
+      updateValues.push(userName);
+    }
+
+    // Always update updatedAt
+    updateFields.push(`updatedAt = NOW()`);
+
+    if (updateFields.length === 0) {
+      return { error: "No fields to update" };
+    }
+
+    const updateQuery = `
+      UPDATE User 
+      SET ${updateFields.join(', ')}
+      WHERE id = $${paramIndex}
+    `;
+    updateValues.push(id);
+
+    // Update user in database using raw SQL
+    await db.$executeRawUnsafe(updateQuery, ...updateValues);
+
+    // Get the updated user
+    const result = await db.$queryRawUnsafe(`
+      SELECT * FROM User WHERE id = $1
+    `, id);
+    const updatedUser = (result as any[])[0];
 
     return { data: updatedUser };
   } catch (error: any) {

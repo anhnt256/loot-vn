@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { GiftRoundForm } from "./_components/gift-round-form";
 import { toast } from "sonner";
-import { Table } from "antd";
+import { Table, Select } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import Cookies from "js-cookie";
+import "../admin-tabs.css";
 
 interface GiftRound {
   id: number;
@@ -15,9 +17,7 @@ interface GiftRound {
   createdAt: string;
   expiredAt: string | null;
   isUsed: boolean;
-  user: {
-    userName: string | null;
-  };
+  branch: string;
 }
 
 export default function GiftRoundsPage() {
@@ -27,14 +27,25 @@ export default function GiftRoundsPage() {
   const [selectedGiftRound, setSelectedGiftRound] = useState<GiftRound | null>(
     null,
   );
+  const [selectedBranch, setSelectedBranch] = useState("GO_VAP");
 
   const columns: ColumnsType<GiftRound> = [
     {
-      title: "Người dùng",
-      dataIndex: ["user", "userName"],
-      key: "userName",
-      render: (text: string) => (
+      title: "User ID",
+      dataIndex: "userId",
+      key: "userId",
+      render: (text: number) => (
         <span className="text-sm font-medium text-gray-900">{text}</span>
+      ),
+    },
+    {
+      title: "Branch",
+      dataIndex: "branch",
+      key: "branch",
+      render: (text: string) => (
+        <span className="text-sm text-gray-900">
+          {text === "GO_VAP" ? "Gò Vấp" : "Tân Phú"}
+        </span>
       ),
     },
     {
@@ -99,6 +110,12 @@ export default function GiftRoundsPage() {
     },
   ];
 
+  // Initialize branch from cookie
+  useEffect(() => {
+    const branch = Cookies.get("branch");
+    if (branch) setSelectedBranch(branch);
+  }, []);
+
   // Fetch gift rounds
   const fetchGiftRounds = async () => {
     try {
@@ -122,6 +139,13 @@ export default function GiftRoundsPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Handle branch change
+  const handleBranchChange = async (value: string) => {
+    setSelectedBranch(value);
+    Cookies.set("branch", value, { path: "/" });
+    await fetchGiftRounds(); // Refresh data for the selected branch
   };
 
   // Delete gift round
@@ -166,9 +190,38 @@ export default function GiftRoundsPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-white">Quản lý lượt chơi</h2>
+        <div className="flex items-center gap-4">
+          <h2 className="text-2xl font-bold text-white">Quản lý lượt chơi</h2>
+          <Select
+            value={selectedBranch}
+            onChange={handleBranchChange}
+            className="w-40 dark custom-branch-select"
+            options={[
+              { value: "GO_VAP", label: "Gò Vấp" },
+              { value: "TAN_PHU", label: "Tân Phú" },
+            ]}
+            style={{
+              backgroundColor: "#23272f",
+              borderColor: "#374151",
+              color: "#fff",
+              fontWeight: 600,
+            }}
+            dropdownStyle={{
+              backgroundColor: "#23272f",
+              color: "#fff",
+              border: "1px solid #374151",
+              borderRadius: 8,
+              padding: 0,
+            }}
+            popupClassName="custom-branch-dropdown"
+            optionLabelProp="label"
+          />
+        </div>
         <button
-          onClick={() => setShowForm(true)}
+          onClick={() => {
+            console.log("Opening form modal");
+            setShowForm(true);
+          }}
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
         >
           Tặng lượt mới
@@ -177,8 +230,17 @@ export default function GiftRoundsPage() {
 
       {/* Form modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg w-full max-w-md">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              console.log("Clicking outside modal to close");
+              setShowForm(false);
+              setSelectedGiftRound(null);
+            }
+          }}
+        >
+          <div className="bg-white p-6 rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-medium mb-4">
               {selectedGiftRound ? "Cập nhật lượt chơi" : "Tặng lượt mới"}
             </h3>
@@ -186,6 +248,7 @@ export default function GiftRoundsPage() {
               initialData={selectedGiftRound || undefined}
               onSuccess={handleFormSuccess}
               onCancel={() => {
+                console.log("Closing form modal");
                 setShowForm(false);
                 setSelectedGiftRound(null);
               }}

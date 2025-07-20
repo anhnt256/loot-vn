@@ -102,16 +102,16 @@ export async function POST(req: Request, res: Response): Promise<any> {
     });
 
     // Kiểm tra user đã tồn tại trong hệ thống
-    const existingUser = await db.user.findFirst({
-      where: {
-        userId: Number(userId),
-        branch: branchFromCookie,
-      },
-    });
+    const existingUser = await db.$queryRaw<any[]>`
+      SELECT * FROM User 
+      WHERE userId = ${Number(userId)} 
+      AND branch = ${branchFromCookie}
+      LIMIT 1
+    `;
 
     let userUpdated;
 
-    if (!existingUser) {
+    if (existingUser.length === 0) {
       // Nếu có username, tạo user mới
       if (userName && userName.trim()) {
         // Validation username
@@ -215,14 +215,14 @@ export async function POST(req: Request, res: Response): Promise<any> {
         }
 
         // Kiểm tra username đã tồn tại chưa
-        const existingUsername = await db.user.findFirst({
-          where: {
-            userName: trimmedUsername,
-            branch: branchFromCookie,
-          },
-        });
+        const existingUsername = await db.$queryRaw<any[]>`
+          SELECT * FROM User 
+          WHERE userName = ${trimmedUsername} 
+          AND branch = ${branchFromCookie}
+          LIMIT 1
+        `;
 
-        if (existingUsername) {
+        if (existingUsername.length > 0) {
           return NextResponse.json(
             {
               statusCode: 409,
@@ -235,17 +235,29 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
         // Tạo user mới
         try {
-          userUpdated = await db.user.create({
-            data: {
-              userName: trimmedUsername,
-              userId: Number(userId),
-              branch: branchFromCookie || "",
-              rankId: 1,
-              stars: 0,
-              magicStone: 0,
-              createdAt: dayjs().tz("Asia/Ho_Chi_Minh").toISOString(),
-            },
-          });
+          await db.$executeRaw`
+            INSERT INTO User (userName, userId, branch, rankId, stars, magicStone, createdAt, updatedAt)
+            VALUES (
+              ${trimmedUsername},
+              ${Number(userId)},
+              ${branchFromCookie || ""},
+              ${1},
+              ${0},
+              ${0},
+              NOW(),
+              NOW()
+            )
+          `;
+
+          // Get the created user
+          const newUser = await db.$queryRaw<any[]>`
+            SELECT * FROM User 
+            WHERE userName = ${trimmedUsername} 
+            AND branch = ${branchFromCookie || ""}
+            ORDER BY id DESC
+            LIMIT 1
+          `;
+          userUpdated = newUser[0];
 
           // Gọi user-calculator để lấy thông tin chi tiết
           let userCalculatorData = null;
@@ -321,12 +333,19 @@ export async function POST(req: Request, res: Response): Promise<any> {
       }
     } else {
       // Cập nhật thông tin user nếu cần
-      userUpdated = await db.user.update({
-        where: { id: existingUser.id },
-        data: {
-          userId: userId,
-        },
-      });
+      await db.$executeRaw`
+        UPDATE User 
+        SET userId = ${userId}, updatedAt = NOW()
+        WHERE id = ${existingUser[0].id}
+      `;
+
+      // Get the updated user
+      const updatedUser = await db.$queryRaw<any[]>`
+        SELECT * FROM User 
+        WHERE id = ${existingUser[0].id}
+        LIMIT 1
+      `;
+      userUpdated = updatedUser[0];
     }
 
     // Gọi user-calculator để lấy thông tin chi tiết cho user đã tồn tại

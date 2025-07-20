@@ -5,30 +5,27 @@ import dayjs from "@/lib/dayjs";
 
 export async function GET() {
   try {
-    const lastJackPotDate = await db.gameResult.findFirst({
-      where: {
-        itemId: 8,
-      },
-      select: {
-        createdAt: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    const lastJackPotDate = await db.$queryRaw<any[]>`
+      SELECT createdAt FROM GameResult 
+      WHERE itemId = 8
+      ORDER BY createdAt DESC
+      LIMIT 1
+    `;
 
-    const totalRound = await db.gameResult.count({
-      where: {
-        ...(lastJackPotDate?.createdAt && {
-          createdAt: {
-            gt: lastJackPotDate.createdAt,
-          },
-        }),
-      },
-      orderBy: {
-        createdAt: "asc",
-      },
-    });
+    let totalRound;
+    if (lastJackPotDate.length > 0) {
+      const totalRoundResult = await db.$queryRaw<any[]>`
+        SELECT COUNT(*) as count FROM GameResult 
+        WHERE createdAt > ${lastJackPotDate[0].createdAt}
+        ORDER BY createdAt ASC
+      `;
+      totalRound = Number(totalRoundResult[0].count);
+    } else {
+      const totalRoundResult = await db.$queryRaw<any[]>`
+        SELECT COUNT(*) as count FROM GameResult
+      `;
+      totalRound = Number(totalRoundResult[0].count);
+    }
 
     const ROUND_COST = 30000; // 30000 một vòng quay
     const RATE = 0.015; // 1.5%

@@ -24,40 +24,41 @@ export async function POST(req: NextRequest) {
     }
 
     // Xóa toàn bộ tài khoản có userName = user.userName
-    const deletedUsers = await db.user.deleteMany({
-      where: {
-        userName: user.userName.toString(),
-        branch: branchFromCookie,
-      },
-    });
+    const deletedResult = await db.$executeRaw`
+      DELETE FROM User 
+      WHERE userName = ${user.userName.toString()} 
+      AND branch = ${branchFromCookie}
+    `;
 
     // Tạo lại user mới với tham số từ user
-    const newUser = await db.user.create({
-      data: {
-        userId: user.userId,
-        userName: user.userName || user.userId.toString(),
-        stars: user.stars || 0,
-        branch: branchFromCookie,
-        rankId: user.rankId || 1, // Default rankId
-        magicStone: user.magicStone || 0,
-        totalPayment: user.totalPayment || 0,
-        createdAt: getCurrentTimeVNISO(),
-        updatedAt: getCurrentTimeVNISO(),
-      },
-    });
+    await db.$executeRaw`
+      INSERT INTO User (userId, userName, stars, branch, rankId, magicStone, totalPayment, createdAt, updatedAt)
+      VALUES (
+        ${user.userId},
+        ${user.userName || user.userId.toString()},
+        ${user.stars || 0},
+        ${branchFromCookie},
+        ${user.rankId || 1},
+        ${user.magicStone || 0},
+        ${user.totalPayment || 0},
+        NOW(),
+        NOW()
+      )
+    `;
+
+    // Get the created user
+    const newUser = await db.$queryRaw<any[]>`
+      SELECT id, userId, userName, stars, branch, createdAt, updatedAt FROM User 
+      WHERE userId = ${user.userId} 
+      AND branch = ${branchFromCookie}
+      ORDER BY id DESC
+      LIMIT 1
+    `;
 
     return NextResponse.json({
       success: true,
-      deletedCount: deletedUsers.count,
-      newUser: {
-        id: newUser.id,
-        userId: newUser.userId,
-        userName: newUser.userName,
-        stars: newUser.stars,
-        branch: newUser.branch,
-        createdAt: newUser.createdAt,
-        updatedAt: newUser.updatedAt,
-      },
+      deletedCount: deletedResult,
+      newUser: newUser[0],
     });
   } catch (e: any) {
     console.error("Reset error:", e);

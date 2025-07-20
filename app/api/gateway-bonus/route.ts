@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import dayjs from "@/lib/dayjs";
-import { getVNTimeForPrisma } from "@/lib/timezone-utils";
+import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
 
 // GET endpoint để kiểm tra trạng thái Gateway Bonus
 export async function GET(request: NextRequest) {
@@ -50,16 +50,16 @@ export async function GET(request: NextRequest) {
     }
 
     // Tìm user theo userId và branch
-    const user = await db.user.findFirst({
-      where: {
-        userId: parseInt(userId),
-        branch: branch,
-      },
-    });
+    const user = await db.$queryRaw<any[]>`
+      SELECT * FROM User 
+      WHERE userId = ${parseInt(userId)} 
+      AND branch = ${branch}
+      LIMIT 1
+    `;
 
-    console.log(user);
+    console.log(user[0]);
 
-    if (!user) {
+    if (user.length === 0) {
       return NextResponse.json(
         {
           error: "User not found",
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Kiểm tra ngày tạo tài khoản
-    const userCreatedAt = dayjs(user.createdAt).utcOffset(7);
+    const userCreatedAt = dayjs(user[0].createdAt).utcOffset(7);
     if (userCreatedAt.isAfter(accountDeadline)) {
       return NextResponse.json({
         available: false,
@@ -80,14 +80,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Kiểm tra xem user đã claim chưa
-    const existingClaim = await db.giftRound.findFirst({
-      where: {
-        userId: parseInt(userId),
-        reason: "Gateway Bonus",
-      },
-    });
+    const existingClaim = await db.$queryRaw<any[]>`
+      SELECT * FROM GiftRound 
+      WHERE userId = ${parseInt(userId)} 
+      AND reason = 'Gateway Bonus'
+      LIMIT 1
+    `;
 
-    if (existingClaim) {
+    if (existingClaim.length > 0) {
       return NextResponse.json({
         available: false,
         reason: "already_claimed",
@@ -143,12 +143,12 @@ export async function POST(request: NextRequest) {
     const claimDeadline = process.env.GATEWAY_BONUS_DEADLINE || "2025-07-15";
     const accountCreationDeadline = "2025-07-05";
 
-    const now = getVNTimeForPrisma();
+    const now = dayjs().tz("Asia/Ho_Chi_Minh");
     const deadline = dayjs(claimDeadline).utcOffset(7).endOf("day");
     const accountDeadline = dayjs(accountCreationDeadline).utcOffset(7);
 
     // Kiểm tra xem đã qua ngày hết hạn chưa
-    if (dayjs(now).isAfter(dayjs(deadline))) {
+    if (now.isAfter(dayjs(deadline))) {
       return NextResponse.json(
         {
           error: "Chương trình Gateway Bonus đã kết thúc",
@@ -158,14 +158,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Tìm user theo userId và branch
-    const user = await db.user.findFirst({
-      where: {
-        userId: parseInt(userId),
-        branch: branch,
-      },
-    });
+    const user = await db.$queryRaw<any[]>`
+      SELECT * FROM User 
+      WHERE userId = ${parseInt(userId)} 
+      AND branch = ${branch}
+      LIMIT 1
+    `;
 
-    if (!user) {
+    if (user.length === 0) {
       return NextResponse.json(
         {
           error: "User not found",
@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Kiểm tra ngày tạo tài khoản
-    const userCreatedAt = dayjs(user.createdAt).utcOffset(7);
+    const userCreatedAt = dayjs(user[0].createdAt).utcOffset(7);
     if (userCreatedAt.isAfter(accountDeadline)) {
       return NextResponse.json(
         {
@@ -187,14 +187,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Kiểm tra xem user đã claim chưa
-    const existingClaim = await db.giftRound.findFirst({
-      where: {
-        userId: parseInt(userId),
-        reason: "Gateway Bonus",
-      },
-    });
+    const existingClaim = await db.$queryRaw<any[]>`
+      SELECT * FROM GiftRound 
+      WHERE userId = ${parseInt(userId)} 
+      AND reason = 'Gateway Bonus'
+      LIMIT 1
+    `;
 
-    if (existingClaim) {
+    if (existingClaim.length > 0) {
       return NextResponse.json(
         {
           error: "Bạn đã nhận Gateway Bonus rồi",
@@ -204,36 +204,44 @@ export async function POST(request: NextRequest) {
     }
 
     // Tính ngày hết hạn là 1 tuần từ ngày hiện tại
-    const expirationDate = dayjs(now).add(1, "week").toDate();
+    const expirationDate = now.add(1, "week").toDate();
 
     // Tạo gift round mới
-    const giftRound = await db.giftRound.create({
-      data: {
-        userId: parseInt(userId),
-        amount: 3, // 3 lượt quay miễn phí
-        reason: "Gateway Bonus",
-        staffId: 0, // System
-        branch: branch,
-        createdAt: getVNTimeForPrisma(),
-        expiredAt: expirationDate, // Hết hạn sau 1 tuần
-        isUsed: false,
-      },
-    });
+    await db.$executeRaw`
+      INSERT INTO GiftRound (userId, amount, reason, staffId, branch, createdAt, expiredAt, isUsed, updatedAt)
+      VALUES (
+        ${parseInt(userId)},
+        ${3},
+        ${"Gateway Bonus"},
+        ${0},
+        ${branch},
+        NOW(),
+        ${expirationDate},
+        ${false},
+        NOW()
+      )
+    `;
+
+    // Get the created gift round
+    const giftRound = await db.$queryRaw<any[]>`
+      SELECT * FROM GiftRound 
+      WHERE userId = ${parseInt(userId)} 
+      AND reason = 'Gateway Bonus'
+      ORDER BY id DESC
+      LIMIT 1
+    `;
 
     // Cập nhật magicStone của user
-    await db.user.update({
-      where: { id: user.id },
-      data: {
-        magicStone: {
-          increment: 3,
-        },
-      },
-    });
+    await db.$executeRaw`
+      UPDATE User 
+      SET magicStone = magicStone + 3, updatedAt = NOW()
+      WHERE id = ${user[0].id}
+    `;
 
     return NextResponse.json({
       success: true,
       message: "Nhận Gateway Bonus thành công!",
-      giftRound,
+      giftRound: giftRound[0],
     });
   } catch (error) {
     console.error("Gateway Bonus POST error:", error);
