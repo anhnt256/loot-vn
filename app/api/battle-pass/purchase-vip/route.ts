@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { calculateLevel } from "@/lib/battle-pass-utils";
-import { getCurrentDateForPrisma } from "@/lib/timezone-utils";
+import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
 
 export async function POST(request: Request) {
   try {
@@ -45,20 +45,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid duration" }, { status: 400 });
     }
 
-    console.log("Purchase VIP - Looking for current season");
-    const currentSeason = await db.battlePassSeason.findFirst({
-      where: {
-        isActive: true,
-        startDate: {
-          lte: getCurrentDateForPrisma(),
-        },
-        endDate: {
-          gte: getCurrentDateForPrisma(),
-        },
-      },
-    });
+    const currentSeasons = await db.$queryRaw<any[]>`
+      SELECT * FROM BattlePassSeason 
+      WHERE isActive = true
+        AND startDate <= DATE(${getCurrentTimeVNISO()})
+        AND endDate >= DATE(${getCurrentTimeVNISO()})
+      LIMIT 1
+    `;
 
-    console.log("Purchase VIP - Current season:", currentSeason);
+    const currentSeason = currentSeasons[0];
 
     if (!currentSeason) {
       console.log("Purchase VIP - No active season found");
@@ -72,28 +67,42 @@ export async function POST(request: Request) {
     const expiryDate = new Date();
     expiryDate.setDate(expiryDate.getDate() + duration);
 
-    console.log("Purchase VIP - Updating user progress");
-    // Update or create user progress
-    const userProgress = await db.userBattlePass.upsert({
-      where: {
-        userId_seasonId: {
-          userId: userId,
-          seasonId: currentSeason.id,
-        },
-      },
-      update: {
-        isPremium: true,
-      },
-      create: {
-        userId: userId,
-        seasonId: currentSeason.id,
-        level: calculateLevel(0, currentSeason.maxLevel), // Level 1 cho user mới (0 experience)
-        experience: 0,
-        isPremium: true,
-        totalSpent: 0,
-        branch: branch,
-      },
-    });
+    // Check if user progress exists
+    const existingProgress = await db.$queryRaw<any[]>`
+      SELECT * FROM UserBattlePass 
+      WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id}
+      LIMIT 1
+    `;
+
+    let userProgress;
+    if (existingProgress.length > 0) {
+      // Update existing progress
+      await db.$executeRaw`
+        UPDATE UserBattlePass 
+        SET isPremium = true, updatedAt = ${getCurrentTimeVNISO()}
+        WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id}
+      `;
+
+      const updatedProgress = await db.$queryRaw<any[]>`
+        SELECT * FROM UserBattlePass 
+        WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id}
+        LIMIT 1
+      `;
+      userProgress = updatedProgress[0];
+    } else {
+      // Create new progress
+      await db.$executeRaw`
+        INSERT INTO UserBattlePass (userId, seasonId, level, experience, isPremium, totalSpent, branch, createdAt, updatedAt)
+        VALUES (${decoded.userId}, ${currentSeason.id}, ${calculateLevel(0, currentSeason.maxLevel)}, 0, true, 0, 'GO_VAP', ${getCurrentTimeVNISO()}, ${getCurrentTimeVNISO()})
+      `;
+
+      const newProgress = await db.$queryRaw<any[]>`
+        SELECT * FROM UserBattlePass 
+        WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id}
+        LIMIT 1
+      `;
+      userProgress = newProgress[0];
+    }
 
     console.log("Purchase VIP - User progress updated:", userProgress);
     console.log("Purchase VIP - Success, returning response");

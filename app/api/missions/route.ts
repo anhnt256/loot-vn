@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
-import { getCurrentDateVN, getVNStartOfDayForPrisma } from "@/lib/timezone-utils";
+import { getCurrentTimeVNISO, getStartOfDayVNISO, getCurrentDateVNString } from "@/lib/timezone-utils";
 import { calculateDailyUsageHours, calculateMissionUsageHours } from "@/lib/battle-pass-utils";
 import { cookies } from "next/headers";
 
@@ -23,35 +23,28 @@ export async function GET(request: Request) {
     const cookieStore = await cookies();
     const branch = cookieStore.get("branch")?.value || "GO_VAP";
 
-    // Get all missions
-    const missions = await db.mission.findMany({
-      orderBy: { id: "asc" },
-    });
+    // Get all missions using raw SQL
+    const missions = await db.$queryRaw<any[]>`
+      SELECT * FROM Mission ORDER BY id ASC
+    `;
 
-    // Get today's date in fnet format
-    const todayDate = getCurrentDateVN();
-    const yyyy = todayDate.getFullYear();
-    const mm = String(todayDate.getMonth() + 1).padStart(2, "0");
-    const dd = String(todayDate.getDate()).padStart(2, "0");
-    const curDate = `${yyyy}-${mm}-${dd}`;
+    // Get today's date in fnet format using ISO function
+    const curDate = getCurrentDateVNString();
 
     // Get fnet database connection
     const fnetDB = await getFnetDB();
     const fnetPrisma = await getFnetPrisma();
 
-    // Get today's start for completion check
-    const today = getVNStartOfDayForPrisma();
+    // Get today's start for completion check using ISO function
+    const todayStartISO = getStartOfDayVNISO();
 
-    // Get user's completion records for today
-    const userCompletions = await db.userMissionCompletion.findMany({
-      where: {
-        userId: userId,
-        branch: branch,
-        createdAt: {
-          gte: today,
-        },
-      },
-    });
+    // Get user's completion records for today using raw SQL
+    const userCompletions = await db.$queryRaw<any[]>`
+      SELECT * FROM UserMissionCompletion 
+      WHERE userId = ${userId} 
+        AND branch = ${branch} 
+        AND createdAt >= ${todayStartISO}
+    `;
 
     // Create a map of completed mission IDs
     const completedMissionIds = new Set(userCompletions.map(c => c.missionId));
@@ -92,8 +85,6 @@ export async function GET(request: Request) {
         AND ServeDate = ${curDate}
     `);
     const topupProgress = parseFloat(topupPayments[0]?.total?.toString() || "0");
-
- 
 
     // Enhance missions with user progress and completion status
     const missionsWithProgress = missions.map(mission => {

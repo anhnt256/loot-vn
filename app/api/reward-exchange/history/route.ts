@@ -59,10 +59,17 @@ export async function GET(request: Request) {
       FROM UserRewardMap urm
       LEFT JOIN Reward r ON urm.rewardId = r.id
       LEFT JOIN User u ON urm.userId = u.id AND u.branch = '${branch}'
-      LEFT JOIN UserStarHistory ush ON ush.targetId = urm.id 
-        AND ush.branch = '${branch}' 
-        AND ush.type = 'REWARD'
-        AND urm.status = 'APPROVE'
+      LEFT JOIN (
+        SELECT ush1.*
+        FROM UserStarHistory ush1
+        INNER JOIN (
+          SELECT targetId, MAX(createdAt) as maxCreatedAt
+          FROM UserStarHistory
+          WHERE branch = '${branch}' AND type = 'REWARD'
+          GROUP BY targetId
+        ) ush2 ON ush1.targetId = ush2.targetId AND ush1.createdAt = ush2.maxCreatedAt
+        WHERE ush1.branch = '${branch}' AND ush1.type = 'REWARD'
+      ) ush ON ush.targetId = urm.id
       WHERE urm.branch = '${branch}'
         ${dateFilter}
         ${statusFilter}

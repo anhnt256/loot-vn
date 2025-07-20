@@ -7,7 +7,7 @@ import { Prisma } from "@/prisma/generated/prisma-client";
 import { calculateDailyUsageMinutes } from "@/lib/battle-pass-utils";
 import {
   getStartOfDayVNISO,
-  getCurrentDateVNString,
+  getCurrentTimeVNISO,
   getStartOfWeekVNISO,
   getEndOfWeekVNISO,
 } from "@/lib/timezone-utils";
@@ -38,8 +38,8 @@ export async function GET() {
   const branchFromCookie = cookieStore.get("branch")?.value;
 
   const startOfDayVN = getStartOfDayVNISO();
-  const today = getCurrentDateVNString();
-  const [yyyy, mm, dd] = today.split("-");
+  const today = getCurrentTimeVNISO();
+  const [yyyy, mm, dd] = today.split("T")[0].split("-");
   const curDate = `${yyyy}-${mm}-${dd}`;
 
   try {

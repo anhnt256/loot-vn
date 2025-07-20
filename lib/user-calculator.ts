@@ -6,7 +6,6 @@ import {
   getStartOfWeekVNISO,
   getEndOfWeekVNISO,
   getCurrentDayOfWeekVN,
-  getCurrentDateVNString,
 } from "@/lib/timezone-utils";
 
 export interface UserInfo {
@@ -104,7 +103,7 @@ export async function calculateActiveUsersInfo(
 
     // Sử dụng các hàm từ timezone-utils để đảm bảo tính nhất quán
     const startOfDayVN = getStartOfDayVNISO();
-    const curDate = getCurrentDateVNString();
+    const curDate = getCurrentTimeVNISO().split("T")[0];
 
     // Tạo các thời gian khác từ timezone-utils
     const startOfWeekVN = getStartOfWeekVNISO();

@@ -241,6 +241,7 @@ export const getCurrentTimeVN = () => {
 };
 
 /**
+ * @deprecated Use getCurrentTimeVNISO from timezone-utils instead
  * Lấy ngày hiện tại theo timezone Vietnam
  * @returns Chuỗi ngày theo format YYYY-MM-DD
  */

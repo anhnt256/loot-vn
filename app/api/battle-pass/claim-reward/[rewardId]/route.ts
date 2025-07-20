@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getCurrentDateVN } from "@/lib/timezone-utils";
+import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
 
 export async function POST(
   request: Request,
@@ -24,20 +24,15 @@ export async function POST(
     }
 
     // Get current active season
-    const currentSeason = await db.battlePassSeason.findFirst({
-      where: {
-        isActive: true,
-        startDate: {
-          lte: getCurrentDateVN(),
-        },
-        endDate: {
-          gte: getCurrentDateVN(),
-        },
-      },
-      include: {
-        rewards: true,
-      },
-    });
+    const currentSeasons = await db.$queryRaw<any[]>`
+      SELECT * FROM BattlePassSeason 
+      WHERE isActive = true
+        AND startDate <= DATE(${getCurrentTimeVNISO()})
+        AND endDate >= DATE(${getCurrentTimeVNISO()})
+      LIMIT 1
+    `;
+
+    const currentSeason = currentSeasons[0];
 
     if (!currentSeason) {
       return NextResponse.json(
@@ -46,8 +41,18 @@ export async function POST(
       );
     }
 
+    // Get rewards for current season
+    const rewards = await db.$queryRaw<any[]>`
+      SELECT * FROM BattlePassReward 
+      WHERE seasonId = ${currentSeason.id}
+      ORDER BY level ASC
+    `;
+
+    currentSeason.rewards = rewards;
+
     // Double check - ensure season hasn't ended
-    if (getCurrentDateVN() >= new Date(currentSeason.endDate)) {
+    const currentDate = getCurrentTimeVNISO().split("T")[0];
+    if (currentDate >= currentSeason.endDate) {
       return NextResponse.json(
         { error: "Season has ended - cannot claim rewards" },
         { status: 403 },
@@ -55,19 +60,19 @@ export async function POST(
     }
 
     // Get the reward
-    const reward = currentSeason.rewards.find((r) => r.id === rewardId);
+    const reward = currentSeason.rewards.find((r: any) => r.id === rewardId);
     if (!reward) {
       return NextResponse.json({ error: "Reward not found" }, { status: 404 });
     }
 
     // Get user progress
-    const userProgress = await db.userBattlePass.findFirst({
-      where: {
-        userId: parseInt(decoded.userId),
-        seasonId: currentSeason.id,
-      },
-    });
+    const userProgressResult = await db.$queryRaw<any[]>`
+      SELECT * FROM UserBattlePass 
+      WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id}
+      LIMIT 1
+    `;
 
+    const userProgress = userProgressResult[0];
     if (!userProgress) {
       return NextResponse.json(
         { error: "No progress found for this season" },
@@ -76,13 +81,13 @@ export async function POST(
     }
 
     // Check if reward is already claimed
-    const claimedReward = await db.userBattlePassReward.findFirst({
-      where: {
-        userId: parseInt(decoded.userId),
-        rewardId: rewardId,
-      },
-    });
+    const claimedRewardResult = await db.$queryRaw<any[]>`
+      SELECT * FROM UserBattlePassReward 
+      WHERE userId = ${decoded.userId} AND rewardId = ${rewardId}
+      LIMIT 1
+    `;
 
+    const claimedReward = claimedRewardResult[0];
     if (claimedReward) {
       return NextResponse.json(
         { error: "Reward already claimed" },
@@ -109,13 +114,10 @@ export async function POST(
     }
 
     // Create claimed reward record
-    await db.userBattlePassReward.create({
-      data: {
-        userId: parseInt(decoded.userId),
-        seasonId: currentSeason.id,
-        rewardId: rewardId,
-      },
-    });
+    await db.$executeRaw`
+      INSERT INTO UserBattlePassReward (userId, seasonId, rewardId, createdAt, updatedAt)
+      VALUES (${decoded.userId}, ${currentSeason.id}, ${rewardId}, ${getCurrentTimeVNISO()}, ${getCurrentTimeVNISO()})
+    `;
 
     // TODO: Implement actual reward distribution logic here
     // This could involve:

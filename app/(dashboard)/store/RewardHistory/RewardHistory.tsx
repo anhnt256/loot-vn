@@ -11,18 +11,16 @@ interface RewardHistoryItem {
   updatedAt: string;
   status: "INITIAL" | "APPROVE" | "REJECT";
   note?: string;
-  reward: {
-    id: number;
-    name: string;
-    value: number;
-    stars: number;
-  };
-  promotionCode?: {
-    id: number;
-    code: string;
-    name: string;
-    value: number;
-  };
+  // Reward fields (from API)
+  reward_id?: number;
+  reward_name?: string;
+  reward_value?: number;
+  reward_stars?: number;
+  // PromotionCode fields (from API)
+  promotionCode_id?: number;
+  promotionCode_code?: string;
+  promotionCode_name?: string;
+  promotionCode_value?: number;
 }
 
 interface RewardHistoryResponse {
@@ -234,16 +232,16 @@ const RewardHistory: React.FC<RewardHistoryProps> = ({ userId }) => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2 mb-1">
                       <div
-                        className={`w-8 h-8 ${getRewardIconStyle(item.reward?.stars || 0)} rounded-lg flex items-center justify-center`}
+                        className={`w-8 h-8 ${getRewardIconStyle(item.reward_stars || 0)} rounded-lg flex items-center justify-center`}
                       >
                         <span className="text-white text-sm">⭐</span>
                       </div>
                       <div>
                         <h3 className="font-semibold text-gray-900 text-sm truncate">
-                          {item.reward?.name || "Không xác định"}
+                          {item.reward_name || item.promotionCode_name || "Không xác định"}
                         </h3>
                         <p className="text-xs text-gray-600 font-medium">
-                          {item.reward?.stars?.toLocaleString()}{" "}
+                          {item.reward_stars?.toLocaleString() || item.promotionCode_value?.toLocaleString()}{" "}
                           <span className="text-white text-sm">⭐</span>
                         </p>
                       </div>
