@@ -60,7 +60,7 @@ export async function POST(
     }
 
     // Get the reward
-    const reward = currentSeason.rewards.find((r) => r.id === rewardId);
+    const reward = currentSeason.rewards.find((r: any) => r.id === rewardId);
     if (!reward) {
       return NextResponse.json({ error: "Reward not found" }, { status: 404 });
     }
