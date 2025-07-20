@@ -1,22 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db, getFnetDB } from '@/lib/db';
-import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from "next/server";
+import { db, getFnetDB } from "@/lib/db";
+import { cookies } from "next/headers";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: { userId: string } },
 ) {
   try {
     const cookieStore = await cookies();
-    const branch = cookieStore.get('branch')?.value || 'GO_VAP';
+    const branch = cookieStore.get("branch")?.value || "GO_VAP";
     const userId = parseInt(params.userId);
 
     // Get fnetDB instance
     const fnetDB = await getFnetDB();
 
     // Hard code date range for birthday event: 21/07/2025 to 31/07/2025
-    const startDate = '2025-07-21 00:00:00';
-    const endDate = '2025-07-31 23:59:59';
+    const startDate = "2025-07-21 00:00:00";
+    const endDate = "2025-07-31 23:59:59";
 
     // Get total spent from fnet.paymenttb (real-time data)
     const totalSpentResult = await fnetDB.$queryRawUnsafe<any[]>(`
@@ -88,11 +88,11 @@ export async function GET(
     }
 
     // Build progress array with real-time data
-    const progress = allTiers.map(tier => {
-      const existingRecord = existingProgress.find(p => p.tierId === tier.id);
+    const progress = allTiers.map((tier) => {
+      const existingRecord = existingProgress.find((p) => p.tierId === tier.id);
       const isUnlocked = totalSpent >= tier.milestoneAmount;
       const isClaimed = existingRecord?.isClaimed || false;
-      
+
       return {
         id: existingRecord?.id || null,
         userId,
@@ -111,7 +111,7 @@ export async function GET(
         totalReceived: tier.totalReceived,
         freeSpins: tier.freeSpins,
         isUnlocked,
-        canClaim: isUnlocked && !isClaimed
+        canClaim: isUnlocked && !isClaimed,
       };
     });
 
@@ -121,14 +121,14 @@ export async function GET(
         progress,
         totalSpent,
         allTiers,
-        currentTier
-      }
+        currentTier,
+      },
     });
   } catch (error) {
-    console.error('Error fetching birthday progress:', error);
+    console.error("Error fetching birthday progress:", error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch birthday progress' },
-      { status: 500 }
+      { success: false, error: "Failed to fetch birthday progress" },
+      { status: 500 },
     );
   }
-} 
+}

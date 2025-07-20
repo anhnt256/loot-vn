@@ -55,7 +55,7 @@ interface BirthdayTier {
   tkPhu: number;
   tongNhan: number;
   cumulativeBonusAmount: number; // Cộng dồn bonusAmount
-  cumulativeFreeSpins: number;   // Cộng dồn freeSpins
+  cumulativeFreeSpins: number; // Cộng dồn freeSpins
 }
 
 interface UserProgress {
@@ -164,7 +164,11 @@ export default function BirthdayPage() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("vi-VN").format(amount);
+    return new Intl.NumberFormat("vi-VN", {
+      style: "decimal",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
   };
 
   const getTierStatus = (tier: BirthdayTier) => {
@@ -255,61 +259,127 @@ export default function BirthdayPage() {
             <table className="w-full text-xs border-collapse">
               <thead className="bg-white/50 sticky top-0">
                 <tr>
-                  <th className="border border-gray-300 p-1 text-center">Mốc nạp (VNĐ)</th>
-                  <th className="border border-gray-300 p-1 text-center">% KM</th>
-                  <th className="border border-gray-300 p-1 text-center">Thưởng tại mốc</th>
-                  <th className="border border-gray-300 p-1 text-center">Thưởng (CỘNG DỒN)</th>
-                  <th className="border border-gray-300 p-1 text-center">Lượt quay (CỘNG DỒN)</th>
+                  <th className="border border-gray-300 p-1 text-center">
+                    Mốc nạp (VNĐ)
+                  </th>
+                  <th className="border border-gray-300 p-1 text-center">
+                    % KM
+                  </th>
+                  <th className="border border-gray-300 p-1 text-center">
+                    Thưởng tại mốc
+                  </th>
+                  <th className="border border-gray-300 p-1 text-center">
+                    Thưởng (CỘNG DỒN)
+                  </th>
+                  <th className="border border-gray-300 p-1 text-center">
+                    Lượt quay (CỘNG DỒN)
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 <tr className="bg-white/30">
-                  <td className="border border-gray-300 p-1 text-center font-bold">5.000</td>
-                  <td className="border border-gray-300 p-1 text-center bg-red-100 font-bold">600%</td>
-                  <td className="border border-gray-300 p-1 text-center">30.000₫ + 1q</td>
-                  <td className="border border-gray-300 p-1 text-center">30.000₫</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold">
+                    5.000
+                  </td>
+                  <td className="border border-gray-300 p-1 text-center bg-red-100 font-bold">
+                    600%
+                  </td>
+                  <td className="border border-gray-300 p-1 text-center">
+                    30.000₫ + 1q
+                  </td>
+                  <td className="border border-gray-300 p-1 text-center">
+                    30.000₫
+                  </td>
                   <td className="border border-gray-300 p-1 text-center">1</td>
                 </tr>
                 <tr className="bg-white/30">
-                  <td className="border border-gray-300 p-1 text-center font-bold">10.000</td>
-                  <td className="border border-gray-300 p-1 text-center bg-orange-100 font-bold">500%</td>
-                  <td className="border border-gray-300 p-1 text-center">25.000₫ + 0q</td>
-                  <td className="border border-gray-300 p-1 text-center">55.000₫</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold">
+                    10.000
+                  </td>
+                  <td className="border border-gray-300 p-1 text-center bg-orange-100 font-bold">
+                    500%
+                  </td>
+                  <td className="border border-gray-300 p-1 text-center">
+                    25.000₫ + 0q
+                  </td>
+                  <td className="border border-gray-300 p-1 text-center">
+                    55.000₫
+                  </td>
                   <td className="border border-gray-300 p-1 text-center">1</td>
                 </tr>
                 <tr className="bg-white/30">
-                  <td className="border border-gray-300 p-1 text-center font-bold">20.000</td>
-                  <td className="border border-gray-300 p-1 text-center bg-yellow-100 font-bold">450%</td>
-                  <td className="border border-gray-300 p-1 text-center">45.000₫ + 2q</td>
-                  <td className="border border-gray-300 p-1 text-center">100.000₫</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold">
+                    20.000
+                  </td>
+                  <td className="border border-gray-300 p-1 text-center bg-yellow-100 font-bold">
+                    450%
+                  </td>
+                  <td className="border border-gray-300 p-1 text-center">
+                    45.000₫ + 2q
+                  </td>
+                  <td className="border border-gray-300 p-1 text-center">
+                    100.000₫
+                  </td>
                   <td className="border border-gray-300 p-1 text-center">3</td>
                 </tr>
                 <tr className="bg-white/30">
-                  <td className="border border-gray-300 p-1 text-center font-bold">50.000</td>
-                  <td className="border border-gray-300 p-1 text-center bg-green-100 font-bold">350%</td>
-                  <td className="border border-gray-300 p-1 text-center">105.000₫ + 4q</td>
-                  <td className="border border-gray-300 p-1 text-center">205.000₫</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold">
+                    50.000
+                  </td>
+                  <td className="border border-gray-300 p-1 text-center bg-green-100 font-bold">
+                    350%
+                  </td>
+                  <td className="border border-gray-300 p-1 text-center">
+                    105.000₫ + 4q
+                  </td>
+                  <td className="border border-gray-300 p-1 text-center">
+                    205.000₫
+                  </td>
                   <td className="border border-gray-300 p-1 text-center">7</td>
                 </tr>
                 <tr className="bg-white/30">
-                  <td className="border border-gray-300 p-1 text-center font-bold">100.000</td>
-                  <td className="border border-gray-300 p-1 text-center bg-blue-100 font-bold">250%</td>
-                  <td className="border border-gray-300 p-1 text-center">125.000₫ + 5q</td>
-                  <td className="border border-gray-300 p-1 text-center">330.000₫</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold">
+                    100.000
+                  </td>
+                  <td className="border border-gray-300 p-1 text-center bg-blue-100 font-bold">
+                    250%
+                  </td>
+                  <td className="border border-gray-300 p-1 text-center">
+                    125.000₫ + 5q
+                  </td>
+                  <td className="border border-gray-300 p-1 text-center">
+                    330.000₫
+                  </td>
                   <td className="border border-gray-300 p-1 text-center">12</td>
                 </tr>
                 <tr className="bg-white/30">
-                  <td className="border border-gray-300 p-1 text-center font-bold">200.000</td>
-                  <td className="border border-gray-300 p-1 text-center bg-purple-100 font-bold">220%</td>
-                  <td className="border border-gray-300 p-1 text-center">220.000₫ + 8q</td>
-                  <td className="border border-gray-300 p-1 text-center">550.000₫</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold">
+                    200.000
+                  </td>
+                  <td className="border border-gray-300 p-1 text-center bg-purple-100 font-bold">
+                    220%
+                  </td>
+                  <td className="border border-gray-300 p-1 text-center">
+                    220.000₫ + 8q
+                  </td>
+                  <td className="border border-gray-300 p-1 text-center">
+                    550.000₫
+                  </td>
                   <td className="border border-gray-300 p-1 text-center">20</td>
                 </tr>
                 <tr className="bg-white/30">
-                  <td className="border border-gray-300 p-1 text-center font-bold">500.000</td>
-                  <td className="border border-gray-300 p-1 text-center bg-indigo-100 font-bold">150%</td>
-                  <td className="border border-gray-300 p-1 text-center">450.000₫ + 7q</td>
-                  <td className="border border-gray-300 p-1 text-center">1.000.000₫</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold">
+                    500.000
+                  </td>
+                  <td className="border border-gray-300 p-1 text-center bg-indigo-100 font-bold">
+                    150%
+                  </td>
+                  <td className="border border-gray-300 p-1 text-center">
+                    450.000₫ + 7q
+                  </td>
+                  <td className="border border-gray-300 p-1 text-center">
+                    1.000.000₫
+                  </td>
                   <td className="border border-gray-300 p-1 text-center">27</td>
                 </tr>
               </tbody>
@@ -387,7 +457,7 @@ export default function BirthdayPage() {
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-pink-900 to-purple-900 relative birthday-scroll">
       {/* Custom styles */}
       <style dangerouslySetInnerHTML={{ __html: customStyles }} />
-      
+
       {/* Background decorations */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-10 right-10 w-20 h-20 bg-yellow-400 rounded-full opacity-20 animate-bounce animate-float"></div>
@@ -506,13 +576,17 @@ export default function BirthdayPage() {
                     {/* Nạp - Nhận section */}
                     <div className="grid grid-cols-2 gap-1 mb-2">
                       <div className="flex flex-col items-center justify-center p-1 bg-red-600/30 rounded border border-red-500/50 min-h-[35px]">
-                        <p className="text-red-100 text-xs font-semibold">Nạp</p>
+                        <p className="text-red-100 text-xs font-semibold">
+                          Nạp
+                        </p>
                         <p className="text-red-50 text-xs font-bold">
                           {formatCurrency(tier.milestoneAmount)}
                         </p>
                       </div>
                       <div className="flex flex-col items-center justify-center p-1 bg-green-500/70 rounded border border-green-400 min-h-[35px]">
-                        <p className="text-green-100 text-xs font-semibold">Nhận*</p>
+                        <p className="text-green-100 text-xs font-semibold">
+                          Nhận*
+                        </p>
                         <p className="text-white text-xs font-bold">
                           {formatCurrency(tier.tongNhan)}
                         </p>
@@ -522,19 +596,27 @@ export default function BirthdayPage() {
                     {/* TK chính - TK phụ - Lượt quay */}
                     <div className="grid grid-cols-3 gap-1 mb-2">
                       <div className="flex flex-col items-center justify-center p-1 bg-blue-600/30 rounded border border-blue-500/50 min-h-[35px]">
-                        <p className="text-blue-100 text-xs font-semibold">TK chính</p>
+                        <p className="text-blue-100 text-xs font-semibold">
+                          TK chính
+                        </p>
                         <p className="text-blue-50 text-xs font-bold">
                           {formatCurrency(tier.tkChinh)}
                         </p>
                       </div>
                       <div className="flex flex-col items-center justify-center p-1 bg-indigo-600/30 rounded border border-indigo-500/50 min-h-[35px]">
-                        <p className="text-indigo-100 text-xs font-semibold">TK phụ</p>
+                        <p className="text-indigo-100 text-xs font-semibold">
+                          TK phụ
+                        </p>
                         <p className="text-indigo-50 text-xs font-bold">
-                          {formatCurrency(tier.cumulativeBonusAmount || tier.bonusAmount)}
+                          {formatCurrency(
+                            tier.cumulativeBonusAmount || tier.bonusAmount,
+                          )}
                         </p>
                       </div>
                       <div className="flex flex-col items-center justify-center p-1 bg-amber-600/30 rounded border border-amber-500/50 min-h-[35px]">
-                        <p className="text-amber-100 text-xs font-semibold">Lượt quay</p>
+                        <p className="text-amber-100 text-xs font-semibold">
+                          Lượt quay
+                        </p>
                         <p className="text-amber-50 text-xs font-bold">
                           +{tier.cumulativeFreeSpins || tier.freeSpins}
                         </p>
@@ -629,13 +711,17 @@ export default function BirthdayPage() {
                     {/* Nạp - Nhận section */}
                     <div className="grid grid-cols-2 gap-2 mb-3">
                       <div className="flex flex-col items-center justify-center p-2 bg-red-600/30 rounded border border-red-500/50 min-h-[50px]">
-                        <p className="text-red-100 text-xs font-semibold">Nạp</p>
+                        <p className="text-red-100 text-xs font-semibold">
+                          Nạp
+                        </p>
                         <p className="text-red-50 text-sm font-bold">
                           {formatCurrency(tier.milestoneAmount)}
                         </p>
                       </div>
                       <div className="flex flex-col items-center justify-center p-2 bg-green-500/70 rounded border border-green-400 min-h-[50px]">
-                        <p className="text-green-100 text-xs font-semibold">Nhận*</p>
+                        <p className="text-green-100 text-xs font-semibold">
+                          Nhận*
+                        </p>
                         <p className="text-white text-sm font-bold">
                           {formatCurrency(tier.tongNhan)}
                         </p>
@@ -645,19 +731,27 @@ export default function BirthdayPage() {
                     {/* TK chính - TK phụ - Lượt quay */}
                     <div className="grid grid-cols-3 gap-2 mb-3">
                       <div className="flex flex-col items-center justify-center p-1 bg-blue-600/30 rounded border border-blue-500/50 min-h-[45px]">
-                        <p className="text-blue-100 text-xs font-semibold">TK chính</p>
+                        <p className="text-blue-100 text-xs font-semibold">
+                          TK chính
+                        </p>
                         <p className="text-blue-50 text-xs font-bold">
                           {formatCurrency(tier.tkChinh)}
                         </p>
                       </div>
                       <div className="flex flex-col items-center justify-center p-1 bg-indigo-600/30 rounded border border-indigo-500/50 min-h-[45px]">
-                        <p className="text-indigo-100 text-xs font-semibold">TK phụ</p>
+                        <p className="text-indigo-100 text-xs font-semibold">
+                          TK phụ
+                        </p>
                         <p className="text-indigo-50 text-xs font-bold">
-                          {formatCurrency(tier.cumulativeBonusAmount || tier.bonusAmount)}
+                          {formatCurrency(
+                            tier.cumulativeBonusAmount || tier.bonusAmount,
+                          )}
                         </p>
                       </div>
                       <div className="flex flex-col items-center justify-center p-1 bg-amber-600/30 rounded border border-amber-500/50 min-h-[45px]">
-                        <p className="text-amber-100 text-xs font-semibold">Lượt quay</p>
+                        <p className="text-amber-100 text-xs font-semibold">
+                          Lượt quay
+                        </p>
                         <p className="text-amber-50 text-xs font-bold">
                           +{tier.cumulativeFreeSpins || tier.freeSpins}
                         </p>
@@ -724,7 +818,7 @@ export default function BirthdayPage() {
         {/* Footer note */}
         <div className="text-center mt-4 pb-4">
           <p className="text-white/60 text-xs">
-            * Số tiền "Nhận" là số tiền cộng dồn từ các mốc trước đó
+            * Số tiền &quot;Nhận&quot; là số tiền cộng dồn từ các mốc trước đó
           </p>
         </div>
       </div>

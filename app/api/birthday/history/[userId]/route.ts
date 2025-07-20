@@ -1,27 +1,27 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { cookies } from "next/headers";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: { userId: string } },
 ) {
   try {
     const userId = parseInt(params.userId);
     const cookieStore = await cookies();
-    const branch = cookieStore.get('branch')?.value || 'GO_VAP';
+    const branch = cookieStore.get("branch")?.value || "GO_VAP";
 
     if (!userId || isNaN(userId)) {
       return NextResponse.json(
-        { success: false, error: 'Invalid user ID' },
-        { status: 400 }
+        { success: false, error: "Invalid user ID" },
+        { status: 400 },
       );
     }
 
     if (!branch) {
       return NextResponse.json(
-        { success: false, error: 'Branch not found' },
-        { status: 400 }
+        { success: false, error: "Branch not found" },
+        { status: 400 },
       );
     }
 
@@ -46,14 +46,13 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      data: history
+      data: history,
     });
-
   } catch (error) {
-    console.error('Error fetching birthday history:', error);
+    console.error("Error fetching birthday history:", error);
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
+      { success: false, error: "Internal server error" },
+      { status: 500 },
     );
   }
-} 
+}

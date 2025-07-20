@@ -1,21 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db, getFnetDB } from '@/lib/db';
-import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from "next/server";
+import { db, getFnetDB } from "@/lib/db";
+import { cookies } from "next/headers";
 
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
-    const branch = cookieStore.get('branch')?.value || 'GO_VAP';
+    const branch = cookieStore.get("branch")?.value || "GO_VAP";
     const { userId, tierId } = await request.json();
 
-    console.log('=== BIRTHDAY CLAIM DEBUG ===');
-    console.log('Request data:', { userId, tierId, branch });
+    console.log("=== BIRTHDAY CLAIM DEBUG ===");
+    console.log("Request data:", { userId, tierId, branch });
 
     if (!userId || !tierId) {
-      console.log('Missing userId or tierId');
+      console.log("Missing userId or tierId");
       return NextResponse.json(
-        { success: false, error: 'Missing userId or tierId' },
-        { status: 400 }
+        { success: false, error: "Missing userId or tierId" },
+        { status: 400 },
       );
     }
 
@@ -27,19 +27,19 @@ export async function POST(request: NextRequest) {
         FOR UPDATE
       `;
 
-      console.log('Existing claim check:', existingClaim);
+      console.log("Existing claim check:", existingClaim);
 
       if (existingClaim.length > 0 && existingClaim[0].isClaimed) {
-        console.log('Already claimed this tier');
+        console.log("Already claimed this tier");
         return NextResponse.json(
-          { success: false, error: 'Already claimed this tier' },
-          { status: 400 }
+          { success: false, error: "Already claimed this tier" },
+          { status: 400 },
         );
       }
 
       // Additional check: Verify no recent transactions for this tier (within last 5 minutes)
       // const recentTransactions = await db.$queryRaw<any[]>`
-      //   SELECT COUNT(*) as count FROM BirthdayTransaction 
+      //   SELECT COUNT(*) as count FROM BirthdayTransaction
       //   WHERE userId = ${userId} AND tierId = ${tierId} AND branch = ${branch}
       //   AND createdAt >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)
       // `;
@@ -59,30 +59,30 @@ export async function POST(request: NextRequest) {
         SELECT * FROM BirthdayTier WHERE id = ${tierId}
       `;
 
-      console.log('Tier result:', tierResult);
+      console.log("Tier result:", tierResult);
 
       if (tierResult.length === 0) {
-        console.log('Invalid tier');
+        console.log("Invalid tier");
         return NextResponse.json(
-          { success: false, error: 'Invalid tier' },
-          { status: 400 }
+          { success: false, error: "Invalid tier" },
+          { status: 400 },
         );
       }
 
-    const tier = tierResult[0];
+      const tier = tierResult[0];
 
-    // Get fnetDB instance
-    const fnetDB = await getFnetDB();
-    console.log('FnetDB connected');
+      // Get fnetDB instance
+      const fnetDB = await getFnetDB();
+      console.log("FnetDB connected");
 
-    // Hard code date range for birthday event: 21/07/2025 to 31/07/2025
-    const startDate = '2025-07-21 00:00:00';
-    const endDate = '2025-07-31 23:59:59';
+      // Hard code date range for birthday event: 21/07/2025 to 31/07/2025
+      const startDate = "2025-07-21 00:00:00";
+      const endDate = "2025-07-31 23:59:59";
 
-    console.log('Checking spending from:', startDate, 'to:', endDate);
+      console.log("Checking spending from:", startDate, "to:", endDate);
 
-    // Get total spent from fnet.paymenttb (real-time data) - same logic as progress API
-    const totalSpentResult = await fnetDB.$queryRawUnsafe<any[]>(`
+      // Get total spent from fnet.paymenttb (real-time data) - same logic as progress API
+      const totalSpentResult = await fnetDB.$queryRawUnsafe<any[]>(`
       SELECT 
         COALESCE(CAST(SUM(AutoAmount) AS DECIMAL(18,2)), 0) AS totalSpent
       FROM fnet.paymenttb
@@ -93,67 +93,75 @@ export async function POST(request: NextRequest) {
         AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) <= '${endDate}'
     `);
 
-    const totalSpent = totalSpentResult[0]?.totalSpent || 0;
-    console.log('Total spent:', totalSpent, 'Tier milestone:', tier.milestoneAmount);
-
-    // Check if user meets the milestone requirement
-    if (totalSpent < tier.milestoneAmount) {
-      console.log('Insufficient spending');
-      return NextResponse.json(
-        { success: false, error: 'Insufficient spending to claim this tier' },
-        { status: 400 }
+      const totalSpent = totalSpentResult[0]?.totalSpent || 0;
+      console.log(
+        "Total spent:",
+        totalSpent,
+        "Tier milestone:",
+        tier.milestoneAmount,
       );
-    }
 
-    console.log('Creating/updating user progress...');
+      // Check if user meets the milestone requirement
+      if (totalSpent < tier.milestoneAmount) {
+        console.log("Insufficient spending");
+        return NextResponse.json(
+          { success: false, error: "Insufficient spending to claim this tier" },
+          { status: 400 },
+        );
+      }
 
-    // Create or update user progress
+      console.log("Creating/updating user progress...");
+
+      // Create or update user progress
       if (existingClaim.length > 0) {
-        console.log('Updating existing progress...');
+        console.log("Updating existing progress...");
         await db.$executeRaw`
           UPDATE UserBirthdayProgress 
           SET isClaimed = 1, claimedAt = NOW(), totalSpent = ${totalSpent}
           WHERE userId = ${userId} AND tierId = ${tierId} AND branch = ${branch}
         `;
-        console.log('Updated existing progress successfully');
+        console.log("Updated existing progress successfully");
       } else {
-        console.log('Creating new progress record...');
+        console.log("Creating new progress record...");
         await db.$executeRaw`
           INSERT INTO UserBirthdayProgress (userId, tierId, branch, isClaimed, claimedAt, totalSpent, updatedAt)
           VALUES (${userId}, ${tierId}, ${branch}, 1, NOW(), ${totalSpent}, NOW())
         `;
-        console.log('Created new progress record successfully');
+        console.log("Created new progress record successfully");
       }
 
-      console.log('Recording bonus transaction...');
+      console.log("Recording bonus transaction...");
 
       // Record bonus transaction
       await db.$executeRaw`
         INSERT INTO BirthdayTransaction (userId, branch, amount, tierId, transactionType, description)
         VALUES (${userId}, ${branch}, ${tier.bonusAmount}, ${tierId}, 'BONUS', ${`Birthday bonus for ${tier.tierName}`})
       `;
-      console.log('Bonus transaction recorded successfully');
+      console.log("Bonus transaction recorded successfully");
 
       // Record free spins transaction
       if (tier.freeSpins > 0) {
-        console.log('Recording free spins transaction...');
+        console.log("Recording free spins transaction...");
         await db.$executeRaw`
           INSERT INTO BirthdayTransaction (userId, branch, amount, tierId, transactionType, description)
           VALUES (${userId}, ${branch}, ${tier.freeSpins}, ${tierId}, 'FREE_SPIN', ${`Free spins for ${tier.tierName}`})
         `;
-        console.log('Free spins transaction recorded successfully');
+        console.log("Free spins transaction recorded successfully");
       }
 
       // Create GiftRound for free spins if applicable
       if (tier.freeSpins > 0) {
-        console.log('Creating GiftRound for free spins...');
+        console.log("Creating GiftRound for free spins...");
         // Set expiration date to 3 days from now
         const expirationDate = new Date();
         expirationDate.setDate(expirationDate.getDate() + 3);
-        const expirationDateFormatted = expirationDate.toISOString().slice(0, 19).replace('T', ' ');
+        const expirationDateFormatted = expirationDate
+          .toISOString()
+          .slice(0, 19)
+          .replace("T", " ");
 
-        console.log('GiftRound expiration date:', expirationDateFormatted);
-        
+        console.log("GiftRound expiration date:", expirationDateFormatted);
+
         await db.$executeRaw`
           INSERT INTO GiftRound (userId, amount, reason, staffId, branch, createdAt, expiredAt, isUsed, usedAmount)
           VALUES (
@@ -168,10 +176,10 @@ export async function POST(request: NextRequest) {
             ${0}
           )
         `;
-        console.log('GiftRound created successfully');
+        console.log("GiftRound created successfully");
       }
 
-      console.log('Updating fnet.usertb...');
+      console.log("Updating fnet.usertb...");
 
       // Update fnet.usertb with bonus amount
       const fnetUser = await fnetDB.$queryRaw<any[]>`
@@ -180,10 +188,10 @@ export async function POST(request: NextRequest) {
         LIMIT 1
       `;
 
-      console.log('Fnet user data:', fnetUser);
+      console.log("Fnet user data:", fnetUser);
 
       if (fnetUser.length > 0) {
-        console.log('Updating fnet.usertb with bonus...');
+        console.log("Updating fnet.usertb with bonus...");
         const today = new Date();
         today.setFullYear(today.getFullYear() - 20);
         const todayFormatted =
@@ -201,7 +209,7 @@ export async function POST(request: NextRequest) {
               ExpiryDate = ${expiryDateFormatted}
           WHERE UserId = ${userId}
         `;
-        console.log('Updated fnet.usertb successfully');
+        console.log("Updated fnet.usertb successfully");
       }
 
       // Final verification: Check if we actually created the progress record
@@ -210,17 +218,17 @@ export async function POST(request: NextRequest) {
         WHERE userId = ${userId} AND tierId = ${tierId} AND branch = ${branch} AND isClaimed = 1
       `;
 
-      console.log('Final verification:', finalCheck);
+      console.log("Final verification:", finalCheck);
 
       if (finalCheck[0]?.count === 0) {
-        console.log('Failed to create claim record');
+        console.log("Failed to create claim record");
         return NextResponse.json(
-          { success: false, error: 'Failed to create claim record' },
-          { status: 500 }
+          { success: false, error: "Failed to create claim record" },
+          { status: 500 },
         );
       }
 
-      console.log('All operations completed successfully');
+      console.log("All operations completed successfully");
 
       // Get the created GiftRound if free spins were given
       let giftRound = null;
@@ -234,33 +242,34 @@ export async function POST(request: NextRequest) {
           LIMIT 1
         `;
         giftRound = giftRoundResult[0] || null;
-        console.log('GiftRound created:', giftRound);
+        console.log("GiftRound created:", giftRound);
       }
 
-      console.log('=== BIRTHDAY CLAIM SUCCESS ===');
+      console.log("=== BIRTHDAY CLAIM SUCCESS ===");
       return NextResponse.json({
         success: true,
         data: {
-          message: 'Successfully claimed birthday reward',
+          message: "Successfully claimed birthday reward",
           bonusAmount: tier.bonusAmount,
           freeSpins: tier.freeSpins,
-          giftRound: giftRound
-        }
+          giftRound: giftRound,
+        },
       });
-
     } catch (error) {
-      console.error('=== BIRTHDAY CLAIM TRANSACTION ERROR ===');
-      console.error('Transaction error details:', error);
+      console.error("=== BIRTHDAY CLAIM TRANSACTION ERROR ===");
+      console.error("Transaction error details:", error);
       throw error;
     }
-
   } catch (error) {
-    console.error('=== BIRTHDAY CLAIM GENERAL ERROR ===');
-    console.error('Error claiming birthday reward:', error);
-    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error("=== BIRTHDAY CLAIM GENERAL ERROR ===");
+    console.error("Error claiming birthday reward:", error);
+    console.error(
+      "Error stack:",
+      error instanceof Error ? error.stack : "No stack trace",
+    );
     return NextResponse.json(
-      { success: false, error: 'Failed to claim birthday reward' },
-      { status: 500 }
+      { success: false, error: "Failed to claim birthday reward" },
+      { status: 500 },
     );
   }
-} 
+}

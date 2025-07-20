@@ -1,24 +1,24 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { cookies } from "next/headers";
 
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
-    const branch = cookieStore.get('branch')?.value || 'GO_VAP';
+    const branch = cookieStore.get("branch")?.value || "GO_VAP";
     const { userId, amount, description } = await request.json();
 
     if (!userId || !amount) {
       return NextResponse.json(
-        { success: false, error: 'Missing userId or amount' },
-        { status: 400 }
+        { success: false, error: "Missing userId or amount" },
+        { status: 400 },
       );
     }
 
     // Record topup transaction
     await db.$executeRaw`
       INSERT INTO BirthdayTransaction (userId, branch, amount, transactionType, description)
-      VALUES (${userId}, ${branch}, ${amount}, 'TOPUP', ${description || 'Birthday topup'})
+      VALUES (${userId}, ${branch}, ${amount}, 'TOPUP', ${description || "Birthday topup"})
     `;
 
     // Get updated total spent
@@ -56,17 +56,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        message: 'Topup recorded successfully',
+        message: "Topup recorded successfully",
         totalSpent,
-        availableTiers
-      }
+        availableTiers,
+      },
     });
-
   } catch (error) {
-    console.error('Error recording birthday topup:', error);
+    console.error("Error recording birthday topup:", error);
     return NextResponse.json(
-      { success: false, error: 'Failed to record topup' },
-      { status: 500 }
+      { success: false, error: "Failed to record topup" },
+      { status: 500 },
     );
   }
-} 
+}

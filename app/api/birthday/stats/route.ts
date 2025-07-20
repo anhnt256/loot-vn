@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { cookies } from "next/headers";
 
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies();
-    const branch = cookieStore.get('branch')?.value || 'GO_VAP';
+    const branch = cookieStore.get("branch")?.value || "GO_VAP";
 
     // Get total users who participated
     const totalUsersResult = await db.$queryRaw<any[]>`
@@ -44,13 +44,13 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: stats
+      data: stats,
     });
   } catch (error) {
-    console.error('Error fetching birthday stats:', error);
+    console.error("Error fetching birthday stats:", error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch birthday stats' },
-      { status: 500 }
+      { success: false, error: "Failed to fetch birthday stats" },
+      { status: 500 },
     );
   }
-} 
+}

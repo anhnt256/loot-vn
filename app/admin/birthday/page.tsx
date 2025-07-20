@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 interface BirthdayTier {
   id: number;
@@ -40,8 +40,8 @@ export default function BirthdayAdminPage() {
   const fetchData = async () => {
     try {
       const [tiersResponse, statsResponse] = await Promise.all([
-        fetch('/api/birthday/tiers'),
-        fetch('/api/birthday/stats')
+        fetch("/api/birthday/tiers"),
+        fetch("/api/birthday/stats"),
       ]);
 
       const tiersData = await tiersResponse.json();
@@ -55,8 +55,8 @@ export default function BirthdayAdminPage() {
         setStats(statsData.data);
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
-      toast.error('Failed to load data');
+      console.error("Error fetching data:", error);
+      toast.error("Failed to load data");
     } finally {
       setLoading(false);
     }
@@ -65,29 +65,29 @@ export default function BirthdayAdminPage() {
   const handleToggleTier = async (tierId: number, isActive: boolean) => {
     try {
       const response = await fetch(`/api/birthday/tiers/${tierId}`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ isActive: !isActive }),
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
-        toast.success('Tier updated successfully');
+        toast.success("Tier updated successfully");
         fetchData();
       } else {
         toast.error(data.error);
       }
     } catch (error) {
-      console.error('Error updating tier:', error);
-      toast.error('Failed to update tier');
+      console.error("Error updating tier:", error);
+      toast.error("Failed to update tier");
     }
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN').format(amount);
+    return new Intl.NumberFormat("vi-VN").format(amount);
   };
 
   if (loading) {
@@ -109,7 +109,9 @@ export default function BirthdayAdminPage() {
     <div className="container mx-auto p-6">
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">🎂 Quản Lý Sinh Nhật</h1>
-        <p className="text-gray-600">Quản lý các tier và thống kê tính năng sinh nhật</p>
+        <p className="text-gray-600">
+          Quản lý các tier và thống kê tính năng sinh nhật
+        </p>
       </div>
 
       {/* Stats Cards */}
@@ -125,7 +127,7 @@ export default function BirthdayAdminPage() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="pt-6">
               <div className="text-center">
@@ -136,7 +138,7 @@ export default function BirthdayAdminPage() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="pt-6">
               <div className="text-center">
@@ -147,7 +149,7 @@ export default function BirthdayAdminPage() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="pt-6">
               <div className="text-center">
@@ -185,7 +187,9 @@ export default function BirthdayAdminPage() {
                   <tr key={tier.id} className="border-b hover:bg-gray-50">
                     <td className="p-2 font-medium">{tier.tierName}</td>
                     <td className="p-2">{tier.discountPercent}%</td>
-                    <td className="p-2">{formatCurrency(tier.milestoneAmount)}</td>
+                    <td className="p-2">
+                      {formatCurrency(tier.milestoneAmount)}
+                    </td>
                     <td className="p-2 text-green-600 font-medium">
                       {formatCurrency(tier.bonusAmount)}
                     </td>
@@ -193,12 +197,14 @@ export default function BirthdayAdminPage() {
                       {tier.freeSpins}
                     </td>
                     <td className="p-2">
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        tier.isActive 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {tier.isActive ? 'Hoạt động' : 'Tạm dừng'}
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs ${
+                          tier.isActive
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {tier.isActive ? "Hoạt động" : "Tạm dừng"}
                       </span>
                     </td>
                     <td className="p-2">
@@ -207,7 +213,7 @@ export default function BirthdayAdminPage() {
                         size="sm"
                         onClick={() => handleToggleTier(tier.id, tier.isActive)}
                       >
-                        {tier.isActive ? 'Tạm dừng' : 'Kích hoạt'}
+                        {tier.isActive ? "Tạm dừng" : "Kích hoạt"}
                       </Button>
                     </td>
                   </tr>
@@ -225,16 +231,13 @@ export default function BirthdayAdminPage() {
             <CardTitle>Thao Tác Nhanh</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button 
-              onClick={() => fetchData()}
-              className="w-full"
-            >
+            <Button onClick={() => fetchData()} className="w-full">
               🔄 Làm mới dữ liệu
             </Button>
-            
-            <Button 
+
+            <Button
               variant="outline"
-              onClick={() => window.open('/birthday', '_blank')}
+              onClick={() => window.open("/birthday", "_blank")}
               className="w-full"
             >
               👀 Xem trang người dùng
@@ -250,12 +253,20 @@ export default function BirthdayAdminPage() {
             <div className="space-y-2 text-sm">
               <p>• Tổng cộng {tiers.length} tier sinh nhật</p>
               <p>• Tier cao nhất: {tiers[tiers.length - 1]?.tierName}</p>
-              <p>• Mốc cao nhất: {formatCurrency(tiers[tiers.length - 1]?.milestoneAmount || 0)} VNĐ</p>
-              <p>• Tổng thưởng tối đa: {formatCurrency(tiers[tiers.length - 1]?.totalReceived || 0)} VNĐ</p>
+              <p>
+                • Mốc cao nhất:{" "}
+                {formatCurrency(tiers[tiers.length - 1]?.milestoneAmount || 0)}{" "}
+                VNĐ
+              </p>
+              <p>
+                • Tổng thưởng tối đa:{" "}
+                {formatCurrency(tiers[tiers.length - 1]?.totalReceived || 0)}{" "}
+                VNĐ
+              </p>
             </div>
           </CardContent>
         </Card>
       </div>
     </div>
   );
-} 
+}

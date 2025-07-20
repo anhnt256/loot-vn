@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,13 +22,13 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: tiers
+      data: tiers,
     });
   } catch (error) {
-    console.error('Error fetching birthday tiers:', error);
+    console.error("Error fetching birthday tiers:", error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch birthday tiers' },
-      { status: 500 }
+      { success: false, error: "Failed to fetch birthday tiers" },
+      { status: 500 },
     );
   }
-} 
+}
