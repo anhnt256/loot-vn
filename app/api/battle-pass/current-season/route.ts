@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getCurrentDateVN, getCurrentTimeVNISO } from "@/lib/timezone-utils";
+import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
 
 export async function GET() {
   try {
@@ -8,8 +8,8 @@ export async function GET() {
     const currentSeason = await db.$queryRaw<any[]>`
       SELECT * FROM BattlePassSeason 
       WHERE isActive = true
-        AND startDate <= ${getCurrentDateVN()}
-        AND endDate >= ${getCurrentDateVN()}
+        AND startDate <= DATE(${getCurrentTimeVNISO()})
+        AND endDate >= DATE(${getCurrentTimeVNISO()})
       LIMIT 1
     `;
 
@@ -31,8 +31,8 @@ export async function GET() {
             '2024-12-31',
             true,
             30,
-            NOW(),
-            NOW()
+            ${getCurrentTimeVNISO()},
+            ${getCurrentTimeVNISO()}
           )
         `;
 
@@ -66,8 +66,8 @@ export async function GET() {
               ${rewardType},
               ${isFree ? level * 50 : level * 150},
               false,
-              NOW(),
-              NOW()
+              ${getCurrentTimeVNISO()},
+              ${getCurrentTimeVNISO()}
             )
           `;
         }
@@ -76,9 +76,9 @@ export async function GET() {
         await db.$executeRaw`
           INSERT INTO BattlePassReward (seasonId, level, name, description, type, rewardType, rewardValue, isBonus, createdAt, updatedAt)
           VALUES 
-            (${seasonId}, 31, 'Ultimate Bonus 1', 'Free ultimate reward for completing all levels', 'free', 'stars', 5000, true, NOW(), NOW()),
-            (${seasonId}, 32, 'Ultimate Bonus 2', 'Premium ultimate reward for completing all levels', 'premium', 'coins', 10000, true, NOW(), NOW()),
-            (${seasonId}, 33, 'Ultimate Bonus 3', 'Premium ultimate reward for completing all levels', 'premium', 'voucher', 1, true, NOW(), NOW())
+            (${seasonId}, 31, 'Ultimate Bonus 1', 'Free ultimate reward for completing all levels', 'free', 'stars', 5000, true, ${getCurrentTimeVNISO()}, ${getCurrentTimeVNISO()}),
+            (${seasonId}, 32, 'Ultimate Bonus 2', 'Premium ultimate reward for completing all levels', 'premium', 'coins', 10000, true, ${getCurrentTimeVNISO()}, ${getCurrentTimeVNISO()}),
+            (${seasonId}, 33, 'Ultimate Bonus 3', 'Premium ultimate reward for completing all levels', 'premium', 'voucher', 1, true, ${getCurrentTimeVNISO()}, ${getCurrentTimeVNISO()})
         `;
 
         // Get the complete season with rewards

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db, getFnetDB } from "@/lib/db";
 import { calculateLevel } from "@/lib/battle-pass-utils";
-import { getCurrentDateVN } from "@/lib/timezone-utils";
+import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
 
 export async function POST(request: Request) {
   try {
@@ -20,17 +20,15 @@ export async function POST(request: Request) {
     const userId = decoded.userId;
 
     // Get current active season
-    const currentSeason = await db.battlePassSeason.findFirst({
-      where: {
-        isActive: true,
-        startDate: {
-          lte: getCurrentDateVN(),
-        },
-        endDate: {
-          gte: getCurrentDateVN(),
-        },
-      },
-    });
+    const currentSeasons = await db.$queryRaw<any[]>`
+      SELECT * FROM BattlePassSeason 
+      WHERE isActive = true
+        AND startDate <= DATE(${getCurrentTimeVNISO()})
+        AND endDate >= DATE(${getCurrentTimeVNISO()})
+      LIMIT 1
+    `;
+
+    const currentSeason = currentSeasons[0];
 
     if (!currentSeason) {
       return NextResponse.json(
@@ -53,27 +51,42 @@ export async function POST(request: Request) {
     const foodSpending = Math.floor(totalSpending * 0.5);
     const drinkSpending = Math.floor(totalSpending * 0.5);
 
-    // Update or create user progress
-    const userProgress = await db.userBattlePass.upsert({
-      where: {
-        userId_seasonId: {
-          userId: decoded.userId,
-          seasonId: currentSeason.id,
-        },
-      },
-      update: {
-        totalSpent: totalSpending,
-      },
-      create: {
-        userId: decoded.userId,
-        seasonId: currentSeason.id,
-        level: calculateLevel(0, currentSeason.maxLevel), // Level 1 cho user mới (0 experience)
-        experience: 0,
-        isPremium: false,
-        totalSpent: totalSpending,
-        branch: "GO_VAP",
-      },
-    });
+    // Check if user progress exists
+    const existingProgress = await db.$queryRaw<any[]>`
+      SELECT * FROM UserBattlePass 
+      WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id}
+      LIMIT 1
+    `;
+
+    let userProgress;
+    if (existingProgress.length > 0) {
+      // Update existing progress
+      await db.$executeRaw`
+        UPDATE UserBattlePass 
+        SET totalSpent = ${totalSpending}, updatedAt = ${getCurrentTimeVNISO()}
+        WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id}
+      `;
+
+      const updatedProgress = await db.$queryRaw<any[]>`
+        SELECT * FROM UserBattlePass 
+        WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id}
+        LIMIT 1
+      `;
+      userProgress = updatedProgress[0];
+    } else {
+      // Create new progress
+      await db.$executeRaw`
+        INSERT INTO UserBattlePass (userId, seasonId, level, experience, isPremium, totalSpent, branch, createdAt, updatedAt)
+        VALUES (${decoded.userId}, ${currentSeason.id}, ${calculateLevel(0, currentSeason.maxLevel)}, 0, false, ${totalSpending}, 'GO_VAP', ${getCurrentTimeVNISO()}, ${getCurrentTimeVNISO()})
+      `;
+
+      const newProgress = await db.$queryRaw<any[]>`
+        SELECT * FROM UserBattlePass 
+        WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id}
+        LIMIT 1
+      `;
+      userProgress = newProgress[0];
+    }
 
     return NextResponse.json({
       success: true,

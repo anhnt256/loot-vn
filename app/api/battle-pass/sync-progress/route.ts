@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getCurrentDateVN } from "@/lib/timezone-utils";
+import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
 
 export async function POST(request: Request) {
   try {
@@ -23,17 +23,15 @@ export async function POST(request: Request) {
 
     // Get current active season
     console.log("Getting current season...");
-    const currentSeason = await db.battlePassSeason.findFirst({
-      where: {
-        isActive: true,
-        startDate: {
-          lte: getCurrentDateVN(),
-        },
-        endDate: {
-          gte: getCurrentDateVN(),
-        },
-      },
-    });
+    const currentSeasons = await db.$queryRaw<any[]>`
+      SELECT * FROM BattlePassSeason 
+      WHERE isActive = true
+        AND startDate <= DATE(${getCurrentTimeVNISO()})
+        AND endDate >= DATE(${getCurrentTimeVNISO()})
+      LIMIT 1
+    `;
+
+    const currentSeason = currentSeasons[0];
 
     console.log("Current season:", currentSeason);
 
@@ -46,29 +44,29 @@ export async function POST(request: Request) {
 
     // Find user progress
     console.log("Finding user progress...");
-    let userProgress = await db.userBattlePass.findFirst({
-      where: {
-        userId: decoded.userId,
-        seasonId: currentSeason.id,
-      },
-    });
+    const existingProgress = await db.$queryRaw<any[]>`
+      SELECT * FROM UserBattlePass 
+      WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id}
+      LIMIT 1
+    `;
 
+    let userProgress = existingProgress[0];
     console.log("Existing user progress:", userProgress);
 
     if (!userProgress) {
       console.log("Creating new user progress...");
       // Create new user progress with default values
-      userProgress = await db.userBattlePass.create({
-        data: {
-          userId: decoded.userId,
-          seasonId: currentSeason.id,
-          level: 0,
-          experience: 0,
-          isPremium: false,
-          totalSpent: 0,
-          branch: "GO_VAP",
-        },
-      });
+      await db.$executeRaw`
+        INSERT INTO UserBattlePass (userId, seasonId, level, experience, isPremium, totalSpent, branch, createdAt, updatedAt)
+        VALUES (${decoded.userId}, ${currentSeason.id}, 0, 0, false, 0, 'GO_VAP', ${getCurrentTimeVNISO()}, ${getCurrentTimeVNISO()})
+      `;
+
+      const newProgress = await db.$queryRaw<any[]>`
+        SELECT * FROM UserBattlePass 
+        WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id}
+        LIMIT 1
+      `;
+      userProgress = newProgress[0];
       console.log("Created user progress:", userProgress);
     }
 
