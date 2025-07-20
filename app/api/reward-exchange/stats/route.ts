@@ -21,73 +21,51 @@ export async function GET(request: Request) {
     }
 
     // Tạo điều kiện date filter nếu có
-    let dateFilter = {};
+    let dateFilter = "";
 
     if (startDate && endDate) {
       // Sử dụng date range
-      dateFilter = {
-        createdAt: {
-          gte: new Date(startDate + "T00:00:00.000Z"),
-          lte: new Date(endDate + "T23:59:59.999Z"),
-        },
-      };
+      dateFilter = `AND createdAt >= '${startDate}T00:00:00.000Z' AND createdAt <= '${endDate}T23:59:59.999Z'`;
     } else if (date) {
       // Fallback cho single date (backward compatibility)
-      dateFilter = {
-        createdAt: {
-          gte: new Date(date + "T00:00:00.000Z"),
-          lt: new Date(date + "T23:59:59.999Z"),
-        },
-      };
+      dateFilter = `AND createdAt >= '${date}T00:00:00.000Z' AND createdAt < '${date}T23:59:59.999Z'`;
     }
 
     const [pending, approved, rejected, total] = await Promise.all([
-      db.userRewardMap.count({
-        where: {
-          branch: branch,
-          status: "INITIAL",
-          userId: {
-            not: null,
-          },
-          ...dateFilter,
-        },
-      }),
-      db.userRewardMap.count({
-        where: {
-          branch: branch,
-          status: "APPROVE",
-          userId: {
-            not: null,
-          },
-          ...dateFilter,
-        },
-      }),
-      db.userRewardMap.count({
-        where: {
-          branch: branch,
-          status: "REJECT",
-          userId: {
-            not: null,
-          },
-          ...dateFilter,
-        },
-      }),
-      db.userRewardMap.count({
-        where: {
-          branch: branch,
-          userId: {
-            not: null,
-          },
-          ...dateFilter,
-        },
-      }),
+      db.$queryRawUnsafe<any[]>(`
+        SELECT COUNT(*) as count FROM UserRewardMap 
+        WHERE branch = '${branch}' 
+          AND status = 'INITIAL' 
+          AND userId IS NOT NULL
+          ${dateFilter}
+      `),
+      db.$queryRawUnsafe<any[]>(`
+        SELECT COUNT(*) as count FROM UserRewardMap 
+        WHERE branch = '${branch}' 
+          AND status = 'APPROVE' 
+          AND userId IS NOT NULL
+          ${dateFilter}
+      `),
+      db.$queryRawUnsafe<any[]>(`
+        SELECT COUNT(*) as count FROM UserRewardMap 
+        WHERE branch = '${branch}' 
+          AND status = 'REJECT' 
+          AND userId IS NOT NULL
+          ${dateFilter}
+      `),
+      db.$queryRawUnsafe<any[]>(`
+        SELECT COUNT(*) as count FROM UserRewardMap 
+        WHERE branch = '${branch}' 
+          AND userId IS NOT NULL
+          ${dateFilter}
+      `),
     ]);
 
     return NextResponse.json({
-      pending,
-      approved,
-      rejected,
-      total,
+      pending: Number(pending[0].count),
+      approved: Number(approved[0].count),
+      rejected: Number(rejected[0].count),
+      total: Number(total[0].count),
     });
   } catch (error) {
     console.error("[REWARD_EXCHANGE_STATS_GET]", error);

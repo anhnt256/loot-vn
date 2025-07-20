@@ -1,14 +1,13 @@
-import { NextResponse } from "next/server";
-import { db, getFnetDB } from "@/lib/db";
+import { NextRequest, NextResponse } from "next/server";
+import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
 import { cookies } from "next/headers";
-import { getVNTimeForPrisma } from "@/lib/timezone-utils";
+import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
 import { calculateActiveUsersInfo } from "@/lib/user-calculator";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const branch = cookieStore.get("branch")?.value;
-    // const staffId = cookieStore.get("staffId")?.value;
 
     if (!branch) {
       return NextResponse.json(
@@ -16,13 +15,6 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
-
-    // if (!staffId) {
-    //   return NextResponse.json(
-    //     { error: "Staff ID is required" },
-    //     { status: 400 }
-    //   );
-    // }
 
     const body = await request.json();
     const { rewardMapId, action, note } = body;
@@ -42,19 +34,27 @@ export async function POST(request: Request) {
     }
 
     // Get the reward map
-    const rewardMap = await db.userRewardMap.findFirst({
-      where: {
-        id: rewardMapId,
-        branch: branch,
-        status: "INITIAL",
-      },
-      include: {
-        reward: true,
-        promotionCode: true,
-      },
-    });
+    const rewardMap = await db.$queryRaw<any[]>`
+      SELECT 
+        urm.*,
+        r.id as reward_id,
+        r.name as reward_name,
+        r.value as reward_value,
+        r.stars as reward_stars,
+        pc.id as promotionCode_id,
+        pc.code as promotionCode_code,
+        pc.name as promotionCode_name,
+        pc.value as promotionCode_value
+      FROM UserRewardMap urm
+      LEFT JOIN Reward r ON urm.rewardId = r.id
+      LEFT JOIN PromotionCode pc ON urm.promotionCodeId = pc.id
+      WHERE urm.id = ${rewardMapId}
+        AND urm.branch = ${branch}
+        AND urm.status = 'INITIAL'
+      LIMIT 1
+    `;
 
-    if (!rewardMap) {
+    if (rewardMap.length === 0) {
       return NextResponse.json(
         { error: "Reward exchange not found or already processed" },
         { status: 404 },
@@ -63,85 +63,70 @@ export async function POST(request: Request) {
 
     // Get user info manually
     let user = null;
-    if (rewardMap.userId) {
-      // rewardMap.userId là User.id (foreign key), cần tìm user thực tế
-      user = await db.user.findFirst({
-        where: {
-          id: rewardMap.userId, // Tìm theo User.id (foreign key)
-          branch: branch,
-        },
-        select: {
-          id: true,
-          userId: true, // Business identifier
-          userName: true,
-          stars: true,
-          branch: true,
-        },
-      });
+    if (rewardMap[0].userId) {
+      user = await db.$queryRaw<any[]>`
+        SELECT id, userId, userName, stars, branch FROM User 
+        WHERE id = ${rewardMap[0].userId} 
+        AND branch = ${branch}
+        LIMIT 1
+      `;
     }
 
-    if (!user) {
+    if (!user || user.length === 0) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     await db.$transaction(async (tx) => {
       // Update reward map status
-      await tx.userRewardMap.update({
-        where: { id: rewardMapId },
-        data: {
-          status: action === "APPROVE" ? "APPROVE" : "REJECT",
-          note: note || null,
-          updatedAt: getVNTimeForPrisma(),
-        },
-      });
+      await tx.$executeRaw`
+        UPDATE UserRewardMap 
+        SET status = ${action === "APPROVE" ? "APPROVE" : "REJECT"},
+            note = ${note || null},
+            updatedAt = NOW()
+        WHERE id = ${rewardMapId}
+      `;
 
       if (action === "APPROVE") {
         // Mark promotion code as used
-        if (rewardMap.promotionCodeId) {
-          await tx.promotionCode.update({
-            where: { id: rewardMap.promotionCodeId },
-            data: {
-              isUsed: true,
-              updatedAt: getVNTimeForPrisma(),
-            },
-          });
+        if (rewardMap[0].promotionCodeId) {
+          await tx.$executeRaw`
+            UPDATE PromotionCode 
+            SET isUsed = true, updatedAt = NOW()
+            WHERE id = ${rewardMap[0].promotionCodeId}
+          `;
         }
 
         // Mark reward map as used
-        await tx.userRewardMap.update({
-          where: { id: rewardMapId },
-          data: {
-            isUsed: true,
-          },
-        });
+        await tx.$executeRaw`
+          UPDATE UserRewardMap 
+          SET isUsed = true
+          WHERE id = ${rewardMapId}
+        `;
 
-        await tx.userStarHistory.create({
-          data: {
-            userId: user.userId,
-            type: "REWARD",
-            oldStars: user?.stars + (rewardMap?.reward?.stars || 0),
-            newStars: user?.stars,
-            targetId: rewardMapId,
-            createdAt: getVNTimeForPrisma(),
-            branch,
-          },
-        });
+        await tx.$executeRaw`
+          INSERT INTO UserStarHistory (userId, type, oldStars, newStars, targetId, createdAt, branch)
+          VALUES (
+            ${user[0].userId},
+            'REWARD',
+            ${user[0].stars + (rewardMap[0].reward_stars || 0)},
+            ${user[0].stars},
+            ${rewardMapId},
+            NOW(),
+            ${branch}
+          )
+        `;
 
         // Update money in fnet database
-        if (rewardMap.reward?.value && user.userId) {
+        if (rewardMap[0].reward_value && user[0].userId) {
           const fnetDB = await getFnetDB();
 
-          const fnetUser = await fnetDB.usertb.findFirst({
-            where: {
-              UserId: user.userId,
-            },
-            select: {
-              UserId: true,
-              RemainMoney: true,
-            },
-          });
+          const fnetUser = await fnetDB.$queryRaw<any[]>`
+            SELECT UserId, RemainMoney FROM usertb 
+            WHERE UserId = ${user[0].userId}
+            LIMIT 1
+          `;
 
-          if (fnetUser) {
+          if (fnetUser.length > 0) {
             const today = new Date();
             today.setFullYear(today.getFullYear() - 20);
             const todayFormatted =
@@ -152,40 +137,34 @@ export async function POST(request: Request) {
             const expiryDateFormatted =
               expiryDate.toISOString().split("T")[0] + "T00:00:00.000Z";
 
-            await fnetDB.usertb.update({
-              where: {
-                UserId: user.userId,
-              },
-              data: {
-                RemainMoney:
-                  Number(fnetUser.RemainMoney) + Number(rewardMap.reward.value),
-                Birthdate: todayFormatted,
-                ExpiryDate: expiryDateFormatted,
-              },
-            });
+            await fnetDB.$executeRaw`
+              UPDATE usertb 
+              SET RemainMoney = ${Number(fnetUser[0].RemainMoney) + Number(rewardMap[0].reward_value)},
+                  Birthdate = ${todayFormatted},
+                  ExpiryDate = ${expiryDateFormatted}
+              WHERE UserId = ${user[0].userId}
+            `;
           }
         }
       } else if (action === "REJECT") {
         // Hoàn trả số sao cho user khi từ chối
-        if (rewardMap.reward?.stars) {
-          await tx.user.update({
-            where: {
-              id: user.id,
-            },
-            data: {
-              stars: Number(user.stars) + Number(rewardMap.reward.stars),
-            },
-          });
+        if (rewardMap[0].reward_stars) {
+          await tx.$executeRaw`
+            UPDATE User 
+            SET stars = ${Number(user[0].stars) + Number(rewardMap[0].reward_stars)},
+                updatedAt = NOW()
+            WHERE id = ${user[0].id}
+          `;
         }
       }
     });
 
     // Gọi user-calculator để cập nhật thông tin user sau khi xử lý
     try {
-      if (user.userId) {
-        await calculateActiveUsersInfo([user.userId], branch);
+      if (user[0].userId) {
+        await calculateActiveUsersInfo([user[0].userId], branch);
         console.log(
-          `User calculator called for userId: ${user.userId} after ${action.toLowerCase()}ing reward exchange`,
+          `User calculator called for userId: ${user[0].userId} after ${action.toLowerCase()}ing reward exchange`,
         );
       }
     } catch (calculatorError) {

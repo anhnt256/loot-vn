@@ -5,7 +5,7 @@ import { createSafeAction } from "@/lib/create-safe-action";
 import { CreateUserRewardMap } from "./schema";
 import { InputType } from "./type";
 import dayjs from "@/lib/dayjs";
-import { getVNTimeForPrisma } from "@/lib/timezone-utils";
+import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
 
 const expirationDuration = 1;
 
@@ -33,8 +33,8 @@ const handler = async (data: InputType): Promise<any> => {
 
   // Verify user exists with correct userId and branch first using raw SQL
   const users = await db.$queryRaw`
-    SELECT * FROM "User" 
-    WHERE "userId" = ${userId} AND "branch" = ${branch}
+    SELECT * FROM User 
+    WHERE userId = ${userId} AND branch = ${branch}
     LIMIT 1
   `;
   const user = (users as any[])[0];
@@ -54,8 +54,8 @@ const handler = async (data: InputType): Promise<any> => {
 
   // Kiểm tra xem user có đang có yêu cầu đổi thưởng đang chờ duyệt không
   const pendingRewardExchanges = await db.$queryRaw`
-    SELECT * FROM "UserRewardMap" 
-    WHERE "userId" = ${user.id} AND "branch" = ${branch} AND "status" = 'INITIAL'
+    SELECT * FROM UserRewardMap 
+    WHERE userId = ${user.id} AND branch = ${branch} AND status = 'INITIAL'
     LIMIT 1
   `;
   const pendingRewardExchange = (pendingRewardExchanges as any[])[0];
@@ -68,7 +68,7 @@ const handler = async (data: InputType): Promise<any> => {
 
   // Tìm reward trước để lấy name
   const rewards = await db.$queryRaw`
-    SELECT * FROM "Reward" WHERE "id" = ${rewardId}
+    SELECT * FROM Reward WHERE id = ${rewardId}
   `;
   const reward = (rewards as any[])[0];
 
@@ -80,8 +80,8 @@ const handler = async (data: InputType): Promise<any> => {
 
   // Tìm promotionCode hợp lệ - tìm theo name của reward và branch
   const promotions = await db.$queryRaw`
-    SELECT * FROM "PromotionCode" 
-    WHERE "name" = ${reward.name} AND "branch" = ${branch} AND "isUsed" = false
+    SELECT * FROM PromotionCode 
+    WHERE name = ${reward.name} AND branch = ${branch} AND isUsed = false
     LIMIT 1
   `;
   const promotion = (promotions as any[])[0];
@@ -96,27 +96,35 @@ const handler = async (data: InputType): Promise<any> => {
         
         // Update promotionCode: set isUsed = true
         await tx.$executeRaw`
-          UPDATE "PromotionCode" 
-          SET "isUsed" = true, "updatedAt" = ${getVNTimeForPrisma()}
-          WHERE "id" = ${id}
+          UPDATE PromotionCode 
+          SET isUsed = true, updatedAt = ${getCurrentTimeVNISO()}
+          WHERE id = ${id}
         `;
         
         console.log("Creating userRewardMap...");
         // Insert vào userRewardMap với internal id của user để relation đúng
-        const userRewardMapResults = await tx.$queryRaw`
-          INSERT INTO "UserRewardMap" ("userId", "rewardId", "promotionCodeId", "duration", "isUsed", "branch", "createdAt", "updatedAt")
-          VALUES (${user.id}, ${rewardId}, ${id}, ${duration}, ${isUsed}, ${branch}, ${getVNTimeForPrisma()}, ${getVNTimeForPrisma()})
-          RETURNING *
+        await tx.$executeRaw`
+          INSERT INTO UserRewardMap (userId, rewardId, promotionCodeId, duration, isUsed, branch, createdAt, updatedAt)
+          VALUES (${user.id}, ${rewardId}, ${id}, ${duration}, ${isUsed}, ${branch}, ${getCurrentTimeVNISO()}, ${getCurrentTimeVNISO()})
         `;
-        createUserRewardMap = (userRewardMapResults as any[])[0];
+        
+        // Get the inserted record ID
+        const userRewardMapResults = await tx.$queryRaw`SELECT LAST_INSERT_ID() as id`;
+        const userRewardMapId = (userRewardMapResults as any[])[0]?.id;
+        
+        // Get the full userRewardMap record
+        const userRewardMapRecords = await tx.$queryRaw`
+          SELECT * FROM UserRewardMap WHERE id = ${userRewardMapId}
+        `;
+        createUserRewardMap = (userRewardMapRecords as any[])[0];
         
         console.log("userRewardMap created:", createUserRewardMap);
         
         // Update số sao trong table User
         await tx.$executeRaw`
-          UPDATE "User" 
-          SET "stars" = ${newStars}, "updatedAt" = ${getVNTimeForPrisma()}
-          WHERE "id" = ${user.id}
+          UPDATE User 
+          SET stars = ${newStars}, updatedAt = ${getCurrentTimeVNISO()}
+          WHERE id = ${user.id}
         `;
         
         console.log(`Updated user stars from ${oldStars} to ${newStars}`);

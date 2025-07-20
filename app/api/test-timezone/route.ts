@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getVNTimeForPrisma } from "@/lib/timezone-utils";
+import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
 import { db } from "@/lib/db";
 import dayjs from "@/lib/dayjs";
 
 export async function GET() {
   try {
-    const currentVNTime = getVNTimeForPrisma();
+    const currentVNTime = getCurrentTimeVNISO();
     const currentVNTimeFormatted = dayjs().utcOffset(7).format("YYYY-MM-DD HH:mm:ss");
     const testName = `Test Rank ${new Date().getTime()}`;
     

@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { getStartOfDayDateVN } from "@/lib/timezone-utils";
+import { getStartOfDayVNISO } from "@/lib/timezone-utils";
 
 interface RateLimitConfig {
   windowMs: number; // Time window in milliseconds
@@ -90,14 +90,13 @@ export async function checkDatabaseRateLimit(
 ): Promise<{ allowed: boolean; count: number }> {
   const oneHourAgo = new Date(Date.now() - windowMs);
 
-  const recentUsers = await db.user.count({
-    where: {
-      createdAt: {
-        gte: oneHourAgo,
-      },
-      branch: branch,
-    },
-  });
+  const recentUsersResult = await db.$queryRaw<any[]>`
+    SELECT COUNT(*) as count FROM User 
+    WHERE createdAt >= ${oneHourAgo}
+      AND branch = ${branch}
+  `;
+
+  const recentUsers = Number(recentUsersResult[0].count);
 
   // Giới hạn 10 user mới từ cùng branch trong 1 giờ
   const maxUsersPerHour = 10;
@@ -141,17 +140,16 @@ export async function checkDailyCheckInLimit(
   userId: string,
   branch: string,
 ): Promise<{ allowed: boolean; count: number; maxAllowed: number }> {
-  const today = getStartOfDayDateVN();
+  const today = getStartOfDayVNISO();
 
-  const checkInCount = await db.checkInResult.count({
-    where: {
-      userId: parseInt(userId),
-      branch: branch,
-      createdAt: {
-        gte: today,
-      },
-    },
-  });
+  const checkInCountResult = await db.$queryRaw<any[]>`
+    SELECT COUNT(*) as count FROM CheckInResult 
+    WHERE userId = ${parseInt(userId)}
+      AND branch = ${branch}
+      AND createdAt >= ${today}
+  `;
+
+  const checkInCount = Number(checkInCountResult[0].count);
 
   const maxDailyCheckIns = 10; // Tối đa 10 lần check-in mỗi ngày
 

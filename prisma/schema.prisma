@@ -415,6 +415,20 @@ model ChatMessage {
   @@index([createdAt])
 }
 
+model UserMissionCompletion {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  missionId   Int
+  branch      String   @default("GO_VAP")
+  completedAt DateTime @default(now())
+  actualValue Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+
+  @@index([branch])
+  @@index([userId])
+}
+
 enum MissionType {
   HOURS
   ORDER

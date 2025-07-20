@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
 import { cookies } from "next/headers";
+import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,15 +29,19 @@ export async function POST(req: NextRequest) {
 
     // Cập nhật số sao của tài khoản được giữ lại
     if (starsCalculated !== undefined) {
-      await db.user.update({
-        where: { id: keepId },
-        data: { stars: starsCalculated },
-      });
+      await db.$executeRaw`
+        UPDATE User 
+        SET stars = ${starsCalculated}, updatedAt = NOW()
+        WHERE id = ${keepId}
+      `;
     }
 
     // Xóa các tài khoản khác
     if (deleteIds.length > 0) {
-      await db.user.deleteMany({ where: { id: { in: deleteIds } } });
+      const idsString = deleteIds.join(',');
+      await db.$executeRawUnsafe(
+        `DELETE FROM User WHERE id IN (${idsString})`
+      );
     }
 
     return NextResponse.json({

@@ -10,28 +10,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json([]);
     }
 
-    const users = await db.user.findMany({
-      where: {
-        OR: [
-          {
-            userId: {
-              equals: parseInt(query) || undefined,
-            },
-          },
-          {
-            userName: {
-              contains: query,
-            },
-          },
-        ],
-      },
-      select: {
-        id: true,
-        userId: true,
-        userName: true,
-      },
-      take: 10,
-    });
+    // Get branch from cookie
+    const branch = request.cookies.get("branch")?.value || "GO_VAP";
+
+    const users = await db.$queryRaw<any[]>`
+      SELECT id, userId, userName
+      FROM User
+      WHERE (userId = ${parseInt(query) || 0} OR userName LIKE ${`%${query}%`})
+        AND branch = ${branch}
+      ORDER BY userName
+      LIMIT 10
+    `;
 
     return NextResponse.json(users);
   } catch (error) {

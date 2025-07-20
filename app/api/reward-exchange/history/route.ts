@@ -25,111 +25,89 @@ export async function GET(request: Request) {
     }
 
     // Tạo điều kiện date filter nếu có
-    let dateFilter = {};
+    let dateFilter = "";
 
     if (startDate && endDate) {
       // Sử dụng date range
-      dateFilter = {
-        createdAt: {
-          gte: new Date(startDate + "T00:00:00.000Z"),
-          lte: new Date(endDate + "T23:59:59.999Z"),
-        },
-      };
+      dateFilter = `AND urm.createdAt >= '${startDate}T00:00:00.000Z' AND urm.createdAt <= '${endDate}T23:59:59.999Z'`;
     } else if (date) {
       // Fallback cho single date (backward compatibility)
-      dateFilter = {
-        createdAt: {
-          gte: new Date(date + "T00:00:00.000Z"),
-          lt: new Date(date + "T23:59:59.999Z"),
-        },
-      };
+      dateFilter = `AND urm.createdAt >= '${date}T00:00:00.000Z' AND urm.createdAt < '${date}T23:59:59.999Z'`;
     }
 
-    const whereClause: any = {
-      branch: branch,
-      ...dateFilter,
-    };
-
-    // Add status filter if provided
+    let statusFilter = "";
     if (status && status !== "ALL") {
-      whereClause.status = status;
+      statusFilter = `AND urm.status = '${status}'`;
     }
 
-    // Get UserRewardMap records first
-    const allUserRewardMaps = await db.userRewardMap.findMany({
-      where: whereClause,
-      include: {
-        reward: {
-          select: {
-            id: true,
-            name: true,
-            value: true,
-          }
-        }
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    // Get UserRewardMap records with pagination
+    const allUserRewardMaps = await db.$queryRawUnsafe<any[]>(`
+      SELECT 
+        urm.*,
+        r.id as reward_id,
+        r.name as reward_name,
+        r.value as reward_value,
+        u.id as user_id,
+        u.userId as user_userId,
+        u.userName as user_userName,
+        u.stars as user_stars,
+        u.branch as user_branch,
+        ush.id as userStarHistory_id,
+        ush.oldStars as userStarHistory_oldStars,
+        ush.newStars as userStarHistory_newStars,
+        ush.createdAt as userStarHistory_createdAt
+      FROM UserRewardMap urm
+      LEFT JOIN Reward r ON urm.rewardId = r.id
+      LEFT JOIN User u ON urm.userId = u.id AND u.branch = '${branch}'
+      LEFT JOIN UserStarHistory ush ON ush.targetId = urm.id 
+        AND ush.branch = '${branch}' 
+        AND ush.type = 'REWARD'
+        AND urm.status = 'APPROVE'
+      WHERE urm.branch = '${branch}'
+        ${dateFilter}
+        ${statusFilter}
+      ORDER BY urm.createdAt DESC
+      LIMIT ${limit} OFFSET ${offset}
+    `);
 
-    // Apply pagination
-    const total = allUserRewardMaps.length;
-    const paginatedUserRewardMaps = allUserRewardMaps.slice(offset, offset + limit);
+    // Get total count
+    const totalResult = await db.$queryRawUnsafe<any[]>(`
+      SELECT COUNT(*) as count FROM UserRewardMap urm
+      WHERE urm.branch = '${branch}'
+        ${dateFilter}
+        ${statusFilter}
+    `);
 
-    // Join with User table and UserStarHistory (only for APPROVE status)
-    const historiesWithUser = await Promise.all(
-      paginatedUserRewardMaps.map(async (userRewardMap) => {
-        let user = null;
-        let userStarHistory = null;
+    const total = Number(totalResult[0].count);
 
-        // Get user information
-        if (userRewardMap.userId) {
-          user = await db.user.findFirst({
-            where: {
-              id: userRewardMap.userId, // Tìm theo User.id (foreign key)
-              branch: branch,
-            },
-            select: {
-              id: true,
-              userId: true, // Business identifier
-              userName: true,
-              stars: true,
-              branch: true,
-            },
-          });
-        }
-
-        // Get UserStarHistory only if status is APPROVE
-        if (userRewardMap.status === "APPROVE" && userRewardMap.id) {
-          userStarHistory = await db.userStarHistory.findFirst({
-            where: {
-              targetId: userRewardMap.id,
-              branch: branch,
-              type: "REWARD",
-            },
-            select: {
-              id: true,
-              oldStars: true,
-              newStars: true,
-              createdAt: true,
-            },
-          });
-        }
-
-        return {
-          id: userRewardMap.id,
-          userId: userRewardMap.userId,
-          rewardId: userRewardMap.rewardId,
-          status: userRewardMap.status,
-          note: userRewardMap.note,
-          createdAt: userRewardMap.createdAt,
-          updatedAt: userRewardMap.updatedAt,
-          reward: userRewardMap.reward,
-          user,
-          userStarHistory, // oldStars, newStars info for APPROVE status
-        };
-      }),
-    );
+    // Transform data to match expected format
+    const historiesWithUser = allUserRewardMaps.map((userRewardMap) => ({
+      id: userRewardMap.id,
+      userId: userRewardMap.userId,
+      rewardId: userRewardMap.rewardId,
+      status: userRewardMap.status,
+      note: userRewardMap.note,
+      createdAt: userRewardMap.createdAt,
+      updatedAt: userRewardMap.updatedAt,
+      reward: userRewardMap.reward_id ? {
+        id: userRewardMap.reward_id,
+        name: userRewardMap.reward_name,
+        value: userRewardMap.reward_value,
+      } : null,
+      user: userRewardMap.user_id ? {
+        id: userRewardMap.user_id,
+        userId: userRewardMap.user_userId,
+        userName: userRewardMap.user_userName,
+        stars: userRewardMap.user_stars,
+        branch: userRewardMap.user_branch,
+      } : null,
+      userStarHistory: userRewardMap.userStarHistory_id ? {
+        id: userRewardMap.userStarHistory_id,
+        oldStars: userRewardMap.userStarHistory_oldStars,
+        newStars: userRewardMap.userStarHistory_newStars,
+        createdAt: userRewardMap.userStarHistory_createdAt,
+      } : null,
+    }));
 
     console.log('histories', historiesWithUser)
     console.log('total', total)

@@ -3,11 +3,10 @@ import { calculateDailyUsageMinutes } from "@/lib/battle-pass-utils";
 import {
   getStartOfDayVNISO,
   getCurrentTimeVNISO,
-  getCurrentDateVNString,
   getStartOfWeekVNISO,
   getEndOfWeekVNISO,
   getCurrentDayOfWeekVN,
-  getVNTimeForPrisma,
+  getCurrentDateVNString,
 } from "@/lib/timezone-utils";
 
 export interface UserInfo {
@@ -93,7 +92,7 @@ export async function calculateActiveUsersInfo(
 ): Promise<UserInfo[]> {
   try {
     // Nếu debug mode, thêm debugUsers vào listUsers
-    const finalListUsers = isDebug 
+    const finalListUsers = isDebug
       ? [...new Set([...listUsers, ...debugUsers])] // Loại bỏ duplicates
       : listUsers;
 
@@ -105,14 +104,13 @@ export async function calculateActiveUsersInfo(
 
     // Sử dụng các hàm từ timezone-utils để đảm bảo tính nhất quán
     const startOfDayVN = getStartOfDayVNISO();
-    const today = getCurrentTimeVNISO();
     const curDate = getCurrentDateVNString();
 
     // Tạo các thời gian khác từ timezone-utils
     const startOfWeekVN = getStartOfWeekVNISO();
     const endOfWeekVN = getEndOfWeekVNISO();
     const todayDayOfWeek = getCurrentDayOfWeekVN();
-
+    
     if (isDebug) {
       console.log("=== DEBUG TIMEZONE CONVERSION ===");
       console.log("startOfWeekVN:", startOfWeekVN);
@@ -190,7 +188,7 @@ export async function calculateActiveUsersInfo(
             AND type = 'CHECK_IN'
             AND createdAt >= '${startOfDayVN}'
         `;
-        
+
         const result = await db.$queryRawUnsafe(queryString);
         return result;
       })(),
@@ -214,7 +212,7 @@ export async function calculateActiveUsersInfo(
           WHERE userId IN (${userIdsStr})
             AND branch = '${branch}'
         `;
-        
+
         const result = await db.$queryRawUnsafe(queryString);
         return result;
       })(),
@@ -231,14 +229,14 @@ export async function calculateActiveUsersInfo(
             AND UserId IN (${userIdsStr})
             AND Note = N'Thời gian phí'
             AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) >= '${startOfWeekVN}'
-            AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) <= '${today}'
+            AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) <= NOW()
           GROUP BY UserId
         `;
 
         if (isDebug) {
           console.log("=== DEBUG TOP UP QUERY ===");
           console.log("startOfWeekVN:", startOfWeekVN);
-          console.log("today:", today);
+          console.log("curDate:", curDate);
           console.log("Query string:", queryString);
         }
 
@@ -259,10 +257,10 @@ export async function calculateActiveUsersInfo(
             isUsed
           FROM GiftRound
           WHERE userId IN (${userIdsStr})
-            AND expiredAt >= '${today}'
+            AND expiredAt >= NOW()
             AND isUsed = false
         `;
-        
+
         const result = await db.$queryRawUnsafe(queryString);
         return result;
       })(),
@@ -275,7 +273,7 @@ export async function calculateActiveUsersInfo(
           console.log("endOfWeekVN:", endOfWeekVN);
           console.log("Using raw query for timezone control");
         }
-        
+
         const userIdsStr = finalListUsers.join(",");
         const queryString = `
           SELECT 
@@ -296,7 +294,7 @@ export async function calculateActiveUsersInfo(
             AND createdAt <= '${endOfWeekVN}'
           ORDER BY createdAt DESC
         `;
-        
+
         const result = await db.$queryRawUnsafe(queryString);
         return result;
       })(),
@@ -435,7 +433,10 @@ export async function calculateActiveUsersInfo(
         totalCheckIn = Math.floor(totalPlayTimeHours * starsPerHour);
 
         if (isDebug && debugUsers.includes(userId)) {
-          console.log(`User ${userId} totalPlayTimeMinutes:`, totalPlayTimeMinutes);
+          console.log(
+            `User ${userId} totalPlayTimeMinutes:`,
+            totalPlayTimeMinutes,
+          );
           console.log(`User ${userId} totalPlayTimeHours:`, totalPlayTimeHours);
           console.log(`User ${userId} starsPerHour:`, starsPerHour);
           console.log(`User ${userId} totalCheckIn:`, totalCheckIn);
@@ -512,10 +513,9 @@ export async function calculateActiveUsersInfo(
 
         // Cập nhật magicStone trong table User = totalRound và lưu xuống DB - convert sang raw query
         if (userData) {
-          const currentTime = getVNTimeForPrisma();
           await db.$executeRawUnsafe(`
             UPDATE User 
-            SET magicStone = ${totalRound}, updatedAt = '${currentTime}'
+            SET magicStone = ${totalRound}, updatedAt = NOW()
             WHERE id = '${userData.id}'
           `);
         }
@@ -543,7 +543,7 @@ export async function calculateActiveUsersInfo(
           round: totalRound,
           stars: userData?.stars || 0,
           magicStone: userData?.magicStone || 0,
-          isUseApp: userData?.isUseApp !== undefined ? userData.isUseApp : true,
+          isUseApp: userData?.isUseApp !== undefined ? Boolean(userData.isUseApp) : true,
           note: userData?.note || "",
           totalPayment: userTopUp,
           giftRound: totalGiftRounds,
@@ -561,7 +561,7 @@ export async function calculateActiveUsersInfo(
         round: totalRound,
         stars: userData?.stars || 0,
         magicStone: userData?.magicStone || 0,
-        isUseApp: userData?.isUseApp !== undefined ? userData.isUseApp : true,
+        isUseApp: userData?.isUseApp !== undefined ? Boolean(userData.isUseApp) : true,
         note: userData?.note || "",
         totalPayment: userTopUp,
         giftRound: totalGiftRounds,

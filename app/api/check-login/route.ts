@@ -1,42 +1,35 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
 import { cookies } from "next/headers";
+import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
 
-export async function POST(req: Request, res: Response): Promise<any> {
-  const cookieStore = await cookies();
-  const branchFromCookie = cookieStore.get("branch")?.value;
-
+export async function POST(req: NextRequest) {
   try {
-    const body = await req.text();
-    console.log("Check-login request body:", body);
+    const cookieStore = await cookies();
+    const branchFromCookie = cookieStore.get("branch")?.value;
 
-    const { userName, machineName, isAdmin } = JSON.parse(body);
-
-    // Xử lý check admin
-    if (isAdmin) {
-      console.log("Processing admin check for user:", userName);
-      if (userName !== "gateway_admin") {
-        console.log("Admin check failed: Invalid userName");
-        return NextResponse.json(
-          {
-            statusCode: 401,
-            message: "Invalid admin credentials",
-            data: null,
-          },
-          { status: 401 },
-        );
-      }
-
-      return NextResponse.json({
-        statusCode: 200,
-        message: "Admin check successful",
-        data: {
-          userId: "admin",
-          id: "admin",
-          userName: "gateway_admin",
-          role: "admin",
+    if (!branchFromCookie) {
+      return NextResponse.json(
+        {
+          statusCode: 400,
+          message: "Branch cookie is required",
+          data: null,
         },
-      });
+        { status: 400 },
+      );
+    }
+
+    const { userName, machineName } = await req.json();
+
+    if (!userName && !machineName) {
+      return NextResponse.json(
+        {
+          statusCode: 400,
+          message: "userName hoặc machineName là bắt buộc",
+          data: null,
+        },
+        { status: 400 },
+      );
     }
 
     const fnetDB = await getFnetDB();
@@ -57,11 +50,10 @@ export async function POST(req: Request, res: Response): Promise<any> {
     let allUsers: any[] = [];
 
     if (userName && machineName) {
-      const usersWithSameUsername = await db.user.findMany({
-        where: {
-          userName: userName,
-        },
-      });
+      const usersWithSameUsername = await db.$queryRaw<any[]>`
+        SELECT * FROM User 
+        WHERE userName = ${userName}
+      `;
 
       console.log("Users with same username:", usersWithSameUsername.length);
 
@@ -78,12 +70,11 @@ export async function POST(req: Request, res: Response): Promise<any> {
         );
       }
 
-      const currentUsers = await db.user.findMany({
-        where: {
-          userId: Number(userId),
-          branch: branchFromCookie,
-        },
-      });
+      const currentUsers = await db.$queryRaw<any[]>`
+        SELECT * FROM User 
+        WHERE userId = ${Number(userId)} 
+        AND branch = ${branchFromCookie}
+      `;
 
       if (!currentUsers.length) {
         console.error(
@@ -112,11 +103,11 @@ export async function POST(req: Request, res: Response): Promise<any> {
       allUsers = [...currentUsers];
 
       if (validUserNames.length > 0) {
-        const usersByUsername = await db.user.findMany({
-          where: {
-            userName: { in: validUserNames },
-          },
-        });
+        const usernamesString = validUserNames.map(name => `'${name}'`).join(',');
+        const usersByUsername = await db.$queryRawUnsafe<any[]>(`
+          SELECT * FROM User 
+          WHERE userName IN (${usernamesString})
+        `);
 
         const uniqueBranches = new Set(
           usersByUsername.map((user) => user.branch),
@@ -161,20 +152,12 @@ export async function POST(req: Request, res: Response): Promise<any> {
     // Tính lại stars từ UserStarHistory cho userId hiện tại (base cho migration, không update DB)
     let starsCalculated = null;
     if (userId) {
-      const histories = await db.userStarHistory.findMany({
-        where: {
-          userId: Number(userId),
-          branch: branchFromCookie,
-          createdAt: {
-            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-          },
-        },
-        select: {
-          type: true,
-          oldStars: true,
-          newStars: true,
-        },
-      });
+      const histories = await db.$queryRaw<any[]>`
+        SELECT type, oldStars, newStars FROM UserStarHistory 
+        WHERE userId = ${Number(userId)} 
+        AND branch = ${branchFromCookie}
+        AND createdAt >= ${new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)}
+      `;
       const { checkIn, game, reward } = histories.reduce(
         (acc, h) => {
           if (h.type === "CHECK_IN")

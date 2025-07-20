@@ -18,76 +18,79 @@ export async function GET(request: Request) {
       );
     }
 
-    const whereClause: any = {
-      status: "INITIAL",
-      branch: branch,
-    };
+    let userFilter = "";
+    let userJoin = "";
 
     // Nếu có userId, lọc theo user cụ thể
     if (userId) {
-      const user = await db.user.findFirst({
-        where: {
-          userId: parseInt(userId, 10),
-          branch: branch,
-        },
-      });
+      const user = await db.$queryRaw<any[]>`
+        SELECT * FROM User 
+        WHERE userId = ${parseInt(userId, 10)} 
+        AND branch = ${branch}
+        LIMIT 1
+      `;
 
-      if (user) {
-        whereClause.userId = user.id; // user.id là foreign key trong UserRewardMap
+      if (user.length > 0) {
+        userFilter = `AND urm.userId = ${user[0].id}`;
+        userJoin = `
+          LEFT JOIN User u ON urm.userId = u.id AND u.branch = '${branch}'
+        `;
       }
+    } else {
+      userJoin = `
+        LEFT JOIN User u ON urm.userId = u.id AND u.branch = '${branch}'
+      `;
     }
 
-    const pendingRewards = await db.userRewardMap.findMany({
-      where: whereClause,
-      include: {
-        reward: {
-          select: {
-            id: true,
-            name: true,
-            value: true,
-            stars: true,
-          },
-        },
-        promotionCode: {
-          select: {
-            id: true,
-            code: true,
-            name: true,
-            value: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    const pendingRewards = await db.$queryRawUnsafe<any[]>(`
+      SELECT 
+        urm.*,
+        r.id as reward_id,
+        r.name as reward_name,
+        r.value as reward_value,
+        r.stars as reward_stars,
+        pc.id as promotionCode_id,
+        pc.code as promotionCode_code,
+        pc.name as promotionCode_name,
+        pc.value as promotionCode_value,
+        u.id as user_id,
+        u.userId as user_userId,
+        u.userName as user_userName,
+        u.stars as user_stars,
+        u.branch as user_branch
+      FROM UserRewardMap urm
+      LEFT JOIN Reward r ON urm.rewardId = r.id
+      LEFT JOIN PromotionCode pc ON urm.promotionCodeId = pc.id
+      ${userJoin}
+      WHERE urm.status = 'INITIAL'
+        AND urm.branch = '${branch}'
+        ${userFilter}
+      ORDER BY urm.createdAt DESC
+    `);
 
-    // Join with User table manually
-    const rewardsWithUser = await Promise.all(
-      pendingRewards.map(async (reward) => {
-        let user = null;
-        if (reward.userId) {
-          // reward.userId là User.id (foreign key), cần tìm user thực tế
-          user = await db.user.findFirst({
-            where: {
-              id: reward.userId, // Tìm theo User.id (foreign key)
-              branch: branch,
-            },
-            select: {
-              id: true,
-              userId: true, // Business identifier
-              userName: true,
-              stars: true,
-              branch: true,
-            },
-          });
-        }
-        return {
-          ...reward,
-          user,
-        };
-      }),
-    );
+    // Transform data to match expected format
+    const rewardsWithUser = pendingRewards.map((reward) => ({
+      ...reward,
+      reward: reward.reward_id ? {
+        id: reward.reward_id,
+        name: reward.reward_name,
+        value: reward.reward_value,
+        stars: reward.reward_stars,
+      } : null,
+      promotionCode: reward.promotionCode_id ? {
+        id: reward.promotionCode_id,
+        code: reward.promotionCode_code,
+        name: reward.promotionCode_name,
+        value: reward.promotionCode_value,
+      } : null,
+      user: reward.user_id ? {
+        id: reward.user_id,
+        userId: reward.user_userId,
+        userName: reward.user_userName,
+        stars: reward.user_stars,
+        branch: reward.user_branch,
+      } : null,
+    }));
 
     return NextResponse.json(rewardsWithUser);
   } catch (error) {

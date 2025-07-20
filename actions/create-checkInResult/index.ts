@@ -11,7 +11,7 @@ import { CreateCheckInResult } from "./schema";
 import { InputType, ReturnType } from "./type";
 import dayjs from "@/lib/dayjs";
 import { calculateActiveUsersInfo } from "@/lib/user-calculator";
-import { getCurrentTimeVN, getVNTimeForPrisma } from "@/lib/timezone-utils";
+import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
 import { cookies } from "next/headers";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
@@ -48,15 +48,15 @@ const handler = async (data: InputType): Promise<ReturnType> => {
 
   // Enhanced anti-spam: Prevent check-in if last check-in was less than 30 minutes ago
   const lastCheckIns = await db.$queryRaw`
-    SELECT * FROM "CheckInResult" 
-    WHERE "userId" = ${userId} AND "branch" = ${branch}
-    ORDER BY "createdAt" DESC
+    SELECT * FROM CheckInResult 
+    WHERE userId = ${userId} AND branch = ${branch}
+    ORDER BY createdAt DESC
     LIMIT 1
   `;
   const lastCheckIn = (lastCheckIns as any[])[0];
 
   if (lastCheckIn) {
-    const now = getCurrentTimeVN();
+    const now = dayjs(getCurrentTimeVNISO());
     const last = dayjs(dayjs(lastCheckIn.createdAt).subtract(7, "hours"));
     const minutesSinceLastCheckIn = now.diff(last, "minute");
 
@@ -88,24 +88,32 @@ const handler = async (data: InputType): Promise<ReturnType> => {
       };
     }
 
-    console.log('getVNTimeForPrisma', getVNTimeForPrisma().toISOString())
+    console.log('getCurrentTimeVNISO', getCurrentTimeVNISO())
 
     await db.$transaction(async (tx) => {
       // Create checkInResult using raw SQL
-      const checkInResults = await tx.$queryRaw`
-        INSERT INTO "CheckInResult" ("userId", "branch", "createdAt", "updatedAt")
-        VALUES (${userId}, ${branch}, ${getVNTimeForPrisma()}, ${getVNTimeForPrisma()})
-        RETURNING *
+      await tx.$executeRaw`
+        INSERT INTO CheckInResult (userId, branch, createdAt)
+        VALUES (${userId}, ${branch}, ${getCurrentTimeVNISO()})
       `;
-      checkIn = (checkInResults as any[])[0];
+      
+      // Get the inserted record ID
+      const checkInResults = await tx.$queryRaw`SELECT LAST_INSERT_ID() as id`;
+      const checkInId = (checkInResults as any[])[0]?.id;
+      
+      // Get the full checkIn record
+      const checkInRecords = await tx.$queryRaw`
+        SELECT * FROM CheckInResult WHERE id = ${checkInId}
+      `;
+      checkIn = (checkInRecords as any[])[0];
 
       if (checkIn) {
         const { id } = checkIn;
 
         // Find user using raw SQL
         const users = await tx.$queryRaw`
-          SELECT * FROM "User" 
-          WHERE "userId" = ${userId} AND "branch" = ${branch}
+          SELECT * FROM User 
+          WHERE userId = ${userId} AND branch = ${branch}
           LIMIT 1
         `;
         const user = (users as any[])[0];
@@ -116,15 +124,15 @@ const handler = async (data: InputType): Promise<ReturnType> => {
 
           // Create UserStarHistory using raw SQL
           await tx.$executeRaw`
-            INSERT INTO "UserStarHistory" ("userId", "type", "oldStars", "newStars", "targetId", "createdAt", "branch", "updatedAt")
-            VALUES (${userId}, 'CHECK_IN', ${oldStars}, ${newStars}, ${id}, ${getVNTimeForPrisma()}, ${branch}, ${getVNTimeForPrisma()})
+            INSERT INTO UserStarHistory (userId, type, oldStars, newStars, targetId, createdAt, branch)
+            VALUES (${userId}, 'CHECK_IN', ${oldStars}, ${newStars}, ${id}, ${getCurrentTimeVNISO()}, ${branch})
           `;
 
           // Update user stars using raw SQL
           await tx.$executeRaw`
-            UPDATE "User" 
-            SET "stars" = ${newStars}, "updatedAt" = ${getVNTimeForPrisma()}
-            WHERE "id" = ${user.id}
+            UPDATE User 
+            SET stars = ${newStars}, updatedAt = ${getCurrentTimeVNISO()}
+            WHERE id = ${user.id}
           `;
         }
       }

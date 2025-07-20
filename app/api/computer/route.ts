@@ -7,10 +7,9 @@ import { Prisma } from "@/prisma/generated/prisma-client";
 import { calculateDailyUsageMinutes } from "@/lib/battle-pass-utils";
 import {
   getStartOfDayVNISO,
-  getCurrentDateVN,
-  getStartOfWeekDateVN,
-  getEndOfWeekDateVN,
-  convertToVNTimeISO,
+  getCurrentDateVNString,
+  getStartOfWeekVNISO,
+  getEndOfWeekVNISO,
 } from "@/lib/timezone-utils";
 import { calculateActiveUsersInfo } from "@/lib/user-calculator";
 
@@ -39,10 +38,8 @@ export async function GET() {
   const branchFromCookie = cookieStore.get("branch")?.value;
 
   const startOfDayVN = getStartOfDayVNISO();
-  const today = getCurrentDateVN();
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth() + 1).padStart(2, "0");
-  const dd = String(today.getDate()).padStart(2, "0");
+  const today = getCurrentDateVNString();
+  const [yyyy, mm, dd] = today.split('-');
   const curDate = `${yyyy}-${mm}-${dd}`;
 
   try {
@@ -77,9 +74,12 @@ export async function GET() {
         ORDER BY s.MachineName ASC;
       `),
 
-        // 2. Device histories
+        // 2. Device histories với timezone conversion
         db.$queryRaw`
-        SELECT h.*, h.createdAt
+        SELECT 
+          h.*,
+          CONVERT_TZ(h.createdAt, '+00:00', '+07:00') as createdAt,
+          CONVERT_TZ(h.updatedAt, '+00:00', '+07:00') as updatedAt
         FROM (
           SELECT *,
                  ROW_NUMBER() OVER (PARTITION BY deviceId, type ORDER BY createdAt DESC) as rn
@@ -90,20 +90,37 @@ export async function GET() {
       `,
 
         // 3. Computers với devices
-        db.computer.findMany({
-          where: {
-            branch: branchFromCookie,
-            name: {
-              not: "ADMIN",
-            },
-          },
-          include: {
-            devices: true,
-          },
-        }),
+        db.$queryRaw`
+        SELECT 
+          c.*,
+          COALESCE(
+            JSON_ARRAYAGG(
+              CASE WHEN d.id IS NOT NULL THEN
+                JSON_OBJECT(
+                  'id', d.id,
+                  'monitorStatus', d.monitorStatus,
+                  'keyboardStatus', d.keyboardStatus,
+                  'mouseStatus', d.mouseStatus,
+                  'headphoneStatus', d.headphoneStatus,
+                  'chairStatus', d.chairStatus,
+                  'networkStatus', d.networkStatus,
+                  'computerStatus', d.computerStatus,
+                  'note', d.note
+                )
+              END
+            ), '[]'
+          ) as devices
+        FROM Computer c
+        LEFT JOIN Device d ON c.id = d.computerId
+        WHERE c.branch = ${branchFromCookie}
+        AND c.name != 'ADMIN'
+        GROUP BY c.id
+      `,
 
         // 4. Check in items (cache lại)
-        db.checkInItem.findMany(),
+        db.$queryRaw`
+        SELECT * FROM CheckInItem
+      `,
       ]);
 
     // Map histories vào từng device
@@ -132,6 +149,8 @@ export async function GET() {
         ? await calculateActiveUsersInfo(activeUserIds, branchFromCookie)
         : [];
 
+    console.log("usersInfo", usersInfo);
+
     // Tạo map để lookup nhanh user info
     const userInfoMap = new Map();
     usersInfo.forEach((userInfo) => {
@@ -140,7 +159,7 @@ export async function GET() {
 
     const results = [];
 
-    for (const computer of computers) {
+    for (const computer of computers as any[]) {
       const { name } = computer || {};
       const computerStatusData = computerStatus.find(
         (status: { MachineName: string }) => status.MachineName === name,
@@ -149,6 +168,9 @@ export async function GET() {
 
       // Lấy user info từ map
       const userInfo = UserId ? userInfoMap.get(parseInt(UserId, 10)) : null;
+
+      // Parse devices JSON
+      const devices = computer.devices ? JSON.parse(computer.devices) : [];
 
       results.push({
         id: computer.id,
@@ -167,7 +189,7 @@ export async function GET() {
         note: userInfo?.note || "",
         totalPayment: userInfo?.totalPayment || 0,
         giftRound: userInfo?.giftRound || 0,
-        devices: computer.devices.map((device) => ({
+        devices: devices.filter((device: any) => device && device.id).map((device: any) => ({
           id: device.id,
           monitorStatus: device.monitorStatus,
           keyboardStatus: device.keyboardStatus,
@@ -181,31 +203,15 @@ export async function GET() {
             deviceIdToHistories[device.id]?.REPORT
               ? {
                   ...deviceIdToHistories[device.id].REPORT,
-                  createdAt: deviceIdToHistories[device.id].REPORT.createdAt
-                    ? convertToVNTimeISO(
-                        deviceIdToHistories[device.id].REPORT.createdAt,
-                      )
-                    : null,
-                  updatedAt: deviceIdToHistories[device.id].REPORT.updatedAt
-                    ? convertToVNTimeISO(
-                        deviceIdToHistories[device.id].REPORT.updatedAt,
-                      )
-                    : null,
+                  createdAt: deviceIdToHistories[device.id].REPORT.createdAt,
+                  updatedAt: deviceIdToHistories[device.id].REPORT.updatedAt,
                 }
               : null,
             deviceIdToHistories[device.id]?.REPAIR
               ? {
                   ...deviceIdToHistories[device.id].REPAIR,
-                  createdAt: deviceIdToHistories[device.id].REPAIR.createdAt
-                    ? convertToVNTimeISO(
-                        deviceIdToHistories[device.id].REPAIR.createdAt,
-                      )
-                    : null,
-                  updatedAt: deviceIdToHistories[device.id].REPAIR.updatedAt
-                    ? convertToVNTimeISO(
-                        deviceIdToHistories[device.id].REPAIR.updatedAt,
-                      )
-                    : null,
+                  createdAt: deviceIdToHistories[device.id].REPAIR.createdAt,
+                  updatedAt: deviceIdToHistories[device.id].REPAIR.updatedAt,
                 }
               : null,
           ],
