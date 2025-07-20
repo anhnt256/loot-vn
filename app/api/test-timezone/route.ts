@@ -6,9 +6,11 @@ import dayjs from "@/lib/dayjs";
 export async function GET() {
   try {
     const currentVNTime = getCurrentTimeVNISO();
-    const currentVNTimeFormatted = dayjs().utcOffset(7).format("YYYY-MM-DD HH:mm:ss");
+    const currentVNTimeFormatted = dayjs()
+      .utcOffset(7)
+      .format("YYYY-MM-DD HH:mm:ss");
     const testName = `Test Rank ${new Date().getTime()}`;
-    
+
     // Test insert vào table Rank bằng raw SQL
     const result = await db.$executeRaw`
       INSERT INTO Rank (name, fromValue, toValue, discount, foodVoucher, drinkVoucher, createdAt, updatedAt)
@@ -26,7 +28,9 @@ export async function GET() {
       data: {
         currentVNTime,
         currentVNTimeFormatted,
-        insertedRank: Array.isArray(insertedRank) ? insertedRank[0] : insertedRank,
+        insertedRank: Array.isArray(insertedRank)
+          ? insertedRank[0]
+          : insertedRank,
         rawResult: result,
       },
     });
@@ -38,7 +42,7 @@ export async function GET() {
         message: "Failed to get timezone or insert rank",
         error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

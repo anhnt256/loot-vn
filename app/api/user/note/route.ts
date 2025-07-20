@@ -75,21 +75,21 @@ export async function PATCH(req: NextRequest) {
       console.log("Debug - Created new user:", userToUpdate);
     } else {
       console.log("Debug - Found existing user:", existingUser[0]);
-      
+
       // Update note trong table user
       await db.$executeRaw`
         UPDATE User 
         SET note = ${note}, updatedAt = NOW()
         WHERE id = ${existingUser[0].id}
       `;
-      
+
       // Get the updated user
       const updatedUser = await db.$queryRaw<any[]>`
         SELECT * FROM User 
         WHERE id = ${existingUser[0].id}
         LIMIT 1
       `;
-      
+
       userToUpdate = updatedUser[0];
     }
 

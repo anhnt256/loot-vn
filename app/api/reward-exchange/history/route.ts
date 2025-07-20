@@ -89,28 +89,34 @@ export async function GET(request: Request) {
       note: userRewardMap.note,
       createdAt: userRewardMap.createdAt,
       updatedAt: userRewardMap.updatedAt,
-      reward: userRewardMap.reward_id ? {
-        id: userRewardMap.reward_id,
-        name: userRewardMap.reward_name,
-        value: userRewardMap.reward_value,
-      } : null,
-      user: userRewardMap.user_id ? {
-        id: userRewardMap.user_id,
-        userId: userRewardMap.user_userId,
-        userName: userRewardMap.user_userName,
-        stars: userRewardMap.user_stars,
-        branch: userRewardMap.user_branch,
-      } : null,
-      userStarHistory: userRewardMap.userStarHistory_id ? {
-        id: userRewardMap.userStarHistory_id,
-        oldStars: userRewardMap.userStarHistory_oldStars,
-        newStars: userRewardMap.userStarHistory_newStars,
-        createdAt: userRewardMap.userStarHistory_createdAt,
-      } : null,
+      reward: userRewardMap.reward_id
+        ? {
+            id: userRewardMap.reward_id,
+            name: userRewardMap.reward_name,
+            value: userRewardMap.reward_value,
+          }
+        : null,
+      user: userRewardMap.user_id
+        ? {
+            id: userRewardMap.user_id,
+            userId: userRewardMap.user_userId,
+            userName: userRewardMap.user_userName,
+            stars: userRewardMap.user_stars,
+            branch: userRewardMap.user_branch,
+          }
+        : null,
+      userStarHistory: userRewardMap.userStarHistory_id
+        ? {
+            id: userRewardMap.userStarHistory_id,
+            oldStars: userRewardMap.userStarHistory_oldStars,
+            newStars: userRewardMap.userStarHistory_newStars,
+            createdAt: userRewardMap.userStarHistory_createdAt,
+          }
+        : null,
     }));
 
-    console.log('histories', historiesWithUser)
-    console.log('total', total)
+    console.log("histories", historiesWithUser);
+    console.log("total", total);
 
     return NextResponse.json({
       histories: historiesWithUser,

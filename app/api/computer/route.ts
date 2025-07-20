@@ -39,7 +39,7 @@ export async function GET() {
 
   const startOfDayVN = getStartOfDayVNISO();
   const today = getCurrentDateVNString();
-  const [yyyy, mm, dd] = today.split('-');
+  const [yyyy, mm, dd] = today.split("-");
   const curDate = `${yyyy}-${mm}-${dd}`;
 
   try {
@@ -189,33 +189,35 @@ export async function GET() {
         note: userInfo?.note || "",
         totalPayment: userInfo?.totalPayment || 0,
         giftRound: userInfo?.giftRound || 0,
-        devices: devices.filter((device: any) => device && device.id).map((device: any) => ({
-          id: device.id,
-          monitorStatus: device.monitorStatus,
-          keyboardStatus: device.keyboardStatus,
-          mouseStatus: device.mouseStatus,
-          headphoneStatus: device.headphoneStatus,
-          chairStatus: device.chairStatus,
-          networkStatus: device.networkStatus,
-          computerStatus: device.computerStatus,
-          note: device.note,
-          histories: [
-            deviceIdToHistories[device.id]?.REPORT
-              ? {
-                  ...deviceIdToHistories[device.id].REPORT,
-                  createdAt: deviceIdToHistories[device.id].REPORT.createdAt,
-                  updatedAt: deviceIdToHistories[device.id].REPORT.updatedAt,
-                }
-              : null,
-            deviceIdToHistories[device.id]?.REPAIR
-              ? {
-                  ...deviceIdToHistories[device.id].REPAIR,
-                  createdAt: deviceIdToHistories[device.id].REPAIR.createdAt,
-                  updatedAt: deviceIdToHistories[device.id].REPAIR.updatedAt,
-                }
-              : null,
-          ],
-        })),
+        devices: devices
+          .filter((device: any) => device && device.id)
+          .map((device: any) => ({
+            id: device.id,
+            monitorStatus: device.monitorStatus,
+            keyboardStatus: device.keyboardStatus,
+            mouseStatus: device.mouseStatus,
+            headphoneStatus: device.headphoneStatus,
+            chairStatus: device.chairStatus,
+            networkStatus: device.networkStatus,
+            computerStatus: device.computerStatus,
+            note: device.note,
+            histories: [
+              deviceIdToHistories[device.id]?.REPORT
+                ? {
+                    ...deviceIdToHistories[device.id].REPORT,
+                    createdAt: deviceIdToHistories[device.id].REPORT.createdAt,
+                    updatedAt: deviceIdToHistories[device.id].REPORT.updatedAt,
+                  }
+                : null,
+              deviceIdToHistories[device.id]?.REPAIR
+                ? {
+                    ...deviceIdToHistories[device.id].REPAIR,
+                    createdAt: deviceIdToHistories[device.id].REPAIR.createdAt,
+                    updatedAt: deviceIdToHistories[device.id].REPAIR.updatedAt,
+                  }
+                : null,
+            ],
+          })),
       });
     }
 

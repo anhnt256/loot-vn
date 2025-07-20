@@ -110,7 +110,7 @@ export async function calculateActiveUsersInfo(
     const startOfWeekVN = getStartOfWeekVNISO();
     const endOfWeekVN = getEndOfWeekVNISO();
     const todayDayOfWeek = getCurrentDayOfWeekVN();
-    
+
     if (isDebug) {
       console.log("=== DEBUG TIMEZONE CONVERSION ===");
       console.log("startOfWeekVN:", startOfWeekVN);
@@ -543,7 +543,10 @@ export async function calculateActiveUsersInfo(
           round: totalRound,
           stars: userData?.stars || 0,
           magicStone: userData?.magicStone || 0,
-          isUseApp: userData?.isUseApp !== undefined ? Boolean(userData.isUseApp) : true,
+          isUseApp:
+            userData?.isUseApp !== undefined
+              ? Boolean(userData.isUseApp)
+              : true,
           note: userData?.note || "",
           totalPayment: userTopUp,
           giftRound: totalGiftRounds,
@@ -561,7 +564,8 @@ export async function calculateActiveUsersInfo(
         round: totalRound,
         stars: userData?.stars || 0,
         magicStone: userData?.magicStone || 0,
-        isUseApp: userData?.isUseApp !== undefined ? Boolean(userData.isUseApp) : true,
+        isUseApp:
+          userData?.isUseApp !== undefined ? Boolean(userData.isUseApp) : true,
         note: userData?.note || "",
         totalPayment: userTopUp,
         giftRound: totalGiftRounds,

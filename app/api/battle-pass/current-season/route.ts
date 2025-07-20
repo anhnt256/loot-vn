@@ -47,13 +47,14 @@ export async function GET() {
 
         // Create rewards for the default season
         const seasonId = defaultSeason[0].id;
-        
+
         // Create 30 regular rewards
         for (let i = 1; i <= 30; i++) {
           const level = i;
           const isFree = level % 2 === 1; // Odd levels are free, even levels are premium
-          const rewardType = level <= 10 ? "stars" : level <= 20 ? "coins" : "voucher";
-          
+          const rewardType =
+            level <= 10 ? "stars" : level <= 20 ? "coins" : "voucher";
+
           await db.$executeRaw`
             INSERT INTO BattlePassReward (seasonId, level, name, description, type, rewardType, rewardValue, isBonus, createdAt, updatedAt)
             VALUES (
@@ -61,7 +62,7 @@ export async function GET() {
               ${level},
               ${isFree ? `Free Reward Lv.${level}` : `Premium Reward Lv.${level}`},
               ${isFree ? `Free tier reward for level ${level}` : `Premium tier reward for level ${level}`},
-              ${isFree ? 'free' : 'premium'},
+              ${isFree ? "free" : "premium"},
               ${rewardType},
               ${isFree ? level * 50 : level * 150},
               false,
@@ -102,8 +103,8 @@ export async function GET() {
         const transformedSeason = {
           ...completeSeason[0],
           rewards: completeSeason
-            .filter(row => row.reward_id)
-            .map(row => ({
+            .filter((row) => row.reward_id)
+            .map((row) => ({
               id: row.reward_id,
               level: row.reward_level,
               name: row.reward_name,
@@ -112,7 +113,7 @@ export async function GET() {
               rewardType: row.reward_rewardType,
               rewardValue: row.reward_rewardValue,
               isBonus: row.reward_isBonus,
-            }))
+            })),
         };
 
         return NextResponse.json(transformedSeason);
@@ -140,8 +141,8 @@ export async function GET() {
           const transformedSeason = {
             ...latestSeason[0],
             rewards: latestSeason
-              .filter(row => row.reward_id)
-              .map(row => ({
+              .filter((row) => row.reward_id)
+              .map((row) => ({
                 id: row.reward_id,
                 level: row.reward_level,
                 name: row.reward_name,
@@ -150,7 +151,7 @@ export async function GET() {
                 rewardType: row.reward_rewardType,
                 rewardValue: row.reward_rewardValue,
                 isBonus: row.reward_isBonus,
-              }))
+              })),
           };
 
           return NextResponse.json(transformedSeason);
@@ -185,8 +186,8 @@ export async function GET() {
     const transformedCurrentSeason = {
       ...seasonWithRewards[0],
       rewards: seasonWithRewards
-        .filter(row => row.reward_id)
-        .map(row => ({
+        .filter((row) => row.reward_id)
+        .map((row) => ({
           id: row.reward_id,
           level: row.reward_level,
           name: row.reward_name,
@@ -195,7 +196,7 @@ export async function GET() {
           rewardType: row.reward_rewardType,
           rewardValue: row.reward_rewardValue,
           isBonus: row.reward_isBonus,
-        }))
+        })),
     };
 
     return NextResponse.json(transformedCurrentSeason);

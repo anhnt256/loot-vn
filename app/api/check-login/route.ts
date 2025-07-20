@@ -103,7 +103,9 @@ export async function POST(req: NextRequest) {
       allUsers = [...currentUsers];
 
       if (validUserNames.length > 0) {
-        const usernamesString = validUserNames.map(name => `'${name}'`).join(',');
+        const usernamesString = validUserNames
+          .map((name) => `'${name}'`)
+          .join(",");
         const usersByUsername = await db.$queryRawUnsafe<any[]>(`
           SELECT * FROM User 
           WHERE userName IN (${usernamesString})

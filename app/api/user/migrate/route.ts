@@ -38,10 +38,8 @@ export async function POST(req: NextRequest) {
 
     // Xóa các tài khoản khác
     if (deleteIds.length > 0) {
-      const idsString = deleteIds.join(',');
-      await db.$executeRawUnsafe(
-        `DELETE FROM User WHERE id IN (${idsString})`
-      );
+      const idsString = deleteIds.join(",");
+      await db.$executeRawUnsafe(`DELETE FROM User WHERE id IN (${idsString})`);
     }
 
     return NextResponse.json({

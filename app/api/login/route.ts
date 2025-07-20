@@ -248,7 +248,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
               NOW()
             )
           `;
-          
+
           // Get the created user
           const newUser = await db.$queryRaw<any[]>`
             SELECT * FROM User 
@@ -338,7 +338,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
         SET userId = ${userId}, updatedAt = NOW()
         WHERE id = ${existingUser[0].id}
       `;
-      
+
       // Get the updated user
       const updatedUser = await db.$queryRaw<any[]>`
         SELECT * FROM User 

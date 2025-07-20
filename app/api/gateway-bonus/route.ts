@@ -212,7 +212,7 @@ export async function POST(request: NextRequest) {
       VALUES (
         ${parseInt(userId)},
         ${3},
-        ${'Gateway Bonus'},
+        ${"Gateway Bonus"},
         ${0},
         ${branch},
         NOW(),

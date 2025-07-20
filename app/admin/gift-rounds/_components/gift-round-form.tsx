@@ -91,7 +91,7 @@ export function GiftRoundForm({
       setIsLoading(true);
       console.log("Submitting data:", data);
       console.log("Form errors:", errors);
-      
+
       const url = initialData
         ? `/api/gift-rounds/${initialData.id}`
         : "/api/gift-rounds";
@@ -106,7 +106,7 @@ export function GiftRoundForm({
       });
 
       console.log("Response status:", response.status);
-      
+
       if (!response.ok) {
         const error = await response.json();
         console.error("API error:", error);
@@ -130,13 +130,14 @@ export function GiftRoundForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
       <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
         <div className="text-sm text-blue-800">
-          <strong>Branch hiện tại:</strong> {currentBranch === "GO_VAP" ? "Gò Vấp" : "Tân Phú"}
+          <strong>Branch hiện tại:</strong>{" "}
+          {currentBranch === "GO_VAP" ? "Gò Vấp" : "Tân Phú"}
         </div>
         <div className="text-xs text-blue-600 mt-1">
           Lượt chơi sẽ được tặng cho người dùng thuộc branch này
         </div>
       </div>
-      
+
       <div>
         <label
           htmlFor="userId"

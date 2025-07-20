@@ -65,7 +65,7 @@ function combineDateTime(dateVal: string | Date, timeVal: string | Date) {
 
   const a = dateStr.split("T")[0];
   let b;
-  
+
   if (timeStr.includes("T")) {
     b = timeStr.split("T")[1].replace("Z", ""); // loại bỏ Z nếu có
   } else {
@@ -100,14 +100,14 @@ export const calculateDailyUsageMinutes = (
 
     const enter = combineDateTime(session.EnterDate, session.EnterTime);
     let end;
-    
+
     // Trường hợp 1: start-date là ngày hôm trước và end-date null (chưa nghỉ)
     if (enter.isBefore(dayStart) && (!session.EndDate || !session.EndTime)) {
       // Tính từ 0h ngày hôm nay đến giờ hiện tại
       end = now;
       const sessionStart = dayStart;
       const sessionEnd = end.isAfter(dayEnd) ? dayEnd : end;
-      
+
       if (sessionEnd.isAfter(sessionStart)) {
         totalMinutes += sessionEnd.diff(sessionStart, "minute");
       }
@@ -118,7 +118,7 @@ export const calculateDailyUsageMinutes = (
       // Tính từ 0h ngày hôm nay đến end time
       const sessionStart = dayStart;
       const sessionEnd = end.isAfter(dayEnd) ? dayEnd : end;
-      
+
       if (sessionEnd.isAfter(sessionStart)) {
         totalMinutes += sessionEnd.diff(sessionStart, "minute");
       }

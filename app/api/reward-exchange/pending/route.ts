@@ -71,25 +71,31 @@ export async function GET(request: Request) {
     // Transform data to match expected format
     const rewardsWithUser = pendingRewards.map((reward) => ({
       ...reward,
-      reward: reward.reward_id ? {
-        id: reward.reward_id,
-        name: reward.reward_name,
-        value: reward.reward_value,
-        stars: reward.reward_stars,
-      } : null,
-      promotionCode: reward.promotionCode_id ? {
-        id: reward.promotionCode_id,
-        code: reward.promotionCode_code,
-        name: reward.promotionCode_name,
-        value: reward.promotionCode_value,
-      } : null,
-      user: reward.user_id ? {
-        id: reward.user_id,
-        userId: reward.user_userId,
-        userName: reward.user_userName,
-        stars: reward.user_stars,
-        branch: reward.user_branch,
-      } : null,
+      reward: reward.reward_id
+        ? {
+            id: reward.reward_id,
+            name: reward.reward_name,
+            value: reward.reward_value,
+            stars: reward.reward_stars,
+          }
+        : null,
+      promotionCode: reward.promotionCode_id
+        ? {
+            id: reward.promotionCode_id,
+            code: reward.promotionCode_code,
+            name: reward.promotionCode_name,
+            value: reward.promotionCode_value,
+          }
+        : null,
+      user: reward.user_id
+        ? {
+            id: reward.user_id,
+            userId: reward.user_userId,
+            userName: reward.user_userName,
+            stars: reward.user_stars,
+            branch: reward.user_branch,
+          }
+        : null,
     }));
 
     return NextResponse.json(rewardsWithUser);
