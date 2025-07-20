@@ -238,10 +238,13 @@ const RewardHistory: React.FC<RewardHistoryProps> = ({ userId }) => {
                       </div>
                       <div>
                         <h3 className="font-semibold text-gray-900 text-sm truncate">
-                          {item.reward_name || item.promotionCode_name || "Không xác định"}
+                          {item.reward_name ||
+                            item.promotionCode_name ||
+                            "Không xác định"}
                         </h3>
                         <p className="text-xs text-gray-600 font-medium">
-                          {item.reward_stars?.toLocaleString() || item.promotionCode_value?.toLocaleString()}{" "}
+                          {item.reward_stars?.toLocaleString() ||
+                            item.promotionCode_value?.toLocaleString()}{" "}
                           <span className="text-white text-sm">⭐</span>
                         </p>
                       </div>

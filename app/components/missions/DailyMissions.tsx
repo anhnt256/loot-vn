@@ -97,7 +97,11 @@ export function DailyMissions({ className }: DailyMissionsProps) {
   };
 
   // Fetch daily missions
-  const { data: missions = [], isLoading, refetch } = useQuery<Mission[]>({
+  const {
+    data: missions = [],
+    isLoading,
+    refetch,
+  } = useQuery<Mission[]>({
     queryKey: ["dailyMissions"],
     queryFn: async () => {
       let token = localStorage.getItem("token");
@@ -130,48 +134,70 @@ export function DailyMissions({ className }: DailyMissionsProps) {
     const currentHour = now.hour();
 
     // Get all unique time periods from missions
-    const missionPeriods = missions.map(m => getTimePeriodFromMission(m));
+    const missionPeriods = missions.map((m) => getTimePeriodFromMission(m));
     const uniquePeriods = [...new Set(missionPeriods)];
 
     // Get time ranges for each period from actual mission data
-    const morningMissions = missions.filter(m => getTimePeriodFromMission(m) === "MORNING");
-    const afternoonMissions = missions.filter(m => getTimePeriodFromMission(m) === "AFTERNOON");
-    const eveningMissions = missions.filter(m => getTimePeriodFromMission(m) === "EVENING");
+    const morningMissions = missions.filter(
+      (m) => getTimePeriodFromMission(m) === "MORNING",
+    );
+    const afternoonMissions = missions.filter(
+      (m) => getTimePeriodFromMission(m) === "AFTERNOON",
+    );
+    const eveningMissions = missions.filter(
+      (m) => getTimePeriodFromMission(m) === "EVENING",
+    );
 
     // Determine current period based on available mission periods and their actual time ranges
     if (uniquePeriods.includes("MORNING") && morningMissions.length > 0) {
-      const morningStart = Math.min(...morningMissions.map(m => m.startHours));
-      const morningEnd = Math.max(...morningMissions.map(m => m.endHours));
-      if (currentHour >= morningStart && currentHour <= morningEnd) return "MORNING";
+      const morningStart = Math.min(
+        ...morningMissions.map((m) => m.startHours),
+      );
+      const morningEnd = Math.max(...morningMissions.map((m) => m.endHours));
+      if (currentHour >= morningStart && currentHour <= morningEnd)
+        return "MORNING";
     }
-    
+
     if (uniquePeriods.includes("AFTERNOON") && afternoonMissions.length > 0) {
-      const afternoonStart = Math.min(...afternoonMissions.map(m => m.startHours));
-      const afternoonEnd = Math.max(...afternoonMissions.map(m => m.endHours));
-      if (currentHour >= afternoonStart && currentHour <= afternoonEnd) return "AFTERNOON";
+      const afternoonStart = Math.min(
+        ...afternoonMissions.map((m) => m.startHours),
+      );
+      const afternoonEnd = Math.max(
+        ...afternoonMissions.map((m) => m.endHours),
+      );
+      if (currentHour >= afternoonStart && currentHour <= afternoonEnd)
+        return "AFTERNOON";
     }
-    
+
     if (uniquePeriods.includes("EVENING") && eveningMissions.length > 0) {
-      const eveningStart = Math.min(...eveningMissions.map(m => m.startHours));
-      const eveningEnd = Math.max(...eveningMissions.map(m => m.endHours));
-      if (currentHour >= eveningStart && currentHour <= eveningEnd) return "EVENING";
+      const eveningStart = Math.min(
+        ...eveningMissions.map((m) => m.startHours),
+      );
+      const eveningEnd = Math.max(...eveningMissions.map((m) => m.endHours));
+      if (currentHour >= eveningStart && currentHour <= eveningEnd)
+        return "EVENING";
     }
-    
+
     // Fallback: find the period that contains current hour
     for (const mission of missions) {
-      if (currentHour >= mission.startHours && currentHour <= mission.endHours) {
+      if (
+        currentHour >= mission.startHours &&
+        currentHour <= mission.endHours
+      ) {
         return getTimePeriodFromMission(mission);
       }
     }
-    
+
     // Final fallback based on start time
-    const sortedMissions = [...missions].sort((a, b) => a.startHours - b.startHours);
+    const sortedMissions = [...missions].sort(
+      (a, b) => a.startHours - b.startHours,
+    );
     for (const mission of sortedMissions) {
       if (currentHour < mission.startHours) {
         return getTimePeriodFromMission(mission);
       }
     }
-    
+
     return "EVENING"; // Default fallback
   };
 
@@ -185,7 +211,7 @@ export function DailyMissions({ className }: DailyMissionsProps) {
     if (startHours >= 6 && endHours <= 12) return "MORNING";
     if (startHours >= 12 && endHours <= 17) return "AFTERNOON";
     if (startHours >= 17) return "EVENING";
-    
+
     // Fallback based on start time
     if (startHours < 12) return "MORNING";
     if (startHours < 17) return "AFTERNOON";
@@ -262,8 +288,12 @@ export function DailyMissions({ className }: DailyMissionsProps) {
       const bStatus = getMissionStatus(b);
 
       // Check if missions can be claimed (completed but not claimed)
-      const aCanClaim = Boolean(!a.userCompletion?.isDone && a.progress?.canClaim);
-      const bCanClaim = Boolean(!b.userCompletion?.isDone && b.progress?.canClaim);
+      const aCanClaim = Boolean(
+        !a.userCompletion?.isDone && a.progress?.canClaim,
+      );
+      const bCanClaim = Boolean(
+        !b.userCompletion?.isDone && b.progress?.canClaim,
+      );
 
       // Priority 1: Claimable missions first (regardless of status)
       if (aCanClaim !== bCanClaim) {
@@ -358,26 +388,29 @@ export function DailyMissions({ className }: DailyMissionsProps) {
       const previousMissions = queryClient.getQueryData(["dailyMissions"]);
 
       // Optimistically update to the new value
-      queryClient.setQueryData(["dailyMissions"], (old: Mission[] | undefined) => {
-        if (!old) return old;
-        return old.map(mission => 
-          mission.id === missionId 
-            ? {
-                ...mission,
-                userCompletion: {
-                  id: Date.now(), // Temporary ID
-                  isDone: true,
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString(),
-                },
-                progress: {
-                  ...mission.progress!,
-                  canClaim: false,
+      queryClient.setQueryData(
+        ["dailyMissions"],
+        (old: Mission[] | undefined) => {
+          if (!old) return old;
+          return old.map((mission) =>
+            mission.id === missionId
+              ? {
+                  ...mission,
+                  userCompletion: {
+                    id: Date.now(), // Temporary ID
+                    isDone: true,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                  },
+                  progress: {
+                    ...mission.progress!,
+                    canClaim: false,
+                  },
                 }
-              }
-            : mission
-        );
-      });
+              : mission,
+          );
+        },
+      );
 
       // Return a context object with the snapshotted value
       return { previousMissions };
@@ -489,7 +522,9 @@ export function DailyMissions({ className }: DailyMissionsProps) {
             variant="outline"
             className="bg-blue-600 hover:bg-blue-700 text-white border-blue-500 hover:border-blue-600 flex-shrink-0 shadow-md h-8 px-3"
           >
-            <RefreshCw className={`w-3 h-3 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`w-3 h-3 mr-1 ${isLoading ? "animate-spin" : ""}`}
+            />
             <span className="text-xs">Cập nhật</span>
           </Button>
         </div>
@@ -569,7 +604,9 @@ export function DailyMissions({ className }: DailyMissionsProps) {
                   }`}
                 >
                   <Icon className="w-4 h-4" />
-                  <span className="text-sm font-medium truncate">{config.label}</span>
+                  <span className="text-sm font-medium truncate">
+                    {config.label}
+                  </span>
                 </Button>
               );
             })}
@@ -599,11 +636,15 @@ export function DailyMissions({ className }: DailyMissionsProps) {
 
                 const getProgressText = (mission: Mission) => {
                   if (!mission.progress) return "";
-                  
+
                   if (mission.type === "HOURS") {
                     // Convert hours to minutes for display
-                    const actualMinutes = Math.round(mission.progress.actual * 60);
-                    const requiredMinutes = Math.round(mission.progress.required * 60);
+                    const actualMinutes = Math.round(
+                      mission.progress.actual * 60,
+                    );
+                    const requiredMinutes = Math.round(
+                      mission.progress.required * 60,
+                    );
                     return `${actualMinutes} phút/${requiredMinutes} phút`;
                   } else {
                     // For ORDER and TOPUP, use locale string with comma
@@ -627,7 +668,9 @@ export function DailyMissions({ className }: DailyMissionsProps) {
                 const statusInfo = getStatusInfo(missionStatus);
                 const isCompleted = mission.userCompletion?.isDone || false;
                 // Allow claiming if mission is completed but not yet claimed, regardless of status
-                const canClaim = Boolean(!isCompleted && mission.progress?.canClaim);
+                const canClaim = Boolean(
+                  !isCompleted && mission.progress?.canClaim,
+                );
 
                 return (
                   <div
@@ -729,30 +772,33 @@ export function DailyMissions({ className }: DailyMissionsProps) {
                       >
                         {mission.description}
                       </p>
-                      
+
                       {/* Progress bar for missions with progress data */}
-                      {mission.progress && (missionStatus === "ACTIVE" || canClaim) && (
-                        <div className="mt-3">
-                          <div className="flex justify-between text-sm mb-2">
-                            <span className="text-gray-400">
-                              Tiến độ: {getProgressText(mission)}
-                            </span>
-                            <span className="text-gray-400">
-                              {mission.progress.percentage.toFixed(0)}%
-                            </span>
+                      {mission.progress &&
+                        (missionStatus === "ACTIVE" || canClaim) && (
+                          <div className="mt-3">
+                            <div className="flex justify-between text-sm mb-2">
+                              <span className="text-gray-400">
+                                Tiến độ: {getProgressText(mission)}
+                              </span>
+                              <span className="text-gray-400">
+                                {mission.progress.percentage.toFixed(0)}%
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-700 rounded-full h-2">
+                              <div
+                                className={`h-2 rounded-full transition-all duration-300 ${
+                                  mission.progress.canClaim
+                                    ? "bg-gradient-to-r from-green-500 to-emerald-500"
+                                    : "bg-gradient-to-r from-blue-500 to-cyan-500"
+                                }`}
+                                style={{
+                                  width: `${mission.progress.percentage}%`,
+                                }}
+                              ></div>
+                            </div>
                           </div>
-                          <div className="w-full bg-gray-700 rounded-full h-2">
-                            <div 
-                              className={`h-2 rounded-full transition-all duration-300 ${
-                                mission.progress.canClaim 
-                                  ? "bg-gradient-to-r from-green-500 to-emerald-500" 
-                                  : "bg-gradient-to-r from-blue-500 to-cyan-500"
-                              }`}
-                              style={{ width: `${mission.progress.percentage}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                      )}
+                        )}
                     </div>
 
                     {/* Button claim phần thưởng */}
@@ -779,7 +825,9 @@ export function DailyMissions({ className }: DailyMissionsProps) {
                           {claimMissionMutation.isPending ? (
                             <span className="flex items-center gap-2">
                               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                              <span className="hidden sm:inline">Đang nhận...</span>
+                              <span className="hidden sm:inline">
+                                Đang nhận...
+                              </span>
                             </span>
                           ) : (
                             "Nhận Thưởng"
@@ -811,7 +859,9 @@ export function DailyMissions({ className }: DailyMissionsProps) {
                 <div className="mb-3">
                   <Star className="w-12 h-12 mx-auto text-gray-600" />
                 </div>
-                <p className="text-base">Không có nhiệm vụ nào trong danh mục này</p>
+                <p className="text-base">
+                  Không có nhiệm vụ nào trong danh mục này
+                </p>
               </div>
             )}
           </div>

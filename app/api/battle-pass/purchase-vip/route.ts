@@ -6,11 +6,14 @@ import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
 export async function POST(request: Request) {
   try {
     console.log("Purchase VIP - Request started");
-    
+
     // Get user info from headers (set by middleware)
     const userHeader = request.headers.get("user");
-    console.log("Purchase VIP - User header:", userHeader ? "exists" : "not found");
-    
+    console.log(
+      "Purchase VIP - User header:",
+      userHeader ? "exists" : "not found",
+    );
+
     if (!userHeader) {
       console.log("Purchase VIP - No user header");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -18,7 +21,7 @@ export async function POST(request: Request) {
 
     const decoded = JSON.parse(userHeader);
     console.log("Purchase VIP - Decoded user:", decoded);
-    
+
     if (!decoded || !decoded.userId) {
       console.log("Purchase VIP - Invalid user data");
       return NextResponse.json({ error: "Invalid user data" }, { status: 401 });

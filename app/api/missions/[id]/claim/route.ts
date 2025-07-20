@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
-import { getCurrentDateVN, getVNTimeForPrisma, getVNStartOfDayForPrisma } from "@/lib/timezone-utils";
+import { Prisma } from "@/prisma/generated/prisma-client";
+import {
+  getCurrentTimeVNISO,
+  getStartOfDayVNISO,
+  getCurrentDateVNString,
+} from "@/lib/timezone-utils";
 import { calculateMissionUsageHours } from "@/lib/battle-pass-utils";
 import dayjs from "@/lib/dayjs";
 import { cookies } from "next/headers";
@@ -68,20 +73,17 @@ export async function POST(
     }
 
     // Check if user already completed this mission today
-    const today = getVNStartOfDayForPrisma();
+    const today = getStartOfDayVNISO();
 
-    const existingCompletion = await db.userMissionCompletion.findFirst({
-      where: {
-        userId: userId,
-        missionId: missionId,
-        branch: branch,
-        createdAt: {
-          gte: today,
-        },
-      },
-    });
+    const existingCompletion = await db.$queryRaw<any[]>(Prisma.sql`
+      SELECT * FROM UserMissionCompletion 
+      WHERE userId = ${userId} 
+        AND missionId = ${missionId} 
+        AND branch = ${branch} 
+        AND createdAt >= ${today}
+    `);
 
-    if (existingCompletion) {
+    if (existingCompletion && existingCompletion.length > 0) {
       return NextResponse.json(
         { error: "Mission already completed today" },
         { status: 400 },
@@ -93,11 +95,7 @@ export async function POST(
     const fnetPrisma = await getFnetPrisma();
 
     // Get today's date in fnet format
-    const todayDate = getCurrentDateVN();
-    const yyyy = todayDate.getFullYear();
-    const mm = String(todayDate.getMonth() + 1).padStart(2, "0");
-    const dd = String(todayDate.getDate()).padStart(2, "0");
-    const curDate = `${yyyy}-${mm}-${dd}`;
+    const curDate = getCurrentDateVNString();
 
     console.log("curDate", curDate);
 
@@ -194,81 +192,65 @@ export async function POST(
     }
 
     // Create mission completion record within transaction
+    const currentTime = getCurrentTimeVNISO();
     console.log("[DEBUG] Creating completion record:", {
       userId,
       missionId,
       branch,
-      completedAt: getVNTimeForPrisma(),
-      createdAt: getVNTimeForPrisma(),
+      completedAt: currentTime,
+      createdAt: currentTime,
       actualValue,
     });
 
-    const completion = await db.$transaction(async (tx) => {
-      const completion = await tx.userMissionCompletion.create({
-        data: {
-          userId: userId,
-          missionId: missionId,
-          branch: branch,
-          completedAt: getVNTimeForPrisma(),
-          actualValue: actualValue,
-          createdAt: getVNTimeForPrisma(),
-        },
-      });
-
-      return completion;
-    });
+    const completion = await db.$queryRaw<any[]>(Prisma.sql`
+      INSERT INTO UserMissionCompletion (userId, missionId, branch, completedAt, actualValue, createdAt)
+      VALUES (${userId}, ${missionId}, ${branch}, ${currentTime}, ${actualValue}, ${currentTime})
+    `);
 
     // Add XP to user's battle pass progress
-    const currentSeason = await db.battlePassSeason.findFirst({
-      where: {
-        isActive: true,
-        startDate: {
-          lte: getVNTimeForPrisma(),
-        },
-        endDate: {
-          gte: getVNTimeForPrisma(),
-        },
-      },
-    });
+    const currentSeason = await db.$queryRaw<any[]>(Prisma.sql`
+      SELECT * FROM BattlePassSeason 
+      WHERE isActive = true 
+        AND startDate <= ${currentTime} 
+        AND endDate >= ${currentTime}
+      LIMIT 1
+    `);
 
-    if (currentSeason) {
+    if (currentSeason && currentSeason.length > 0) {
+      const season = currentSeason[0];
       // Find or create user battle pass progress
-      let userProgress = await db.userBattlePass.findFirst({
-        where: {
-          userId: userId,
-          seasonId: currentSeason.id,
-        },
-      });
+      let userProgress = await db.$queryRaw<any[]>(Prisma.sql`
+        SELECT * FROM UserBattlePass 
+        WHERE userId = ${userId} 
+          AND seasonId = ${season.id}
+      `);
 
-      if (!userProgress) {
-        userProgress = await db.userBattlePass.create({
-          data: {
-            userId: userId,
-            seasonId: currentSeason.id,
-            branch: branch,
-            experience: 0,
-            level: 1,
-            isPremium: false,
-          },
-        });
+      if (!userProgress || userProgress.length === 0) {
+        await db.$queryRaw(Prisma.sql`
+          INSERT INTO UserBattlePass (userId, seasonId, branch, experience, level, isPremium)
+          VALUES (${userId}, ${season.id}, ${branch}, 0, 1, false)
+        `);
+        userProgress = await db.$queryRaw<any[]>(Prisma.sql`
+          SELECT * FROM UserBattlePass 
+          WHERE userId = ${userId} 
+            AND seasonId = ${season.id}
+        `);
       }
 
       // Add XP from mission completion
-      await db.userBattlePass.update({
-        where: { id: userProgress.id },
-        data: {
-          experience: {
-            increment: mission.reward,
-          },
-        },
-      });
+      const progress = userProgress[0];
+      await db.$queryRaw(Prisma.sql`
+        UPDATE UserBattlePass 
+        SET experience = experience + ${mission.reward}
+        WHERE id = ${progress.id}
+      `);
     }
 
     return NextResponse.json({
       success: true,
       message: "Mission completed successfully",
       xpReward: mission.reward,
-      completion: completion,
+      completion: { id: "created" },
     });
   } catch (error) {
     console.error("Error claiming mission:", error);

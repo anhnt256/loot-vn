@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
-import { getCurrentTimeVNISO, getStartOfDayVNISO, getCurrentDateVNString } from "@/lib/timezone-utils";
-import { calculateDailyUsageHours, calculateMissionUsageHours } from "@/lib/battle-pass-utils";
+import {
+  getCurrentTimeVNISO,
+  getStartOfDayVNISO,
+  getCurrentDateVNString,
+} from "@/lib/timezone-utils";
+import {
+  calculateDailyUsageHours,
+  calculateMissionUsageHours,
+} from "@/lib/battle-pass-utils";
 import { cookies } from "next/headers";
 
 export async function GET(request: Request) {
@@ -47,9 +54,11 @@ export async function GET(request: Request) {
     `;
 
     // Create a map of completed mission IDs
-    const completedMissionIds = new Set(userCompletions.map(c => c.missionId));
+    const completedMissionIds = new Set(
+      userCompletions.map((c) => c.missionId),
+    );
 
-    console.log('completedMissionIds', completedMissionIds)
+    console.log("completedMissionIds", completedMissionIds);
 
     // Get play sessions for the entire day and overnight sessions from previous day
     const playSessions = await fnetDB.$queryRaw<any[]>(fnetPrisma.sql`
@@ -64,7 +73,7 @@ export async function GET(request: Request) {
           OR (EndDate IS NULL AND EnterDate = DATE_SUB(${curDate}, INTERVAL 1 DAY))
         )
     `);
-    
+
     // Get ORDER and TOPUP data for the entire day
     const orderPayments = await fnetDB.$queryRaw<any[]>(fnetPrisma.sql`
       SELECT COALESCE(CAST(SUM(ABS(AutoAmount)) AS DECIMAL(18,2)), 0) AS total
@@ -74,7 +83,9 @@ export async function GET(request: Request) {
         AND Note LIKE N'%Thời gian phí (cấn trừ từ ffood%'
         AND ServeDate = ${curDate}
     `);
-    const orderProgress = parseFloat(orderPayments[0]?.total?.toString() || "0");
+    const orderProgress = parseFloat(
+      orderPayments[0]?.total?.toString() || "0",
+    );
 
     const topupPayments = await fnetDB.$queryRaw<any[]>(fnetPrisma.sql`
       SELECT COALESCE(CAST(SUM(AutoAmount) AS DECIMAL(18,2)), 0) AS total
@@ -84,22 +95,24 @@ export async function GET(request: Request) {
         AND Note NOT LIKE N'%Thời gian phí (cấn trừ từ ffood%'
         AND ServeDate = ${curDate}
     `);
-    const topupProgress = parseFloat(topupPayments[0]?.total?.toString() || "0");
+    const topupProgress = parseFloat(
+      topupPayments[0]?.total?.toString() || "0",
+    );
 
     // Enhance missions with user progress and completion status
-    const missionsWithProgress = missions.map(mission => {
+    const missionsWithProgress = missions.map((mission) => {
       const isCompleted = completedMissionIds.has(mission.id);
-      
+
       // Get actual progress based on mission type
       let actualValue = 0;
       switch (mission.type) {
         case "HOURS":
           // Calculate hours progress for this specific mission's time range
           actualValue = calculateMissionUsageHours(
-            playSessions, 
-            curDate, 
-            mission.startHours, 
-            mission.endHours
+            playSessions,
+            curDate,
+            mission.startHours,
+            mission.endHours,
           );
           break;
         case "ORDER":
@@ -115,18 +128,26 @@ export async function GET(request: Request) {
 
       return {
         ...mission,
-        userCompletion: isCompleted ? {
-          id: userCompletions.find(c => c.missionId === mission.id)?.id || 0,
-          isDone: true,
-          createdAt: userCompletions.find(c => c.missionId === mission.id)?.createdAt || new Date(),
-          updatedAt: userCompletions.find(c => c.missionId === mission.id)?.updatedAt || new Date(),
-        } : null,
+        userCompletion: isCompleted
+          ? {
+              id:
+                userCompletions.find((c) => c.missionId === mission.id)?.id ||
+                0,
+              isDone: true,
+              createdAt:
+                userCompletions.find((c) => c.missionId === mission.id)
+                  ?.createdAt || new Date(),
+              updatedAt:
+                userCompletions.find((c) => c.missionId === mission.id)
+                  ?.updatedAt || new Date(),
+            }
+          : null,
         progress: {
           actual: actualValue,
           required: mission.quantity,
           percentage: Math.min((actualValue / mission.quantity) * 100, 100),
           canClaim: canClaim,
-        }
+        },
       };
     });
 

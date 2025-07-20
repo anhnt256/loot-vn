@@ -298,7 +298,9 @@ export default function BattlePassPage() {
                   <span className="text-sm">🎁</span>
                 </div>
                 <div>
-                  <div className="text-white font-bold">Phần Thưởng Premium</div>
+                  <div className="text-white font-bold">
+                    Phần Thưởng Premium
+                  </div>
                   <div className="text-gray-400 text-sm">
                     Nhận tất cả phần thưởng Premium ở mỗi cấp độ
                   </div>
@@ -322,7 +324,9 @@ export default function BattlePassPage() {
                   <span className="text-sm">⚡</span>
                 </div>
                 <div>
-                  <div className="text-white font-bold">Ưu Tiên Nhận Thưởng</div>
+                  <div className="text-white font-bold">
+                    Ưu Tiên Nhận Thưởng
+                  </div>
                   <div className="text-gray-400 text-sm">
                     Nhận thưởng ngay lập tức khi đủ điều kiện
                   </div>
@@ -333,12 +337,15 @@ export default function BattlePassPage() {
             {/* Current Progress */}
             <div className="bg-blue-900/30 border border-blue-500/30 rounded-lg p-4 mb-6">
               <div className="text-center">
-                <div className="text-blue-300 text-sm mb-2">Tiến Độ Hiện Tại</div>
+                <div className="text-blue-300 text-sm mb-2">
+                  Tiến Độ Hiện Tại
+                </div>
                 <div className="text-white font-bold text-lg mb-2">
                   Cấp {userProgress?.level || 0}
                 </div>
                 <div className="text-gray-400 text-sm">
-                  {userProgress?.claimedRewards?.length || 0} phần thưởng đã nhận
+                  {userProgress?.claimedRewards?.length || 0} phần thưởng đã
+                  nhận
                 </div>
               </div>
             </div>

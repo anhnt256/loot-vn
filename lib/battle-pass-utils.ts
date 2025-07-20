@@ -167,11 +167,11 @@ export const calculateMissionUsageHours = (
 ): number => {
   const day = dayjs.tz(targetDate, "Asia/Ho_Chi_Minh");
   const dayStart = day.startOf("day");
-  
+
   // Tính thời gian bắt đầu và kết thúc của mission trong ngày
-  let missionStart = dayStart.add(startHours, "hour");
+  const missionStart = dayStart.add(startHours, "hour");
   let missionEnd = dayStart.add(endHours, "hour");
-  
+
   // Xử lý trường hợp mission qua đêm (ví dụ: 22h-6h)
   if (startHours > endHours) {
     missionEnd = missionEnd.add(1, "day");
@@ -195,9 +195,13 @@ export const calculateMissionUsageHours = (
     if (enter.isBefore(dayStart) && end.isAfter(dayStart)) {
       const sessionStart = dayStart; // Bắt đầu từ 00:00:00 của ngày hiện tại
       const sessionEnd = end.isAfter(missionEnd) ? missionEnd : end;
-      
+
       // Chỉ tính nếu session thực sự overlap với khoảng thời gian mission
-      if (sessionEnd.isAfter(sessionStart) && sessionStart.isBefore(missionEnd) && sessionEnd.isAfter(missionStart)) {
+      if (
+        sessionEnd.isAfter(sessionStart) &&
+        sessionStart.isBefore(missionEnd) &&
+        sessionEnd.isAfter(missionStart)
+      ) {
         const minutes = sessionEnd.diff(sessionStart, "minute");
         totalMinutes += minutes;
       }
@@ -205,9 +209,13 @@ export const calculateMissionUsageHours = (
       // Session bình thường trong cùng ngày
       const sessionStart = enter.isBefore(missionStart) ? missionStart : enter;
       const sessionEnd = end.isAfter(missionEnd) ? missionEnd : end;
-      
+
       // Chỉ tính nếu session thực sự overlap với khoảng thời gian mission
-      if (sessionEnd.isAfter(sessionStart) && sessionStart.isBefore(missionEnd) && sessionEnd.isAfter(missionStart)) {
+      if (
+        sessionEnd.isAfter(sessionStart) &&
+        sessionStart.isBefore(missionEnd) &&
+        sessionEnd.isAfter(missionStart)
+      ) {
         const minutes = sessionEnd.diff(sessionStart, "minute");
         totalMinutes += minutes;
       }
