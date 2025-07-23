@@ -274,6 +274,9 @@ export default function BirthdayPage() {
                   <th className="border border-gray-300 p-1 text-center">
                     Lượt quay (CỘNG DỒN)
                   </th>
+                  <th className="border border-gray-300 p-1 text-center">
+                    Tổng (CỘNG DỒN)
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -285,12 +288,15 @@ export default function BirthdayPage() {
                     600%
                   </td>
                   <td className="border border-gray-300 p-1 text-center">
-                    30.000₫ + 1q
+                    10.000₫ + 2q
                   </td>
                   <td className="border border-gray-300 p-1 text-center">
                     30.000₫
                   </td>
-                  <td className="border border-gray-300 p-1 text-center">1</td>
+                  <td className="border border-gray-300 p-1 text-center">2</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold text-green-600">
+                    35.000₫
+                  </td>
                 </tr>
                 <tr className="bg-white/30">
                   <td className="border border-gray-300 p-1 text-center font-bold">
@@ -300,12 +306,15 @@ export default function BirthdayPage() {
                     500%
                   </td>
                   <td className="border border-gray-300 p-1 text-center">
-                    25.000₫ + 0q
+                    15.000₫ + 1q
                   </td>
                   <td className="border border-gray-300 p-1 text-center">
                     55.000₫
                   </td>
-                  <td className="border border-gray-300 p-1 text-center">1</td>
+                  <td className="border border-gray-300 p-1 text-center">3</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold text-green-600">
+                    65.000₫
+                  </td>
                 </tr>
                 <tr className="bg-white/30">
                   <td className="border border-gray-300 p-1 text-center font-bold">
@@ -315,12 +324,15 @@ export default function BirthdayPage() {
                     450%
                   </td>
                   <td className="border border-gray-300 p-1 text-center">
-                    45.000₫ + 2q
+                    25.000₫ + 2q
                   </td>
                   <td className="border border-gray-300 p-1 text-center">
                     100.000₫
                   </td>
-                  <td className="border border-gray-300 p-1 text-center">3</td>
+                  <td className="border border-gray-300 p-1 text-center">5</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold text-green-600">
+                    120.000₫
+                  </td>
                 </tr>
                 <tr className="bg-white/30">
                   <td className="border border-gray-300 p-1 text-center font-bold">
@@ -330,12 +342,15 @@ export default function BirthdayPage() {
                     350%
                   </td>
                   <td className="border border-gray-300 p-1 text-center">
-                    105.000₫ + 4q
+                    65.000₫ + 4q
                   </td>
                   <td className="border border-gray-300 p-1 text-center">
                     205.000₫
                   </td>
-                  <td className="border border-gray-300 p-1 text-center">7</td>
+                  <td className="border border-gray-300 p-1 text-center">9</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold text-green-600">
+                    255.000₫
+                  </td>
                 </tr>
                 <tr className="bg-white/30">
                   <td className="border border-gray-300 p-1 text-center font-bold">
@@ -345,12 +360,15 @@ export default function BirthdayPage() {
                     250%
                   </td>
                   <td className="border border-gray-300 p-1 text-center">
-                    125.000₫ + 5q
+                    75.000₫ + 5q
                   </td>
                   <td className="border border-gray-300 p-1 text-center">
                     330.000₫
                   </td>
-                  <td className="border border-gray-300 p-1 text-center">12</td>
+                  <td className="border border-gray-300 p-1 text-center">14</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold text-green-600">
+                    430.000₫
+                  </td>
                 </tr>
                 <tr className="bg-white/30">
                   <td className="border border-gray-300 p-1 text-center font-bold">
@@ -360,12 +378,15 @@ export default function BirthdayPage() {
                     220%
                   </td>
                   <td className="border border-gray-300 p-1 text-center">
-                    220.000₫ + 8q
+                    140.000₫ + 8q
                   </td>
                   <td className="border border-gray-300 p-1 text-center">
                     550.000₫
                   </td>
-                  <td className="border border-gray-300 p-1 text-center">20</td>
+                  <td className="border border-gray-300 p-1 text-center">22</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold text-green-600">
+                    750.000₫
+                  </td>
                 </tr>
                 <tr className="bg-white/30">
                   <td className="border border-gray-300 p-1 text-center font-bold">
@@ -375,12 +396,15 @@ export default function BirthdayPage() {
                     150%
                   </td>
                   <td className="border border-gray-300 p-1 text-center">
-                    450.000₫ + 7q
+                    380.000₫ + 7q
                   </td>
                   <td className="border border-gray-300 p-1 text-center">
-                    1.000.000₫
+                    730.000₫
                   </td>
-                  <td className="border border-gray-300 p-1 text-center">27</td>
+                  <td className="border border-gray-300 p-1 text-center">29</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold text-green-600">
+                    1.500.000₫
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -485,7 +509,7 @@ export default function BirthdayPage() {
           </h1>
 
           <p className="text-center text-white/80 text-xs mb-4">
-            📅 Thời gian diễn ra: 21/07/2025 - 31/07/2025
+            📅 Thời gian diễn ra: 24/07/2025 - 31/07/2025
           </p>
 
           {/* Action buttons */}

@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       console.log("FnetDB connected");
 
       // Hard code date range for birthday event: 21/07/2025 to 31/07/2025
-      const startDate = "2025-07-21 00:00:00";
+      const startDate = "2025-07-24 00:00:00";
       const endDate = "2025-07-31 23:59:59";
 
       console.log("Checking spending from:", startDate, "to:", endDate);
