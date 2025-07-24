@@ -239,8 +239,9 @@ export default function BirthdayPage() {
               <li>
                 • GateWay có quyền thay đổi thể lệ mà không cần thông báo trước
               </li>
+              <li className="font-bold text-blue-600">• Chương trình có thể kết thúc sớm hơn khi hết ngân sách khuyến mãi mà không cần báo trước</li>
               <li>• Các tài khoản gian lận sẽ bị khóa vĩnh viễn</li>
-              <li className="font-bold text-red-600">
+              <li className="font-bold">
                 • Nếu xảy ra tranh chấp, quyết định của The GateWay là quyết định cuối cùng
               </li>
               <li className="font-bold text-red-600">
