@@ -16,14 +16,14 @@ const UP_RATE_AMOUNT = process.env.NEXT_PUBLIC_UP_RATE_AMOUNT;
 const JACKPOT_ID = 8;
 
 const ITEM_RATE_DEFAULT = [
-  { id: 1, rating: 60.0 },
-  { id: 2, rating: 25.0 },
-  { id: 3, rating: 10.0 },
+  { id: 1, rating: 58.4 },
+  { id: 2, rating: 24.4 },
+  { id: 3, rating: 9.8 },
   { id: 4, rating: 4.0 },
-  { id: 5, rating: 1.0 },
-  { id: 6, rating: 0.5 },
-  { id: 7, rating: 0.1 },
-  { id: 8, rating: 0 },
+  { id: 5, rating: 2.0 },
+  { id: 6, rating: 1.0 },
+  { id: 7, rating: 0.5 },
+  { id: 8, rating: 0.1 },
 ];
 
 // Hàm lấy danh sách item và rate hiện tại
