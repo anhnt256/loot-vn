@@ -15,7 +15,7 @@ export async function GET(
     const fnetDB = await getFnetDB();
 
     // Hard code date range for birthday event: 21/07/2025 to 31/07/2025
-    const startDate = "2025-07-21 00:00:00";
+    const startDate = "2025-07-24 00:00:00";
     const endDate = "2025-07-31 23:59:59";
 
     // Get total spent from fnet.paymenttb (real-time data)
