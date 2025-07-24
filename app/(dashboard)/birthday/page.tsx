@@ -240,6 +240,12 @@ export default function BirthdayPage() {
                 • GateWay có quyền thay đổi thể lệ mà không cần thông báo trước
               </li>
               <li>• Các tài khoản gian lận sẽ bị khóa vĩnh viễn</li>
+              <li className="font-bold text-red-600">
+                • Nếu xảy ra tranh chấp, quyết định của The GateWay là quyết định cuối cùng
+              </li>
+              <li className="font-bold text-red-600">
+                • Người chơi khi tham gia sự kiện cần đọc kỹ và hoàn toàn đồng ý với các yêu cầu này trước khi tiến hành sử dụng
+              </li>
             </ul>
           </div>
 
@@ -268,14 +274,17 @@ export default function BirthdayPage() {
                   <th className="border border-gray-300 p-1 text-center">
                     Thưởng tại mốc
                   </th>
-                  <th className="border border-gray-300 p-1 text-center">
-                    Thưởng (CỘNG DỒN)
+                  <th className="border border-gray-300 p-1 text-center font-bold text-blue-700 bg-blue-50">
+                    <div>Thưởng</div>
+                    <div>(CỘNG DỒN)</div>
                   </th>
-                  <th className="border border-gray-300 p-1 text-center">
-                    Lượt quay (CỘNG DỒN)
+                  <th className="border border-gray-300 p-1 text-center font-bold text-purple-700 bg-purple-50">
+                    <div>Lượt quay</div>
+                    <div>(CỘNG DỒN)</div>
                   </th>
-                  <th className="border border-gray-300 p-1 text-center">
-                    Tổng (CỘNG DỒN)
+                  <th className="border border-gray-300 p-1 text-center font-bold text-green-700 bg-green-50">
+                    <div>Tổng</div>
+                    <div>(CỘNG DỒN)</div>
                   </th>
                 </tr>
               </thead>
@@ -290,10 +299,10 @@ export default function BirthdayPage() {
                   <td className="border border-gray-300 p-1 text-center">
                     10.000₫ + 2q
                   </td>
-                  <td className="border border-gray-300 p-1 text-center">
+                  <td className="border border-gray-300 p-1 text-center font-bold text-blue-600">
                     30.000₫
                   </td>
-                  <td className="border border-gray-300 p-1 text-center">2</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold text-purple-600">2</td>
                   <td className="border border-gray-300 p-1 text-center font-bold text-green-600">
                     35.000₫
                   </td>
@@ -308,10 +317,10 @@ export default function BirthdayPage() {
                   <td className="border border-gray-300 p-1 text-center">
                     15.000₫ + 1q
                   </td>
-                  <td className="border border-gray-300 p-1 text-center">
+                  <td className="border border-gray-300 p-1 text-center font-bold text-blue-600">
                     55.000₫
                   </td>
-                  <td className="border border-gray-300 p-1 text-center">3</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold text-purple-600">3</td>
                   <td className="border border-gray-300 p-1 text-center font-bold text-green-600">
                     65.000₫
                   </td>
@@ -326,10 +335,10 @@ export default function BirthdayPage() {
                   <td className="border border-gray-300 p-1 text-center">
                     25.000₫ + 2q
                   </td>
-                  <td className="border border-gray-300 p-1 text-center">
+                  <td className="border border-gray-300 p-1 text-center font-bold text-blue-600">
                     100.000₫
                   </td>
-                  <td className="border border-gray-300 p-1 text-center">5</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold text-purple-600">5</td>
                   <td className="border border-gray-300 p-1 text-center font-bold text-green-600">
                     120.000₫
                   </td>
@@ -344,10 +353,10 @@ export default function BirthdayPage() {
                   <td className="border border-gray-300 p-1 text-center">
                     65.000₫ + 4q
                   </td>
-                  <td className="border border-gray-300 p-1 text-center">
+                  <td className="border border-gray-300 p-1 text-center font-bold text-blue-600">
                     205.000₫
                   </td>
-                  <td className="border border-gray-300 p-1 text-center">9</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold text-purple-600">9</td>
                   <td className="border border-gray-300 p-1 text-center font-bold text-green-600">
                     255.000₫
                   </td>
@@ -362,10 +371,10 @@ export default function BirthdayPage() {
                   <td className="border border-gray-300 p-1 text-center">
                     75.000₫ + 5q
                   </td>
-                  <td className="border border-gray-300 p-1 text-center">
+                  <td className="border border-gray-300 p-1 text-center font-bold text-blue-600">
                     330.000₫
                   </td>
-                  <td className="border border-gray-300 p-1 text-center">14</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold text-purple-600">14</td>
                   <td className="border border-gray-300 p-1 text-center font-bold text-green-600">
                     430.000₫
                   </td>
@@ -380,10 +389,10 @@ export default function BirthdayPage() {
                   <td className="border border-gray-300 p-1 text-center">
                     140.000₫ + 8q
                   </td>
-                  <td className="border border-gray-300 p-1 text-center">
+                  <td className="border border-gray-300 p-1 text-center font-bold text-blue-600">
                     550.000₫
                   </td>
-                  <td className="border border-gray-300 p-1 text-center">22</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold text-purple-600">22</td>
                   <td className="border border-gray-300 p-1 text-center font-bold text-green-600">
                     750.000₫
                   </td>
@@ -398,10 +407,10 @@ export default function BirthdayPage() {
                   <td className="border border-gray-300 p-1 text-center">
                     380.000₫ + 7q
                   </td>
-                  <td className="border border-gray-300 p-1 text-center">
+                  <td className="border border-gray-300 p-1 text-center font-bold text-blue-600">
                     730.000₫
                   </td>
-                  <td className="border border-gray-300 p-1 text-center">29</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold text-purple-600">29</td>
                   <td className="border border-gray-300 p-1 text-center font-bold text-green-600">
                     1.500.000₫
                   </td>
@@ -462,15 +471,117 @@ export default function BirthdayPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-pink-900 to-purple-900">
-        <div className="container mx-auto p-6">
-          <div className="animate-pulse">
-            <div className="h-12 bg-white/20 rounded w-1/3 mb-8 mx-auto"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(7)].map((_, i) => (
-                <div key={i} className="h-64 bg-white/10 rounded-lg"></div>
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-pink-900 to-purple-900 relative">
+        <div className="container mx-auto p-3 relative z-10 pb-16">
+          {/* Header skeleton */}
+          <div className="text-center mb-4">
+            <div className="h-8 bg-white/20 rounded w-2/3 mb-2 mx-auto animate-pulse"></div>
+            <div className="h-4 bg-white/10 rounded w-1/2 mb-4 mx-auto animate-pulse"></div>
+            
+            {/* Action buttons skeleton */}
+            <div className="flex justify-center gap-2 mb-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-8 bg-white/20 rounded-full w-20 animate-pulse"></div>
               ))}
             </div>
+
+            {/* Progress summary skeleton */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 mb-4 border border-white/20 max-w-xl mx-auto">
+              <div className="grid grid-cols-3 gap-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="text-center">
+                    <div className="h-3 bg-white/20 rounded w-16 mb-1 mx-auto animate-pulse"></div>
+                    <div className="h-6 bg-white/30 rounded w-20 mx-auto animate-pulse"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Birthday tiers skeleton */}
+          <div className="space-y-3">
+            {/* Top row - 4 smaller cards skeleton */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="bg-white/10 backdrop-blur-sm rounded-lg p-2 border-2 border-gray-400/50 min-h-[280px] animate-pulse">
+                  {/* Tier header skeleton */}
+                  <div className="text-center mb-2">
+                    <div className="h-5 bg-white/20 rounded-full w-20 mx-auto mb-1"></div>
+                  </div>
+
+                  {/* Nạp - Nhận section skeleton */}
+                  <div className="grid grid-cols-2 gap-1 mb-2">
+                    <div className="h-9 bg-red-600/30 rounded border border-red-500/50"></div>
+                    <div className="h-9 bg-green-500/70 rounded border border-green-400"></div>
+                  </div>
+
+                  {/* TK chính - TK phụ - Lượt quay skeleton */}
+                  <div className="grid grid-cols-3 gap-1 mb-2">
+                    <div className="h-9 bg-blue-600/30 rounded border border-blue-500/50"></div>
+                    <div className="h-9 bg-indigo-600/30 rounded border border-indigo-500/50"></div>
+                    <div className="h-9 bg-amber-600/30 rounded border border-amber-500/50"></div>
+                  </div>
+
+                  {/* Progress indicator skeleton */}
+                  <div className="mb-2">
+                    <div className="flex justify-between mb-1">
+                      <div className="h-3 bg-white/20 rounded w-12"></div>
+                      <div className="h-3 bg-white/20 rounded w-8"></div>
+                    </div>
+                    <div className="w-full bg-white/20 rounded-full h-1.5">
+                      <div className="h-1.5 bg-white/40 rounded-full w-1/3"></div>
+                    </div>
+                  </div>
+
+                  {/* Action button skeleton */}
+                  <div className="h-11 bg-white/20 rounded"></div>
+                </div>
+              ))}
+            </div>
+
+            {/* Bottom row - 3 larger cards skeleton */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border-2 border-gray-400/50 min-h-[320px] animate-pulse">
+                  {/* Tier header skeleton */}
+                  <div className="text-center mb-3">
+                    <div className="h-6 bg-white/20 rounded-full w-24 mx-auto mb-2"></div>
+                  </div>
+
+                  {/* Nạp - Nhận section skeleton */}
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    <div className="h-12 bg-red-600/30 rounded border border-red-500/50"></div>
+                    <div className="h-12 bg-green-500/70 rounded border border-green-400"></div>
+                  </div>
+
+                  {/* TK chính - TK phụ - Lượt quay skeleton */}
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                    <div className="h-11 bg-blue-600/30 rounded border border-blue-500/50"></div>
+                    <div className="h-11 bg-indigo-600/30 rounded border border-indigo-500/50"></div>
+                    <div className="h-11 bg-amber-600/30 rounded border border-amber-500/50"></div>
+                  </div>
+
+                  {/* Progress indicator skeleton */}
+                  <div className="mb-3">
+                    <div className="flex justify-between mb-2">
+                      <div className="h-3 bg-white/20 rounded w-12"></div>
+                      <div className="h-3 bg-white/20 rounded w-8"></div>
+                    </div>
+                    <div className="w-full bg-white/20 rounded-full h-2">
+                      <div className="h-2 bg-white/40 rounded-full w-1/2"></div>
+                    </div>
+                  </div>
+
+                  {/* Action button skeleton */}
+                  <div className="h-16 bg-white/20 rounded"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Footer note skeleton */}
+          <div className="text-center mt-4 pb-4">
+            <div className="h-3 bg-white/10 rounded w-64 mx-auto"></div>
           </div>
         </div>
       </div>

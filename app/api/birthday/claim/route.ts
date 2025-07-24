@@ -38,21 +38,21 @@ export async function POST(request: NextRequest) {
       }
 
       // Additional check: Verify no recent transactions for this tier (within last 5 minutes)
-      // const recentTransactions = await db.$queryRaw<any[]>`
-      //   SELECT COUNT(*) as count FROM BirthdayTransaction
-      //   WHERE userId = ${userId} AND tierId = ${tierId} AND branch = ${branch}
-      //   AND createdAt >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)
-      // `;
+      const recentTransactions = await db.$queryRaw<any[]>`
+        SELECT COUNT(*) as count FROM BirthdayTransaction
+        WHERE userId = ${userId} AND tierId = ${tierId} AND branch = ${branch}
+        AND createdAt >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)
+      `;
 
-      // console.log('Recent transactions check:', recentTransactions);
+      console.log('Recent transactions check:', recentTransactions);
 
-      // if (recentTransactions[0]?.count > 0) {
-      //   console.log('Recent claim detected');
-      //   return NextResponse.json(
-      //     { success: false, error: 'Recent claim detected, please wait' },
-      //     { status: 429 }
-      //   );
-      // }
+      if (recentTransactions[0]?.count > 0) {
+        console.log('Recent claim detected');
+        return NextResponse.json(
+          { success: false, error: 'Recent claim detected, please wait' },
+          { status: 429 }
+        );
+      }
 
       // Get tier information
       const tierResult = await db.$queryRaw<any[]>`
