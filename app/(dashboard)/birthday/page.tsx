@@ -239,13 +239,18 @@ export default function BirthdayPage() {
               <li>
                 • GateWay có quyền thay đổi thể lệ mà không cần thông báo trước
               </li>
-              <li className="font-bold text-blue-600">• Chương trình có thể kết thúc sớm hơn khi hết ngân sách khuyến mãi mà không cần báo trước</li>
+              <li className="font-bold text-blue-600">
+                • Chương trình có thể kết thúc sớm hơn khi hết ngân sách khuyến
+                mãi mà không cần báo trước
+              </li>
               <li>• Các tài khoản gian lận sẽ bị khóa vĩnh viễn</li>
               <li className="font-bold">
-                • Nếu xảy ra tranh chấp, quyết định của The GateWay là quyết định cuối cùng
+                • Nếu xảy ra tranh chấp, quyết định của The GateWay là quyết
+                định cuối cùng
               </li>
               <li className="font-bold text-red-600">
-                • Người chơi khi tham gia sự kiện cần đọc kỹ và hoàn toàn đồng ý với các yêu cầu này trước khi tiến hành sử dụng
+                • Người chơi khi tham gia sự kiện cần đọc kỹ và hoàn toàn đồng ý
+                với các yêu cầu này trước khi tiến hành sử dụng
               </li>
             </ul>
           </div>
@@ -303,7 +308,9 @@ export default function BirthdayPage() {
                   <td className="border border-gray-300 p-1 text-center font-bold text-blue-600">
                     30.000₫
                   </td>
-                  <td className="border border-gray-300 p-1 text-center font-bold text-purple-600">2</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold text-purple-600">
+                    2
+                  </td>
                   <td className="border border-gray-300 p-1 text-center font-bold text-green-600">
                     35.000₫
                   </td>
@@ -321,7 +328,9 @@ export default function BirthdayPage() {
                   <td className="border border-gray-300 p-1 text-center font-bold text-blue-600">
                     55.000₫
                   </td>
-                  <td className="border border-gray-300 p-1 text-center font-bold text-purple-600">3</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold text-purple-600">
+                    3
+                  </td>
                   <td className="border border-gray-300 p-1 text-center font-bold text-green-600">
                     65.000₫
                   </td>
@@ -339,7 +348,9 @@ export default function BirthdayPage() {
                   <td className="border border-gray-300 p-1 text-center font-bold text-blue-600">
                     100.000₫
                   </td>
-                  <td className="border border-gray-300 p-1 text-center font-bold text-purple-600">5</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold text-purple-600">
+                    5
+                  </td>
                   <td className="border border-gray-300 p-1 text-center font-bold text-green-600">
                     120.000₫
                   </td>
@@ -357,7 +368,9 @@ export default function BirthdayPage() {
                   <td className="border border-gray-300 p-1 text-center font-bold text-blue-600">
                     205.000₫
                   </td>
-                  <td className="border border-gray-300 p-1 text-center font-bold text-purple-600">9</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold text-purple-600">
+                    9
+                  </td>
                   <td className="border border-gray-300 p-1 text-center font-bold text-green-600">
                     255.000₫
                   </td>
@@ -375,7 +388,9 @@ export default function BirthdayPage() {
                   <td className="border border-gray-300 p-1 text-center font-bold text-blue-600">
                     330.000₫
                   </td>
-                  <td className="border border-gray-300 p-1 text-center font-bold text-purple-600">14</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold text-purple-600">
+                    14
+                  </td>
                   <td className="border border-gray-300 p-1 text-center font-bold text-green-600">
                     430.000₫
                   </td>
@@ -393,7 +408,9 @@ export default function BirthdayPage() {
                   <td className="border border-gray-300 p-1 text-center font-bold text-blue-600">
                     550.000₫
                   </td>
-                  <td className="border border-gray-300 p-1 text-center font-bold text-purple-600">22</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold text-purple-600">
+                    22
+                  </td>
                   <td className="border border-gray-300 p-1 text-center font-bold text-green-600">
                     750.000₫
                   </td>
@@ -411,7 +428,9 @@ export default function BirthdayPage() {
                   <td className="border border-gray-300 p-1 text-center font-bold text-blue-600">
                     730.000₫
                   </td>
-                  <td className="border border-gray-300 p-1 text-center font-bold text-purple-600">29</td>
+                  <td className="border border-gray-300 p-1 text-center font-bold text-purple-600">
+                    29
+                  </td>
                   <td className="border border-gray-300 p-1 text-center font-bold text-green-600">
                     1.500.000₫
                   </td>
@@ -478,11 +497,14 @@ export default function BirthdayPage() {
           <div className="text-center mb-4">
             <div className="h-8 bg-white/20 rounded w-2/3 mb-2 mx-auto animate-pulse"></div>
             <div className="h-4 bg-white/10 rounded w-1/2 mb-4 mx-auto animate-pulse"></div>
-            
+
             {/* Action buttons skeleton */}
             <div className="flex justify-center gap-2 mb-4">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-8 bg-white/20 rounded-full w-20 animate-pulse"></div>
+                <div
+                  key={i}
+                  className="h-8 bg-white/20 rounded-full w-20 animate-pulse"
+                ></div>
               ))}
             </div>
 
@@ -504,7 +526,10 @@ export default function BirthdayPage() {
             {/* Top row - 4 smaller cards skeleton */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="bg-white/10 backdrop-blur-sm rounded-lg p-2 border-2 border-gray-400/50 min-h-[280px] animate-pulse">
+                <div
+                  key={i}
+                  className="bg-white/10 backdrop-blur-sm rounded-lg p-2 border-2 border-gray-400/50 min-h-[280px] animate-pulse"
+                >
                   {/* Tier header skeleton */}
                   <div className="text-center mb-2">
                     <div className="h-5 bg-white/20 rounded-full w-20 mx-auto mb-1"></div>
@@ -543,7 +568,10 @@ export default function BirthdayPage() {
             {/* Bottom row - 3 larger cards skeleton */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border-2 border-gray-400/50 min-h-[320px] animate-pulse">
+                <div
+                  key={i}
+                  className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border-2 border-gray-400/50 min-h-[320px] animate-pulse"
+                >
                   {/* Tier header skeleton */}
                   <div className="text-center mb-3">
                     <div className="h-6 bg-white/20 rounded-full w-24 mx-auto mb-2"></div>

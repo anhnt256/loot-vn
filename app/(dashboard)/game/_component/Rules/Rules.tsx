@@ -52,12 +52,15 @@ export function Rules({ isModalOpen, closeModal }: RulesProps) {
           </tbody>
         </table>
         <p className="mt-4 text-gray-700">
-          🔹 Mỗi lượt quay sẽ trích ra một phần vào quỹ chung lên đến {Number(process.env.NEXT_PUBLIC_UP_RATE_AMOUNT).toLocaleString()} VNĐ (<strong>Jackpot</strong>), và mỗi lượt quay đều có tỉ lệ trúng
+          🔹 Mỗi lượt quay sẽ trích ra một phần vào quỹ chung lên đến{" "}
+          {Number(process.env.NEXT_PUBLIC_UP_RATE_AMOUNT).toLocaleString()} VNĐ
+          (<strong>Jackpot</strong>), và mỗi lượt quay đều có tỉ lệ trúng
           <strong> Jackpot</strong>.
         </p>
         <p className="mt-4 text-gray-700">
-          🔹 <strong>Chỉ những lượt quay từ Đá Ma Thuật (Nạp tiền)</strong> mới được trích thưởng vào Jackpot. 
-          Các <strong>vòng quay Thưởng</strong> sẽ không được tính vào Jackpot.
+          🔹 <strong>Chỉ những lượt quay từ Đá Ma Thuật (Nạp tiền)</strong> mới
+          được trích thưởng vào Jackpot. Các <strong>vòng quay Thưởng</strong>{" "}
+          sẽ không được tính vào Jackpot.
         </p>
         <p className="mt-4 text-gray-700">
           🔹 Giải thưởng sẽ chỉ được sử dụng để đổi lấy giờ chơi hoặc các sản

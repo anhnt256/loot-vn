@@ -37,7 +37,8 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   const [isClient, setIsClient] = useState(false);
 
   const IS_MAINTENANCE = process.env.NEXT_PUBLIC_IS_MAINTENANCE === "true";
-  const GATEWAY_BIRTHDAY_ENABLE = process.env.NEXT_PUBLIC_GATEWAY_BIRTHDAY_ENABLE === "true";
+  const GATEWAY_BIRTHDAY_ENABLE =
+    process.env.NEXT_PUBLIC_GATEWAY_BIRTHDAY_ENABLE === "true";
 
   // Function to call user-calculator API and update localStorage
   const refreshUserData = async () => {
@@ -209,10 +210,10 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
                 </span>
               </div>
               <div className="flex items-center bg-gray-600/80 rounded-full px-3 py-1.5">
-                                  <span className="text-white font-semibold flex items-center gap-1">
-                    {(currentUser as any)?.stars?.toLocaleString()}
-                    <span className="text-yellow-400">⭐</span>
-                  </span>
+                <span className="text-white font-semibold flex items-center gap-1">
+                  {(currentUser as any)?.stars?.toLocaleString()}
+                  <span className="text-yellow-400">⭐</span>
+                </span>
               </div>
             </div>
           </div>

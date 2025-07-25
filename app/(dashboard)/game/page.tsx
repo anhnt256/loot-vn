@@ -192,7 +192,9 @@ const Game = () => {
         <div className="flex-1 flex justify-center items-center bg-gray-100 p-2 min-h-0">
           <div className="w-full h-full flex items-center justify-center">
             <CircleSegments
-              segments={Array.isArray(segments) ? [...segments].slice(0, 7) : []}
+              segments={
+                Array.isArray(segments) ? [...segments].slice(0, 7) : []
+              }
             />
           </div>
         </div>

@@ -44,13 +44,13 @@ export async function POST(request: NextRequest) {
         AND createdAt >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)
       `;
 
-      console.log('Recent transactions check:', recentTransactions);
+      console.log("Recent transactions check:", recentTransactions);
 
       if (recentTransactions[0]?.count > 0) {
-        console.log('Recent claim detected');
+        console.log("Recent claim detected");
         return NextResponse.json(
-          { success: false, error: 'Recent claim detected, please wait' },
-          { status: 429 }
+          { success: false, error: "Recent claim detected, please wait" },
+          { status: 429 },
         );
       }
 
