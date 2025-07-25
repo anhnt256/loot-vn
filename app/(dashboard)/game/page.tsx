@@ -135,42 +135,42 @@ const Game = () => {
   if (!userData || !branch) return null;
 
   return (
-    <div className="flex flex-col p-4 gap-4">
-      <div className="bg-white rounded-lg shadow-sm w-full overflow-auto max-h-[89vh] relative">
+    <div className="flex flex-col h-screen max-h-screen">
+      <div className="bg-white rounded-lg shadow-sm w-full h-full flex flex-col">
         {/* Header */}
-        <div className="flex justify-between p-4 bg-blue-600 text-white">
+        <div className="flex justify-between p-3 bg-blue-600 text-white flex-shrink-0">
           <h2 className="text-lg font-semibold">Đền Nguyện Ước</h2>
           <div className="flex gap-2">
-            <div className="bg-orange-500 rounded px-3 py-1">
-              <span className="text-white text-sm font-medium">
+            <div className="bg-orange-500 rounded px-2 py-1">
+              <span className="text-white text-xs font-medium">
                 Tổng tiền nạp: {totalPayment?.toLocaleString() || 0}
               </span>
             </div>
             <div
-              className={`flex items-center gap-1 rounded px-3 py-1 cursor-pointer transition-colors ${
+              className={`flex items-center gap-1 rounded px-2 py-1 cursor-pointer transition-colors ${
                 selectedType === "round"
                   ? "bg-white text-blue-600 border border-blue-600"
                   : "bg-gray-600"
               }`}
               onClick={() => setSelectedType("round")}
             >
-              <span className="text-sm font-medium">
+              <span className="text-xs font-medium">
                 {round?.toLocaleString() || 0}
               </span>
-              <Image src={"/rock.png"} alt="wish" width="16" height="16" />
+              <Image src={"/rock.png"} alt="wish" width="12" height="12" />
             </div>
             <div
-              className={`flex items-center gap-1 rounded px-3 py-1 cursor-pointer transition-colors ${
+              className={`flex items-center gap-1 rounded px-2 py-1 cursor-pointer transition-colors ${
                 selectedType === "giftRound"
                   ? "bg-white text-blue-600 border border-blue-600"
                   : "bg-gray-600"
               }`}
               onClick={() => setSelectedType("giftRound")}
             >
-              <span className="text-sm font-medium">
+              <span className="text-xs font-medium">
                 {giftRound?.toLocaleString() || 0}
               </span>
-              <span role="img" aria-label="gift" className="text-sm">
+              <span role="img" aria-label="gift" className="text-xs">
                 🎁
               </span>
             </div>
@@ -178,22 +178,27 @@ const Game = () => {
         </div>
 
         {/* Warning Banner */}
-        <div className="bg-red-100 p-4">
-          <p className="text-red-800 text-sm">
+        <div className="bg-red-100 p-2 flex-shrink-0">
+          <p className="text-red-800 text-xs leading-tight">
             Số lượt quay được tính theo tổng tiền nạp trong tuần, và reset vào
             0h mỗi thứ 2 hàng tuần. Vui lòng sử dụng sớm để tránh mất lượt.
+          </p>
+          <p className="text-blue-800 text-xs font-bold mt-1 leading-tight">
+            {`Tỉ lệ trúng Jackpot sẽ được cải thiện mạnh khi trên ${Number(process.env.NEXT_PUBLIC_UP_RATE_AMOUNT).toLocaleString()} VND. Hãy để ý nhé`}
           </p>
         </div>
 
         {/* Game Wheel Section */}
-        <div className="flex justify-center items-center bg-gray-100 p-6">
-          <CircleSegments
-            segments={Array.isArray(segments) ? [...segments].slice(0, 7) : []}
-          />
+        <div className="flex-1 flex justify-center items-center bg-gray-100 p-2 min-h-0">
+          <div className="w-full h-full flex items-center justify-center">
+            <CircleSegments
+              segments={Array.isArray(segments) ? [...segments].slice(0, 7) : []}
+            />
+          </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-center items-center bg-gray-100 p-4">
+        <div className="flex justify-center items-center bg-gray-100 p-4 flex-shrink-0">
           <div className="flex gap-3">
             <button
               className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded text-sm font-medium transition-colors"
@@ -208,7 +213,7 @@ const Game = () => {
               Thể lệ
             </button>
             <button
-              className="bg-pink-400 hover:bg-pink-500 text-white px-6 py-2 rounded text-sm font-medium flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-pink-400 hover:bg-pink-500 text-white px-5 py-2 rounded text-sm font-medium flex items-center gap-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => {
                 setSelectedType("round");
                 handleRoll(1);
@@ -225,12 +230,12 @@ const Game = () => {
                   🎁
                 </span>
               ) : (
-                <Image src={"/rock.png"} alt="wish" width="16" height="16" />
+                <Image src={"/rock.png"} alt="wish" width="14" height="14" />
               )}
               Ước
             </button>
             <button
-              className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded text-sm font-medium flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-purple-500 hover:bg-purple-600 text-white px-5 py-2 rounded text-sm font-medium flex items-center gap-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => {
                 setSelectedType("giftRound");
                 handleRoll(10);
@@ -247,7 +252,7 @@ const Game = () => {
                   🎁
                 </span>
               ) : (
-                <Image src={"/rock.png"} alt="wish" width="16" height="16" />
+                <Image src={"/rock.png"} alt="wish" width="14" height="14" />
               )}
               Ước x10
             </button>

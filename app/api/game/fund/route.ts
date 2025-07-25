@@ -15,19 +15,20 @@ export async function GET() {
     let totalRound;
     if (lastJackPotDate.length > 0) {
       const totalRoundResult = await db.$queryRaw<any[]>`
-        SELECT COUNT(*) as count FROM GameResult 
-        WHERE createdAt > ${lastJackPotDate[0].createdAt}
-        ORDER BY createdAt ASC
+        SELECT COUNT(*) as count FROM GameResult gr
+        INNER JOIN UserStarHistory ush ON gr.id = ush.targetId AND ush.type = 'GAME'
+        WHERE gr.createdAt > ${lastJackPotDate[0].createdAt}
       `;
       totalRound = Number(totalRoundResult[0].count);
     } else {
       const totalRoundResult = await db.$queryRaw<any[]>`
-        SELECT COUNT(*) as count FROM GameResult
+        SELECT COUNT(*) as count FROM GameResult gr
+        INNER JOIN UserStarHistory ush ON gr.id = ush.targetId AND ush.type = 'GAME'
       `;
       totalRound = Number(totalRoundResult[0].count);
     }
 
-    const ROUND_COST = 30000; // 30000 một vòng quay
+    const ROUND_COST = Number(process.env.NEXT_PUBLIC_SPEND_PER_ROUND); // 30000 một vòng quay
     const RATE = 0.015; // 1.5%
 
     const totalAmount = totalRound * ROUND_COST * RATE;
