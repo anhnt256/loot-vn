@@ -27,12 +27,11 @@ const CheckInCard = () => {
   });
 
   const handleCheckIn = useCallback(async () => {
-    const canClaim = rewards - claim;
-    if ((rewards || claim) < 0) {
+    if (rewards < 0) {
       toast.error("Lỗi hệ thống. Vui lòng liên hệ nhân viên để được hỗ trợ!");
       return;
     }
-    if (isChecking || canClaim <= 0) {
+    if (isChecking || rewards <= 0) {
       toast.error("Bạn không có phần thưởng để nhận");
       return;
     }
@@ -47,7 +46,7 @@ const CheckInCard = () => {
       }
       setIsChecking(false);
     }
-  }, [rewards, claim, isChecking, executeCheckIn, userId]);
+  }, [rewards, isChecking, executeCheckIn, userId]);
 
   const handleUpdate = useCallback(() => {
     window.location.reload();
@@ -115,7 +114,7 @@ const CheckInCard = () => {
           <span>Cập nhật</span>
         </button>
         <button
-          disabled={rewards - claim <= 0}
+          disabled={rewards <= 0}
           onClick={handleCheckIn}
           className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white text-base py-2 px-3 rounded-lg transition-all duration-200 font-bold"
         >
