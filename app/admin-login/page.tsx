@@ -97,7 +97,7 @@ const AdminLogin = () => {
       setSelectedBranch(ADMIN_MAC_MAPPING[macAddress]);
       handleLogin(true);
     }
-  }, [macAddress, handleLogin]);
+  }, [macAddress]); // Remove handleLogin from dependencies
 
   if (pageLoading) {
     return (

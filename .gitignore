@@ -39,4 +39,7 @@ next-env.d.ts
 # generated
 /prisma/generated
 
+# package lock
+package-lock.json
+
 google-credentials.json

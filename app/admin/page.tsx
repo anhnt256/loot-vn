@@ -113,7 +113,7 @@ const getStatusText = (status: string) => {
   }
 };
 
-const COUNT_DOWN_TIME = 120;
+const COUNT_DOWN_TIME = 60;
 
 const COMBO_BG_COLOR = "bg-purple-700";
 

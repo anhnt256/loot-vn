@@ -53,6 +53,7 @@ const menuItems = [
     title: "Tặng lượt chơi",
     href: "/admin/gift-rounds",
     icon: "🎮",
+    adminOnly: true,
   },
   {
     title: "Quản lý Battle Pass",
@@ -76,7 +77,6 @@ const menuItems = [
     title: "Báo cáo bàn giao",
     href: "/admin/handover-reports",
     icon: "📝",
-    adminOnly: true,
   },
   // {
   //   title: "Báo cáo kết ca",
@@ -98,13 +98,22 @@ const menuItems = [
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const loginType = Cookies.get("loginType");
+  const [loginType, setLoginType] = useState<string | undefined>(undefined);
   const [branch, setBranch] = useState("GO_VAP");
+  const [isClient, setIsClient] = useState(false);
   const { pendingCount, setPendingCount } = usePendingCount();
 
-  // Load branch from cookie
+  // Set isClient to true after mount to prevent hydration mismatch
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Load cookies after mount
+  useEffect(() => {
+    const loginTypeFromCookie = Cookies.get("loginType");
     const branchFromCookie = Cookies.get("branch");
+    
+    setLoginType(loginTypeFromCookie);
     if (branchFromCookie) setBranch(branchFromCookie);
   }, []);
 
@@ -135,15 +144,34 @@ export function AdminSidebar() {
 
   // Filter menu items based on login type and admin role
   const filteredMenuItems = menuItems.filter((item) => {
-    // If login type is macAddress, only show dashboard and reward exchange
-    if (loginType === "macAddress") {
-      return item.href === "/admin" || item.href === "/admin/reward-exchange";
+    // Debug: log loginType to see what value it has
+    console.log("Current loginType:", loginType);
+    
+    // If login type is macAddress or mac, show dashboard, reward exchange, and handover reports
+    if (loginType === "macAddress" || loginType === "mac") {
+      return item.href === "/admin" || 
+             item.href === "/admin/reward-exchange" || 
+             item.href === "/admin/handover-reports";
     }
 
     // For other login types, show all items except adminOnly items for non-admin users
     // You can add additional logic here if needed
     return true;
   });
+
+  // Don't render until client-side hydration is complete
+  if (!isClient) {
+    return (
+      <aside className="w-64 bg-gray-800 shadow-xl border-r border-gray-700">
+        <div className="p-4">
+          <h2 className="text-2xl font-bold text-gray-100">Admin Panel</h2>
+        </div>
+        <nav className="mt-4">
+          {/* Show loading state or skeleton */}
+        </nav>
+      </aside>
+    );
+  }
 
   return (
     <aside className="w-64 bg-gray-800 shadow-xl border-r border-gray-700">
