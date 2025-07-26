@@ -212,6 +212,12 @@ model Staff {
   createdAt DateTime @default(now())
   updatedAt DateTime
   branch    String   @default("GO_VAP")
+  
+  // Relations for reports
+  counterStaffReports    Report[]         @relation("CounterStaff")
+  kitchenStaffReports    Report[]         @relation("KitchenStaff")
+  securityStaffReports   Report[]         @relation("SecurityStaff")
+  handoverReports        HandoverReport[] @relation("HandoverStaff")
 }
 
 model GiftRound {
@@ -443,6 +449,18 @@ enum ReportDetailType {
   TONG
 }
 
+// Thêm enum cho loại báo cáo bàn giao
+enum HandoverReportType {
+  BAO_CAO_BEP
+  BAO_CAO_NUOC
+}
+
+// Thêm enum cho loại nguyên vật liệu
+enum MaterialType {
+  NGUYEN_VAT_LIEU
+  NUOC_UONG
+}
+
 model ReportDetail {
   id        Int              @id @default(autoincrement())
   report    Report           @relation(fields: [reportId], references: [id])
@@ -467,4 +485,50 @@ model Report {
   securityStaff     Staff         @relation("SecurityStaff", fields: [securityStaffId], references: [id])
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
+}
+
+// Model cho báo cáo bàn giao
+model HandoverReport {
+  id          Int                 @id @default(autoincrement())
+  date        DateTime
+  shift       Shift
+  reportType  HandoverReportType
+  branch      String              @default("GO_VAP")
+  staffId     Int
+  note        String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  
+  staff       Staff               @relation("HandoverStaff", fields: [staffId], references: [id])
+  materials   HandoverMaterial[]
+  
+  @@index([date, shift, reportType])
+  @@index([staffId])
+}
+
+// Model cho nguyên vật liệu trong báo cáo bàn giao
+model HandoverMaterial {
+  id                    Int             @id @default(autoincrement())
+  handoverReportId      Int
+  materialName          String
+  materialType          MaterialType
+  morningBeginning      Float           @default(0)
+  morningReceived       Float           @default(0)
+  morningIssued         Float           @default(0)
+  morningEnding         Float           @default(0)
+  afternoonBeginning    Float           @default(0)
+  afternoonReceived     Float           @default(0)
+  afternoonIssued       Float           @default(0)
+  afternoonEnding       Float           @default(0)
+  eveningBeginning      Float           @default(0)
+  eveningReceived       Float           @default(0)
+  eveningIssued         Float           @default(0)
+  eveningEnding         Float           @default(0)
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  
+  handoverReport        HandoverReport  @relation(fields: [handoverReportId], references: [id], onDelete: Cascade)
+  
+  @@index([handoverReportId])
+  @@index([materialName])
 }

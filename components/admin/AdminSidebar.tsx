@@ -33,7 +33,13 @@ const menuItems = [
     adminOnly: true,
   },
   {
-    title: "Báo cáo Gateway",
+    title: "Báo cáo bàn giao",
+    href: "/admin/handover-reports",
+    icon: "📝",
+    adminOnly: true,
+  },
+  {
+    title: "Báo cáo kết ca",
     href: "/admin/reports",
     icon: "📝",
     adminOnly: true,
