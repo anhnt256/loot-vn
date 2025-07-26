@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getBranchFromCookie } from "@/lib/server-utils";
-import { Prisma } from "@prisma/client";
-import {
-  SHIFT_ENUM,
-  REPORT_TYPE_ENUM,
-  BRANCH_ENUM,
-} from "@/constants/handover-reports.constants";
 
 export async function GET(request: NextRequest) {
   try {

@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { db } from "@/lib/db";
 
 // GET /api/reports/[id]
 export async function GET(
@@ -9,7 +7,7 @@ export async function GET(
   { params }: { params: { id: string } },
 ) {
   const id = Number(params.id);
-  const report = await prisma.report.findUnique({
+  const report = await db.report.findUnique({
     where: { id },
     include: {
       details: true,
@@ -31,7 +29,7 @@ export async function PUT(
   const id = Number(params.id);
   const data = await req.json();
   // Cập nhật các trường cơ bản và details (xóa hết details cũ, tạo lại mới)
-  const updated = await prisma.report.update({
+  const updated = await db.report.update({
     where: { id },
     data: {
       date: new Date(data.date),
@@ -60,6 +58,6 @@ export async function DELETE(
   { params }: { params: { id: string } },
 ) {
   const id = Number(params.id);
-  await prisma.report.delete({ where: { id } });
+  await db.report.delete({ where: { id } });
   return NextResponse.json({ success: true });
 }

@@ -112,7 +112,7 @@ export function AdminSidebar() {
   useEffect(() => {
     const loginTypeFromCookie = Cookies.get("loginType");
     const branchFromCookie = Cookies.get("branch");
-    
+
     setLoginType(loginTypeFromCookie);
     if (branchFromCookie) setBranch(branchFromCookie);
   }, []);
@@ -146,12 +146,14 @@ export function AdminSidebar() {
   const filteredMenuItems = menuItems.filter((item) => {
     // Debug: log loginType to see what value it has
     console.log("Current loginType:", loginType);
-    
+
     // If login type is macAddress or mac, show dashboard, reward exchange, and handover reports
     if (loginType === "macAddress" || loginType === "mac") {
-      return item.href === "/admin" || 
-             item.href === "/admin/reward-exchange" || 
-             item.href === "/admin/handover-reports";
+      return (
+        item.href === "/admin" ||
+        item.href === "/admin/reward-exchange" ||
+        item.href === "/admin/handover-reports"
+      );
     }
 
     // For other login types, show all items except adminOnly items for non-admin users
@@ -166,9 +168,7 @@ export function AdminSidebar() {
         <div className="p-4">
           <h2 className="text-2xl font-bold text-gray-100">Admin Panel</h2>
         </div>
-        <nav className="mt-4">
-          {/* Show loading state or skeleton */}
-        </nav>
+        <nav className="mt-4">{/* Show loading state or skeleton */}</nav>
       </aside>
     );
   }

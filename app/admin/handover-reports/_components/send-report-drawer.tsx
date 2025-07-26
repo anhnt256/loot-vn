@@ -194,9 +194,19 @@ export default function SendReportDrawer({
     setLoading(true);
     try {
       // Calculate the correct report date based on selected shift
-      const reportDate = getReportDateForSubmission(
+      let reportDate = getReportDateForSubmission(
         selectedShift || getCurrentShift(),
       );
+
+      // For morning shift, we need to get data from previous night shift
+      if (selectedShift === SHIFT_ENUM.SANG) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const year = yesterday.getFullYear();
+        const month = String(yesterday.getMonth() + 1).padStart(2, "0");
+        const day = String(yesterday.getDate()).padStart(2, "0");
+        reportDate = `${year}-${month}-${day}`;
+      }
 
       const params = new URLSearchParams();
       params.append("date", reportDate);

@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { db } from "@/lib/db";
 
 // GET /api/reports?date=yyyy-mm-dd&shift=SANG&branch=...
 export async function GET(req: NextRequest) {
@@ -15,7 +13,7 @@ export async function GET(req: NextRequest) {
   if (shift) where.shift = shift;
   if (branch) where.branch = branch;
 
-  const reports = await prisma.report.findMany({
+  const reports = await db.report.findMany({
     where,
     include: {
       details: true,
@@ -33,7 +31,7 @@ export async function POST(req: NextRequest) {
   const data = await req.json();
   // data: { date, shift, branch, fileUrl, note, counterStaffId, kitchenStaffId, securityStaffId, details }
   // details: [{ type, value }]
-  const report = await prisma.report.create({
+  const report = await db.report.create({
     data: {
       date: new Date(data.date),
       shift: data.shift,
