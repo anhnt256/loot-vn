@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getBranchFromCookie } from "@/lib/server-utils";
 import { Prisma } from "@prisma/client";
-import { SHIFT_ENUM, REPORT_TYPE_ENUM, BRANCH_ENUM } from "@/constants/handover-reports.constants";
+import {
+  SHIFT_ENUM,
+  REPORT_TYPE_ENUM,
+  BRANCH_ENUM,
+} from "@/constants/handover-reports.constants";
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,7 +19,7 @@ export async function GET(request: NextRequest) {
     // Build where clause for finding the report for the specific date
     const whereClause: any = {
       branch: branch,
-      ...(reportType && { reportType: reportType })
+      ...(reportType && { reportType: reportType }),
     };
 
     // If date is provided, find report for that specific date
@@ -23,10 +27,10 @@ export async function GET(request: NextRequest) {
       const startDate = new Date(date);
       const endDate = new Date(date);
       endDate.setDate(endDate.getDate() + 1);
-      
+
       whereClause.date = {
         gte: startDate,
-        lt: endDate
+        lt: endDate,
       };
     }
 
@@ -35,61 +39,57 @@ export async function GET(request: NextRequest) {
       include: {
         materials: {
           include: {
-            material: true
-          }
-        }
+            material: true,
+          },
+        },
       },
-      orderBy: [
-        { date: 'desc' },
-        { reportType: 'asc' }
-      ]
+      orderBy: [{ date: "desc" }, { reportType: "asc" }],
     });
 
     console.log("Found reports count:", reports.length);
 
     // Transform data to match expected format - each report represents 1 day with all 3 shifts
-    const transformedReports = reports.map(report => ({
+    const transformedReports = reports.map((report) => ({
       id: report.id,
       date: report.date,
       reportType: report.reportType,
       note: report.note,
       materials: report.materials
-        .map(material => ({
+        .map((material) => ({
           id: material.id,
-          materialName: material.material?.name || 'Unknown',
-          materialType: material.material?.reportType || 'DAILY',
+          materialName: material.material?.name || "Unknown",
+          materialType: material.material?.reportType || "DAILY",
           morning: {
             beginning: material.morningBeginning,
             received: material.morningReceived,
             issued: material.morningIssued,
-            ending: material.morningEnding
+            ending: material.morningEnding,
           },
           afternoon: {
             beginning: material.afternoonBeginning,
             received: material.afternoonReceived,
             issued: material.afternoonIssued,
-            ending: material.afternoonEnding
+            ending: material.afternoonEnding,
           },
           evening: {
             beginning: material.eveningBeginning,
             received: material.eveningReceived,
             issued: material.eveningIssued,
-            ending: material.eveningEnding
-          }
+            ending: material.eveningEnding,
+          },
         }))
-        .sort((a, b) => a.materialName.localeCompare(b.materialName)) // Sort by material name for consistent order
+        .sort((a, b) => a.materialName.localeCompare(b.materialName)), // Sort by material name for consistent order
     }));
 
     return NextResponse.json({
       success: true,
-      data: transformedReports
+      data: transformedReports,
     });
-
   } catch (error) {
     console.error("Error fetching handover reports:", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch reports" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -99,19 +99,14 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const branch = await getBranchFromCookie();
-    
-    const {
-      date,
-      reportType,
-      note,
-      materials
-    } = body;
+
+    const { date, reportType, note, materials } = body;
 
     // Validate required fields
     if (!date || !reportType || !materials) {
       return NextResponse.json(
         { success: false, error: "Missing required fields" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -120,22 +115,22 @@ export async function POST(request: NextRequest) {
     const endDate = new Date(date);
     endDate.setDate(endDate.getDate() + 1);
 
-    let existingReport = await db.handoverReport.findFirst({
+    const existingReport = await db.handoverReport.findFirst({
       where: {
         date: {
           gte: startDate,
-          lt: endDate
+          lt: endDate,
         },
         reportType: reportType,
-        branch: branch
+        branch: branch,
       },
       include: {
         materials: {
           include: {
-            material: true
-          }
-        }
-      }
+            material: true,
+          },
+        },
+      },
     });
 
     let handoverReport;
@@ -143,12 +138,12 @@ export async function POST(request: NextRequest) {
     if (existingReport) {
       // Update existing report
       handoverReport = existingReport;
-      
+
       // Update note if provided
       if (note) {
         await db.handoverReport.update({
           where: { id: existingReport.id },
-          data: { note: note }
+          data: { note: note },
         });
       }
     } else {
@@ -158,18 +153,20 @@ export async function POST(request: NextRequest) {
           date: new Date(date),
           reportType: reportType,
           branch: branch,
-          note: note || null
-        }
+          note: note || null,
+        },
       });
     }
 
     // Update materials for all shifts
     for (const material of materials) {
-      const existingMaterial = existingReport?.materials.find(m => m.material?.name === material.materialName);
-      
+      const existingMaterial = existingReport?.materials.find(
+        (m) => m.material?.name === material.materialName,
+      );
+
       // Find material by name to get materialId
       const materialRecord = await db.material.findFirst({
-        where: { name: material.materialName }
+        where: { name: material.materialName },
       });
 
       const updateData: any = {
@@ -193,29 +190,28 @@ export async function POST(request: NextRequest) {
         // Update existing material
         await db.handoverMaterial.update({
           where: { id: existingMaterial.id },
-          data: updateData
+          data: updateData,
         });
       } else {
         // Create new material
         await db.handoverMaterial.create({
           data: {
             handoverReportId: handoverReport.id,
-            ...updateData
-          }
+            ...updateData,
+          },
         });
       }
     }
 
     return NextResponse.json({
       success: true,
-      data: { id: handoverReport.id }
+      data: { id: handoverReport.id },
     });
-
   } catch (error) {
     console.error("Error creating/updating handover report:", error);
     return NextResponse.json(
       { success: false, error: "Failed to create/update report" },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

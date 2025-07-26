@@ -2,71 +2,73 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getBranchFromCookie } from "@/lib/server-utils";
 import { SHIFT_ENUM } from "@/constants/handover-reports.constants";
-import { getCurrentTimeVNISO, getCurrentDateVNString } from "@/lib/timezone-utils";
+import {
+  getCurrentTimeVNISO,
+  getCurrentDateVNString,
+} from "@/lib/timezone-utils";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const branch = await getBranchFromCookie();
-    
-    const {
-      date,
-      shift,
-      reportType,
-      staffId,
-      materials
-    } = body;
+
+    const { date, shift, reportType, staffId, materials } = body;
 
     // Validate required fields
     if (!date || !shift || !reportType || !staffId || !materials) {
       return NextResponse.json(
         { success: false, error: "Missing required fields" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Parse date using timezone-utils
     const currentTime = getCurrentTimeVNISO();
-    
+
     // Use the input date directly since it's already in YYYY-MM-DD format
     const dateVN = date;
 
-    console.log('Date parsing:', {
+    console.log("Date parsing:", {
       inputDate: date,
       dateVN: dateVN,
       currentTime: currentTime,
       shift: shift,
-      reportType: reportType
+      reportType: reportType,
     });
 
     // Check if report already exists for this exact date and report type using raw query
     // Convert date to Vietnam timezone for comparison
-    console.log('Checking existing reports with dateVN:', dateVN);
-    
-    const existingReports = await db.$queryRaw`
+    console.log("Checking existing reports with dateVN:", dateVN);
+
+    const existingReports = (await db.$queryRaw`
       SELECT hr.id, hr.date, hr.reportType, hr.branch, DATE(CONVERT_TZ(hr.date, '+00:00', '+07:00')) as dateVN
       FROM HandoverReport hr
       WHERE hr.reportType = ${reportType} AND hr.branch = ${branch}
       ORDER BY hr.createdAt DESC
       LIMIT 5
-    ` as any[];
-    
-    console.log('All existing reports for this type and branch:', existingReports);
-    
-    const existingReport = existingReports.find(report => report.dateVN === dateVN);
+    `) as any[];
+
+    console.log(
+      "All existing reports for this type and branch:",
+      existingReports,
+    );
+
+    const existingReport = existingReports.find(
+      (report) => report.dateVN === dateVN,
+    );
 
     // Check if materials for this specific shift already exist
     if (existingReport) {
-      console.log('Found existing report:', {
+      console.log("Found existing report:", {
         reportId: existingReport.id,
         reportDate: existingReport.date,
         reportType: existingReport.reportType,
         requestedDate: date,
-        requestedShift: shift
+        requestedShift: shift,
       });
 
       // Check existing materials for this shift using raw query
-      const existingMaterials = await db.$queryRaw`
+      const existingMaterials = (await db.$queryRaw`
         SELECT hm.id, hm.materialId, m.name as materialName,
                hm.morningBeginning, hm.morningReceived, hm.morningIssued, hm.morningEnding,
                hm.afternoonBeginning, hm.afternoonReceived, hm.afternoonIssued, hm.afternoonEnding,
@@ -74,36 +76,53 @@ export async function POST(request: NextRequest) {
         FROM HandoverMaterial hm
         LEFT JOIN Material m ON hm.materialId = m.id
         WHERE hm.handoverReportId = ${existingReport.id}
-      ` as any[];
+      `) as any[];
 
-      const hasShiftData = existingMaterials.some(material => {
+      const hasShiftData = existingMaterials.some((material) => {
         let hasData = false;
         if (shift === SHIFT_ENUM.SANG) {
-          hasData = material.morningBeginning !== null || material.morningReceived !== null || 
-                   material.morningIssued !== null || material.morningEnding !== null;
+          hasData =
+            material.morningBeginning !== null ||
+            material.morningReceived !== null ||
+            material.morningIssued !== null ||
+            material.morningEnding !== null;
         } else if (shift === SHIFT_ENUM.CHIEU) {
-          hasData = material.afternoonBeginning !== null || material.afternoonReceived !== null || 
-                   material.afternoonIssued !== null || material.afternoonEnding !== null;
+          hasData =
+            material.afternoonBeginning !== null ||
+            material.afternoonReceived !== null ||
+            material.afternoonIssued !== null ||
+            material.afternoonEnding !== null;
         } else if (shift === SHIFT_ENUM.TOI) {
-          hasData = material.eveningBeginning !== null || material.eveningReceived !== null || 
-                   material.eveningIssued !== null || material.eveningEnding !== null;
+          hasData =
+            material.eveningBeginning !== null ||
+            material.eveningReceived !== null ||
+            material.eveningIssued !== null ||
+            material.eveningEnding !== null;
         }
-        
+
         if (hasData) {
-          console.log('Found existing shift data for material:', material.materialName);
+          console.log(
+            "Found existing shift data for material:",
+            material.materialName,
+          );
         }
-        
+
         return hasData;
       });
 
       if (hasShiftData) {
-        console.log('Blocking duplicate submission for shift:', shift, 'date:', date);
+        console.log(
+          "Blocking duplicate submission for shift:",
+          shift,
+          "date:",
+          date,
+        );
         return NextResponse.json(
-          { 
-            success: false, 
-            error: `Báo cáo cho ca ${shift} ngày ${date} đã tồn tại. Không thể gửi báo cáo trùng.` 
+          {
+            success: false,
+            error: `Báo cáo cho ca ${shift} ngày ${date} đã tồn tại. Không thể gửi báo cáo trùng.`,
           },
-          { status: 409 }
+          { status: 409 },
         );
       }
     }
@@ -119,30 +138,30 @@ export async function POST(request: NextRequest) {
         INSERT INTO HandoverReport (date, reportType, branch, note, createdAt, updatedAt)
         VALUES (${new Date(date)}, ${reportType}, ${branch}, NULL, ${currentTime}, ${currentTime})
       `;
-      
+
       // Get the created report ID
-      const createdReport = await db.$queryRaw`
+      const createdReport = (await db.$queryRaw`
         SELECT id FROM HandoverReport 
         WHERE DATE(CONVERT_TZ(date, '+00:00', '+07:00')) = ${dateVN} AND reportType = ${reportType} AND branch = ${branch}
         ORDER BY createdAt DESC LIMIT 1
-      ` as any[];
+      `) as any[];
       handoverReportId = createdReport[0].id;
     }
 
     // Update materials for the specific shift using raw queries
     for (const materialData of materials) {
       // Find material by name to get materialId
-      const materials = await db.$queryRaw`
+      const materials = (await db.$queryRaw`
         SELECT id FROM Material WHERE name = ${materialData.materialName} LIMIT 1
-      ` as any[];
+      `) as any[];
       const materialRecord = materials[0];
 
       // Check if material already exists for this report
-      const existingMaterials = await db.$queryRaw`
+      const existingMaterials = (await db.$queryRaw`
         SELECT id FROM HandoverMaterial 
         WHERE handoverReportId = ${handoverReportId} AND materialId = ${materialRecord?.id || null}
         LIMIT 1
-      ` as any[];
+      `) as any[];
       const existingMaterial = existingMaterials[0];
 
       if (existingMaterial) {
@@ -211,14 +230,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: { id: handoverReportId }
+      data: { id: handoverReportId },
     });
-
   } catch (error) {
     console.error("Error submitting report:", error);
     return NextResponse.json(
       { success: false, error: "Failed to submit report" },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

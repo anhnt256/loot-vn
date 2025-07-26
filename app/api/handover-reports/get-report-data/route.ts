@@ -3,6 +3,13 @@ import { db } from "@/lib/db";
 import { getBranchFromCookie } from "@/lib/server-utils";
 import { SHIFT_ENUM } from "@/constants/handover-reports.constants";
 
+type HandoverReportType = "BAO_CAO_BEP" | "BAO_CAO_NUOC";
+
+interface PreviousShiftData {
+  materialName: string;
+  ending: number;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -13,8 +20,11 @@ export async function GET(request: NextRequest) {
 
     if (!date || !shift || !reportType) {
       return NextResponse.json(
-        { success: false, error: "Missing required parameters: date, shift, reportType" },
-        { status: 400 }
+        {
+          success: false,
+          error: "Missing required parameters: date, shift, reportType",
+        },
+        { status: 400 },
       );
     }
 
@@ -26,8 +36,8 @@ export async function GET(request: NextRequest) {
     endDate.setDate(endDate.getDate() + 1);
 
     // Get previous shift data for beginning inventory
-    let previousShiftData: any[] = [];
-    
+    let previousShiftData: PreviousShiftData[] = [];
+
     if (shift === SHIFT_ENUM.SANG) {
       // Ca sáng: lấy tồn cuối ca tối ngày hôm trước
       const previousDay = new Date(reportDate);
@@ -41,24 +51,24 @@ export async function GET(request: NextRequest) {
         where: {
           date: {
             gte: previousDayStart,
-            lt: previousDayEnd
+            lt: previousDayEnd,
           },
-          reportType: reportType,
-          branch: branch
+          reportType: reportType as HandoverReportType,
+          branch: branch,
         },
         include: {
           materials: {
             include: {
-              material: true
-            }
-          }
-        }
+              material: true,
+            },
+          },
+        },
       });
 
       if (previousReport) {
-        previousShiftData = previousReport.materials.map(material => ({
+        previousShiftData = previousReport.materials.map((material: any) => ({
           materialName: material.material?.name || material.materialName,
-          ending: material.eveningEnding
+          ending: material.eveningEnding,
         }));
       }
     } else if (shift === SHIFT_ENUM.CHIEU) {
@@ -67,24 +77,24 @@ export async function GET(request: NextRequest) {
         where: {
           date: {
             gte: startDate,
-            lt: endDate
+            lt: endDate,
           },
-          reportType: reportType,
-          branch: branch
+          reportType: reportType as HandoverReportType,
+          branch: branch,
         },
         include: {
           materials: {
             include: {
-              material: true
-            }
-          }
-        }
+              material: true,
+            },
+          },
+        },
       });
 
       if (currentReport) {
-        previousShiftData = currentReport.materials.map(material => ({
+        previousShiftData = currentReport.materials.map((material: any) => ({
           materialName: material.material?.name || material.materialName,
-          ending: material.morningEnding
+          ending: material.morningEnding,
         }));
       }
     } else if (shift === SHIFT_ENUM.TOI) {
@@ -93,24 +103,24 @@ export async function GET(request: NextRequest) {
         where: {
           date: {
             gte: startDate,
-            lt: endDate
+            lt: endDate,
           },
-          reportType: reportType,
-          branch: branch
+          reportType: reportType as HandoverReportType,
+          branch: branch,
         },
         include: {
           materials: {
             include: {
-              material: true
-            }
-          }
-        }
+              material: true,
+            },
+          },
+        },
       });
 
       if (currentReport) {
-        previousShiftData = currentReport.materials.map(material => ({
+        previousShiftData = currentReport.materials.map((material: any) => ({
           materialName: material.material?.name || material.materialName,
-          ending: material.afternoonEnding
+          ending: material.afternoonEnding,
         }));
       }
     }
@@ -118,37 +128,38 @@ export async function GET(request: NextRequest) {
     // Get materials for the report type
     const materials = await db.material.findMany({
       where: {
-        reportType: reportType,
-        isActive: true
+        reportType: reportType as HandoverReportType,
+        isActive: true,
       },
       orderBy: {
-        name: 'asc'
-      }
+        name: "asc",
+      },
     });
 
     // Combine materials with previous shift data
-    const reportData = materials.map(material => {
-      const previousData = previousShiftData.find(p => p.materialName === material.name);
+    const reportData = materials.map((material) => {
+      const previousData = previousShiftData.find(
+        (p) => p.materialName === material.name,
+      );
       return {
         id: material.id,
         materialName: material.name,
         beginning: previousData ? previousData.ending : 0,
         received: 0,
         issued: 0,
-        ending: previousData ? previousData.ending : 0
+        ending: previousData ? previousData.ending : 0,
       };
     });
 
     return NextResponse.json({
       success: true,
-      data: reportData
+      data: reportData,
     });
-
   } catch (error) {
     console.error("Error fetching report data:", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch report data" },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

@@ -1,10 +1,15 @@
-"use client"
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { X, Send, User, Clock } from "lucide-react";
 import { Table, Input, Button, Select, message } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { SHIFT_ENUM, SHIFT_LABELS, REPORT_TYPE_ENUM, REPORT_TYPE_LABELS } from "@/constants/handover-reports.constants";
+import {
+  SHIFT_ENUM,
+  SHIFT_LABELS,
+  REPORT_TYPE_ENUM,
+  REPORT_TYPE_LABELS,
+} from "@/constants/handover-reports.constants";
 import { CURRENT_USER } from "@/constants/token.constant";
 
 interface Material {
@@ -37,10 +42,17 @@ interface Staff {
   userName: string;
 }
 
-export default function SendReportDrawer({ isOpen, onClose, selectedDate, defaultReportType }: SendReportDrawerProps) {
+export default function SendReportDrawer({
+  isOpen,
+  onClose,
+  selectedDate,
+  defaultReportType,
+}: SendReportDrawerProps) {
   const [selectedShift, setSelectedShift] = useState("");
   const [selectedStaff, setSelectedStaff] = useState("");
-  const [selectedReportType, setSelectedReportType] = useState(defaultReportType || REPORT_TYPE_ENUM.BAO_CAO_BEP);
+  const [selectedReportType, setSelectedReportType] = useState(
+    defaultReportType || REPORT_TYPE_ENUM.BAO_CAO_BEP,
+  );
   const [materials, setMaterials] = useState<Material[]>([]);
   const [materialData, setMaterialData] = useState<MaterialReportData[]>([]);
   const [loading, setLoading] = useState(false);
@@ -54,7 +66,7 @@ export default function SendReportDrawer({ isOpen, onClose, selectedDate, defaul
   const getCurrentShift = () => {
     const now = new Date();
     const currentHour = now.getHours();
-    
+
     if (currentHour >= 7 && currentHour < 15) {
       return SHIFT_ENUM.SANG;
     } else if (currentHour >= 15 && currentHour < 22) {
@@ -67,9 +79,9 @@ export default function SendReportDrawer({ isOpen, onClose, selectedDate, defaul
   // Function to get report date based on shift in DD/MM/YYYY format
   const getReportDate = (shift: string) => {
     const now = new Date();
-    let reportDate = new Date(now);
-    
-    // For night shift (22:00 - 07:00), if current time is after midnight (0:00-7:00), 
+    const reportDate = new Date(now);
+
+    // For night shift (22:00 - 07:00), if current time is after midnight (0:00-7:00),
     // the report should be for the previous day
     if (shift === SHIFT_ENUM.TOI) {
       const currentHour = now.getHours();
@@ -77,9 +89,9 @@ export default function SendReportDrawer({ isOpen, onClose, selectedDate, defaul
         reportDate.setDate(now.getDate() - 1);
       }
     }
-    
-    const day = String(reportDate.getDate()).padStart(2, '0');
-    const month = String(reportDate.getMonth() + 1).padStart(2, '0');
+
+    const day = String(reportDate.getDate()).padStart(2, "0");
+    const month = String(reportDate.getMonth() + 1).padStart(2, "0");
     const year = reportDate.getFullYear();
     return `${day}/${month}/${year}`;
   };
@@ -87,9 +99,9 @@ export default function SendReportDrawer({ isOpen, onClose, selectedDate, defaul
   // Function to get report date for submission in YYYY-MM-DD format
   const getReportDateForSubmission = (shift: string) => {
     const now = new Date();
-    let reportDate = new Date(now);
-    
-    // For night shift (22:00 - 07:00), if current time is after midnight (0:00-7:00), 
+    const reportDate = new Date(now);
+
+    // For night shift (22:00 - 07:00), if current time is after midnight (0:00-7:00),
     // the report should be for the previous day
     if (shift === SHIFT_ENUM.TOI) {
       const currentHour = now.getHours();
@@ -97,10 +109,10 @@ export default function SendReportDrawer({ isOpen, onClose, selectedDate, defaul
         reportDate.setDate(now.getDate() - 1);
       }
     }
-    
+
     const year = reportDate.getFullYear();
-    const month = String(reportDate.getMonth() + 1).padStart(2, '0');
-    const day = String(reportDate.getDate()).padStart(2, '0');
+    const month = String(reportDate.getMonth() + 1).padStart(2, "0");
+    const day = String(reportDate.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   };
 
@@ -122,7 +134,7 @@ export default function SendReportDrawer({ isOpen, onClose, selectedDate, defaul
   // Fetch staff list from API
   const fetchStaffList = async () => {
     try {
-      const response = await fetch('/api/staff');
+      const response = await fetch("/api/staff");
       const result = await response.json();
 
       if (result.success) {
@@ -162,10 +174,10 @@ export default function SendReportDrawer({ isOpen, onClose, selectedDate, defaul
   useEffect(() => {
     if (materials.length > 0) {
       // Sort materials by name to match the order in the main table
-      const sortedMaterials = [...materials].sort((a, b) => 
-        a.materialName.localeCompare(b.materialName)
+      const sortedMaterials = [...materials].sort((a, b) =>
+        a.materialName.localeCompare(b.materialName),
       );
-      
+
       const initialData = sortedMaterials.map((material, index) => ({
         id: material.id,
         materialName: material.materialName,
@@ -182,20 +194,25 @@ export default function SendReportDrawer({ isOpen, onClose, selectedDate, defaul
     setLoading(true);
     try {
       // Calculate the correct report date based on selected shift
-      const reportDate = getReportDateForSubmission(selectedShift || getCurrentShift());
-      
-      const params = new URLSearchParams();
-      params.append('date', reportDate);
-      params.append('shift', selectedShift || getCurrentShift());
-      params.append('reportType', selectedReportType);
+      const reportDate = getReportDateForSubmission(
+        selectedShift || getCurrentShift(),
+      );
 
-      const response = await fetch(`/api/handover-reports/get-report-data?${params.toString()}`);
+      const params = new URLSearchParams();
+      params.append("date", reportDate);
+      params.append("shift", selectedShift || getCurrentShift());
+      params.append("reportType", selectedReportType);
+
+      const response = await fetch(
+        `/api/handover-reports/get-report-data?${params.toString()}`,
+      );
       const result = await response.json();
 
       if (result.success) {
         // Sort materials by name to ensure consistent order with main table
-        const sortedData = result.data.sort((a: MaterialReportData, b: MaterialReportData) => 
-          a.materialName.localeCompare(b.materialName)
+        const sortedData = result.data.sort(
+          (a: MaterialReportData, b: MaterialReportData) =>
+            a.materialName.localeCompare(b.materialName),
         );
         setMaterialData(sortedData);
       } else {
@@ -213,51 +230,55 @@ export default function SendReportDrawer({ isOpen, onClose, selectedDate, defaul
   // Table columns configuration
   const columns: ColumnsType<MaterialReportData> = [
     {
-      title: 'STT',
-      key: 'index',
+      title: "STT",
+      key: "index",
       width: 60,
       render: (_, __, index) => index + 1,
     },
     {
-      title: 'Nguyên vật liệu',
-      dataIndex: 'materialName',
-      key: 'materialName',
+      title: "Nguyên vật liệu",
+      dataIndex: "materialName",
+      key: "materialName",
       width: 200,
     },
     {
-      title: 'Tồn đầu',
-      dataIndex: 'beginning',
-      key: 'beginning',
+      title: "Tồn đầu",
+      dataIndex: "beginning",
+      key: "beginning",
       width: 100,
       render: (value, record, index) => (
         <Input
           type="number"
           value={value}
-          onChange={(e) => handleDataChange(index, 'beginning', parseInt(e.target.value) || 0)}
+          onChange={(e) =>
+            handleDataChange(index, "beginning", parseInt(e.target.value) || 0)
+          }
           className="text-center"
           min={0}
         />
       ),
     },
     {
-      title: 'Nhập',
-      dataIndex: 'received',
-      key: 'received',
+      title: "Nhập",
+      dataIndex: "received",
+      key: "received",
       width: 100,
       render: (value, record, index) => (
         <Input
           type="number"
           value={value}
-          onChange={(e) => handleDataChange(index, 'received', parseInt(e.target.value) || 0)}
+          onChange={(e) =>
+            handleDataChange(index, "received", parseInt(e.target.value) || 0)
+          }
           className="text-center"
           min={0}
         />
       ),
     },
     {
-      title: 'Xuất',
-      dataIndex: 'issued',
-      key: 'issued',
+      title: "Xuất",
+      dataIndex: "issued",
+      key: "issued",
       width: 100,
       render: (value, record, index) => {
         const maxIssued = record.beginning + record.received;
@@ -266,22 +287,25 @@ export default function SendReportDrawer({ isOpen, onClose, selectedDate, defaul
           <Input
             type="number"
             value={value}
-            onChange={(e) => handleDataChange(index, 'issued', parseInt(e.target.value) || 0)}
-            className={`text-center ${isExceeded ? 'border-red-500 bg-red-50' : ''}`}
+            onChange={(e) =>
+              handleDataChange(index, "issued", parseInt(e.target.value) || 0)
+            }
+            className={`text-center ${isExceeded ? "border-red-500 bg-red-50" : ""}`}
             min={0}
             max={maxIssued}
-            title={isExceeded ? `Tối đa: ${maxIssued}` : ''}
+            title={isExceeded ? `Tối đa: ${maxIssued}` : ""}
           />
         );
       },
     },
     {
-      title: 'Tồn cuối',
-      dataIndex: 'ending',
-      key: 'ending',
+      title: "Tồn cuối",
+      dataIndex: "ending",
+      key: "ending",
       width: 100,
       render: (value, record, index) => {
-        const calculatedEnding = record.beginning + record.received - record.issued;
+        const calculatedEnding =
+          record.beginning + record.received - record.issued;
         return (
           <Input
             type="number"
@@ -295,50 +319,61 @@ export default function SendReportDrawer({ isOpen, onClose, selectedDate, defaul
     },
   ];
 
-  const handleDataChange = (index: number, field: keyof MaterialReportData, value: number) => {
+  const handleDataChange = (
+    index: number,
+    field: keyof MaterialReportData,
+    value: number,
+  ) => {
     const newData = [...materialData];
     newData[index] = { ...newData[index], [field]: value };
-    
+
     // Validate issued amount cannot exceed beginning + received
-    if (field === 'issued') {
+    if (field === "issued") {
       const maxIssued = newData[index].beginning + newData[index].received;
       if (value > maxIssued) {
-        message.warning(`Số lượng xuất không thể vượt quá tổng kho (${maxIssued})`);
+        message.warning(
+          `Số lượng xuất không thể vượt quá tổng kho (${maxIssued})`,
+        );
         newData[index].issued = maxIssued;
         value = maxIssued;
       }
     }
-    
+
     // Auto-calculate ending inventory
-    if (field === 'beginning' || field === 'received' || field === 'issued') {
-      newData[index].ending = newData[index].beginning + newData[index].received - newData[index].issued;
+    if (field === "beginning" || field === "received" || field === "issued") {
+      newData[index].ending =
+        newData[index].beginning +
+        newData[index].received -
+        newData[index].issued;
     }
-    
+
     setMaterialData(newData);
   };
 
   const handleSubmit = async () => {
     if (!selectedShift) {
-      message.error('Vui lòng chọn ca làm việc!');
+      message.error("Vui lòng chọn ca làm việc!");
       return;
     }
     if (!selectedStaff) {
-      message.error('Vui lòng chọn nhân viên!');
+      message.error("Vui lòng chọn nhân viên!");
       return;
     }
     if (!selectedReportType) {
-      message.error('Vui lòng chọn loại báo cáo!');
+      message.error("Vui lòng chọn loại báo cáo!");
       return;
     }
 
     // Validate all materials before submission
-    const invalidMaterials = materialData.filter(material => {
+    const invalidMaterials = materialData.filter((material) => {
       const maxIssued = material.beginning + material.received;
       return material.issued > maxIssued;
     });
 
     if (invalidMaterials.length > 0) {
-      const materialNames = invalidMaterials.map(m => m.materialName).join(', ');
+      const materialNames = invalidMaterials
+        .map((m) => m.materialName)
+        .join(", ");
       message.error(`Số lượng xuất vượt quá tổng kho cho: ${materialNames}`);
       return;
     }
@@ -347,32 +382,32 @@ export default function SendReportDrawer({ isOpen, onClose, selectedDate, defaul
     try {
       // Calculate the correct report date based on selected shift
       const reportDate = getReportDateForSubmission(selectedShift);
-      
-      const response = await fetch('/api/handover-reports/submit-report', {
-        method: 'POST',
+
+      const response = await fetch("/api/handover-reports/submit-report", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           date: reportDate,
           shift: selectedShift,
           reportType: selectedReportType,
           staffId: parseInt(selectedStaff),
-          materials: materialData
-        })
+          materials: materialData,
+        }),
       });
 
       const result = await response.json();
 
       if (result.success) {
-        message.success('Gửi báo cáo thành công!');
+        message.success("Gửi báo cáo thành công!");
         onClose();
       } else {
-        message.error(result.error || 'Có lỗi xảy ra khi gửi báo cáo!');
+        message.error(result.error || "Có lỗi xảy ra khi gửi báo cáo!");
       }
     } catch (error) {
-      console.error('Error submitting report:', error);
-      message.error('Có lỗi xảy ra khi gửi báo cáo!');
+      console.error("Error submitting report:", error);
+      message.error("Có lỗi xảy ra khi gửi báo cáo!");
     } finally {
       setSubmitLoading(false);
     }
@@ -382,26 +417,28 @@ export default function SendReportDrawer({ isOpen, onClose, selectedDate, defaul
 
   // Generate title with selected shift, date and staff name
   const reportDate = getReportDate(selectedShift || getCurrentShift());
-  const selectedStaffData = staffList.find(staff => staff.id.toString() === selectedStaff);
-  const staffName = selectedStaffData ? selectedStaffData.fullName : "Chưa chọn nhân viên";
+  const selectedStaffData = staffList.find(
+    (staff) => staff.id.toString() === selectedStaff,
+  );
+  const staffName = selectedStaffData
+    ? selectedStaffData.fullName
+    : "Chưa chọn nhân viên";
   const title = `Báo cáo ${selectedShift ? SHIFT_LABELS[selectedShift as keyof typeof SHIFT_LABELS] : SHIFT_LABELS[getCurrentShift() as keyof typeof SHIFT_LABELS]} ${reportDate} - ${staffName}`;
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
         onClick={onClose}
       />
-      
+
       {/* Drawer */}
       <div className="absolute right-0 top-0 h-full w-full max-w-6xl bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">
-              {title}
-            </h2>
+            <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
             <button
               onClick={onClose}
               className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
@@ -412,25 +449,29 @@ export default function SendReportDrawer({ isOpen, onClose, selectedDate, defaul
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                         {/* Selection Section */}
-             <div className="bg-gray-50 p-4 rounded-lg">
-               <div className="flex items-center justify-between mb-4">
-                 <h3 className="text-md font-medium text-gray-900 flex items-center">
-                   <Clock className="w-4 h-4 mr-2" />
-                   Thông tin báo cáo
-                 </h3>
-                 <div className="text-sm text-gray-600">
-                   Thời gian hiện tại: {new Date().toLocaleTimeString('vi-VN')}
-                 </div>
-               </div>
-              
+            {/* Selection Section */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-md font-medium text-gray-900 flex items-center">
+                  <Clock className="w-4 h-4 mr-2" />
+                  Thông tin báo cáo
+                </h3>
+                <div className="text-sm text-gray-600">
+                  Thời gian hiện tại: {new Date().toLocaleTimeString("vi-VN")}
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Report Type Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="report-type-select"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Loại báo cáo *
                   </label>
                   <Select
+                    id="report-type-select"
                     placeholder="Chọn loại báo cáo"
                     value={selectedReportType}
                     onChange={setSelectedReportType}
@@ -439,7 +480,11 @@ export default function SendReportDrawer({ isOpen, onClose, selectedDate, defaul
                   >
                     {Object.values(REPORT_TYPE_ENUM).map((type) => (
                       <Select.Option key={type} value={type}>
-                        {REPORT_TYPE_LABELS[type as keyof typeof REPORT_TYPE_LABELS]}
+                        {
+                          REPORT_TYPE_LABELS[
+                            type as keyof typeof REPORT_TYPE_LABELS
+                          ]
+                        }
                       </Select.Option>
                     ))}
                   </Select>
@@ -447,10 +492,14 @@ export default function SendReportDrawer({ isOpen, onClose, selectedDate, defaul
 
                 {/* Shift Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="shift-select"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Ca làm việc *
                   </label>
                   <Select
+                    id="shift-select"
                     placeholder="Chọn ca làm việc"
                     value={selectedShift}
                     onChange={setSelectedShift}
@@ -468,10 +517,14 @@ export default function SendReportDrawer({ isOpen, onClose, selectedDate, defaul
 
                 {/* Staff Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="staff-select"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Nhân viên *
                   </label>
                   <Select
+                    id="staff-select"
                     placeholder="Chọn nhân viên"
                     value={selectedStaff}
                     onChange={setSelectedStaff}
@@ -479,7 +532,9 @@ export default function SendReportDrawer({ isOpen, onClose, selectedDate, defaul
                     size="large"
                     showSearch
                     filterOption={(input, option) =>
-                      (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
+                      (option?.children as unknown as string)
+                        ?.toLowerCase()
+                        .includes(input.toLowerCase())
                     }
                   >
                     {staffList.map((staff) => (
@@ -495,9 +550,15 @@ export default function SendReportDrawer({ isOpen, onClose, selectedDate, defaul
             {/* Materials Table */}
             <div>
               <h3 className="text-md font-medium text-gray-900 mb-3">
-                Số lượng ca {selectedShift ? SHIFT_LABELS[selectedShift as keyof typeof SHIFT_LABELS]?.toLowerCase() : ''} ({materialData.length})
+                Số lượng ca{" "}
+                {selectedShift
+                  ? SHIFT_LABELS[
+                      selectedShift as keyof typeof SHIFT_LABELS
+                    ]?.toLowerCase()
+                  : ""}{" "}
+                ({materialData.length})
               </h3>
-              
+
               {loading ? (
                 <div className="space-y-3">
                   {[...Array(5)].map((_, index) => (
@@ -509,12 +570,26 @@ export default function SendReportDrawer({ isOpen, onClose, selectedDate, defaul
               ) : materialData.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
                   <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                    <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                    <svg
+                      className="w-8 h-8 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                      />
                     </svg>
                   </div>
-                  <p className="text-lg font-medium">Chưa có nguyên vật liệu nào</p>
-                  <p className="text-sm text-gray-400 mt-1">Vui lòng kiểm tra lại loại báo cáo</p>
+                  <p className="text-lg font-medium">
+                    Chưa có nguyên vật liệu nào
+                  </p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Vui lòng kiểm tra lại loại báo cáo
+                  </p>
                 </div>
               ) : (
                 <div className="bg-white rounded-lg border border-gray-200">
@@ -538,11 +613,13 @@ export default function SendReportDrawer({ isOpen, onClose, selectedDate, defaul
               <Button onClick={onClose} size="large">
                 Hủy
               </Button>
-              <Button 
-                type="primary" 
+              <Button
+                type="primary"
                 onClick={handleSubmit}
                 loading={submitLoading}
-                disabled={!selectedShift || !selectedStaff || !selectedReportType}
+                disabled={
+                  !selectedShift || !selectedStaff || !selectedReportType
+                }
                 icon={<Send className="w-4 h-4" />}
                 size="large"
                 className="bg-blue-600 hover:bg-blue-700"
@@ -555,4 +632,4 @@ export default function SendReportDrawer({ isOpen, onClose, selectedDate, defaul
       </div>
     </div>
   );
-} 
+}

@@ -1,10 +1,13 @@
-"use client"
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { X, Plus, Edit } from "lucide-react";
 import { Table, Tag, Button, Modal, Form, Input, Switch, message } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { REPORT_TYPE_ENUM, REPORT_TYPE_LABELS } from "@/constants/handover-reports.constants";
+import {
+  REPORT_TYPE_ENUM,
+  REPORT_TYPE_LABELS,
+} from "@/constants/handover-reports.constants";
 
 interface Material {
   id: number;
@@ -19,7 +22,10 @@ interface MaterialManagementDrawerProps {
   onClose: () => void;
 }
 
-export default function MaterialManagementDrawer({ isOpen, onClose }: MaterialManagementDrawerProps) {
+export default function MaterialManagementDrawer({
+  isOpen,
+  onClose,
+}: MaterialManagementDrawerProps) {
   const [selectedReportType, setSelectedReportType] = useState("BAO_CAO_NUOC");
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(false);
@@ -33,38 +39,40 @@ export default function MaterialManagementDrawer({ isOpen, onClose }: MaterialMa
   // Table columns configuration
   const columns: ColumnsType<Material> = [
     {
-      title: 'Tên nguyên vật liệu',
-      dataIndex: 'materialName',
-      key: 'materialName',
+      title: "Tên nguyên vật liệu",
+      dataIndex: "materialName",
+      key: "materialName",
       render: (text: string, record: Material) => (
-        <span className={record.isDeleted ? 'line-through text-gray-500' : 'text-gray-900'}>
+        <span
+          className={
+            record.isDeleted ? "line-through text-gray-500" : "text-gray-900"
+          }
+        >
           {text}
         </span>
       ),
     },
     {
-      title: 'Trạng thái',
-      key: 'isDeleted',
-      dataIndex: 'isDeleted',
+      title: "Trạng thái",
+      key: "isDeleted",
+      dataIndex: "isDeleted",
       render: (isDeleted: boolean) => (
-        <Tag color={isDeleted ? 'red' : 'green'}>
-          {isDeleted ? 'Đã xóa' : 'Hoạt động'}
+        <Tag color={isDeleted ? "red" : "green"}>
+          {isDeleted ? "Đã xóa" : "Hoạt động"}
         </Tag>
       ),
     },
     {
-      title: 'Hiển thị trên FFood',
-      key: 'isFood',
-      dataIndex: 'isFood',
+      title: "Hiển thị trên FFood",
+      key: "isFood",
+      dataIndex: "isFood",
       render: (isFood: boolean) => (
-        <Tag color={isFood ? 'blue' : 'orange'}>
-          {isFood ? 'Có' : 'Không'}
-        </Tag>
+        <Tag color={isFood ? "blue" : "orange"}>{isFood ? "Có" : "Không"}</Tag>
       ),
     },
     {
-      title: 'Thao tác',
-      key: 'actions',
+      title: "Thao tác",
+      key: "actions",
       render: (_, record: Material) => (
         <Button
           type="text"
@@ -90,7 +98,9 @@ export default function MaterialManagementDrawer({ isOpen, onClose }: MaterialMa
   const fetchMaterials = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/handover-reports/materials?reportType=${selectedReportType}`);
+      const response = await fetch(
+        `/api/handover-reports/materials?reportType=${selectedReportType}`,
+      );
       const result = await response.json();
 
       if (result.success) {
@@ -142,19 +152,19 @@ export default function MaterialManagementDrawer({ isOpen, onClose }: MaterialMa
   const handleSubmit = async (values: any) => {
     setSubmitLoading(true);
     try {
-      const url = editingMaterial 
-        ? '/api/handover-reports/materials'
-        : '/api/handover-reports/materials';
-      
-      const method = editingMaterial ? 'PUT' : 'POST';
-      const body = editingMaterial 
+      const url = editingMaterial
+        ? "/api/handover-reports/materials"
+        : "/api/handover-reports/materials";
+
+      const method = editingMaterial ? "PUT" : "POST";
+      const body = editingMaterial
         ? { ...values, id: editingMaterial.id }
         : values;
 
       const response = await fetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
       });
@@ -163,20 +173,20 @@ export default function MaterialManagementDrawer({ isOpen, onClose }: MaterialMa
 
       if (result.success) {
         message.success(
-          editingMaterial 
-            ? 'Cập nhật nguyên vật liệu thành công!' 
-            : 'Thêm nguyên vật liệu thành công!'
+          editingMaterial
+            ? "Cập nhật nguyên vật liệu thành công!"
+            : "Thêm nguyên vật liệu thành công!",
         );
         setModalVisible(false);
         setEditingMaterial(null);
         form.resetFields();
         fetchMaterials(); // Refresh the list
       } else {
-        message.error(result.error || 'Có lỗi xảy ra!');
+        message.error(result.error || "Có lỗi xảy ra!");
       }
     } catch (error) {
-      console.error('Error submitting form:', error);
-      message.error('Có lỗi xảy ra khi lưu dữ liệu!');
+      console.error("Error submitting form:", error);
+      message.error("Có lỗi xảy ra khi lưu dữ liệu!");
     } finally {
       setSubmitLoading(false);
     }
@@ -187,11 +197,11 @@ export default function MaterialManagementDrawer({ isOpen, onClose }: MaterialMa
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
         onClick={onClose}
       />
-      
+
       {/* Drawer */}
       <div className="absolute right-0 top-0 h-full w-full max-w-4xl bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
         <div className="flex flex-col h-full">
@@ -212,10 +222,14 @@ export default function MaterialManagementDrawer({ isOpen, onClose }: MaterialMa
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {/* Report Type Selector */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="report-type-select"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Loại báo cáo
               </label>
               <select
+                id="report-type-select"
                 value={selectedReportType}
                 onChange={(e) => handleReportTypeChange(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -223,7 +237,11 @@ export default function MaterialManagementDrawer({ isOpen, onClose }: MaterialMa
                 <option value="">Chọn loại báo cáo</option>
                 {reportTypes.map((type) => (
                   <option key={type} value={type}>
-                    {REPORT_TYPE_LABELS[type as keyof typeof REPORT_TYPE_LABELS]}
+                    {
+                      REPORT_TYPE_LABELS[
+                        type as keyof typeof REPORT_TYPE_LABELS
+                      ]
+                    }
                   </option>
                 ))}
               </select>
@@ -245,7 +263,7 @@ export default function MaterialManagementDrawer({ isOpen, onClose }: MaterialMa
                     Thêm mới
                   </Button>
                 </div>
-                
+
                 {loading ? (
                   <div className="space-y-3">
                     {[...Array(5)].map((_, index) => (
@@ -257,12 +275,26 @@ export default function MaterialManagementDrawer({ isOpen, onClose }: MaterialMa
                 ) : materials.length === 0 ? (
                   <div className="text-center py-12 text-gray-500">
                     <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                      <svg
+                        className="w-8 h-8 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                        />
                       </svg>
                     </div>
-                    <p className="text-lg font-medium">Chưa có nguyên vật liệu nào</p>
-                    <p className="text-sm text-gray-400 mt-1">Hãy chọn loại báo cáo khác hoặc thêm nguyên vật liệu mới</p>
+                    <p className="text-lg font-medium">
+                      Chưa có nguyên vật liệu nào
+                    </p>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Hãy chọn loại báo cáo khác hoặc thêm nguyên vật liệu mới
+                    </p>
                   </div>
                 ) : (
                   <div className="bg-white rounded-lg border border-gray-200">
@@ -274,7 +306,8 @@ export default function MaterialManagementDrawer({ isOpen, onClose }: MaterialMa
                         pageSize: 10,
                         showSizeChanger: true,
                         showQuickJumper: true,
-                        showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} mục`,
+                        showTotal: (total, range) =>
+                          `${range[0]}-${range[1]} của ${total} mục`,
                       }}
                       size="middle"
                       loading={loading}
@@ -288,12 +321,24 @@ export default function MaterialManagementDrawer({ isOpen, onClose }: MaterialMa
             {!selectedReportType && (
               <div className="text-center py-16 text-gray-500">
                 <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-                  <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <svg
+                    className="w-10 h-10 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
                   </svg>
                 </div>
                 <p className="text-xl font-medium">Chọn loại báo cáo</p>
-                <p className="text-sm text-gray-400 mt-2">Để xem danh sách nguyên vật liệu</p>
+                <p className="text-sm text-gray-400 mt-2">
+                  Để xem danh sách nguyên vật liệu
+                </p>
               </div>
             )}
           </div>
@@ -312,7 +357,11 @@ export default function MaterialManagementDrawer({ isOpen, onClose }: MaterialMa
 
       {/* Add/Edit Material Modal */}
       <Modal
-        title={editingMaterial ? 'Chỉnh sửa nguyên vật liệu' : 'Thêm nguyên vật liệu mới'}
+        title={
+          editingMaterial
+            ? "Chỉnh sửa nguyên vật liệu"
+            : "Thêm nguyên vật liệu mới"
+        }
         open={modalVisible}
         onCancel={handleModalCancel}
         footer={null}
@@ -333,8 +382,8 @@ export default function MaterialManagementDrawer({ isOpen, onClose }: MaterialMa
             name="materialName"
             label="Tên nguyên vật liệu"
             rules={[
-              { required: true, message: 'Vui lòng nhập tên nguyên vật liệu!' },
-              { min: 2, message: 'Tên phải có ít nhất 2 ký tự!' }
+              { required: true, message: "Vui lòng nhập tên nguyên vật liệu!" },
+              { min: 2, message: "Tên phải có ít nhất 2 ký tự!" },
             ]}
           >
             <Input placeholder="Nhập tên nguyên vật liệu..." />
@@ -343,14 +392,18 @@ export default function MaterialManagementDrawer({ isOpen, onClose }: MaterialMa
           <Form.Item
             name="materialType"
             label="Loại báo cáo"
-            rules={[{ required: true, message: 'Vui lòng chọn loại báo cáo!' }]}
+            rules={[{ required: true, message: "Vui lòng chọn loại báo cáo!" }]}
           >
-            <select 
+            <select
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-100"
               disabled
             >
               <option value={selectedReportType}>
-                {REPORT_TYPE_LABELS[selectedReportType as keyof typeof REPORT_TYPE_LABELS]}
+                {
+                  REPORT_TYPE_LABELS[
+                    selectedReportType as keyof typeof REPORT_TYPE_LABELS
+                  ]
+                }
               </option>
             </select>
           </Form.Item>
@@ -360,10 +413,7 @@ export default function MaterialManagementDrawer({ isOpen, onClose }: MaterialMa
             label="Hiển thị trên FFood"
             valuePropName="checked"
           >
-            <Switch 
-              checkedChildren="Có" 
-              unCheckedChildren="Không"
-            />
+            <Switch checkedChildren="Có" unCheckedChildren="Không" />
           </Form.Item>
 
           <Form.Item
@@ -371,27 +421,22 @@ export default function MaterialManagementDrawer({ isOpen, onClose }: MaterialMa
             label="Trạng thái"
             valuePropName="checked"
           >
-            <Switch 
-              checkedChildren="Đã xóa" 
-              unCheckedChildren="Hoạt động"
-            />
+            <Switch checkedChildren="Đã xóa" unCheckedChildren="Hoạt động" />
           </Form.Item>
 
           <div className="flex justify-end space-x-3 pt-4">
-            <Button onClick={handleModalCancel}>
-              Hủy
-            </Button>
-            <Button 
-              type="primary" 
-              htmlType="submit" 
+            <Button onClick={handleModalCancel}>Hủy</Button>
+            <Button
+              type="primary"
+              htmlType="submit"
               loading={submitLoading}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {editingMaterial ? 'Cập nhật' : 'Thêm mới'}
+              {editingMaterial ? "Cập nhật" : "Thêm mới"}
             </Button>
           </div>
         </Form>
       </Modal>
     </div>
   );
-} 
+}

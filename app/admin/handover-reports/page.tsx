@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { Calendar, Search, Download, Package, Send } from "lucide-react";
 import Cookies from "js-cookie";
-import { 
-  SHIFT_ENUM, 
-  REPORT_TYPE_ENUM, 
+import {
+  SHIFT_ENUM,
+  REPORT_TYPE_ENUM,
   BRANCH_ENUM,
   SHIFT_LABELS,
   REPORT_TYPE_LABELS,
-  BRANCH_LABELS
+  BRANCH_LABELS,
 } from "@/constants/handover-reports.constants";
 import MaterialManagementDrawer from "./_components/material-management-drawer";
 import SendReportDrawer from "./_components/send-report-drawer";
@@ -72,7 +72,7 @@ const LoadingSkeleton = () => (
 export default function HandoverReportsPage() {
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
-    return today.toISOString().split('T')[0];
+    return today.toISOString().split("T")[0];
   });
   const [selectedReportType, setSelectedReportType] = useState("BAO_CAO_BEP");
   const [selectedBranch, setSelectedBranch] = useState("GO_VAP");
@@ -90,7 +90,9 @@ export default function HandoverReportsPage() {
       if (selectedReportType) params.append("reportType", selectedReportType);
       if (selectedBranch) params.append("branch", selectedBranch);
 
-      const response = await fetch(`/api/handover-reports?${params.toString()}`);
+      const response = await fetch(
+        `/api/handover-reports?${params.toString()}`,
+      );
       const result = await response.json();
 
       if (result.success) {
@@ -152,43 +154,64 @@ export default function HandoverReportsPage() {
   // Function to check data consistency and return validation errors
   const validateMaterialData = (material: MaterialReport) => {
     const errors: { [key: string]: boolean } = {};
-    
+
     // Check morning shift: beginning + received - issued should equal ending
-    const morningCalculated = material.morning.beginning + material.morning.received - material.morning.issued;
+    const morningCalculated =
+      material.morning.beginning +
+      material.morning.received -
+      material.morning.issued;
     if (Math.abs(morningCalculated - material.morning.ending) > 0.01) {
       errors.morningEnding = true;
     }
-    
+
     // Check afternoon shift: beginning + received - issued should equal ending
-    const afternoonCalculated = material.afternoon.beginning + material.afternoon.received - material.afternoon.issued;
+    const afternoonCalculated =
+      material.afternoon.beginning +
+      material.afternoon.received -
+      material.afternoon.issued;
     if (Math.abs(afternoonCalculated - material.afternoon.ending) > 0.01) {
       errors.afternoonEnding = true;
     }
-    
+
     // Check evening shift: beginning + received - issued should equal ending
-    const eveningCalculated = material.evening.beginning + material.evening.received - material.evening.issued;
+    const eveningCalculated =
+      material.evening.beginning +
+      material.evening.received -
+      material.evening.issued;
     if (Math.abs(eveningCalculated - material.evening.ending) > 0.01) {
       errors.eveningEnding = true;
     }
-    
+
     // Check shift continuity: morning ending should equal afternoon beginning
     // Only check if afternoon shift has data (beginning > 0 or received > 0 or issued > 0 or ending > 0)
-    const afternoonHasData = material.afternoon.beginning > 0 || material.afternoon.received > 0 || 
-                           material.afternoon.issued > 0 || material.afternoon.ending > 0;
-    if (afternoonHasData && Math.abs(material.morning.ending - material.afternoon.beginning) > 0.01) {
+    const afternoonHasData =
+      material.afternoon.beginning > 0 ||
+      material.afternoon.received > 0 ||
+      material.afternoon.issued > 0 ||
+      material.afternoon.ending > 0;
+    if (
+      afternoonHasData &&
+      Math.abs(material.morning.ending - material.afternoon.beginning) > 0.01
+    ) {
       errors.afternoonBeginning = true;
       errors.morningEnding = true;
     }
-    
+
     // Check shift continuity: afternoon ending should equal evening beginning
     // Only check if evening shift has data (beginning > 0 or received > 0 or issued > 0 or ending > 0)
-    const eveningHasData = material.evening.beginning > 0 || material.evening.received > 0 || 
-                          material.evening.issued > 0 || material.evening.ending > 0;
-    if (eveningHasData && Math.abs(material.afternoon.ending - material.evening.beginning) > 0.01) {
+    const eveningHasData =
+      material.evening.beginning > 0 ||
+      material.evening.received > 0 ||
+      material.evening.issued > 0 ||
+      material.evening.ending > 0;
+    if (
+      eveningHasData &&
+      Math.abs(material.afternoon.ending - material.evening.beginning) > 0.01
+    ) {
       errors.eveningBeginning = true;
       errors.afternoonEnding = true;
     }
-    
+
     return errors;
   };
 
@@ -208,7 +231,7 @@ export default function HandoverReportsPage() {
       afternoonBeginning: `Tồn đầu chiều (${material.afternoon.beginning}) ≠ Tồn cuối sáng (${material.morning.ending})`,
       afternoonEnding: `Tồn cuối chiều (${material.afternoon.ending}) ≠ Tồn đầu (${material.afternoon.beginning}) + Nhập (${material.afternoon.received}) - Xuất (${material.afternoon.issued}) = ${material.afternoon.beginning + material.afternoon.received - material.afternoon.issued}`,
       eveningBeginning: `Tồn đầu tối (${material.evening.beginning}) ≠ Tồn cuối chiều (${material.afternoon.ending})`,
-      eveningEnding: `Tồn cuối tối (${material.evening.ending}) ≠ Tồn đầu (${material.evening.beginning}) + Nhập (${material.evening.received}) - Xuất (${material.evening.issued}) = ${material.evening.beginning + material.evening.received - material.evening.issued}`
+      eveningEnding: `Tồn cuối tối (${material.evening.ending}) ≠ Tồn đầu (${material.evening.beginning}) + Nhập (${material.evening.received}) - Xuất (${material.evening.issued}) = ${material.evening.beginning + material.evening.received - material.evening.issued}`,
     };
 
     return errorMessages[field];
@@ -217,8 +240,8 @@ export default function HandoverReportsPage() {
   // Function to count total errors across all materials
   const getTotalErrors = () => {
     let totalErrors = 0;
-    reports.forEach(report => {
-      report.materials.forEach(material => {
+    reports.forEach((report) => {
+      report.materials.forEach((material) => {
         const errors = validateMaterialData(material);
         totalErrors += Object.keys(errors).length;
       });
@@ -232,7 +255,8 @@ export default function HandoverReportsPage() {
       <div className="bg-white border border-gray-200 rounded-lg p-3 lg:p-4">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-3 gap-3">
           <h2 className="text-lg font-semibold text-gray-900">
-            Báo cáo hằng ngày - {selectedReportType === "BAO_CAO_BEP" ? "Bếp" : "Nước"}
+            Báo cáo hằng ngày -{" "}
+            {selectedReportType === "BAO_CAO_BEP" ? "Bếp" : "Nước"}
           </h2>
           <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
             <button
@@ -298,7 +322,9 @@ export default function HandoverReportsPage() {
           {/* Search Button */}
           <button
             onClick={handleSearch}
-            disabled={loading || !selectedDate || !selectedBranch || !selectedReportType}
+            disabled={
+              loading || !selectedDate || !selectedBranch || !selectedReportType
+            }
             className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
@@ -315,24 +341,34 @@ export default function HandoverReportsPage() {
       <div className="bg-white border border-gray-200 rounded-lg p-3 lg:p-4">
         {/* Summary Section */}
         <div className="mb-4">
-          <h3 className="text-md font-semibold text-gray-900 mb-2">Tóm tắt báo cáo</h3>
+          <h3 className="text-md font-semibold text-gray-900 mb-2">
+            Tóm tắt báo cáo
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-blue-50 p-3 rounded-md">
-              <div className="text-sm text-blue-600 font-medium">Tổng nguyên vật liệu</div>
+              <div className="text-sm text-blue-600 font-medium">
+                Tổng nguyên vật liệu
+              </div>
               <div className="text-lg font-bold text-blue-800">
                 {reports.length > 0 ? reports[0].materials.length : 0}
               </div>
             </div>
             <div className="bg-yellow-50 p-3 rounded-md">
-              <div className="text-sm text-yellow-600 font-medium">Lỗi dữ liệu</div>
+              <div className="text-sm text-yellow-600 font-medium">
+                Lỗi dữ liệu
+              </div>
               <div className="text-lg font-bold text-yellow-800">
                 {getTotalErrors()}
               </div>
             </div>
             <div className="bg-green-50 p-3 rounded-md">
-              <div className="text-sm text-green-600 font-medium">Ngày báo cáo</div>
+              <div className="text-sm text-green-600 font-medium">
+                Ngày báo cáo
+              </div>
               <div className="text-lg font-bold text-green-800">
-                {selectedDate ? new Date(selectedDate).toLocaleDateString('vi-VN') : 'N/A'}
+                {selectedDate
+                  ? new Date(selectedDate).toLocaleDateString("vi-VN")
+                  : "N/A"}
               </div>
             </div>
           </div>
@@ -345,7 +381,10 @@ export default function HandoverReportsPage() {
             <div className="flex items-center text-sm text-yellow-800">
               <div className="w-4 h-4 bg-red-600 rounded mr-2"></div>
               <span className="font-medium">Chú ý:</span>
-              <span className="ml-2">Dữ liệu màu đỏ cho thấy có sự không khớp trong tính toán hoặc liên kết giữa các ca</span>
+              <span className="ml-2">
+                Dữ liệu màu đỏ cho thấy có sự không khớp trong tính toán hoặc
+                liên kết giữa các ca
+              </span>
             </div>
             <div className="mt-2 text-xs text-yellow-700 space-y-1">
               <div>• Tồn cuối ≠ Tồn đầu + Nhập - Xuất</div>
@@ -362,13 +401,22 @@ export default function HandoverReportsPage() {
                 <th className="border border-gray-300 px-2 py-2 text-left font-semibold">
                   Nguyên vật liệu
                 </th>
-                <th className="border border-gray-300 px-2 py-2 text-center font-semibold" colSpan={4}>
+                <th
+                  className="border border-gray-300 px-2 py-2 text-center font-semibold"
+                  colSpan={4}
+                >
                   Số lượng ca sáng
                 </th>
-                <th className="border border-gray-300 px-2 py-2 text-center font-semibold" colSpan={4}>
+                <th
+                  className="border border-gray-300 px-2 py-2 text-center font-semibold"
+                  colSpan={4}
+                >
                   Số lượng ca chiều
                 </th>
-                <th className="border border-gray-300 px-2 py-2 text-center font-semibold" colSpan={4}>
+                <th
+                  className="border border-gray-300 px-2 py-2 text-center font-semibold"
+                  colSpan={4}
+                >
                   Số lượng ca tối
                 </th>
               </tr>
@@ -423,9 +471,12 @@ export default function HandoverReportsPage() {
                   </td>
                 </tr>
               ) : (
-                reports.map((report) => 
+                reports.map((report) =>
                   report.materials.map((material, materialIndex) => (
-                    <tr key={`${report.id}-${material.id}`} className="hover:bg-gray-50">
+                    <tr
+                      key={`${report.id}-${material.id}`}
+                      className="hover:bg-gray-50"
+                    >
                       <td className="border border-gray-300 px-2 py-2 text-center">
                         {materialIndex + 1}
                       </td>
@@ -442,13 +493,23 @@ export default function HandoverReportsPage() {
                       <td className="border border-gray-300 px-2 py-2 text-center">
                         {material.morning.issued}
                       </td>
-                      <td className={`border border-gray-300 px-2 py-2 text-center ${getCellStyle(material, 'morningEnding')}`}
-                          title={getErrorDetails(material, 'morningEnding') || undefined}>
+                      <td
+                        className={`border border-gray-300 px-2 py-2 text-center ${getCellStyle(material, "morningEnding")}`}
+                        title={
+                          getErrorDetails(material, "morningEnding") ||
+                          undefined
+                        }
+                      >
                         {material.morning.ending}
                       </td>
                       {/* Afternoon Shift */}
-                      <td className={`border border-gray-300 px-2 py-2 text-center ${getCellStyle(material, 'afternoonBeginning')}`}
-                          title={getErrorDetails(material, 'afternoonBeginning') || undefined}>
+                      <td
+                        className={`border border-gray-300 px-2 py-2 text-center ${getCellStyle(material, "afternoonBeginning")}`}
+                        title={
+                          getErrorDetails(material, "afternoonBeginning") ||
+                          undefined
+                        }
+                      >
                         {material.afternoon.beginning}
                       </td>
                       <td className="border border-gray-300 px-2 py-2 text-center">
@@ -457,13 +518,23 @@ export default function HandoverReportsPage() {
                       <td className="border border-gray-300 px-2 py-2 text-center">
                         {material.afternoon.issued}
                       </td>
-                      <td className={`border border-gray-300 px-2 py-2 text-center ${getCellStyle(material, 'afternoonEnding')}`}
-                          title={getErrorDetails(material, 'afternoonEnding') || undefined}>
+                      <td
+                        className={`border border-gray-300 px-2 py-2 text-center ${getCellStyle(material, "afternoonEnding")}`}
+                        title={
+                          getErrorDetails(material, "afternoonEnding") ||
+                          undefined
+                        }
+                      >
                         {material.afternoon.ending}
                       </td>
                       {/* Evening Shift */}
-                      <td className={`border border-gray-300 px-2 py-2 text-center ${getCellStyle(material, 'eveningBeginning')}`}
-                          title={getErrorDetails(material, 'eveningBeginning') || undefined}>
+                      <td
+                        className={`border border-gray-300 px-2 py-2 text-center ${getCellStyle(material, "eveningBeginning")}`}
+                        title={
+                          getErrorDetails(material, "eveningBeginning") ||
+                          undefined
+                        }
+                      >
                         {material.evening.beginning}
                       </td>
                       <td className="border border-gray-300 px-2 py-2 text-center">
@@ -472,12 +543,17 @@ export default function HandoverReportsPage() {
                       <td className="border border-gray-300 px-2 py-2 text-center">
                         {material.evening.issued}
                       </td>
-                      <td className={`border border-gray-300 px-2 py-2 text-center ${getCellStyle(material, 'eveningEnding')}`}
-                          title={getErrorDetails(material, 'eveningEnding') || undefined}>
+                      <td
+                        className={`border border-gray-300 px-2 py-2 text-center ${getCellStyle(material, "eveningEnding")}`}
+                        title={
+                          getErrorDetails(material, "eveningEnding") ||
+                          undefined
+                        }
+                      >
                         {material.evening.ending}
                       </td>
                     </tr>
-                  ))
+                  )),
                 )
               )}
             </tbody>
@@ -500,4 +576,4 @@ export default function HandoverReportsPage() {
       />
     </div>
   );
-} 
+}

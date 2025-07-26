@@ -10,28 +10,27 @@ export async function GET(request: NextRequest) {
       where: {
         branch: branch,
         isDeleted: false,
-        isAdmin: false
+        isAdmin: false,
       },
       select: {
         id: true,
         fullName: true,
-        userName: true
+        userName: true,
       },
       orderBy: {
-        fullName: 'asc'
-      }
+        fullName: "asc",
+      },
     });
 
     return NextResponse.json({
       success: true,
-      data: staffList
+      data: staffList,
     });
-
   } catch (error) {
     console.error("Error fetching staff list:", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch staff list" },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

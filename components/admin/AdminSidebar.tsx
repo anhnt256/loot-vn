@@ -77,7 +77,7 @@ const menuItems = [
     href: "/admin/handover-reports",
     icon: "📝",
     adminOnly: true,
-  }
+  },
   // {
   //   title: "Báo cáo kết ca",
   //   href: "/admin/reports",

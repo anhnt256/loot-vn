@@ -179,5 +179,3 @@ export const clearUserData = () => {
     localStorage.removeItem("user-info");
   }
 };
-
-
