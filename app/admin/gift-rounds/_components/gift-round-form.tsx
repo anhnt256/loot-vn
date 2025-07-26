@@ -5,10 +5,11 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { AutoComplete } from "antd";
 import debounce from "lodash/debounce";
+import Cookies from "js-cookie";
 
 const giftRoundSchema = z.object({
-  userId: z.number(),
-  amount: z.number().min(1),
+  userId: z.number().min(1, "Vui lòng chọn người dùng"),
+  amount: z.number().min(1, "Số lượt phải lớn hơn 0"),
   reason: z.string().min(1, "Vui lòng nhập lý do"),
   expiredAt: z.string().optional(),
 });
@@ -39,6 +40,7 @@ export function GiftRoundForm({
 }: GiftRoundFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [options, setOptions] = useState<UserOption[]>([]);
+  const currentBranch = Cookies.get("branch") || "GO_VAP";
 
   const {
     register,
@@ -87,6 +89,9 @@ export function GiftRoundForm({
   const onSubmit = async (data: GiftRoundInput) => {
     try {
       setIsLoading(true);
+      console.log("Submitting data:", data);
+      console.log("Form errors:", errors);
+
       const url = initialData
         ? `/api/gift-rounds/${initialData.id}`
         : "/api/gift-rounds";
@@ -100,14 +105,21 @@ export function GiftRoundForm({
         body: JSON.stringify(data),
       });
 
+      console.log("Response status:", response.status);
+
       if (!response.ok) {
         const error = await response.json();
+        console.error("API error:", error);
         throw new Error(error.error || "Có lỗi xảy ra");
       }
+
+      const result = await response.json();
+      console.log("Success result:", result);
 
       toast.success(initialData ? "Cập nhật thành công" : "Tạo mới thành công");
       onSuccess?.();
     } catch (error) {
+      console.error("Submit error:", error);
       toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra");
     } finally {
       setIsLoading(false);
@@ -115,7 +127,17 @@ export function GiftRoundForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+        <div className="text-sm text-blue-800">
+          <strong>Branch hiện tại:</strong>{" "}
+          {currentBranch === "GO_VAP" ? "Gò Vấp" : "Tân Phú"}
+        </div>
+        <div className="text-xs text-blue-600 mt-1">
+          Lượt chơi sẽ được tặng cho người dùng thuộc branch này
+        </div>
+      </div>
+
       <div>
         <label
           htmlFor="userId"

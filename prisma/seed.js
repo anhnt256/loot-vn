@@ -216,6 +216,36 @@ async function main() {
   console.log(
     "✅ Đã seed lại bảng BattlePassReward với experience chuẩn từng mốc!",
   );
+
+  // Seed PromotionCode data
+  console.log("🌱 Seeding PromotionCode data...");
+  
+  // Xóa dữ liệu cũ
+  await prisma.promotionCode.deleteMany();
+  console.log("🧹 Đã xóa PromotionCode cũ");
+
+  // Tạo dữ liệu PromotionCode cho các reward
+  const rewards = await prisma.reward.findMany();
+  
+  for (const reward of rewards) {
+    if (reward.value) {
+      // Tạo 10 promotion codes cho mỗi reward value
+      for (let i = 1; i <= 10; i++) {
+        await prisma.promotionCode.create({
+          data: {
+            name: `${reward.name || 'Reward'} - Code ${i}`,
+            code: `PROMO_${reward.value}_${i}`,
+            value: reward.value,
+            branch: "GO_VAP",
+            isUsed: false,
+          },
+        });
+      }
+      console.log(`✅ Đã tạo 10 promotion codes cho reward value ${reward.value}`);
+    }
+  }
+
+  console.log("✅ Đã seed xong PromotionCode data!");
 }
 
 main()

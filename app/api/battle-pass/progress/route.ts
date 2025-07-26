@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { calculateLevel } from "@/lib/battle-pass-utils";
-import { getCurrentDateVN } from "@/lib/timezone-utils";
+import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
 
 export async function GET(request: Request) {
   try {
@@ -16,17 +16,15 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Invalid user data" }, { status: 401 });
     }
 
-    const currentSeason = await db.battlePassSeason.findFirst({
-      where: {
-        isActive: true,
-        startDate: {
-          lte: getCurrentDateVN(),
-        },
-        endDate: {
-          gte: getCurrentDateVN(),
-        },
-      },
-    });
+    const currentSeasons = await db.$queryRaw<any[]>`
+      SELECT * FROM BattlePassSeason 
+      WHERE isActive = true
+        AND startDate <= DATE(${getCurrentTimeVNISO()})
+        AND endDate >= DATE(${getCurrentTimeVNISO()})
+      LIMIT 1
+    `;
+
+    const currentSeason = currentSeasons[0];
 
     if (!currentSeason) {
       return NextResponse.json(
@@ -36,12 +34,13 @@ export async function GET(request: Request) {
     }
 
     // Tìm hoặc tạo user battle pass progress
-    let userProgress = await db.userBattlePass.findFirst({
-      where: {
-        userId: decoded.userId,
-        seasonId: currentSeason.id,
-      },
-    });
+    const existingProgress = await db.$queryRaw<any[]>`
+      SELECT * FROM UserBattlePass 
+      WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id}
+      LIMIT 1
+    `;
+
+    let userProgress = existingProgress[0];
 
     // Nếu chưa có progress, tạo mới với level được tính toán
     if (!userProgress) {
@@ -52,37 +51,33 @@ export async function GET(request: Request) {
         currentSeason.maxLevel,
       );
 
-      userProgress = await db.userBattlePass.create({
-        data: {
-          userId: decoded.userId,
-          seasonId: currentSeason.id,
-          level: calculatedLevel,
-          experience: experience,
-          isPremium: false,
-          totalSpent: 0,
-          branch: "GO_VAP", // Default branch
-        },
-      });
+      await db.$executeRaw`
+        INSERT INTO UserBattlePass (userId, seasonId, level, experience, isPremium, totalSpent, branch, createdAt, updatedAt)
+        VALUES (${decoded.userId}, ${currentSeason.id}, ${calculatedLevel}, ${experience}, false, 0, 'GO_VAP', ${getCurrentTimeVNISO()}, ${getCurrentTimeVNISO()})
+      `;
+
+      const newProgress = await db.$queryRaw<any[]>`
+        SELECT * FROM UserBattlePass 
+        WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id}
+        LIMIT 1
+      `;
+      userProgress = newProgress[0];
     }
 
     // Lấy danh sách rewards đã claim
-    const claimedRewards = await db.userBattlePassReward.findMany({
-      where: {
-        userId: decoded.userId,
-        seasonId: currentSeason.id,
-      },
-      select: {
-        rewardId: true,
-      },
-    });
+    const claimedRewards = await db.$queryRaw<any[]>`
+      SELECT rewardId FROM UserBattlePassReward 
+      WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id}
+    `;
 
     const claimedRewardIds = claimedRewards.map((r) => r.rewardId);
 
     // Lấy tất cả rewards của season
-    const allRewards = await db.battlePassReward.findMany({
-      where: { seasonId: currentSeason.id },
-      orderBy: { level: "asc" },
-    });
+    const allRewards = await db.$queryRaw<any[]>`
+      SELECT * FROM BattlePassReward 
+      WHERE seasonId = ${currentSeason.id}
+      ORDER BY level ASC
+    `;
 
     // availableRewards: chưa nhận, đủ điều kiện
     const availableRewards = allRewards.filter(

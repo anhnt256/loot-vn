@@ -45,14 +45,14 @@ export async function GET(req: Request): Promise<any> {
     }
 
     // Check if user exists in our DB
-    const existingUser = await db.user.findFirst({
-      where: {
-        userId: Number(userId),
-        branch: branchFromCookie,
-      },
-    });
+    const existingUser = await db.$queryRaw<any[]>`
+      SELECT * FROM User 
+      WHERE userId = ${Number(userId)} 
+      AND branch = ${branchFromCookie}
+      LIMIT 1
+    `;
 
-    return NextResponse.json(existingUser);
+    return NextResponse.json(existingUser[0] || null);
   } catch (error) {
     console.error("Check existing user error:", error);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });

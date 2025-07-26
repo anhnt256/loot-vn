@@ -1,25 +1,21 @@
 "use server";
 
-import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
+import { db } from "@/lib/db";
 import { createSafeAction } from "@/lib/create-safe-action";
-import { checkCheckInRateLimit, checkDailyCheckInLimit } from "@/lib/rate-limit";
+import {
+  checkCheckInRateLimit,
+  checkDailyCheckInLimit,
+} from "@/lib/rate-limit";
 
 import { CreateCheckInResult } from "./schema";
 import { InputType, ReturnType } from "./type";
 import dayjs from "@/lib/dayjs";
-import {
-  calculateDailyUsageTime,
-  getCurrentDayOfWeekVN,
-} from "@/lib/battle-pass-utils";
-import { 
-  getCurrentTimeVN,
-  getVNTimeForPrisma,
-  getVNStartOfDayForPrisma
-} from "@/lib/timezone-utils";
+import { calculateActiveUsersInfo } from "@/lib/user-calculator";
+import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
 import { cookies } from "next/headers";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
-  const { userId } = data; // Remove addedStar from client input
+  const { userId } = data;
   let checkIn;
 
   const cookieStore = await cookies();
@@ -34,7 +30,9 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   // Rate limiting: Max 5 check-ins per hour per user
   const rateLimitResult = await checkCheckInRateLimit(String(userId), branch);
   if (!rateLimitResult.allowed) {
-    const resetTime = new Date(rateLimitResult.resetTime).toLocaleString("vi-VN");
+    const resetTime = new Date(rateLimitResult.resetTime).toLocaleString(
+      "vi-VN",
+    );
     return {
       error: `Quá nhiều lần check-in. Vui lòng thử lại sau ${resetTime}`,
     };
@@ -48,22 +46,20 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     };
   }
 
-  const fnetDB = await getFnetDB();
-  const fnetPrisma = await getFnetPrisma();
-
-  const startOfDayVN = getVNStartOfDayForPrisma();
-
   // Enhanced anti-spam: Prevent check-in if last check-in was less than 30 minutes ago
-  const lastCheckIn = await db.checkInResult.findFirst({
-    where: { userId, branch },
-    orderBy: { createdAt: "desc" },
-  });
+  const lastCheckIns = await db.$queryRaw`
+    SELECT * FROM CheckInResult 
+    WHERE userId = ${userId} AND branch = ${branch}
+    ORDER BY createdAt DESC
+    LIMIT 1
+  `;
+  const lastCheckIn = (lastCheckIns as any[])[0];
 
   if (lastCheckIn) {
-    const now = getCurrentTimeVN();
-    const last = dayjs(lastCheckIn.createdAt);
+    const now = dayjs(getCurrentTimeVNISO());
+    const last = dayjs(dayjs(lastCheckIn.createdAt).subtract(7, "hours"));
     const minutesSinceLastCheckIn = now.diff(last, "minute");
-    
+
     if (minutesSinceLastCheckIn < 30) {
       const remainingMinutes = 30 - minutesSinceLastCheckIn;
       return {
@@ -73,105 +69,71 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   }
 
   try {
-    // Get user's play sessions from fnet database
-    const query = fnetPrisma.sql`
-      SELECT *
-      FROM fnet.systemlogtb AS t1
-      WHERE t1.UserId = ${userId.toString()}
-        AND t1.status = 3
-        AND DATE(STR_TO_DATE(CONCAT(t1.EnterDate, ' ', t1.EnterTime), '%Y-%m-%d %H:%i:%s')) = CURDATE()
+    // Use calculateActiveUsersInfo to get user's check-in information
+    const userInfoResults = await calculateActiveUsersInfo([userId], branch);
 
-      UNION ALL
+    if (userInfoResults.length === 0) {
+      return {
+        error: "Không tìm thấy thông tin người dùng",
+      };
+    }
 
-      SELECT *
-      FROM (
-             SELECT *
-             FROM fnet.systemlogtb AS t1
-             WHERE t1.UserId = ${userId.toString()}
-               AND t1.status = 3
-               AND DATE(STR_TO_DATE(CONCAT(t1.EnterDate, ' ', t1.EnterTime), '%Y-%m-%d %H:%i:%s')) < CURDATE()
-      ORDER BY STR_TO_DATE(CONCAT(t1.EnterDate, ' ', t1.EnterTime), '%Y-%m-%d %H:%i:%s') DESC
-        LIMIT 1
-        ) AS t2`;
-    const result = await fnetDB.$queryRaw<any[]>(query);
+    const userInfo = userInfoResults[0];
+    const { availableCheckIn } = userInfo;
 
-    // Calculate total play time using utility function
-    const totalPlayTime = calculateDailyUsageTime(result);
-
-    // Get check-in configuration for today
-    const checkInItems = await db.checkInItem.findMany();
-    const today = getCurrentDayOfWeekVN();
-    const todayCheckIn = checkInItems.find((item) => item.dayName === today);
-    const starsPerHour = todayCheckIn ? todayCheckIn.stars : 1000;
-
-    // Server-side calculation of stars to earn (don't trust client input)
-    const starsToEarn = Math.floor(totalPlayTime * starsPerHour);
-
-    // Check if user has already claimed maximum stars for today
-    const userClaim = await db.userStarHistory.findMany({
-      where: {
-        userId: userId,
-        branch: branch,
-        type: "CHECK_IN",
-        createdAt: {
-          gte: startOfDayVN,
-        },
-      },
-    });
-
-    const totalClaimed = userClaim.reduce((acc, item) => {
-      const difference = (item.newStars ?? 0) - (item.oldStars ?? 0);
-      return acc + difference;
-    }, 0);
-
-    if (totalClaimed >= starsToEarn) {
+    // Check if user has available check-in stars
+    if (availableCheckIn <= 0) {
       return {
         error: "Bạn chưa có sao để nhận, hãy chơi thêm để nhận sao nhé!",
       };
     }
 
-    // Calculate actual stars to add (remaining stars)
-    const actualStarsToAdd = starsToEarn - totalClaimed;
+    console.log('getCurrentTimeVNISO', getCurrentTimeVNISO())
 
     await db.$transaction(async (tx) => {
-      checkIn = await db.checkInResult.create({
-        data: {
-          userId,
-          branch,
-          createdAt: getVNTimeForPrisma(),
-        },
-      });
+      // Create checkInResult using raw SQL
+      await tx.$executeRaw`
+        INSERT INTO CheckInResult (userId, branch, createdAt)
+        VALUES (${userId}, ${branch}, ${getCurrentTimeVNISO()})
+      `;
+      
+      // Get the inserted record ID
+      const checkInResults = await tx.$queryRaw`SELECT LAST_INSERT_ID() as id`;
+      const checkInId = (checkInResults as any[])[0]?.id;
+      
+      // Get the full checkIn record
+      const checkInRecords = await tx.$queryRaw`
+        SELECT * FROM CheckInResult WHERE id = ${checkInId}
+      `;
+      checkIn = (checkInRecords as any[])[0];
 
       if (checkIn) {
         const { id } = checkIn;
 
-        const user = await tx.user.findFirst({
-          where: { userId, branch },
-        });
+        // Find user using raw SQL
+        const users = await tx.$queryRaw`
+          SELECT * FROM User 
+          WHERE userId = ${userId} AND branch = ${branch}
+          LIMIT 1
+        `;
+        const user = (users as any[])[0];
 
         if (user) {
           const { stars: oldStars } = user;
-          const newStars = oldStars + actualStarsToAdd;
+          const newStars = oldStars + availableCheckIn;
 
-          await tx.userStarHistory.create({
-            data: {
-              userId,
-              type: "CHECK_IN",
-              oldStars,
-              newStars,
-              targetId: id,
-              createdAt: getVNTimeForPrisma(),
-              branch,
-            },
-          });
+          // Create UserStarHistory using raw SQL
+          await tx.$executeRaw`
+            INSERT INTO UserStarHistory (userId, type, oldStars, newStars, targetId, createdAt, branch)
+            VALUES (${userId}, 'CHECK_IN', ${oldStars}, ${newStars}, ${id}, ${getCurrentTimeVNISO()}, ${branch})
+          `;
 
-          await tx.user.update({
-            where: { id: user.id },
-            data: {
-              stars: newStars,
-              updatedAt: getVNTimeForPrisma(),
-            },
-          });
+          // Update user stars using raw SQL
+          await tx.$executeRaw`
+            UPDATE User 
+            SET stars = ${newStars}, updatedAt = ${getCurrentTimeVNISO()}
+            WHERE id = ${user.id}
+          `;
         }
       }
     });

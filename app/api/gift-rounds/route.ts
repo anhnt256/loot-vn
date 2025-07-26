@@ -10,9 +10,15 @@ const createGiftRoundSchema = z.object({
 });
 
 // GET /api/gift-rounds
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Get branch from cookie
+    const branch = request.cookies.get("branch")?.value || "GO_VAP";
+
     const giftRounds = await db.giftRound.findMany({
+      where: {
+        branch: branch,
+      },
       orderBy: {
         createdAt: "desc",
       },
@@ -44,10 +50,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify that the user exists
+    // Get branch from cookie
+    const branch = request.cookies.get("branch")?.value || "GO_VAP";
+
+    // Verify that the user exists using userId and branch
     const targetUser = await db.user.findFirst({
       where: {
         userId: body.userId,
+        branch: branch,
       },
     });
 
@@ -57,12 +67,13 @@ export async function POST(request: NextRequest) {
 
     const giftRound = await db.giftRound.create({
       data: {
-        userId: targetUser.id,
+        userId: body.userId, // Use userId directly, not targetUser.id
         amount: body.amount,
         reason: body.reason,
         staffId: 0, // Using 0 to represent admin
         expiredAt: body.expiredAt ? new Date(body.expiredAt) : null,
         isUsed: false,
+        branch: branch,
       },
     });
 

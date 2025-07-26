@@ -33,6 +33,8 @@ interface BattlePassProgressProps {
   onPurchasePremium: () => void;
   onBack?: () => void;
   onHome?: () => void;
+  onCloseModal?: () => void;
+  shouldCloseModal?: boolean;
 }
 
 export function BattlePassProgress({
@@ -51,10 +53,13 @@ export function BattlePassProgress({
   onPurchasePremium,
   onBack,
   onHome,
+  onCloseModal,
+  shouldCloseModal,
 }: BattlePassProgressProps) {
   const [selectedReward, setSelectedReward] = useState<BattlePassReward | null>(
     null,
   );
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [timeLeft, setTimeLeft] = useState("");
   const [seasonTimeLeft, setSeasonTimeLeft] = useState("");
 
@@ -66,6 +71,16 @@ export function BattlePassProgress({
     isPremium,
     currentLevel,
   });
+
+  // Close modal when shouldCloseModal is true
+  useEffect(() => {
+    if (shouldCloseModal && selectedReward) {
+      setSelectedReward(null);
+      if (onCloseModal) {
+        onCloseModal();
+      }
+    }
+  }, [shouldCloseModal, selectedReward, onCloseModal]);
 
   // Update countdown timer every minute
   useEffect(() => {
@@ -126,6 +141,11 @@ export function BattlePassProgress({
     ? new Date() >= new Date(seasonEndDate)
     : false;
 
+  const handleClaimReward = (rewardId: number) => {
+    onClaimReward(rewardId);
+    // Modal will be closed by the parent component after successful mutation
+  };
+
   const getRewardIcon = (rewardType: string) => {
     switch (rewardType) {
       case "stars":
@@ -158,38 +178,54 @@ export function BattlePassProgress({
       (!isPremiumSlot || isPremium) &&
       !isSeasonEnded;
 
+    // Xác định border style dựa trên trạng thái
+    const getBorderStyle = () => {
+      if (isPremiumSlot) {
+        // Premium rewards
+        if (isLocked) {
+          return "bg-purple-900/30 border-orange-500 border-dashed"; // Premium chưa mua
+        } else if (isLevelLocked) {
+          return "bg-purple-900/30 border-orange-500 border-dashed"; // Premium chưa đủ level
+        } else if (isClaimed) {
+          return "bg-gradient-to-b from-yellow-400 to-orange-500 border-yellow-400"; // Premium đã nhận
+        } else if (canClaim) {
+          return "bg-gradient-to-b from-yellow-400 to-orange-500 border-yellow-400"; // Premium có thể nhận - bỏ dash
+        } else {
+          return "bg-gradient-to-b from-yellow-400 to-orange-500 border-yellow-400"; // Premium mặc định
+        }
+      } else {
+        // Free rewards
+        if (isLevelLocked) {
+          return "bg-blue-900/30 border-red-500 border-dashed"; // Free chưa đủ level
+        } else if (isClaimed) {
+          return "bg-gradient-to-b from-blue-400 to-cyan-500 border-blue-400"; // Free đã nhận
+        } else if (canClaim) {
+          return "bg-gradient-to-b from-blue-400 to-cyan-500 border-blue-400"; // Free có thể nhận - bỏ dash
+        } else {
+          return "bg-gradient-to-b from-blue-400 to-cyan-500 border-blue-400"; // Free mặc định
+        }
+      }
+    };
+
     return (
       <div
-        className={`reward-slot relative w-full h-full rounded-lg border-2 ${
-          isPremiumSlot
-            ? isLocked
-              ? "bg-purple-900/30 border-purple-500/50"
-              : "bg-gradient-to-b from-yellow-400 to-orange-500 border-yellow-400"
-            : "bg-gradient-to-b from-blue-400 to-cyan-500 border-blue-400"
-        } flex items-center justify-center cursor-pointer`}
+        className={`reward-slot relative w-full h-full rounded-lg border-2 ${getBorderStyle()} flex items-center justify-center cursor-pointer`}
         onClick={() => reward && setSelectedReward(reward)}
       >
-        {isLocked && <Lock className="w-6 h-6 text-white" />}
-        {isLevelLocked && reward && (
-          <>
-            <div className="absolute inset-0 bg-black/50 rounded-lg"></div>
-            <div className="relative text-center">
-              <div className="text-lg mb-1">🔒</div>
-              <div className="text-xs text-white font-bold">
-                Lv.{reward.level}
-              </div>
-            </div>
-          </>
-        )}
-        {reward && !isLocked && !isLevelLocked && (
+        {reward && (
           <div className="text-center">
             <div className="text-xl">{getRewardIcon(reward.rewardType)}</div>
             <div className="text-xs text-white font-bold">
               {reward.rewardValue?.toLocaleString()}
             </div>
+            {isLevelLocked && (
+              <div className="text-xs text-red-400 font-bold mt-1">
+                Lv.{reward.level}
+              </div>
+            )}
           </div>
         )}
-        {!reward && !isLocked && (
+        {!reward && (
           <div className="w-full h-full bg-gray-600/50 rounded-lg flex items-center justify-center">
             <span className="text-gray-400 text-xs">Trống</span>
           </div>
@@ -222,26 +258,13 @@ export function BattlePassProgress({
     const isUnlocked = reward ? currentXP >= reward.experience : false;
 
     return (
-      <div className="flex flex-col items-center gap-1 min-w-[80px]">
+      <div className="flex flex-col items-center min-w-[100px]">
         {/* Single Reward */}
-        <div className="w-16 h-16">
+        <div className="w-20 h-20">
           <RewardSlot
             reward={reward}
             isPremiumSlot={reward?.type === "premium"}
           />
-        </div>
-
-        {/* Level Number */}
-        <div
-          className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2 ${
-            isCurrentLevel
-              ? "bg-yellow-400 text-black border-yellow-300 animate-pulse"
-              : isUnlocked
-                ? "bg-green-500 text-white border-green-400"
-                : "bg-gray-600 text-white border-gray-500"
-          }`}
-        >
-          {level}
         </div>
       </div>
     );
@@ -294,21 +317,19 @@ export function BattlePassProgress({
           </div>
 
           {/* Season Info & Current Level */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-6 text-white">
-              <div className="flex items-center gap-2">
+          <div className="bg-black/20 border border-gray-700/30 rounded-lg p-6 mb-8">
+            <div className="flex items-center justify-between">
+              {/* Left side - Season End Time */}
+              <div className="flex items-center gap-3 text-white">
                 <Clock className="w-5 h-5" />
                 <div>
                   <div className="text-sm opacity-80">Mùa Kết Thúc Sau:</div>
-                  <div className="font-bold">{seasonTimeLeft}</div>
+                  <div className="font-bold text-lg">{seasonTimeLeft}</div>
                 </div>
               </div>
-              <div className="flex items-center gap-6">
-                <div className="text-center">
-                  <div className="text-sm opacity-80">Cấp Độ Hiện Tại</div>
-                  <div className="text-2xl font-bold">{computedLevel}</div>
-                </div>
 
+              {/* Right side - Level Info & Progress */}
+              <div className="flex items-center gap-8 text-white">
                 {/* Claimable Rewards Counter */}
                 {(() => {
                   const claimableCount = rewards.filter(
@@ -327,24 +348,40 @@ export function BattlePassProgress({
                         <div className="text-sm opacity-80">
                           Phần Thưởng Có Thể Nhận
                         </div>
-                        <div className="text-2xl font-bold text-green-400">
+                        <div className="text-3xl font-bold text-green-400">
                           {claimableCount}
                         </div>
                       </div>
                     )
                   );
                 })()}
-                <div className="w-48 h-4 bg-gray-700 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full transition-all duration-500"
-                    style={{
-                      width: `${nextXP > 0 ? Math.min((currentXP / nextXP) * 100, 100) : 0}%`,
-                    }}
-                  />
+
+                <div className="text-center">
+                  <div className="text-sm opacity-80 flex items-center justify-center gap-2 mb-1">
+                    Cấp Độ Hiện Tại
+                    {isPremium && (
+                      <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs px-2 py-1 rounded-full font-bold">
+                        PREMIUM
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-3xl font-bold">{computedLevel}</div>
                 </div>
-                <div className="text-sm">
-                  <div>
-                    {currentXP}/{nextXP} XP
+
+                <div className="flex items-center gap-3">
+                  <div className="text-center">
+                    <div className="text-sm opacity-80 mb-1">Tiến Độ XP</div>
+                    <div className="text-sm font-bold">
+                      {currentXP}/{nextXP} XP
+                    </div>
+                  </div>
+                  <div className="w-48 h-4 bg-gray-700 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full transition-all duration-500"
+                      style={{
+                        width: `${nextXP > 0 ? Math.min((currentXP / nextXP) * 100, 100) : 0}%`,
+                      }}
+                    />
                   </div>
                 </div>
               </div>
@@ -402,17 +439,19 @@ export function BattlePassProgress({
           </div>
 
           {/* Pass Type Labels */}
-          <div className="flex items-center justify-center mb-4 px-4">
-            <div className="flex items-center gap-4 text-white font-bold">
-              <div className="flex items-center gap-2">
-                <Gift className="w-5 h-5 text-blue-400" />
-                <span>PHẦN THƯỞNG MIỄN PHÍ</span>
-              </div>
-              <span className="text-gray-400">•</span>
-              <div className="flex items-center gap-2">
-                <Star className="w-5 h-5 text-yellow-400" />
-                <span>PHẦN THƯỞNG PREMIUM</span>
-                {!isPremium && <Lock className="w-4 h-4 text-gray-400" />}
+          <div className="bg-black/20 border border-gray-700/30 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-center">
+              <div className="flex items-center gap-6 text-white font-bold">
+                <div className="flex items-center gap-2">
+                  <Gift className="w-5 h-5 text-blue-400" />
+                  <span>PHẦN THƯỞNG MIỄN PHÍ</span>
+                </div>
+                <span className="text-gray-400">•</span>
+                <div className="flex items-center gap-2">
+                  <Star className="w-5 h-5 text-yellow-400" />
+                  <span>PHẦN THƯỞNG PREMIUM</span>
+                  {!isPremium && <Lock className="w-4 h-4 text-gray-400" />}
+                </div>
               </div>
             </div>
           </div>
@@ -452,9 +491,6 @@ export function BattlePassProgress({
                             reward={reward}
                             isPremiumSlot={reward.type === "premium"}
                           />
-                        </div>
-                        <div className="text-white text-sm font-bold mt-2">
-                          {reward.name}
                         </div>
                       </div>
                     );
@@ -641,7 +677,7 @@ export function BattlePassProgress({
                       </Button>
                     ) : (
                       <Button
-                        onClick={() => onClaimReward(selectedReward.id)}
+                        onClick={() => handleClaimReward(selectedReward.id)}
                         disabled={
                           claimedRewards.includes(selectedReward.id) ||
                           currentXP < selectedReward.experience ||
@@ -666,7 +702,7 @@ export function BattlePassProgress({
         </div>
 
         {/* Daily Missions Panel */}
-        <div className="w-80 h-full">
+        <div className="w-[432px] min-w-[21.5rem] max-w-full h-full flex-shrink-0 sm:w-[352px] sm:min-w-0">
           <DailyMissions className="h-full" />
         </div>
       </div>

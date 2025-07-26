@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { cookies } from "next/headers";
-import { getVNTimeForPrisma } from "@/lib/timezone-utils";
+import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -25,45 +25,65 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Kiểm tra user có tồn tại không trước khi update
-    let existingUser = await db.user.findFirst({
-      where: {
-        userId: parseInt(userId),
-        branch: branch,
-      },
-    });
+    const existingUser = await db.$queryRaw<any[]>`
+      SELECT * FROM User 
+      WHERE userId = ${parseInt(userId)} 
+      AND branch = ${branch}
+      LIMIT 1
+    `;
 
-    if (!existingUser) {
+    let userToUpdate;
+
+    if (existingUser.length === 0) {
       // Tạo user mới nếu chưa tồn tại
-      existingUser = await db.user.create({
-        data: {
-          userId: parseInt(userId),
-          userName: `Không sử dụng - ${userId}`,
-          branch: branch,
-          rankId: 1, // Default rank
-          stars: 0,
-          magicStone: 0,
-          createdAt: getVNTimeForPrisma(),
-          isUseApp: isUseApp,
-          note: "",
-        },
-      });
+      await db.$executeRaw`
+        INSERT INTO User (userId, userName, branch, rankId, stars, magicStone, createdAt, isUseApp, note, updatedAt)
+        VALUES (
+          ${parseInt(userId)},
+          ${`Không sử dụng - ${userId}`},
+          ${branch},
+          ${1},
+          ${0},
+          ${0},
+          NOW(),
+          ${isUseApp},
+          ${""},
+          NOW()
+        )
+      `;
 
-      console.log("Debug - Created new user:", existingUser);
+      // Get the created user
+      const newUser = await db.$queryRaw<any[]>`
+        SELECT * FROM User 
+        WHERE userId = ${parseInt(userId)} 
+        AND branch = ${branch}
+        ORDER BY id DESC
+        LIMIT 1
+      `;
+
+      userToUpdate = newUser[0];
+      console.log("Debug - Created new user:", userToUpdate);
     } else {
-      console.log("Debug - Found existing user:", existingUser);
+      console.log("Debug - Found existing user:", existingUser[0]);
+
+      // Update isUseApp trong table user
+      await db.$executeRaw`
+        UPDATE User 
+        SET isUseApp = ${isUseApp}, updatedAt = NOW()
+        WHERE id = ${existingUser[0].id}
+      `;
+
+      // Get the updated user
+      const updatedUser = await db.$queryRaw<any[]>`
+        SELECT * FROM User 
+        WHERE id = ${existingUser[0].id}
+        LIMIT 1
+      `;
+
+      userToUpdate = updatedUser[0];
     }
 
-    // Update isUseApp trong table user
-    const updatedUser = await db.user.update({
-      where: {
-        id: existingUser.id,
-      },
-      data: {
-        isUseApp: isUseApp,
-      },
-    });
-
-    return NextResponse.json({ success: true, data: updatedUser });
+    return NextResponse.json({ success: true, data: userToUpdate });
   } catch (e: any) {
     console.error("Error updating isUseApp:", e);
     return NextResponse.json(

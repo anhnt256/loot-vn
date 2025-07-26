@@ -33,11 +33,12 @@ function useAutoLogout(onLogout: () => void, timeout = 60 * 60 * 1000) {
 const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   const loginMutation = useLogout();
   const pathname = usePathname();
-  const [showGatewayBonus, setShowGatewayBonus] = useState(true);
   const currentUser = useLocalStorageValue(CURRENT_USER, null);
   const [isClient, setIsClient] = useState(false);
 
   const IS_MAINTENANCE = process.env.NEXT_PUBLIC_IS_MAINTENANCE === "true";
+  const GATEWAY_BIRTHDAY_ENABLE =
+    process.env.NEXT_PUBLIC_GATEWAY_BIRTHDAY_ENABLE === "true";
 
   // Function to call user-calculator API and update localStorage
   const refreshUserData = async () => {
@@ -84,7 +85,6 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
 
   // Load currentUser và refresh data khi mount
   useEffect(() => {
-    console.log(new Date().toString());
     refreshUserData();
   }, []);
 
@@ -119,30 +119,30 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   );
 
   // Chỉ gọi checkGatewayBonus sau khi user-calculator fetch xong và currentUser đã ổn định
-  useEffect(() => {
-    if (!currentUser) return;
-    const checkGatewayBonus = async () => {
-      try {
-        let userId = null;
-        const user = currentUser as any;
-        userId = user.userId || user.id;
-        if (!userId) {
-          setShowGatewayBonus(false);
-          return;
-        }
-        const res = await fetch(`/api/gateway-bonus?userId=${userId}`);
-        if (res.ok) {
-          const data = await res.json();
-          setShowGatewayBonus(!!data.available);
-        } else {
-          setShowGatewayBonus(false);
-        }
-      } catch (err) {
-        setShowGatewayBonus(false);
-      }
-    };
-    checkGatewayBonus();
-  }, [currentUser]);
+  // useEffect(() => {
+  //   if (!currentUser) return;
+  //   const checkGatewayBonus = async () => {
+  //     try {
+  //       let userId = null;
+  //       const user = currentUser as any;
+  //       userId = user.userId || user.id;
+  //       if (!userId) {
+  //         setShowGatewayBonus(false);
+  //         return;
+  //       }
+  //       const res = await fetch(`/api/gateway-bonus?userId=${userId}`);
+  //       if (res.ok) {
+  //         const data = await res.json();
+  //         setShowGatewayBonus(!!data.available);
+  //       } else {
+  //         setShowGatewayBonus(false);
+  //       }
+  //     } catch (err) {
+  //       setShowGatewayBonus(false);
+  //     }
+  //   };
+  //   checkGatewayBonus();
+  // }, [currentUser]);
 
   useEffect(() => {
     setIsClient(true);
@@ -210,13 +210,26 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
                 </span>
               </div>
               <div className="flex items-center bg-gray-600/80 rounded-full px-3 py-1.5">
-                <span className="text-white font-semibold flex items-center gap-2">
+                <span className="text-white font-semibold flex items-center gap-1">
                   {(currentUser as any)?.stars?.toLocaleString()}
+                  <span className="text-yellow-400">⭐</span>
                 </span>
               </div>
             </div>
           </div>
 
+          {GATEWAY_BIRTHDAY_ENABLE && (
+            <Link
+              className={cn(
+                "block py-2.5 px-4 rounded transition-all duration-300 hover:bg-gray-700 relative overflow-hidden group",
+                pathname === "/birthday" ? "bg-orange-500" : "bg-orange-400",
+              )}
+              href="/birthday"
+            >
+              <span className="relative z-10">Sinh nhật</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 via-orange-500/20 via-yellow-500/20 via-green-500/20 via-blue-500/20 via-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            </Link>
+          )}
           <Link
             className={cn(
               "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
@@ -235,7 +248,25 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
           >
             Trò chơi
           </Link>
-          {showGatewayBonus && (
+          <Link
+            className={cn(
+              "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
+              pathname === "/store" ? "bg-gray-700" : "transparent",
+            )}
+            href="/store"
+          >
+            Đổi thưởng
+          </Link>
+          {/* <Link
+            className={cn(
+              "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
+              pathname === "/battle-pass" ? "bg-gray-700" : "transparent",
+            )}
+            href="/battle-pass"
+          >
+            Battle Pass
+          </Link> */}
+          {/* {showGatewayBonus && (
             <Link
               className={cn(
                 "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center gap-2 font-bold",
@@ -259,7 +290,8 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
                 <span className="ml-2 animate-ping inline-flex h-3 w-3 rounded-full bg-yellow-400 opacity-75"></span>
               )}
             </Link>
-          )}
+          )} */}
+
           <div
             onClick={handleLogout}
             className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 cursor-pointer"
@@ -269,12 +301,14 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
         </nav>
       </div>
 
-      <div className="flex-1 p-10 text-2xl font-bold bg-gray-400">
+      <div className="flex-1 overflow-hidden">
         {IS_MAINTENANCE ? (
-          <h1>
-            Website bảo trì để nâng cấp phần mềm mới. Chúng tôi sẽ quay trở lại
-            sớm. Rất mong các bạn thông cảm.
-          </h1>
+          <div className="flex items-center justify-center h-full p-10 text-2xl font-bold bg-gray-400">
+            <h1>
+              Website bảo trì để nâng cấp phần mềm mới. Chúng tôi sẽ quay trở
+              lại sớm. Rất mong các bạn thông cảm.
+            </h1>
+          </div>
         ) : (
           children
         )}

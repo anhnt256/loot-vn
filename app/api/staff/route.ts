@@ -1,34 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getBranchFromCookie } from "@/lib/utils";
+import { getBranchFromCookie } from "@/lib/server-utils";
 
-// GET - Lấy danh sách nhân viên
 export async function GET(request: NextRequest) {
   try {
-    const branch = getBranchFromCookie(request);
-    
-    const query = `
-      SELECT 
-        id,
-        userName,
-        isAdmin,
-        createdAt
-      FROM Staff 
-      WHERE branch = ? AND isDeleted = false
-      ORDER BY userName ASC
-    `;
+    const branch = await getBranchFromCookie();
 
-    const staff = await db.$queryRawUnsafe(query, branch);
+    const staffList = await db.staff.findMany({
+      where: {
+        branch: branch,
+        isDeleted: false,
+        isAdmin: false
+      },
+      select: {
+        id: true,
+        fullName: true,
+        userName: true
+      },
+      orderBy: {
+        fullName: 'asc'
+      }
+    });
 
     return NextResponse.json({
       success: true,
-      data: staff
+      data: staffList
     });
 
   } catch (error) {
-    console.error("Error fetching staff:", error);
+    console.error("Error fetching staff list:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to fetch staff" },
+      { success: false, error: "Failed to fetch staff list" },
       { status: 500 }
     );
   }

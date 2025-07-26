@@ -43,4 +43,30 @@
 }
 .custom-admin-tabs .ant-tabs-tab:nth-child(2).ant-tabs-tab-active .ant-tabs-tab-btn {
   color: #222 !important;
+}
+
+/* Custom branch select styles */
+.custom-branch-select .ant-select-selector {
+  background-color: #23272f !important;
+  border-color: #374151 !important;
+  color: #fff !important;
+}
+
+.custom-branch-select .ant-select-selection-item {
+  color: #fff !important;
+  font-weight: 600;
+}
+
+.custom-branch-dropdown .ant-select-item {
+  background-color: #23272f !important;
+  color: #fff !important;
+}
+
+.custom-branch-dropdown .ant-select-item:hover {
+  background-color: #374151 !important;
+}
+
+.custom-branch-dropdown .ant-select-item-option-selected {
+  background-color: #4B5563 !important;
+  color: #fff !important;
 } 

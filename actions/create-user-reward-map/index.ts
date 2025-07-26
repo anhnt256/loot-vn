@@ -1,157 +1,149 @@
 "use server";
 
-import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
+import { db } from "@/lib/db";
 import { createSafeAction } from "@/lib/create-safe-action";
 import { CreateUserRewardMap } from "./schema";
 import { InputType } from "./type";
 import dayjs from "@/lib/dayjs";
-import { getVNTimeForPrisma } from "@/lib/timezone-utils";
-import { NextResponse } from "next/server";
-import { signJWT } from "@/lib/jwt";
-import { cookies } from "next/headers";
+import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
 
 const expirationDuration = 1;
-const expirationDate = dayjs().add(expirationDuration, "day").format();
 
 const handler = async (data: InputType): Promise<any> => {
   const {
-    currentUserId,
     userId,
     rewardId,
     duration = 7,
     isUsed = true,
     value,
-    branch,
     oldStars,
     newStars,
+    branch,
+    createdAt,
   } = data;
+
+  console.log("=== createUserRewardMap action called ===");
+  console.log("data", data);
+  console.log("userId:", userId);
+  console.log("rewardId:", rewardId);
+  console.log("value:", value);
+  console.log("branch:", branch);
+
   let createUserRewardMap;
 
-  const promotion = await db.promotionCode.findFirst({
-    where: { value, branch, isUsed: false },
-  });
-
-  const user = await db.user.findFirst({
-    where: { userId, branch },
-  });
-
-  // Check last claim time
-  const lastClaim = await db.userRewardMap.findFirst({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-  });
-  if (lastClaim && lastClaim.createdAt) {
-    const lastClaimTime = new Date(lastClaim.createdAt).getTime();
-    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-
-    if (lastClaimTime > fiveMinutesAgo) {
-      return {
-        error: "Please wait 5 minutes between claims.",
-      };
-    }
+  // Verify user exists with correct userId and branch first using raw SQL
+  const users = await db.$queryRaw`
+    SELECT * FROM User 
+    WHERE userId = ${userId} AND branch = ${branch}
+    LIMIT 1
+  `;
+  const user = (users as any[])[0];
+  
+  if (!user) {
+    return {
+      error: `User with userId ${userId} and branch ${branch} not found`,
+    };
   }
 
-  if (promotion && user) {
-    const { stars } = user;
-    if (stars - value < 0) {
-      return {
-        error: "Failed to create.",
-      };
-    }
+  // Kiểm tra số sao thực tế từ database
+  if (user.stars < value) {
+    return {
+      error: `User chỉ có ${user.stars.toLocaleString()} sao, không đủ để đổi thưởng này (cần ${value.toLocaleString()} sao).`,
+    };
+  }
 
-    const fnetDB = await getFnetDB();
+  // Kiểm tra xem user có đang có yêu cầu đổi thưởng đang chờ duyệt không
+  const pendingRewardExchanges = await db.$queryRaw`
+    SELECT * FROM UserRewardMap 
+    WHERE userId = ${user.id} AND branch = ${branch} AND status = 'INITIAL'
+    LIMIT 1
+  `;
+  const pendingRewardExchange = (pendingRewardExchanges as any[])[0];
 
+  if (pendingRewardExchange) {
+    return {
+      error: "Bạn đang có yêu cầu đổi thưởng đang chờ duyệt. Vui lòng đợi admin xử lý xong trước khi đổi thưởng tiếp.",
+    };
+  }
+
+  // Tìm reward trước để lấy name
+  const rewards = await db.$queryRaw`
+    SELECT * FROM Reward WHERE id = ${rewardId}
+  `;
+  const reward = (rewards as any[])[0];
+
+  if (!reward) {
+    return {
+      error: "Reward không tồn tại.",
+    };
+  }
+
+  // Tìm promotionCode hợp lệ - tìm theo name của reward và branch
+  const promotions = await db.$queryRaw`
+    SELECT * FROM PromotionCode 
+    WHERE name = ${reward.name} AND branch = ${branch} AND isUsed = false
+    LIMIT 1
+  `;
+  const promotion = (promotions as any[])[0];
+
+  console.log("promotion found:", promotion);
+
+  if (promotion) {
     try {
       await db.$transaction(async (tx) => {
         const { id } = promotion;
-
-        await tx.promotionCode.update({
-          where: {
-            id,
-          },
-          data: {
-            isUsed: false,
-            updatedAt: getVNTimeForPrisma(),
-          },
-        });
-
-        const fnetUser = await fnetDB.usertb.findFirst({
-          where: {
-            UserId: userId,
-          },
-          select: {
-            UserId: true,
-            RemainMoney: true,
-          },
-        });
-
-        if (fnetUser) {
-          const today = new Date();
-          today.setFullYear(today.getFullYear() - 20);
-          const todayFormatted =
-            today.toISOString().split("T")[0] + "T00:00:00.000Z";
-
-          const expiryDate = new Date();
-          expiryDate.setFullYear(expiryDate.getFullYear() + 10);
-          const expiryDateFormatted =
-            expiryDate.toISOString().split("T")[0] + "T00:00:00.000Z";
-
-          await fnetDB.usertb.update({
-            where: {
-              UserId: userId,
-            },
-            data: {
-              RemainMoney: Number(fnetUser.RemainMoney) + Number(value),
-              Birthdate: todayFormatted,
-              ExpiryDate: expiryDateFormatted,
-            },
-          });
-        }
-
-        createUserRewardMap = await tx.userRewardMap.create({
-          data: {
-            userId,
-            rewardId,
-            promotionCodeId: id,
-            duration,
-            isUsed,
-            branch,
-            createdAt: getVNTimeForPrisma(),
-          },
-        });
-
-        if (createUserRewardMap) {
-          await tx.user.update({
-            where: {
-              id: currentUserId,
-            },
-            data: {
-              stars: newStars,
-              updatedAt: getVNTimeForPrisma(),
-            },
-          });
-
-          await tx.userStarHistory.create({
-            data: {
-              userId,
-              type: "REWARD",
-              oldStars,
-              newStars,
-              targetId: rewardId,
-              createdAt: getVNTimeForPrisma(),
-              branch,
-            },
-          });
-        }
+        console.log("Updating promotionCode with id:", id);
+        
+        // Update promotionCode: set isUsed = true
+        await tx.$executeRaw`
+          UPDATE PromotionCode 
+          SET isUsed = true, updatedAt = ${getCurrentTimeVNISO()}
+          WHERE id = ${id}
+        `;
+        
+        console.log("Creating userRewardMap...");
+        // Insert vào userRewardMap với internal id của user để relation đúng
+        await tx.$executeRaw`
+          INSERT INTO UserRewardMap (userId, rewardId, promotionCodeId, duration, isUsed, branch, createdAt, updatedAt)
+          VALUES (${user.id}, ${rewardId}, ${id}, ${duration}, ${isUsed}, ${branch}, ${getCurrentTimeVNISO()}, ${getCurrentTimeVNISO()})
+        `;
+        
+        // Get the inserted record ID
+        const userRewardMapResults = await tx.$queryRaw`SELECT LAST_INSERT_ID() as id`;
+        const userRewardMapId = (userRewardMapResults as any[])[0]?.id;
+        
+        // Get the full userRewardMap record
+        const userRewardMapRecords = await tx.$queryRaw`
+          SELECT * FROM UserRewardMap WHERE id = ${userRewardMapId}
+        `;
+        createUserRewardMap = (userRewardMapRecords as any[])[0];
+        
+        console.log("userRewardMap created:", createUserRewardMap);
+        
+        // Update số sao trong table User
+        await tx.$executeRaw`
+          UPDATE User 
+          SET stars = ${newStars}, updatedAt = ${getCurrentTimeVNISO()}
+          WHERE id = ${user.id}
+        `;
+        
+        console.log(`Updated user stars from ${oldStars} to ${newStars}`);
       });
     } catch (error) {
+      console.log("=== ERROR in createUserRewardMap ===");
       console.log("error", error);
       return {
         error: "Failed to create.",
       };
     }
+  } else {
+    console.log("No valid promotion code found");
+    return {
+      error: "Promotion code không hợp lệ hoặc đã sử dụng.",
+    };
   }
 
+  console.log("=== createUserRewardMap action completed ===");
   return { data: createUserRewardMap };
 };
 
@@ -159,149 +151,3 @@ export const createUserRewardMap = createSafeAction(
   CreateUserRewardMap,
   handler,
 );
-
-export async function POST(req: Request, res: Response): Promise<any> {
-  const cookieStore = await cookies();
-  const branchFromCookie = cookieStore.get("branch")?.value;
-
-  try {
-    const body = await req.text();
-
-    const { userName, machineName } = JSON.parse(body);
-
-    const fnetDB = await getFnetDB();
-    const fnetPrisma = await getFnetPrisma();
-
-    const query = fnetPrisma.sql`SELECT userId
-                                 FROM fnet.systemlogtb AS t1
-                                 WHERE t1.MachineName = ${machineName}
-                                 ORDER BY STR_TO_DATE(CONCAT(t1.EnterDate, ' ', t1.EnterTime), '%Y-%m-%d %H:%i:%s') DESC
-                                   LIMIT 1`;
-
-    const user: any = await fnetDB.$queryRaw<any>(query);
-
-    // const userId = user[0]?.userId ?? null;
-
-    const userId = 2969;
-
-    let userUpdated;
-
-    const currentUsers = await db.user.findMany({
-      where: {
-        userId: Number(userId),
-        branch: branchFromCookie,
-      },
-    });
-
-    const validUserNames = currentUsers
-      .map((user) => user.userName)
-      .filter(
-        (userName): userName is string =>
-          userName !== null && userName.trim() !== "",
-      );
-
-    if (validUserNames.length > 0) {
-      const usersByUsername = await db.user.findMany({
-        where: {
-          userName: { in: validUserNames },
-        },
-      });
-
-      const uniqueBranches = new Set(
-        usersByUsername.map((user) => user.branch),
-      );
-
-      if (uniqueBranches.size > 1) {
-        return NextResponse.json("Duplicate account", { status: 499 });
-      }
-
-      const thisUsers = [...currentUsers, ...usersByUsername];
-      const allUsers = [
-        ...new Map(thisUsers.map((user) => [user.id, user])).values(),
-      ];
-
-      if (allUsers.length > 1) {
-        allUsers.sort(
-          (a: { updatedAt: Date }, b: { updatedAt: Date }) =>
-            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
-        );
-
-        const latestUser = allUsers[0];
-        const totalStars = allUsers.reduce(
-          (sum: number, u: { stars: number }) => sum + u.stars,
-          0,
-        );
-        const totalMagicStones = allUsers.reduce(
-          (sum: number, u: { magicStone: number }) => sum + u.magicStone,
-          0,
-        );
-
-        userUpdated = await db.user.update({
-          where: { id: latestUser.id },
-          data: {
-            stars: totalStars,
-            magicStone: totalMagicStones,
-            userId: userId,
-          },
-        });
-
-        const deleteIds = allUsers
-          .slice(1)
-          .map((u: { id: number }) => u.id)
-          .filter((id: number) => id !== latestUser.id);
-
-        await db.user.deleteMany({
-          where: { id: { in: deleteIds } },
-        });
-      } else {
-        userUpdated = await db.user.update({
-          where: { id: allUsers[0].id },
-          data: {
-            userId: userId,
-          },
-        });
-      }
-    } else {
-      if (branchFromCookie) {
-        userUpdated = await db.user.create({
-          data: {
-            userName: userName.trim(),
-            userId,
-            branch: branchFromCookie,
-            rankId: 1,
-            stars: 0,
-            magicStone: 0,
-            createdAt: getVNTimeForPrisma(),
-          },
-        });
-      }
-    }
-
-    if (userUpdated) {
-      const token = await signJWT({ userId: userUpdated?.userId });
-      const response = NextResponse.json(userUpdated);
-
-      response.cookies.set({
-        name: "token",
-        value: token,
-        maxAge: 86400,
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        path: "/",
-      });
-
-      return response;
-    }
-    return NextResponse.json("Login Fail", { status: 401 });
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Internal Error";
-    return new NextResponse(JSON.stringify({ error: errorMessage }), {
-      status: 500,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  }
-}
