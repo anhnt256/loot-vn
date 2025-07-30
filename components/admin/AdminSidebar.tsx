@@ -144,9 +144,6 @@ export function AdminSidebar() {
 
   // Filter menu items based on login type and admin role
   const filteredMenuItems = menuItems.filter((item) => {
-    // Debug: log loginType to see what value it has
-    console.log("Current loginType:", loginType);
-
     // If login type is macAddress or mac, show dashboard, reward exchange, and handover reports
     if (loginType === "macAddress" || loginType === "mac") {
       return (

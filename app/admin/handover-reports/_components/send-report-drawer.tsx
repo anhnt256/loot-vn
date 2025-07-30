@@ -414,11 +414,12 @@ export default function SendReportDrawer({
           type="number"
           value={value}
           onChange={(e) =>
-            handleDataChange(index, "beginning", parseInt(e.target.value) || 0)
+            handleDataChange(index, "beginning", parseFloat(e.target.value) || 0)
           }
           className={`text-center ${record.isSecondReport ? "bg-gray-50" : ""}`}
           disabled={record.isSecondReport || isSecondReport()}
           min={0}
+          step={0.5}
           placeholder="Nhập tồn đầu"
         />
       ),
@@ -433,11 +434,12 @@ export default function SendReportDrawer({
           type="number"
           value={value}
           onChange={(e) =>
-            handleDataChange(index, "received", parseInt(e.target.value) || 0)
+            handleDataChange(index, "received", parseFloat(e.target.value) || 0)
           }
           className={`text-center ${!record.isSecondReport ? "bg-gray-50" : ""}`}
           disabled={!record.isSecondReport}
           min={0}
+          step={0.5}
           placeholder="Nhập số lượng"
         />
       ),
@@ -455,12 +457,13 @@ export default function SendReportDrawer({
             type="number"
             value={value}
             onChange={(e) =>
-              handleDataChange(index, "issued", parseInt(e.target.value) || 0)
+              handleDataChange(index, "issued", parseFloat(e.target.value) || 0)
             }
             className={`text-center ${!record.isSecondReport ? "bg-gray-50" : ""} ${isExceeded ? "border-red-500 bg-red-50" : ""}`}
             disabled={!record.isSecondReport}
             min={0}
             max={maxIssued}
+            step={0.5}
             title={isExceeded ? `Tối đa: ${maxIssued}` : ""}
             placeholder="Xuất số lượng"
           />
@@ -482,6 +485,7 @@ export default function SendReportDrawer({
             className="text-center bg-gray-50 font-bold text-gray-900"
             disabled
             min={0}
+            step={0.5}
           />
         );
       },
