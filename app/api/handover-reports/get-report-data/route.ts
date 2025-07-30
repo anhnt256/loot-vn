@@ -49,10 +49,24 @@ export async function GET(request: NextRequest) {
     console.log("currentReportResult", currentReportResult);
 
     let reportData: any[] = [];
+    let staffInfo: { morningStaffId: number | null; afternoonStaffId: number | null; eveningStaffId: number | null } | null = null;
 
     if (currentReportResult.length > 0) {
       // Ca hiện tại đã có dữ liệu -> lấy dữ liệu thực tế
       const handoverReportId = currentReportResult[0].id;
+      
+      // Lấy thông tin nhân viên từ report
+      const reportStaffInfo = await db.$queryRaw<{
+        morningStaffId: number | null;
+        afternoonStaffId: number | null;
+        eveningStaffId: number | null;
+      }[]>`
+        SELECT morningStaffId, afternoonStaffId, eveningStaffId
+        FROM HandoverReport
+        WHERE id = ${handoverReportId}
+      `;
+      
+      staffInfo = reportStaffInfo[0] || { morningStaffId: null, afternoonStaffId: null, eveningStaffId: null };
       
       const currentMaterialsResult = await db.$queryRaw<
         {
@@ -62,17 +76,14 @@ export async function GET(request: NextRequest) {
           morningReceived: number;
           morningIssued: number;
           morningEnding: number;
-          morningStaffId: number;
           afternoonBeginning: number;
           afternoonReceived: number;
           afternoonIssued: number;
           afternoonEnding: number;
-          afternoonStaffId: number;
           eveningBeginning: number;
           eveningReceived: number;
           eveningIssued: number;
           eveningEnding: number;
-          eveningStaffId: number;
         }[]
       >`
         SELECT 
@@ -82,17 +93,14 @@ export async function GET(request: NextRequest) {
           hm.morningReceived,
           hm.morningIssued,
           hm.morningEnding,
-          hm.morningStaffId,
           hm.afternoonBeginning,
           hm.afternoonReceived,
           hm.afternoonIssued,
           hm.afternoonEnding,
-          hm.afternoonStaffId,
           hm.eveningBeginning,
           hm.eveningReceived,
           hm.eveningIssued,
-          hm.eveningEnding,
-          hm.eveningStaffId
+          hm.eveningEnding
         FROM HandoverMaterial hm
         LEFT JOIN Material m ON hm.materialId = m.id
         WHERE hm.handoverReportId = ${handoverReportId}
@@ -100,37 +108,113 @@ export async function GET(request: NextRequest) {
 
       console.log("Debug - currentMaterialsResult:", currentMaterialsResult);
 
+      // Lấy dữ liệu Tồn cuối của ca trước để fallback
+      let previousShiftData: PreviousShiftData[] = [];
+      const dateObj = new Date(date);
+      let targetDate = dateObj;
+      let targetShift = "";
+
+      if (shift === SHIFT_ENUM.SANG) {
+        // Ca sáng: lấy eveningEnding của ca tối hôm trước
+        targetDate = new Date(dateObj);
+        targetDate.setDate(targetDate.getDate() - 1);
+        targetShift = SHIFT_ENUM.TOI;
+      } else if (shift === SHIFT_ENUM.CHIEU) {
+        // Ca chiều: lấy morningEnding của ca sáng cùng ngày
+        targetDate = dateObj;
+        targetShift = SHIFT_ENUM.SANG;
+      } else if (shift === SHIFT_ENUM.TOI) {
+        // Ca tối: lấy afternoonEnding của ca chiều cùng ngày
+        targetDate = dateObj;
+        targetShift = SHIFT_ENUM.CHIEU;
+      }
+
+      const formattedTargetDate = targetDate.toISOString().split("T")[0];
+
+      const previousReportResult = await db.$queryRaw<{ id: string }[]>`
+        SELECT id FROM HandoverReport 
+        WHERE DATE(date) = ${formattedTargetDate}
+        AND reportType = ${reportType}
+        AND branch = ${branch}
+        LIMIT 1
+      `;
+
+      if (previousReportResult.length > 0) {
+        const previousHandoverReportId = previousReportResult[0].id;
+        
+        const handoverMaterialsResult = await db.$queryRaw<
+          {
+            materialName: string;
+            morningEnding: number;
+            afternoonEnding: number;
+            eveningEnding: number;
+          }[]
+        >`
+          SELECT 
+            m.name as materialName,
+            hm.morningEnding,
+            hm.afternoonEnding,
+            hm.eveningEnding
+          FROM HandoverMaterial hm
+          LEFT JOIN Material m ON hm.materialId = m.id
+          WHERE hm.handoverReportId = ${previousHandoverReportId}
+        `;
+
+        // Map ending của ca trước dựa vào targetShift
+        previousShiftData = handoverMaterialsResult.map((material) => {
+          let ending = 0;
+
+          if (targetShift === SHIFT_ENUM.SANG) {
+            ending = material.morningEnding;
+          } else if (targetShift === SHIFT_ENUM.CHIEU) {
+            ending = material.afternoonEnding;
+          } else if (targetShift === SHIFT_ENUM.TOI) {
+            ending = material.eveningEnding;
+          }
+
+          return {
+            materialName: material.materialName,
+            ending: ending,
+          };
+        });
+      }
+
       // Map dữ liệu thực tế của ca hiện tại
       reportData = currentMaterialsResult.map((material) => {
         let beginning = 0;
         let received = 0;
         let issued = 0;
         let ending = 0;
+        let hasActualBeginning = false;
 
         if (shift === SHIFT_ENUM.SANG) {
-          beginning = material.morningBeginning || 0;
-          received = material.morningReceived || 0;
-          issued = material.morningIssued || 0;
-          ending = material.morningEnding || 0;
+          beginning = material.morningBeginning !== null ? material.morningBeginning : 0;
+          received = material.morningReceived !== null ? material.morningReceived : 0;
+          issued = material.morningIssued !== null ? material.morningIssued : 0;
+          ending = material.morningEnding !== null ? material.morningEnding : 0;
+          hasActualBeginning = material.morningBeginning !== null;
         } else if (shift === SHIFT_ENUM.CHIEU) {
-          beginning = material.afternoonBeginning || 0;
-          received = material.afternoonReceived || 0;
-          issued = material.afternoonIssued || 0;
-          ending = material.afternoonEnding || 0;
+          beginning = material.afternoonBeginning !== null ? material.afternoonBeginning : 0;
+          received = material.afternoonReceived !== null ? material.afternoonReceived : 0;
+          issued = material.afternoonIssued !== null ? material.afternoonIssued : 0;
+          ending = material.afternoonEnding !== null ? material.afternoonEnding : 0;
+          hasActualBeginning = material.afternoonBeginning !== null;
         } else if (shift === SHIFT_ENUM.TOI) {
-          beginning = material.eveningBeginning || 0;
-          received = material.eveningReceived || 0;
-          issued = material.eveningIssued || 0;
-          ending = material.eveningEnding || 0;
+          beginning = material.eveningBeginning !== null ? material.eveningBeginning : 0;
+          received = material.eveningReceived !== null ? material.eveningReceived : 0;
+          issued = material.eveningIssued !== null ? material.eveningIssued : 0;
+          ending = material.eveningEnding !== null ? material.eveningEnding : 0;
+          hasActualBeginning = material.eveningBeginning !== null;
         }
 
-        let staffId = null;
-        if (shift === SHIFT_ENUM.SANG) {
-          staffId = material.morningStaffId;
-        } else if (shift === SHIFT_ENUM.CHIEU) {
-          staffId = material.afternoonStaffId;
-        } else if (shift === SHIFT_ENUM.TOI) {
-          staffId = material.eveningStaffId;
+        // Nếu không có Tồn đầu thực tế, lấy Tồn cuối của ca trước
+        if (!hasActualBeginning) {
+          const previousData = previousShiftData.find(
+            (p: PreviousShiftData) => p.materialName === material.materialName,
+          );
+          if (previousData && previousData.ending !== null) {
+            beginning = previousData.ending;
+          }
         }
 
         return {
@@ -140,7 +224,9 @@ export async function GET(request: NextRequest) {
           received: received,
           issued: issued,
           ending: ending,
-          staffId: staffId,
+          isBeginningFromPreviousShift: !hasActualBeginning && beginning > 0,
+          hasBeginningData: hasActualBeginning,
+          isSecondReport: hasActualBeginning,
         };
       });
     } else {
@@ -243,6 +329,7 @@ export async function GET(request: NextRequest) {
         const previousData = previousShiftData.find(
           (p: PreviousShiftData) => p.materialName === material.name,
         );
+        const hasPreviousData = previousData && previousData.ending > 0;
         return {
           id: material.id,
           materialName: material.name,
@@ -250,13 +337,19 @@ export async function GET(request: NextRequest) {
           received: 0,
           issued: 0,
           ending: previousData ? previousData.ending : 0,
+          isBeginningFromPreviousShift: hasPreviousData,
+          hasBeginningData: false, // Chưa có dữ liệu thực tế
+          isSecondReport: false, // Chưa có dữ liệu thực tế
         };
       });
     }
 
     return NextResponse.json({
       success: true,
-      data: reportData,
+      data: {
+        materials: reportData,
+        staffInfo: staffInfo,
+      },
     });
   } catch (error) {
     console.error("Error fetching report data:", error);

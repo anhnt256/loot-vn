@@ -77,6 +77,19 @@ export async function POST(request: NextRequest) {
 
         handoverReportId = existingReport.id;
 
+        // Update staff information for the current shift
+        const staffIdField = 
+          shift === SHIFT_ENUM.SANG
+            ? "morningStaffId"
+            : shift === SHIFT_ENUM.CHIEU
+              ? "afternoonStaffId"
+              : "eveningStaffId";
+
+        await tx.$executeRawUnsafe(`
+          UPDATE HandoverReport SET ${staffIdField} = ${Number(staffId)}, updatedAt = '${currentTime}'
+          WHERE id = ${handoverReportId}
+        `);
+
         // Check if materials already exist for this shift with complete data (all 4 fields: beginning, received, issued, ending)
         const existingMaterials = (await tx.$queryRaw`
           SELECT hm.id, hm.materialId, m.name as materialName,
@@ -160,20 +173,12 @@ export async function POST(request: NextRequest) {
                   ? "afternoonEnding"
                   : "eveningEnding";
 
-            const staffIdField = 
-              shift === SHIFT_ENUM.SANG
-                ? "morningStaffId"
-                : shift === SHIFT_ENUM.CHIEU
-                  ? "afternoonStaffId"
-                  : "eveningStaffId";
-
             await tx.$executeRawUnsafe(`
               UPDATE HandoverMaterial SET
                 ${beginningField} = ${parseFloat(materialData.beginning || 0)},
                 ${receivedField} = ${materialData.received === null ? 'NULL' : parseFloat(materialData.received)},
                 ${issuedField} = ${materialData.issued === null ? 'NULL' : parseFloat(materialData.issued)},
                 ${endingField} = ${parseFloat(materialData.ending || 0)},
-                ${staffIdField} = ${Number(staffId)},
                 updatedAt = '${currentTime}'
               WHERE id = ${existingMaterial[0].id}
             `);
@@ -182,9 +187,9 @@ export async function POST(request: NextRequest) {
             await tx.$executeRaw`
               INSERT INTO HandoverMaterial (
                 handoverReportId, materialId, 
-                morningBeginning, morningReceived, morningIssued, morningEnding, morningStaffId,
-                afternoonBeginning, afternoonReceived, afternoonIssued, afternoonEnding, afternoonStaffId,
-                eveningBeginning, eveningReceived, eveningIssued, eveningEnding, eveningStaffId,
+                morningBeginning, morningReceived, morningIssued, morningEnding,
+                afternoonBeginning, afternoonReceived, afternoonIssued, afternoonEnding,
+                eveningBeginning, eveningReceived, eveningIssued, eveningEnding,
                 createdAt, updatedAt
               ) VALUES (
                 ${handoverReportId},
@@ -193,17 +198,14 @@ export async function POST(request: NextRequest) {
                 ${shift === SHIFT_ENUM.SANG ? (materialData.received === null ? null : parseFloat(materialData.received)) : null},
                 ${shift === SHIFT_ENUM.SANG ? (materialData.issued === null ? null : parseFloat(materialData.issued)) : null},
                 ${shift === SHIFT_ENUM.SANG ? parseFloat(materialData.ending || 0) : null},
-                ${shift === SHIFT_ENUM.SANG ? Number(staffId) : null},
                 ${shift === SHIFT_ENUM.CHIEU ? parseFloat(materialData.beginning || 0) : null},
                 ${shift === SHIFT_ENUM.CHIEU ? (materialData.received === null ? null : parseFloat(materialData.received)) : null},
                 ${shift === SHIFT_ENUM.CHIEU ? (materialData.issued === null ? null : parseFloat(materialData.issued)) : null},
                 ${shift === SHIFT_ENUM.CHIEU ? parseFloat(materialData.ending || 0) : null},
-                ${shift === SHIFT_ENUM.CHIEU ? Number(staffId) : null},
                 ${shift === SHIFT_ENUM.TOI ? parseFloat(materialData.beginning || 0) : null},
                 ${shift === SHIFT_ENUM.TOI ? (materialData.received === null ? null : parseFloat(materialData.received)) : null},
                 ${shift === SHIFT_ENUM.TOI ? (materialData.issued === null ? null : parseFloat(materialData.issued)) : null},
                 ${shift === SHIFT_ENUM.TOI ? parseFloat(materialData.ending || 0) : null},
-                ${shift === SHIFT_ENUM.TOI ? Number(staffId) : null},
                 ${currentTime},
                 ${currentTime}
               )
@@ -211,11 +213,18 @@ export async function POST(request: NextRequest) {
           }
         }
       } else {
-        // Create new report
-        await tx.$executeRaw`
-          INSERT INTO HandoverReport (date, reportType, branch, note, createdAt, updatedAt)
-          VALUES (${new Date(date)}, ${reportType}, ${branch}, NULL, ${currentTime}, ${currentTime})
-        `;
+        // Create new report with staff information
+        const staffIdField = 
+          shift === SHIFT_ENUM.SANG
+            ? "morningStaffId"
+            : shift === SHIFT_ENUM.CHIEU
+              ? "afternoonStaffId"
+              : "eveningStaffId";
+
+        await tx.$executeRawUnsafe(`
+          INSERT INTO HandoverReport (date, reportType, branch, note, ${staffIdField}, createdAt, updatedAt)
+          VALUES ('${date}', '${reportType}', '${branch}', NULL, ${Number(staffId)}, '${currentTime}', '${currentTime}')
+        `);
 
         // Get the created report ID
         const createdReport = (await tx.$queryRaw`
@@ -237,9 +246,9 @@ export async function POST(request: NextRequest) {
           await tx.$executeRaw`
             INSERT INTO HandoverMaterial (
               handoverReportId, materialId, 
-              morningBeginning, morningReceived, morningIssued, morningEnding, morningStaffId,
-              afternoonBeginning, afternoonReceived, afternoonIssued, afternoonEnding, afternoonStaffId,
-              eveningBeginning, eveningReceived, eveningIssued, eveningEnding, eveningStaffId,
+              morningBeginning, morningReceived, morningIssued, morningEnding,
+              afternoonBeginning, afternoonReceived, afternoonIssued, afternoonEnding,
+              eveningBeginning, eveningReceived, eveningIssued, eveningEnding,
               createdAt, updatedAt
             ) VALUES (
               ${handoverReportId},
@@ -248,17 +257,14 @@ export async function POST(request: NextRequest) {
               ${shift === SHIFT_ENUM.SANG ? (materialData.received === null ? null : parseFloat(materialData.received)) : null},
               ${shift === SHIFT_ENUM.SANG ? (materialData.issued === null ? null : parseFloat(materialData.issued)) : null},
               ${shift === SHIFT_ENUM.SANG ? parseFloat(materialData.ending || 0) : null},
-              ${shift === SHIFT_ENUM.SANG ? Number(staffId) : null},
               ${shift === SHIFT_ENUM.CHIEU ? parseFloat(materialData.beginning || 0) : null},
               ${shift === SHIFT_ENUM.CHIEU ? (materialData.received === null ? null : parseFloat(materialData.received)) : null},
               ${shift === SHIFT_ENUM.CHIEU ? (materialData.issued === null ? null : parseFloat(materialData.issued)) : null},
               ${shift === SHIFT_ENUM.CHIEU ? parseFloat(materialData.ending || 0) : null},
-              ${shift === SHIFT_ENUM.CHIEU ? Number(staffId) : null},
               ${shift === SHIFT_ENUM.TOI ? parseFloat(materialData.beginning || 0) : null},
               ${shift === SHIFT_ENUM.TOI ? (materialData.received === null ? null : parseFloat(materialData.received)) : null},
               ${shift === SHIFT_ENUM.TOI ? (materialData.issued === null ? null : parseFloat(materialData.issued)) : null},
               ${shift === SHIFT_ENUM.TOI ? parseFloat(materialData.ending || 0) : null},
-              ${shift === SHIFT_ENUM.TOI ? Number(staffId) : null},
               ${currentTime},
               ${currentTime}
             )

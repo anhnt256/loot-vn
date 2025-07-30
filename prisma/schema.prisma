@@ -247,6 +247,9 @@ model Staff {
   counterStaffReports  Report[]        @relation("CounterStaff")
   kitchenStaffReports  Report[]        @relation("KitchenStaff")
   securityStaffReports Report[]        @relation("SecurityStaff")
+  morningHandoverReports HandoverReport[] @relation("MorningStaff")
+  afternoonHandoverReports HandoverReport[] @relation("AfternoonStaff")
+  eveningHandoverReports HandoverReport[] @relation("EveningStaff")
 }
 
 model GiftRound {
@@ -513,14 +516,20 @@ model Report {
 }
 
 model HandoverReport {
-  id         Int                @id @default(autoincrement())
-  date       DateTime
-  reportType HandoverReportType
-  branch     String             @default("GO_VAP")
-  note       String?
-  createdAt  DateTime           @default(now())
-  updatedAt  DateTime           @updatedAt
-  materials  HandoverMaterial[]
+  id               Int                @id @default(autoincrement())
+  date             DateTime
+  reportType       HandoverReportType
+  branch           String             @default("GO_VAP")
+  note             String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  afternoonStaffId Int?
+  eveningStaffId   Int?
+  morningStaffId   Int?
+  materials        HandoverMaterial[]
+  morningStaff     Staff?             @relation("MorningStaff", fields: [morningStaffId], references: [id])
+  afternoonStaff   Staff?             @relation("AfternoonStaff", fields: [afternoonStaffId], references: [id])
+  eveningStaff     Staff?             @relation("EveningStaff", fields: [eveningStaffId], references: [id])
 
   @@index([date, reportType], map: "HandoverReport_date_shift_reportType_idx")
 }
@@ -532,18 +541,14 @@ model HandoverMaterial {
   morningReceived    Float?
   morningIssued      Float?
   morningEnding      Float?
-  morningStaffId     Int?
   afternoonBeginning Float?
   afternoonReceived  Float?
   afternoonIssued    Float?
   afternoonEnding    Float?
-  afternoonStaffId   Int?
   eveningBeginning   Float?
   eveningReceived    Float?
   eveningIssued      Float?
   eveningEnding      Float?
-  eveningStaffId     Int?
-  
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
   materialId         Int?

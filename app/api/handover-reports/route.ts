@@ -36,6 +36,21 @@ export async function GET(request: NextRequest) {
             material: true,
           },
         },
+        morningStaff: {
+          select: {
+            fullName: true,
+          },
+        },
+        afternoonStaff: {
+          select: {
+            fullName: true,
+          },
+        },
+        eveningStaff: {
+          select: {
+            fullName: true,
+          },
+        },
       },
       orderBy: [{ date: "desc" }, { reportType: "asc" }],
     });
@@ -48,6 +63,12 @@ export async function GET(request: NextRequest) {
       date: report.date,
       reportType: report.reportType,
       note: report.note,
+      morningStaffId: report.morningStaffId,
+      morningStaffName: report.morningStaff?.fullName || null,
+      afternoonStaffId: report.afternoonStaffId,
+      afternoonStaffName: report.afternoonStaff?.fullName || null,
+      eveningStaffId: report.eveningStaffId,
+      eveningStaffName: report.eveningStaff?.fullName || null,
       materials: report.materials
         .map((material) => ({
           id: material.id,
@@ -58,21 +79,18 @@ export async function GET(request: NextRequest) {
             received: material.morningReceived,
             issued: material.morningIssued,
             ending: material.morningEnding,
-            staffId: material.morningStaffId,
           },
           afternoon: {
             beginning: material.afternoonBeginning,
             received: material.afternoonReceived,
             issued: material.afternoonIssued,
             ending: material.afternoonEnding,
-            staffId: material.afternoonStaffId,
           },
           evening: {
             beginning: material.eveningBeginning,
             received: material.eveningReceived,
             issued: material.eveningIssued,
             ending: material.eveningEnding,
-            staffId: material.eveningStaffId,
           },
         }))
         .sort((a, b) => a.materialName.localeCompare(b.materialName)), // Sort by material name for consistent order
@@ -144,14 +162,24 @@ export async function POST(request: NextRequest) {
         });
       }
     } else {
-      // Create new report
-      handoverReport = await db.handoverReport.create({
-        data: {
-          date: new Date(date),
+      // Create new report using raw query to ensure proper date format
+      const currentTime = new Date().toISOString();
+      await db.$executeRawUnsafe(`
+        INSERT INTO HandoverReport (date, reportType, branch, note, createdAt, updatedAt)
+        VALUES ('${date}', '${reportType}', '${branch}', ${note ? `'${note}'` : 'NULL'}, '${currentTime}', '${currentTime}')
+      `);
+      
+      // Get the created report
+      handoverReport = await db.handoverReport.findFirst({
+        where: {
+          date: {
+            gte: startDate,
+            lt: endDate,
+          },
           reportType: reportType,
           branch: branch,
-          note: note || null,
         },
+        orderBy: { createdAt: 'desc' },
       });
     }
 

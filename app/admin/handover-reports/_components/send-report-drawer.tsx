@@ -27,7 +27,6 @@ interface MaterialReportData {
   received: number;
   issued: number;
   ending: number;
-  staffId?: number;
   isBeginningFromPreviousShift?: boolean;
   hasBeginningData?: boolean; // Track if beginning data has been entered
   isSecondReport?: boolean; // Track if this is second report (has previous data)
@@ -59,6 +58,7 @@ export default function SendReportDrawer({
   const [selectedReportType, setSelectedReportType] = useState(
     defaultReportType || REPORT_TYPE_ENUM.BAO_CAO_BEP,
   );
+  const [selectedDateState, setSelectedDateState] = useState(selectedDate || "");
   const [materials, setMaterials] = useState<Material[]>([]);
   const [materialData, setMaterialData] = useState<MaterialReportData[]>([]);
   const [loading, setLoading] = useState(false);
@@ -68,15 +68,25 @@ export default function SendReportDrawer({
 
   const shifts = Object.values(SHIFT_ENUM);
 
+  // Helper function to check if this is a second report (has existing data)
+  const isSecondReport = () => {
+    return materialData.some(item => item.isSecondReport);
+  };
+
   // Helper function to get material status
   const getMaterialStatus = (record: MaterialReportData) => {
-    if (!record.isSecondReport) {
-      return { text: "Chờ nhập tồn đầu", color: "text-orange-600 bg-orange-50" };
+    if (record.isSecondReport) {
+      if (record.received > 0 || record.issued > 0) {
+        return { text: "Đã hoàn thành", color: "text-green-600 bg-green-50" };
+      }
+      return { text: "Đã có tồn đầu", color: "text-blue-600 bg-blue-50" };
     }
-    if (record.received > 0 || record.issued > 0) {
-      return { text: "Đã hoàn thành", color: "text-green-600 bg-green-50" };
+    
+    if (record.isBeginningFromPreviousShift) {
+      return { text: "Tồn đầu từ ca trước", color: "text-purple-600 bg-purple-50" };
     }
-    return { text: "Đã có tồn đầu", color: "text-blue-600 bg-blue-50" };
+    
+    return { text: "Chờ nhập tồn đầu", color: "text-orange-600 bg-orange-50" };
   };
 
   // Function to determine current shift based on time
@@ -114,7 +124,12 @@ export default function SendReportDrawer({
   };
 
   // Function to get report date for submission in YYYY-MM-DD format
-  const getReportDateForSubmission = (shift: string) => {
+  const getReportDateForSubmission = (shift: string, customDate?: string) => {
+    // If custom date is provided, use it
+    if (customDate) {
+      return customDate;
+    }
+
     const now = new Date();
     const reportDate = new Date(now);
 
@@ -166,12 +181,12 @@ export default function SendReportDrawer({
     }
   };
 
-  // Fetch materials when drawer opens or when report type/shift changes
+  // Fetch materials when drawer opens or when report type/shift/date changes
   useEffect(() => {
     if (isOpen && selectedShift && selectedReportType) {
       checkReportCompletionAndFetchMaterials();
     }
-  }, [isOpen, selectedReportType, selectedShift]);
+  }, [isOpen, selectedReportType, selectedShift, selectedDateState]);
 
   // Fetch staff list and set initial shift when drawer opens
   useEffect(() => {
@@ -214,20 +229,16 @@ export default function SendReportDrawer({
   const checkReportCompletionAndFetchMaterials = async () => {
     setLoading(true);
     try {
-      // Calculate the correct report date based on selected shift
+      // Calculate the correct report date based on selected shift and custom date
       let reportDate = getReportDateForSubmission(
         selectedShift || getCurrentShift(),
+        selectedDateState
       );
 
-      // For morning shift, we need to get data from previous night shift
-      if (selectedShift === SHIFT_ENUM.SANG) {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const year = yesterday.getFullYear();
-        const month = String(yesterday.getMonth() + 1).padStart(2, "0");
-        const day = String(yesterday.getDate()).padStart(2, "0");
-        reportDate = `${year}-${month}-${day}`;
-      }
+      // Always use the selected report date - API will handle getting previous shift data
+      // For morning shift, API will automatically get evening ending from previous day
+      // For afternoon shift, API will get morning ending from same day
+      // For evening shift, API will get afternoon ending from same day
 
       // First, check if report is completed
       const checkParams = new URLSearchParams();
@@ -259,25 +270,28 @@ export default function SendReportDrawer({
 
       if (result.success) {
         // Sort materials by name to ensure consistent order with main table
-        const sortedData = result.data.sort(
+        const sortedData = result.data.materials.sort(
           (a: MaterialReportData, b: MaterialReportData) =>
             a.materialName.localeCompare(b.materialName),
         );
         
-        // Check if this is a second report (has previous data with received/issued)
-        const dataWithDisabledBeginning = sortedData.map((item: MaterialReportData) => ({
-          ...item,
-          isBeginningFromPreviousShift: item.beginning > 0 && (item.received > 0 || item.issued > 0),
-          hasBeginningData: item.beginning > 0, // Track if beginning data exists
-          isSecondReport: item.beginning > 0 // Check if this is second report (has beginning data from API)
-        }));
-        
-        setMaterialData(dataWithDisabledBeginning);
+        // Use data from API directly - it already has the correct flags
+        setMaterialData(sortedData);
         
         // Auto-select staff if report already exists and has beginning data
-        const existingStaffId = sortedData.find((item: MaterialReportData) => item.staffId)?.staffId;
-        if (existingStaffId && sortedData.some((item: MaterialReportData) => item.beginning > 0)) {
-          setSelectedStaff(existingStaffId.toString());
+        if (result.data.staffInfo && sortedData.some((item: MaterialReportData) => item.beginning > 0)) {
+          const shift = selectedShift || getCurrentShift();
+          let staffId = null;
+          if (shift === SHIFT_ENUM.SANG) {
+            staffId = result.data.staffInfo.morningStaffId;
+          } else if (shift === SHIFT_ENUM.CHIEU) {
+            staffId = result.data.staffInfo.afternoonStaffId;
+          } else if (shift === SHIFT_ENUM.TOI) {
+            staffId = result.data.staffInfo.eveningStaffId;
+          }
+          if (staffId) {
+            setSelectedStaff(staffId.toString());
+          }
         }
       } else {
         console.error("Failed to fetch materials:", result.error);
@@ -294,20 +308,16 @@ export default function SendReportDrawer({
   const fetchMaterials = async () => {
     setLoading(true);
     try {
-      // Calculate the correct report date based on selected shift
+      // Calculate the correct report date based on selected shift and custom date
       let reportDate = getReportDateForSubmission(
         selectedShift || getCurrentShift(),
+        selectedDateState
       );
 
-      // For morning shift, we need to get data from previous night shift
-      if (selectedShift === SHIFT_ENUM.SANG) {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const year = yesterday.getFullYear();
-        const month = String(yesterday.getMonth() + 1).padStart(2, "0");
-        const day = String(yesterday.getDate()).padStart(2, "0");
-        reportDate = `${year}-${month}-${day}`;
-      }
+      // Always use the selected report date - API will handle getting previous shift data
+      // For morning shift, API will automatically get evening ending from previous day
+      // For afternoon shift, API will get morning ending from same day
+      // For evening shift, API will get afternoon ending from same day
 
       const params = new URLSearchParams();
       params.append("date", reportDate);
@@ -321,25 +331,28 @@ export default function SendReportDrawer({
 
       if (result.success) {
         // Sort materials by name to ensure consistent order with main table
-        const sortedData = result.data.sort(
+        const sortedData = result.data.materials.sort(
           (a: MaterialReportData, b: MaterialReportData) =>
             a.materialName.localeCompare(b.materialName),
         );
         
-        // Check if this is a second report (has previous data with received/issued)
-        const dataWithDisabledBeginning = sortedData.map((item: MaterialReportData) => ({
-          ...item,
-          isBeginningFromPreviousShift: item.beginning > 0 && (item.received > 0 || item.issued > 0),
-          hasBeginningData: item.beginning > 0, // Track if beginning data exists
-          isSecondReport: item.beginning > 0 // Check if this is second report (has beginning data from API)
-        }));
-        
-        setMaterialData(dataWithDisabledBeginning);
+        // Use data from API directly - it already has the correct flags
+        setMaterialData(sortedData);
         
         // Auto-select staff if report already exists and has beginning data
-        const existingStaffId = sortedData.find((item: MaterialReportData) => item.staffId)?.staffId;
-        if (existingStaffId && sortedData.some((item: MaterialReportData) => item.beginning > 0)) {
-          setSelectedStaff(existingStaffId.toString());
+        if (result.data.staffInfo && sortedData.some((item: MaterialReportData) => item.beginning > 0)) {
+          const shift = selectedShift || getCurrentShift();
+          let staffId = null;
+          if (shift === SHIFT_ENUM.SANG) {
+            staffId = result.data.staffInfo.morningStaffId;
+          } else if (shift === SHIFT_ENUM.CHIEU) {
+            staffId = result.data.staffInfo.afternoonStaffId;
+          } else if (shift === SHIFT_ENUM.TOI) {
+            staffId = result.data.staffInfo.eveningStaffId;
+          }
+          if (staffId) {
+            setSelectedStaff(staffId.toString());
+          }
         }
       } else {
         console.error("Failed to fetch materials:", result.error);
@@ -391,7 +404,7 @@ export default function SendReportDrawer({
             handleDataChange(index, "beginning", parseInt(e.target.value) || 0)
           }
           className={`text-center ${record.isSecondReport ? "bg-gray-50" : ""}`}
-          disabled={record.isSecondReport}
+          disabled={record.isSecondReport || isSecondReport()}
           min={0}
           placeholder="Nhập tồn đầu"
         />
@@ -510,8 +523,8 @@ export default function SendReportDrawer({
     // Check if this is a second report (has beginning data from API)
     const isSecondReport = materialData.some(item => item.isSecondReport);
     
-    // Validate that at least beginning inventory is provided for each material (only for first report)
-    // Allow beginning to be 0 if out of stock
+    // For second report, beginning data is locked and cannot be changed
+    // For first report, beginning can be 0 if out of stock
     if (!isSecondReport) {
       // No validation needed - beginning can be 0 if out of stock
     }
@@ -592,7 +605,7 @@ export default function SendReportDrawer({
   if (!isOpen) return null;
 
   // Generate title with selected shift, date and staff name
-  const reportDate = getReportDate(selectedShift || getCurrentShift());
+  const reportDate = selectedDateState ? new Date(selectedDateState).toLocaleDateString('vi-VN') : getReportDate(selectedShift || getCurrentShift());
   const selectedStaffData = staffList.find(
     (staff) => staff.id.toString() === selectedStaff,
   );
@@ -637,7 +650,7 @@ export default function SendReportDrawer({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {/* Report Type Selection */}
                 <div>
                   <label
@@ -653,6 +666,7 @@ export default function SendReportDrawer({
                     onChange={setSelectedReportType}
                     className="w-full"
                     size="large"
+                    disabled={isSecondReport()}
                   >
                     {Object.values(REPORT_TYPE_ENUM).map((type) => (
                       <Select.Option key={type} value={type}>
@@ -681,6 +695,7 @@ export default function SendReportDrawer({
                     onChange={setSelectedShift}
                     className="w-full"
                     size="large"
+                    disabled={isSecondReport()}
                   >
                     {shifts.map((shift) => (
                       <Select.Option key={shift} value={shift}>
@@ -689,6 +704,26 @@ export default function SendReportDrawer({
                       </Select.Option>
                     ))}
                   </Select>
+                </div>
+
+                {/* Date Selection */}
+                <div>
+                  <label
+                    htmlFor="date-select"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Ngày báo cáo *
+                  </label>
+                  <input
+                    id="date-select"
+                    type="date"
+                    value={selectedDateState || getReportDateForSubmission(selectedShift || getCurrentShift())}
+                    onChange={(e) => setSelectedDateState(e.target.value)}
+                    disabled={isSecondReport()}
+                    className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      isSecondReport() ? 'bg-gray-100 cursor-not-allowed' : ''
+                    }`}
+                  />
                 </div>
 
                 {/* Staff Selection */}
@@ -707,6 +742,7 @@ export default function SendReportDrawer({
                     className="w-full"
                     size="large"
                     showSearch
+                    disabled={isSecondReport()}
                     filterOption={(input, option) =>
                       (option?.children as unknown as string)
                         ?.toLowerCase()
@@ -735,8 +771,18 @@ export default function SendReportDrawer({
                     : ""}{" "}
                   ({materialData.length})
                 </h3>
-                <div className="text-sm text-gray-600 bg-blue-50 px-3 py-1 rounded-md">
-                  <span className="font-medium">Hướng dẫn:</span> {materialData.some(item => item.isSecondReport) ? "Cập nhật nhập/xuất cho ca này" : "Nhập tồn đầu cho ca mới"}
+                <div className={`text-sm px-3 py-1 rounded-md ${
+                  materialData.some(item => item.isSecondReport) 
+                    ? "text-orange-600 bg-orange-50" 
+                    : "text-gray-600 bg-blue-50"
+                }`}>
+                  <span className="font-medium">Hướng dẫn:</span> {
+                    materialData.some(item => item.isSecondReport) 
+                      ? "Cập nhật nhập/xuất cho ca này (thông tin cơ bản đã bị khóa)" 
+                      : materialData.some(item => item.isBeginningFromPreviousShift)
+                        ? "Tồn đầu đã được lấy từ ca trước, có thể chỉnh sửa"
+                        : "Nhập tồn đầu cho ca mới"
+                  }
                 </div>
               </div>
 

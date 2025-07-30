@@ -23,21 +23,18 @@ interface MaterialReport {
     received: number;
     issued: number;
     ending: number;
-    staffId?: number;
   };
   afternoon: {
     beginning: number;
     received: number;
     issued: number;
     ending: number;
-    staffId?: number;
   };
   evening: {
     beginning: number;
     received: number;
     issued: number;
     ending: number;
-    staffId?: number;
   };
 }
 
@@ -47,6 +44,12 @@ interface HandoverReport {
   reportType: string;
   note?: string;
   materials: MaterialReport[];
+  morningStaffId?: number;
+  morningStaffName?: string;
+  afternoonStaffId?: number;
+  afternoonStaffName?: string;
+  eveningStaffId?: number;
+  eveningStaffName?: string;
 }
 
 const reportTypes = Object.values(REPORT_TYPE_ENUM);
@@ -406,34 +409,54 @@ export default function HandoverReportsPage() {
           <table className="w-full border-collapse border border-gray-300 text-sm">
             <thead>
               <tr className="bg-gray-100">
-                <th className="border border-gray-300 px-2 py-2 text-left font-semibold">
-                  STT
-                </th>
-                <th className="border border-gray-300 px-2 py-2 text-left font-semibold">
-                  Nguyên vật liệu
+                <th
+                  className="px-2 py-2 text-center font-semibold"
+                  colSpan={2}
+                />
+                <th
+                  className="border border-gray-300 px-2 py-2 text-center font-semibold"
+                  colSpan={4}
+                >
+                  {reports.length > 0 && reports[0].morningStaffName ? (
+                    <span className="text-blue-600">
+                      Ca sáng - {reports[0].morningStaffName}
+                    </span>
+                  ) : (
+                    <span className="text-gray-500">Ca sáng</span>
+                  )}
                 </th>
                 <th
                   className="border border-gray-300 px-2 py-2 text-center font-semibold"
                   colSpan={4}
                 >
-                  Số lượng ca sáng
+                  {reports.length > 0 && reports[0].afternoonStaffName ? (
+                    <span className="text-blue-600">
+                      Ca chiều - {reports[0].afternoonStaffName}
+                    </span>
+                  ) : (
+                    <span className="text-gray-500">Ca chiều</span>
+                  )}
                 </th>
                 <th
                   className="border border-gray-300 px-2 py-2 text-center font-semibold"
                   colSpan={4}
                 >
-                  Số lượng ca chiều
-                </th>
-                <th
-                  className="border border-gray-300 px-2 py-2 text-center font-semibold"
-                  colSpan={4}
-                >
-                  Số lượng ca tối
+                  {reports.length > 0 && reports[0].eveningStaffName ? (
+                    <span className="text-blue-600">
+                      Ca tối - {reports[0].eveningStaffName}
+                    </span>
+                  ) : (
+                    <span className="text-gray-500">Ca tối</span>
+                  )}
                 </th>
               </tr>
               <tr className="bg-gray-50">
-                <th className="border border-gray-300 px-2 py-2"></th>
-                <th className="border border-gray-300 px-2 py-2"></th>
+                <th className="border border-gray-300 px-2 py-2 text-center text-xs">
+                  STT
+                </th>
+                <th className="border border-gray-300 px-2 py-2 text-center text-xs">
+                  Nguyên vật liệu
+                </th>
                 <th className="border border-gray-300 px-2 py-2 text-center text-xs">
                   Tồn đầu
                 </th>
@@ -589,3 +612,4 @@ export default function HandoverReportsPage() {
     </div>
   );
 }
+
