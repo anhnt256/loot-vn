@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     // Kiểm tra xem ca hiện tại đã có dữ liệu chưa
     const currentDate = new Date(date);
     const formattedCurrentDate = currentDate.toISOString().split("T")[0];
-    
+
     const currentReportResult = await db.$queryRaw<{ id: string }[]>`
       SELECT id FROM HandoverReport 
       WHERE DATE(date) = ${formattedCurrentDate}
@@ -49,25 +49,35 @@ export async function GET(request: NextRequest) {
     console.log("currentReportResult", currentReportResult);
 
     let reportData: any[] = [];
-    let staffInfo: { morningStaffId: number | null; afternoonStaffId: number | null; eveningStaffId: number | null } | null = null;
+    let staffInfo: {
+      morningStaffId: number | null;
+      afternoonStaffId: number | null;
+      eveningStaffId: number | null;
+    } | null = null;
 
     if (currentReportResult.length > 0) {
       // Ca hiện tại đã có dữ liệu -> lấy dữ liệu thực tế
       const handoverReportId = currentReportResult[0].id;
-      
+
       // Lấy thông tin nhân viên từ report
-      const reportStaffInfo = await db.$queryRaw<{
-        morningStaffId: number | null;
-        afternoonStaffId: number | null;
-        eveningStaffId: number | null;
-      }[]>`
+      const reportStaffInfo = await db.$queryRaw<
+        {
+          morningStaffId: number | null;
+          afternoonStaffId: number | null;
+          eveningStaffId: number | null;
+        }[]
+      >`
         SELECT morningStaffId, afternoonStaffId, eveningStaffId
         FROM HandoverReport
         WHERE id = ${handoverReportId}
       `;
-      
-      staffInfo = reportStaffInfo[0] || { morningStaffId: null, afternoonStaffId: null, eveningStaffId: null };
-      
+
+      staffInfo = reportStaffInfo[0] || {
+        morningStaffId: null,
+        afternoonStaffId: null,
+        eveningStaffId: null,
+      };
+
       const currentMaterialsResult = await db.$queryRaw<
         {
           materialId: string;
@@ -141,7 +151,7 @@ export async function GET(request: NextRequest) {
 
       if (previousReportResult.length > 0) {
         const previousHandoverReportId = previousReportResult[0].id;
-        
+
         const handoverMaterialsResult = await db.$queryRaw<
           {
             materialName: string;
@@ -188,20 +198,32 @@ export async function GET(request: NextRequest) {
         let hasActualBeginning = false;
 
         if (shift === SHIFT_ENUM.SANG) {
-          beginning = material.morningBeginning !== null ? material.morningBeginning : 0;
-          received = material.morningReceived !== null ? material.morningReceived : 0;
+          beginning =
+            material.morningBeginning !== null ? material.morningBeginning : 0;
+          received =
+            material.morningReceived !== null ? material.morningReceived : 0;
           issued = material.morningIssued !== null ? material.morningIssued : 0;
           ending = material.morningEnding !== null ? material.morningEnding : 0;
           hasActualBeginning = material.morningBeginning !== null;
         } else if (shift === SHIFT_ENUM.CHIEU) {
-          beginning = material.afternoonBeginning !== null ? material.afternoonBeginning : 0;
-          received = material.afternoonReceived !== null ? material.afternoonReceived : 0;
-          issued = material.afternoonIssued !== null ? material.afternoonIssued : 0;
-          ending = material.afternoonEnding !== null ? material.afternoonEnding : 0;
+          beginning =
+            material.afternoonBeginning !== null
+              ? material.afternoonBeginning
+              : 0;
+          received =
+            material.afternoonReceived !== null
+              ? material.afternoonReceived
+              : 0;
+          issued =
+            material.afternoonIssued !== null ? material.afternoonIssued : 0;
+          ending =
+            material.afternoonEnding !== null ? material.afternoonEnding : 0;
           hasActualBeginning = material.afternoonBeginning !== null;
         } else if (shift === SHIFT_ENUM.TOI) {
-          beginning = material.eveningBeginning !== null ? material.eveningBeginning : 0;
-          received = material.eveningReceived !== null ? material.eveningReceived : 0;
+          beginning =
+            material.eveningBeginning !== null ? material.eveningBeginning : 0;
+          received =
+            material.eveningReceived !== null ? material.eveningReceived : 0;
           issued = material.eveningIssued !== null ? material.eveningIssued : 0;
           ending = material.eveningEnding !== null ? material.eveningEnding : 0;
           hasActualBeginning = material.eveningBeginning !== null;
@@ -289,7 +311,10 @@ export async function GET(request: NextRequest) {
           WHERE hm.handoverReportId = ${handoverReportId}
         `;
 
-        console.log("Debug - handoverMaterialsResult:", handoverMaterialsResult);
+        console.log(
+          "Debug - handoverMaterialsResult:",
+          handoverMaterialsResult,
+        );
 
         // Map ending của ca trước dựa vào targetShift
         previousShiftData = handoverMaterialsResult.map((material) => {

@@ -166,9 +166,9 @@ export async function POST(request: NextRequest) {
       const currentTime = new Date().toISOString();
       await db.$executeRawUnsafe(`
         INSERT INTO HandoverReport (date, reportType, branch, note, createdAt, updatedAt)
-        VALUES ('${date}', '${reportType}', '${branch}', ${note ? `'${note}'` : 'NULL'}, '${currentTime}', '${currentTime}')
+        VALUES ('${date}', '${reportType}', '${branch}', ${note ? `'${note}'` : "NULL"}, '${currentTime}', '${currentTime}')
       `);
-      
+
       // Get the created report
       handoverReport = await db.handoverReport.findFirst({
         where: {
@@ -179,8 +179,15 @@ export async function POST(request: NextRequest) {
           reportType: reportType,
           branch: branch,
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
       });
+
+      if (!handoverReport) {
+        return NextResponse.json(
+          { success: false, error: "Failed to create report" },
+          { status: 500 },
+        );
+      }
     }
 
     // Update materials for all shifts

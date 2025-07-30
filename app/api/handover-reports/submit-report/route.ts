@@ -17,7 +17,10 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!date || !shift || !reportType || !staffId || !materials) {
       return NextResponse.json(
-        { success: false, error: "Missing required fields. staffId is required for each shift." },
+        {
+          success: false,
+          error: "Missing required fields. staffId is required for each shift.",
+        },
         { status: 400 },
       );
     }
@@ -25,7 +28,10 @@ export async function POST(request: NextRequest) {
     // Validate staffId is a valid number
     if (isNaN(Number(staffId)) || Number(staffId) <= 0) {
       return NextResponse.json(
-        { success: false, error: "Invalid staffId. Must be a positive number." },
+        {
+          success: false,
+          error: "Invalid staffId. Must be a positive number.",
+        },
         { status: 400 },
       );
     }
@@ -78,7 +84,7 @@ export async function POST(request: NextRequest) {
         handoverReportId = existingReport.id;
 
         // Update staff information for the current shift
-        const staffIdField = 
+        const staffIdField =
           shift === SHIFT_ENUM.SANG
             ? "morningStaffId"
             : shift === SHIFT_ENUM.CHIEU
@@ -176,8 +182,8 @@ export async function POST(request: NextRequest) {
             await tx.$executeRawUnsafe(`
               UPDATE HandoverMaterial SET
                 ${beginningField} = ${parseFloat(materialData.beginning || 0)},
-                ${receivedField} = ${materialData.received === null ? 'NULL' : parseFloat(materialData.received)},
-                ${issuedField} = ${materialData.issued === null ? 'NULL' : parseFloat(materialData.issued)},
+                ${receivedField} = ${materialData.received === null ? "NULL" : parseFloat(materialData.received)},
+                ${issuedField} = ${materialData.issued === null ? "NULL" : parseFloat(materialData.issued)},
                 ${endingField} = ${parseFloat(materialData.ending || 0)},
                 updatedAt = '${currentTime}'
               WHERE id = ${existingMaterial[0].id}
@@ -214,7 +220,7 @@ export async function POST(request: NextRequest) {
         }
       } else {
         // Create new report with staff information
-        const staffIdField = 
+        const staffIdField =
           shift === SHIFT_ENUM.SANG
             ? "morningStaffId"
             : shift === SHIFT_ENUM.CHIEU

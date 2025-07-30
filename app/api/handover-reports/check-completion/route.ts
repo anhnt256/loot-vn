@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     if (!date || !shift || !reportType) {
       return NextResponse.json(
         { success: false, error: "Missing required parameters" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     if (!branch) {
       return NextResponse.json(
         { success: false, error: "Branch not found" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -45,8 +45,8 @@ export async function GET(request: NextRequest) {
           isCompleted: false,
           reportId: null,
           reportDate: null,
-          reportType: null
-        }
+          reportType: null,
+        },
       });
     }
 
@@ -85,8 +85,11 @@ export async function GET(request: NextRequest) {
 
     // Report is completed if all materials have complete data
     const totalMaterials = materialsCompletion.length;
-    const completedMaterials = materialsCompletion.filter(m => m.isComplete).length;
-    const isCompleted = totalMaterials > 0 && totalMaterials === completedMaterials;
+    const completedMaterials = materialsCompletion.filter(
+      (m) => m.isComplete,
+    ).length;
+    const isCompleted =
+      totalMaterials > 0 && totalMaterials === completedMaterials;
 
     return NextResponse.json({
       success: true,
@@ -98,21 +101,20 @@ export async function GET(request: NextRequest) {
         completionDetails: {
           totalMaterials,
           completedMaterials,
-          materials: materialsCompletion.map(m => ({
+          materials: materialsCompletion.map((m) => ({
             id: Number(m.id),
             materialId: m.materialId ? Number(m.materialId) : null,
             materialName: m.materialName,
-            isComplete: Boolean(m.isComplete)
-          }))
-        }
-      }
+            isComplete: Boolean(m.isComplete),
+          })),
+        },
+      },
     });
-
   } catch (error) {
     console.error("Error checking report completion:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

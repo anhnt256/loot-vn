@@ -58,7 +58,9 @@ export default function SendReportDrawer({
   const [selectedReportType, setSelectedReportType] = useState(
     defaultReportType || REPORT_TYPE_ENUM.BAO_CAO_BEP,
   );
-  const [selectedDateState, setSelectedDateState] = useState(selectedDate || "");
+  const [selectedDateState, setSelectedDateState] = useState(
+    selectedDate || "",
+  );
   const [materials, setMaterials] = useState<Material[]>([]);
   const [materialData, setMaterialData] = useState<MaterialReportData[]>([]);
   const [loading, setLoading] = useState(false);
@@ -70,7 +72,7 @@ export default function SendReportDrawer({
 
   // Helper function to check if this is a second report (has existing data)
   const isSecondReport = () => {
-    return materialData.some(item => item.isSecondReport);
+    return materialData.some((item) => item.isSecondReport);
   };
 
   // Helper function to get material status
@@ -81,11 +83,14 @@ export default function SendReportDrawer({
       }
       return { text: "Đã có tồn đầu", color: "text-blue-600 bg-blue-50" };
     }
-    
+
     if (record.isBeginningFromPreviousShift) {
-      return { text: "Tồn đầu từ ca trước", color: "text-purple-600 bg-purple-50" };
+      return {
+        text: "Tồn đầu từ ca trước",
+        color: "text-purple-600 bg-purple-50",
+      };
     }
-    
+
     return { text: "Chờ nhập tồn đầu", color: "text-orange-600 bg-orange-50" };
   };
 
@@ -230,9 +235,9 @@ export default function SendReportDrawer({
     setLoading(true);
     try {
       // Calculate the correct report date based on selected shift and custom date
-      let reportDate = getReportDateForSubmission(
+      const reportDate = getReportDateForSubmission(
         selectedShift || getCurrentShift(),
-        selectedDateState
+        selectedDateState,
       );
 
       // Always use the selected report date - API will handle getting previous shift data
@@ -274,12 +279,15 @@ export default function SendReportDrawer({
           (a: MaterialReportData, b: MaterialReportData) =>
             a.materialName.localeCompare(b.materialName),
         );
-        
+
         // Use data from API directly - it already has the correct flags
         setMaterialData(sortedData);
-        
+
         // Auto-select staff if report already exists and has beginning data
-        if (result.data.staffInfo && sortedData.some((item: MaterialReportData) => item.beginning > 0)) {
+        if (
+          result.data.staffInfo &&
+          sortedData.some((item: MaterialReportData) => item.beginning > 0)
+        ) {
           const shift = selectedShift || getCurrentShift();
           let staffId = null;
           if (shift === SHIFT_ENUM.SANG) {
@@ -309,9 +317,9 @@ export default function SendReportDrawer({
     setLoading(true);
     try {
       // Calculate the correct report date based on selected shift and custom date
-      let reportDate = getReportDateForSubmission(
+      const reportDate = getReportDateForSubmission(
         selectedShift || getCurrentShift(),
-        selectedDateState
+        selectedDateState,
       );
 
       // Always use the selected report date - API will handle getting previous shift data
@@ -335,12 +343,15 @@ export default function SendReportDrawer({
           (a: MaterialReportData, b: MaterialReportData) =>
             a.materialName.localeCompare(b.materialName),
         );
-        
+
         // Use data from API directly - it already has the correct flags
         setMaterialData(sortedData);
-        
+
         // Auto-select staff if report already exists and has beginning data
-        if (result.data.staffInfo && sortedData.some((item: MaterialReportData) => item.beginning > 0)) {
+        if (
+          result.data.staffInfo &&
+          sortedData.some((item: MaterialReportData) => item.beginning > 0)
+        ) {
           const shift = selectedShift || getCurrentShift();
           let staffId = null;
           if (shift === SHIFT_ENUM.SANG) {
@@ -384,7 +395,9 @@ export default function SendReportDrawer({
         return (
           <div>
             <div className="font-medium">{value}</div>
-            <div className={`text-xs px-2 py-1 rounded-full inline-block mt-1 ${status.color}`}>
+            <div
+              className={`text-xs px-2 py-1 rounded-full inline-block mt-1 ${status.color}`}
+            >
               {status.text}
             </div>
           </div>
@@ -521,8 +534,8 @@ export default function SendReportDrawer({
     }
 
     // Check if this is a second report (has beginning data from API)
-    const isSecondReport = materialData.some(item => item.isSecondReport);
-    
+    const isSecondReport = materialData.some((item) => item.isSecondReport);
+
     // For second report, beginning data is locked and cannot be changed
     // For first report, beginning can be 0 if out of stock
     if (!isSecondReport) {
@@ -532,13 +545,18 @@ export default function SendReportDrawer({
     // Validate that materials with beginning data have at least some activity (only for second report)
     if (isSecondReport) {
       const materialsWithBeginningButNoActivity = materialData.filter(
-        (material) => material.beginning > 0 && material.received === 0 && material.issued === 0
+        (material) =>
+          material.beginning > 0 &&
+          material.received === 0 &&
+          material.issued === 0,
       );
       if (materialsWithBeginningButNoActivity.length > 0) {
         const materialNames = materialsWithBeginningButNoActivity
           .map((m) => m.materialName)
           .join(", ");
-        message.warning(`Các nguyên vật liệu sau chưa có hoạt động nhập/xuất: ${materialNames}`);
+        message.warning(
+          `Các nguyên vật liệu sau chưa có hoạt động nhập/xuất: ${materialNames}`,
+        );
       }
     }
 
@@ -562,7 +580,7 @@ export default function SendReportDrawer({
       const reportDate = getReportDateForSubmission(selectedShift);
 
       // Prepare materials data - set received and issued to null for first report
-      const preparedMaterials = materialData.map(material => ({
+      const preparedMaterials = materialData.map((material) => ({
         ...material,
         received: isSecondReport ? material.received : null,
         issued: isSecondReport ? material.issued : null,
@@ -605,7 +623,9 @@ export default function SendReportDrawer({
   if (!isOpen) return null;
 
   // Generate title with selected shift, date and staff name
-  const reportDate = selectedDateState ? new Date(selectedDateState).toLocaleDateString('vi-VN') : getReportDate(selectedShift || getCurrentShift());
+  const reportDate = selectedDateState
+    ? new Date(selectedDateState).toLocaleDateString("vi-VN")
+    : getReportDate(selectedShift || getCurrentShift());
   const selectedStaffData = staffList.find(
     (staff) => staff.id.toString() === selectedStaff,
   );
@@ -717,11 +737,16 @@ export default function SendReportDrawer({
                   <input
                     id="date-select"
                     type="date"
-                    value={selectedDateState || getReportDateForSubmission(selectedShift || getCurrentShift())}
+                    value={
+                      selectedDateState ||
+                      getReportDateForSubmission(
+                        selectedShift || getCurrentShift(),
+                      )
+                    }
                     onChange={(e) => setSelectedDateState(e.target.value)}
                     disabled={isSecondReport()}
                     className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      isSecondReport() ? 'bg-gray-100 cursor-not-allowed' : ''
+                      isSecondReport() ? "bg-gray-100 cursor-not-allowed" : ""
                     }`}
                   />
                 </div>
@@ -771,18 +796,21 @@ export default function SendReportDrawer({
                     : ""}{" "}
                   ({materialData.length})
                 </h3>
-                <div className={`text-sm px-3 py-1 rounded-md ${
-                  materialData.some(item => item.isSecondReport) 
-                    ? "text-orange-600 bg-orange-50" 
-                    : "text-gray-600 bg-blue-50"
-                }`}>
-                  <span className="font-medium">Hướng dẫn:</span> {
-                    materialData.some(item => item.isSecondReport) 
-                      ? "Cập nhật nhập/xuất cho ca này (thông tin cơ bản đã bị khóa)" 
-                      : materialData.some(item => item.isBeginningFromPreviousShift)
-                        ? "Tồn đầu đã được lấy từ ca trước, có thể chỉnh sửa"
-                        : "Nhập tồn đầu cho ca mới"
-                  }
+                <div
+                  className={`text-sm px-3 py-1 rounded-md ${
+                    materialData.some((item) => item.isSecondReport)
+                      ? "text-orange-600 bg-orange-50"
+                      : "text-gray-600 bg-blue-50"
+                  }`}
+                >
+                  <span className="font-medium">Hướng dẫn:</span>{" "}
+                  {materialData.some((item) => item.isSecondReport)
+                    ? "Cập nhật nhập/xuất cho ca này (thông tin cơ bản đã bị khóa)"
+                    : materialData.some(
+                          (item) => item.isBeginningFromPreviousShift,
+                        )
+                      ? "Tồn đầu đã được lấy từ ca trước, có thể chỉnh sửa"
+                      : "Nhập tồn đầu cho ca mới"}
                 </div>
               </div>
 
