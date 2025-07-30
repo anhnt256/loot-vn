@@ -532,14 +532,18 @@ model HandoverMaterial {
   morningReceived    Float?
   morningIssued      Float?
   morningEnding      Float?
+  morningStaffId     Int?
   afternoonBeginning Float?
   afternoonReceived  Float?
   afternoonIssued    Float?
   afternoonEnding    Float?
+  afternoonStaffId   Int?
   eveningBeginning   Float?
   eveningReceived    Float?
   eveningIssued      Float?
   eveningEnding      Float?
+  eveningStaffId     Int?
+  
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
   materialId         Int?

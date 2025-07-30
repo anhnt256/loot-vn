@@ -27,6 +27,10 @@ interface MaterialReportData {
   received: number;
   issued: number;
   ending: number;
+  staffId?: number;
+  isBeginningFromPreviousShift?: boolean;
+  hasBeginningData?: boolean; // Track if beginning data has been entered
+  isSecondReport?: boolean; // Track if this is second report (has previous data)
 }
 
 interface SendReportDrawerProps {
@@ -34,6 +38,7 @@ interface SendReportDrawerProps {
   onClose: () => void;
   selectedDate: string;
   defaultReportType?: string;
+  onReportSubmitted?: () => void; // Callback to refresh data after successful submission
 }
 
 interface Staff {
@@ -47,6 +52,7 @@ export default function SendReportDrawer({
   onClose,
   selectedDate,
   defaultReportType,
+  onReportSubmitted,
 }: SendReportDrawerProps) {
   const [selectedShift, setSelectedShift] = useState("");
   const [selectedStaff, setSelectedStaff] = useState("");
@@ -61,6 +67,17 @@ export default function SendReportDrawer({
   const [currentUser, setCurrentUser] = useState<any>(null);
 
   const shifts = Object.values(SHIFT_ENUM);
+
+  // Helper function to get material status
+  const getMaterialStatus = (record: MaterialReportData) => {
+    if (!record.isSecondReport) {
+      return { text: "Chờ nhập tồn đầu", color: "text-orange-600 bg-orange-50" };
+    }
+    if (record.received > 0 || record.issued > 0) {
+      return { text: "Đã hoàn thành", color: "text-green-600 bg-green-50" };
+    }
+    return { text: "Đã có tồn đầu", color: "text-blue-600 bg-blue-50" };
+  };
 
   // Function to determine current shift based on time
   const getCurrentShift = () => {
@@ -152,7 +169,7 @@ export default function SendReportDrawer({
   // Fetch materials when drawer opens or when report type/shift changes
   useEffect(() => {
     if (isOpen && selectedShift && selectedReportType) {
-      fetchMaterials();
+      checkReportCompletionAndFetchMaterials();
     }
   }, [isOpen, selectedReportType, selectedShift]);
 
@@ -185,10 +202,94 @@ export default function SendReportDrawer({
         received: 0,
         issued: 0,
         ending: 0,
+        isBeginningFromPreviousShift: false,
+        hasBeginningData: false, // Track if beginning data has been entered
+        isSecondReport: false, // Track if this is second report
       }));
       setMaterialData(initialData);
     }
   }, [materials]);
+
+  // Check if report is completed before fetching materials
+  const checkReportCompletionAndFetchMaterials = async () => {
+    setLoading(true);
+    try {
+      // Calculate the correct report date based on selected shift
+      let reportDate = getReportDateForSubmission(
+        selectedShift || getCurrentShift(),
+      );
+
+      // For morning shift, we need to get data from previous night shift
+      if (selectedShift === SHIFT_ENUM.SANG) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const year = yesterday.getFullYear();
+        const month = String(yesterday.getMonth() + 1).padStart(2, "0");
+        const day = String(yesterday.getDate()).padStart(2, "0");
+        reportDate = `${year}-${month}-${day}`;
+      }
+
+      // First, check if report is completed
+      const checkParams = new URLSearchParams();
+      checkParams.append("date", reportDate);
+      checkParams.append("shift", selectedShift || getCurrentShift());
+      checkParams.append("reportType", selectedReportType);
+
+      const checkResponse = await fetch(
+        `/api/handover-reports/check-completion?${checkParams.toString()}`,
+      );
+      const checkResult = await checkResponse.json();
+
+      if (checkResult.success && checkResult.data.isCompleted) {
+        message.error("Báo cáo này đã hoàn tất, không thể chỉnh sửa!");
+        setMaterialData([]);
+        return;
+      }
+
+      // If not completed, proceed to fetch materials
+      const params = new URLSearchParams();
+      params.append("date", reportDate);
+      params.append("shift", selectedShift || getCurrentShift());
+      params.append("reportType", selectedReportType);
+
+      const response = await fetch(
+        `/api/handover-reports/get-report-data?${params.toString()}`,
+      );
+      const result = await response.json();
+
+      if (result.success) {
+        // Sort materials by name to ensure consistent order with main table
+        const sortedData = result.data.sort(
+          (a: MaterialReportData, b: MaterialReportData) =>
+            a.materialName.localeCompare(b.materialName),
+        );
+        
+        // Check if this is a second report (has previous data with received/issued)
+        const dataWithDisabledBeginning = sortedData.map((item: MaterialReportData) => ({
+          ...item,
+          isBeginningFromPreviousShift: item.beginning > 0 && (item.received > 0 || item.issued > 0),
+          hasBeginningData: item.beginning > 0, // Track if beginning data exists
+          isSecondReport: item.beginning > 0 // Check if this is second report (has beginning data from API)
+        }));
+        
+        setMaterialData(dataWithDisabledBeginning);
+        
+        // Auto-select staff if report already exists and has beginning data
+        const existingStaffId = sortedData.find((item: MaterialReportData) => item.staffId)?.staffId;
+        if (existingStaffId && sortedData.some((item: MaterialReportData) => item.beginning > 0)) {
+          setSelectedStaff(existingStaffId.toString());
+        }
+      } else {
+        console.error("Failed to fetch materials:", result.error);
+        setMaterialData([]);
+      }
+    } catch (error) {
+      console.error("Error checking completion or fetching materials:", error);
+      setMaterialData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchMaterials = async () => {
     setLoading(true);
@@ -224,7 +325,22 @@ export default function SendReportDrawer({
           (a: MaterialReportData, b: MaterialReportData) =>
             a.materialName.localeCompare(b.materialName),
         );
-        setMaterialData(sortedData);
+        
+        // Check if this is a second report (has previous data with received/issued)
+        const dataWithDisabledBeginning = sortedData.map((item: MaterialReportData) => ({
+          ...item,
+          isBeginningFromPreviousShift: item.beginning > 0 && (item.received > 0 || item.issued > 0),
+          hasBeginningData: item.beginning > 0, // Track if beginning data exists
+          isSecondReport: item.beginning > 0 // Check if this is second report (has beginning data from API)
+        }));
+        
+        setMaterialData(dataWithDisabledBeginning);
+        
+        // Auto-select staff if report already exists and has beginning data
+        const existingStaffId = sortedData.find((item: MaterialReportData) => item.staffId)?.staffId;
+        if (existingStaffId && sortedData.some((item: MaterialReportData) => item.beginning > 0)) {
+          setSelectedStaff(existingStaffId.toString());
+        }
       } else {
         console.error("Failed to fetch materials:", result.error);
         setMaterialData([]);
@@ -250,6 +366,17 @@ export default function SendReportDrawer({
       dataIndex: "materialName",
       key: "materialName",
       width: 200,
+      render: (value, record) => {
+        const status = getMaterialStatus(record);
+        return (
+          <div>
+            <div className="font-medium">{value}</div>
+            <div className={`text-xs px-2 py-1 rounded-full inline-block mt-1 ${status.color}`}>
+              {status.text}
+            </div>
+          </div>
+        );
+      },
     },
     {
       title: "Tồn đầu",
@@ -263,8 +390,10 @@ export default function SendReportDrawer({
           onChange={(e) =>
             handleDataChange(index, "beginning", parseInt(e.target.value) || 0)
           }
-          className="text-center"
+          className={`text-center ${record.isSecondReport ? "bg-gray-50" : ""}`}
+          disabled={record.isSecondReport}
           min={0}
+          placeholder="Nhập tồn đầu"
         />
       ),
     },
@@ -280,8 +409,10 @@ export default function SendReportDrawer({
           onChange={(e) =>
             handleDataChange(index, "received", parseInt(e.target.value) || 0)
           }
-          className="text-center"
+          className={`text-center ${!record.isSecondReport ? "bg-gray-50" : ""}`}
+          disabled={!record.isSecondReport}
           min={0}
+          placeholder="Nhập số lượng"
         />
       ),
     },
@@ -300,10 +431,12 @@ export default function SendReportDrawer({
             onChange={(e) =>
               handleDataChange(index, "issued", parseInt(e.target.value) || 0)
             }
-            className={`text-center ${isExceeded ? "border-red-500 bg-red-50" : ""}`}
+            className={`text-center ${!record.isSecondReport ? "bg-gray-50" : ""} ${isExceeded ? "border-red-500 bg-red-50" : ""}`}
+            disabled={!record.isSecondReport}
             min={0}
             max={maxIssued}
             title={isExceeded ? `Tối đa: ${maxIssued}` : ""}
+            placeholder="Xuất số lượng"
           />
         );
       },
@@ -374,6 +507,28 @@ export default function SendReportDrawer({
       return;
     }
 
+    // Check if this is a second report (has beginning data from API)
+    const isSecondReport = materialData.some(item => item.isSecondReport);
+    
+    // Validate that at least beginning inventory is provided for each material (only for first report)
+    // Allow beginning to be 0 if out of stock
+    if (!isSecondReport) {
+      // No validation needed - beginning can be 0 if out of stock
+    }
+
+    // Validate that materials with beginning data have at least some activity (only for second report)
+    if (isSecondReport) {
+      const materialsWithBeginningButNoActivity = materialData.filter(
+        (material) => material.beginning > 0 && material.received === 0 && material.issued === 0
+      );
+      if (materialsWithBeginningButNoActivity.length > 0) {
+        const materialNames = materialsWithBeginningButNoActivity
+          .map((m) => m.materialName)
+          .join(", ");
+        message.warning(`Các nguyên vật liệu sau chưa có hoạt động nhập/xuất: ${materialNames}`);
+      }
+    }
+
     // Validate all materials before submission
     const invalidMaterials = materialData.filter((material) => {
       const maxIssued = material.beginning + material.received;
@@ -393,6 +548,13 @@ export default function SendReportDrawer({
       // Calculate the correct report date based on selected shift
       const reportDate = getReportDateForSubmission(selectedShift);
 
+      // Prepare materials data - set received and issued to null for first report
+      const preparedMaterials = materialData.map(material => ({
+        ...material,
+        received: isSecondReport ? material.received : null,
+        issued: isSecondReport ? material.issued : null,
+      }));
+
       const response = await fetch("/api/handover-reports/submit-report", {
         method: "POST",
         headers: {
@@ -403,7 +565,7 @@ export default function SendReportDrawer({
           shift: selectedShift,
           reportType: selectedReportType,
           staffId: parseInt(selectedStaff),
-          materials: materialData,
+          materials: preparedMaterials,
         }),
       });
 
@@ -411,6 +573,10 @@ export default function SendReportDrawer({
 
       if (result.success) {
         message.success("Gửi báo cáo thành công!");
+        // Call callback to refresh data in parent component
+        if (onReportSubmitted) {
+          onReportSubmitted();
+        }
         onClose();
       } else {
         message.error(result.error || "Có lỗi xảy ra khi gửi báo cáo!");
@@ -559,15 +725,20 @@ export default function SendReportDrawer({
 
             {/* Materials Table */}
             <div>
-              <h3 className="text-md font-medium text-gray-900 mb-3">
-                Số lượng ca{" "}
-                {selectedShift
-                  ? SHIFT_LABELS[
-                      selectedShift as keyof typeof SHIFT_LABELS
-                    ]?.toLowerCase()
-                  : ""}{" "}
-                ({materialData.length})
-              </h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-md font-medium text-gray-900">
+                  Số lượng ca{" "}
+                  {selectedShift
+                    ? SHIFT_LABELS[
+                        selectedShift as keyof typeof SHIFT_LABELS
+                      ]?.toLowerCase()
+                    : ""}{" "}
+                  ({materialData.length})
+                </h3>
+                <div className="text-sm text-gray-600 bg-blue-50 px-3 py-1 rounded-md">
+                  <span className="font-medium">Hướng dẫn:</span> {materialData.some(item => item.isSecondReport) ? "Cập nhật nhập/xuất cho ca này" : "Nhập tồn đầu cho ca mới"}
+                </div>
+              </div>
 
               {loading ? (
                 <div className="space-y-3">

@@ -17,22 +17,18 @@ export async function GET(request: NextRequest) {
     }
 
     // Lấy materials từ bảng Material
-    const materials = await db.material.findMany({
-      where: {
-        reportType: reportType as any,
-        isActive: true,
-      },
-      select: {
-        id: true,
-        name: true,
-        reportType: true,
-        isActive: true,
-        isOnFood: true,
-      },
-      orderBy: {
-        name: "asc",
-      },
-    });
+    const materials = await db.$queryRaw<any[]>`
+      SELECT 
+        id,
+        name,
+        reportType,
+        isActive,
+        isOnFood
+      FROM Material
+      WHERE reportType = ${reportType}
+        AND isActive = true
+      ORDER BY name ASC
+    `;
 
     return NextResponse.json({
       success: true,
@@ -73,14 +69,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Kiểm tra material đã tồn tại chưa
-    const existingMaterial = await db.material.findFirst({
-      where: {
-        name: materialName,
-        reportType: materialType as any,
-      },
-    });
+    const existingMaterial = await db.$queryRaw<any[]>`
+      SELECT id FROM Material 
+      WHERE name = ${materialName} 
+        AND reportType = ${materialType}
+      LIMIT 1
+    `;
 
-    if (existingMaterial) {
+    if (existingMaterial.length > 0) {
       return NextResponse.json(
         { success: false, error: "Material already exists" },
         { status: 400 },
@@ -88,23 +84,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Tạo material mới
-    const newMaterial = await db.material.create({
-      data: {
-        name: materialName,
-        reportType: materialType as any,
-        isActive: !isDeleted,
-        isOnFood: isFood,
-      },
-    });
+    const newMaterial = await db.$queryRaw<any[]>`
+      INSERT INTO Material (name, reportType, isActive, isOnFood, createdAt, updatedAt)
+      VALUES (${materialName}, ${materialType}, ${!isDeleted}, ${isFood}, NOW(), NOW())
+      RETURNING *
+    `;
 
     return NextResponse.json({
       success: true,
       data: {
-        id: newMaterial.id,
-        materialName: newMaterial.name,
-        materialType: newMaterial.reportType,
-        isDeleted: !newMaterial.isActive,
-        isFood: newMaterial.isOnFood,
+        id: newMaterial[0].id,
+        materialName: newMaterial[0].name,
+        materialType: newMaterial[0].reportType,
+        isDeleted: !newMaterial[0].isActive,
+        isFood: newMaterial[0].isOnFood,
       },
     });
   } catch (error) {
@@ -137,11 +130,11 @@ export async function PUT(request: NextRequest) {
     }
 
     // Kiểm tra material có tồn tại không
-    const existingMaterial = await db.material.findUnique({
-      where: { id: parseInt(id) },
-    });
+    const existingMaterial = await db.$queryRaw<any[]>`
+      SELECT id FROM Material WHERE id = ${parseInt(id)} LIMIT 1
+    `;
 
-    if (!existingMaterial) {
+    if (existingMaterial.length === 0) {
       return NextResponse.json(
         { success: false, error: "Material not found" },
         { status: 404 },
@@ -149,15 +142,15 @@ export async function PUT(request: NextRequest) {
     }
 
     // Kiểm tra tên material đã tồn tại chưa (trừ material hiện tại)
-    const duplicateMaterial = await db.material.findFirst({
-      where: {
-        name: materialName,
-        reportType: materialType as any,
-        id: { not: parseInt(id) },
-      },
-    });
+    const duplicateMaterial = await db.$queryRaw<any[]>`
+      SELECT id FROM Material 
+      WHERE name = ${materialName} 
+        AND reportType = ${materialType}
+        AND id != ${parseInt(id)}
+      LIMIT 1
+    `;
 
-    if (duplicateMaterial) {
+    if (duplicateMaterial.length > 0) {
       return NextResponse.json(
         { success: false, error: "Material name already exists" },
         { status: 400 },
@@ -165,24 +158,25 @@ export async function PUT(request: NextRequest) {
     }
 
     // Cập nhật material
-    const updatedMaterial = await db.material.update({
-      where: { id: parseInt(id) },
-      data: {
-        name: materialName,
-        reportType: materialType as any,
-        isActive: !isDeleted,
-        isOnFood: isFood,
-      },
-    });
+    const updatedMaterial = await db.$queryRaw<any[]>`
+      UPDATE Material 
+      SET name = ${materialName}, 
+          reportType = ${materialType}, 
+          isActive = ${!isDeleted}, 
+          isOnFood = ${isFood}, 
+          updatedAt = NOW()
+      WHERE id = ${parseInt(id)}
+      RETURNING *
+    `;
 
     return NextResponse.json({
       success: true,
       data: {
-        id: updatedMaterial.id,
-        materialName: updatedMaterial.name,
-        materialType: updatedMaterial.reportType,
-        isDeleted: !updatedMaterial.isActive,
-        isFood: updatedMaterial.isOnFood,
+        id: updatedMaterial[0].id,
+        materialName: updatedMaterial[0].name,
+        materialType: updatedMaterial[0].reportType,
+        isDeleted: !updatedMaterial[0].isActive,
+        isFood: updatedMaterial[0].isOnFood,
       },
     });
   } catch (error) {

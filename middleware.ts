@@ -14,6 +14,11 @@ export async function middleware(request: NextRequest) {
     "/api/user/check-existing",
     "/api/battle-pass/test-progress",
     "/api/battle-pass/test-sync",
+    "/api/handover-reports/check-completion",
+    "/api/handover-reports/get-report-data",
+    "/api/handover-reports/submit-report",
+    "/api/handover-reports/materials",
+    "/api/staff",
     "/admin-login",
   ];
 

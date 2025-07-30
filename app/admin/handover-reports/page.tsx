@@ -23,18 +23,21 @@ interface MaterialReport {
     received: number;
     issued: number;
     ending: number;
+    staffId?: number;
   };
   afternoon: {
     beginning: number;
     received: number;
     issued: number;
     ending: number;
+    staffId?: number;
   };
   evening: {
     beginning: number;
     received: number;
     issued: number;
     ending: number;
+    staffId?: number;
   };
 }
 
@@ -81,7 +84,9 @@ export default function HandoverReportsPage() {
   const [initialLoad, setInitialLoad] = useState(true);
   const [isMaterialDrawerOpen, setIsMaterialDrawerOpen] = useState(false);
   const [isSendReportDrawerOpen, setIsSendReportDrawerOpen] = useState(false);
-  const [loginType, setLoginType] = useState(Cookies.get("loginType") || "username");
+  const [loginType, setLoginType] = useState(
+    Cookies.get("loginType") || "username",
+  );
 
   const fetchReports = async () => {
     setLoading(true);
@@ -287,7 +292,9 @@ export default function HandoverReportsPage() {
             required
             disabled={loginType === "mac"}
             className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              loginType === "mac" ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""
+              loginType === "mac"
+                ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                : ""
             }`}
           >
             {branches.map((branch) => (
@@ -577,6 +584,7 @@ export default function HandoverReportsPage() {
         onClose={handleCloseSendReportDrawer}
         selectedDate={selectedDate}
         defaultReportType={selectedReportType}
+        onReportSubmitted={fetchReports}
       />
     </div>
   );

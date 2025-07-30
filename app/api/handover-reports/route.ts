@@ -58,18 +58,21 @@ export async function GET(request: NextRequest) {
             received: material.morningReceived,
             issued: material.morningIssued,
             ending: material.morningEnding,
+            staffId: material.morningStaffId,
           },
           afternoon: {
             beginning: material.afternoonBeginning,
             received: material.afternoonReceived,
             issued: material.afternoonIssued,
             ending: material.afternoonEnding,
+            staffId: material.afternoonStaffId,
           },
           evening: {
             beginning: material.eveningBeginning,
             received: material.eveningReceived,
             issued: material.eveningIssued,
             ending: material.eveningEnding,
+            staffId: material.eveningStaffId,
           },
         }))
         .sort((a, b) => a.materialName.localeCompare(b.materialName)), // Sort by material name for consistent order
