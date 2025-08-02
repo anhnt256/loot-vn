@@ -127,20 +127,21 @@ export default function SendReportDrawer({
   // Helper function to check if all shifts are completed
   const areAllShiftsCompleted = () => {
     if (!submissionTracking) return false;
-    
+
     // Check if submission tracking has valid data
-    if (submissionTracking.morningSubmissionCount === undefined ||
-        submissionTracking.afternoonSubmissionCount === undefined ||
-        submissionTracking.eveningSubmissionCount === undefined) {
+    if (
+      submissionTracking.morningSubmissionCount === undefined ||
+      submissionTracking.afternoonSubmissionCount === undefined ||
+      submissionTracking.eveningSubmissionCount === undefined
+    ) {
       return false;
     }
 
-    const result = (
+    const result =
       submissionTracking.morningSubmissionCount >= 2 &&
       submissionTracking.afternoonSubmissionCount >= 2 &&
-      submissionTracking.eveningSubmissionCount >= 2
-    );
-    
+      submissionTracking.eveningSubmissionCount >= 2;
+
     return result;
   };
 
@@ -473,33 +474,33 @@ export default function SendReportDrawer({
 
         // Auto-select available shift based on submission tracking
         const tracking = result.data.submissionTracking;
-        
-                 if (tracking && tracking.morningSubmissionCount !== undefined) {
-           let availableShift = null;
 
-           // Check morning shift
-           if (tracking.morningSubmissionCount < 2) {
-             availableShift = SHIFT_ENUM.SANG;
-           }
-           // Check afternoon shift
-           else if (tracking.afternoonSubmissionCount < 2) {
-             availableShift = SHIFT_ENUM.CHIEU;
-           }
-           // Check evening shift
-           else if (tracking.eveningSubmissionCount < 2) {
-             availableShift = SHIFT_ENUM.TOI;
-           }
+        if (tracking && tracking.morningSubmissionCount !== undefined) {
+          let availableShift = null;
 
-           // If no available shift found, set to first incomplete shift or default
-           if (!availableShift) {
-             // All shifts completed, don't auto-select any shift
-             setSelectedShift("");
-             setSelectedStaff("");
-             setMaterialData([]);
-             return;
-           }
+          // Check morning shift
+          if (tracking.morningSubmissionCount < 2) {
+            availableShift = SHIFT_ENUM.SANG;
+          }
+          // Check afternoon shift
+          else if (tracking.afternoonSubmissionCount < 2) {
+            availableShift = SHIFT_ENUM.CHIEU;
+          }
+          // Check evening shift
+          else if (tracking.eveningSubmissionCount < 2) {
+            availableShift = SHIFT_ENUM.TOI;
+          }
 
-           if (availableShift) {
+          // If no available shift found, set to first incomplete shift or default
+          if (!availableShift) {
+            // All shifts completed, don't auto-select any shift
+            setSelectedShift("");
+            setSelectedStaff("");
+            setMaterialData([]);
+            return;
+          }
+
+          if (availableShift) {
             setSelectedShift(availableShift);
 
             // Auto-select staff for the available shift
@@ -906,10 +907,13 @@ export default function SendReportDrawer({
       return;
     }
 
-         setSubmitLoading(true);
-     try {
-       // Calculate the correct report date based on selected shift and custom date
-       const reportDate = getReportDateForSubmission(selectedShift, selectedDateState);
+    setSubmitLoading(true);
+    try {
+      // Calculate the correct report date based on selected shift and custom date
+      const reportDate = getReportDateForSubmission(
+        selectedShift,
+        selectedDateState,
+      );
 
       // Prepare materials data based on submission count
       // Recalculate ending to ensure accuracy
@@ -1045,42 +1049,42 @@ export default function SendReportDrawer({
                   >
                     Ca làm việc *
                   </label>
-                                     <Select
-                     id="shift-select"
-                     placeholder={loading ? "Đang tải..." : "Chọn ca làm việc"}
-                     value={selectedShift}
-                     onChange={setSelectedShift}
-                     className="w-full"
-                     size="large"
-                     disabled={
-                       loading || isSecondReport() || isCurrentShiftComplete()
-                     }
-                     loading={loading}
-                   >
-                     {shifts.map((shift) => {
-                       // Check if shift is completed (2/2 submissions)
-                       const isShiftCompleted = submissionTracking
-                         ? (shift === SHIFT_ENUM.SANG &&
-                             submissionTracking.morningSubmissionCount >= 2) ||
-                           (shift === SHIFT_ENUM.CHIEU &&
-                             submissionTracking.afternoonSubmissionCount >= 2) ||
-                           (shift === SHIFT_ENUM.TOI &&
-                             submissionTracking.eveningSubmissionCount >= 2)
-                         : false;
+                  <Select
+                    id="shift-select"
+                    placeholder={loading ? "Đang tải..." : "Chọn ca làm việc"}
+                    value={selectedShift}
+                    onChange={setSelectedShift}
+                    className="w-full"
+                    size="large"
+                    disabled={
+                      loading || isSecondReport() || isCurrentShiftComplete()
+                    }
+                    loading={loading}
+                  >
+                    {shifts.map((shift) => {
+                      // Check if shift is completed (2/2 submissions)
+                      const isShiftCompleted = submissionTracking
+                        ? (shift === SHIFT_ENUM.SANG &&
+                            submissionTracking.morningSubmissionCount >= 2) ||
+                          (shift === SHIFT_ENUM.CHIEU &&
+                            submissionTracking.afternoonSubmissionCount >= 2) ||
+                          (shift === SHIFT_ENUM.TOI &&
+                            submissionTracking.eveningSubmissionCount >= 2)
+                        : false;
 
-                       return (
-                         <Select.Option 
-                           key={shift} 
-                           value={shift}
-                           disabled={isShiftCompleted}
-                         >
-                           {SHIFT_LABELS[shift as keyof typeof SHIFT_LABELS]}
-                           {shift === getCurrentShift() && " (Hiện tại)"}
-                           {isShiftCompleted && " (Đã hoàn thành)"}
-                         </Select.Option>
-                       );
-                     })}
-                   </Select>
+                      return (
+                        <Select.Option
+                          key={shift}
+                          value={shift}
+                          disabled={isShiftCompleted}
+                        >
+                          {SHIFT_LABELS[shift as keyof typeof SHIFT_LABELS]}
+                          {shift === getCurrentShift() && " (Hiện tại)"}
+                          {isShiftCompleted && " (Đã hoàn thành)"}
+                        </Select.Option>
+                      );
+                    })}
+                  </Select>
                 </div>
 
                 {/* Date Selection */}
@@ -1159,8 +1163,7 @@ export default function SendReportDrawer({
                           (selectedShift === SHIFT_ENUM.SANG &&
                             submissionTracking.morningSubmissionCount >= 2) ||
                           (selectedShift === SHIFT_ENUM.CHIEU &&
-                            submissionTracking.afternoonSubmissionCount >=
-                              2) ||
+                            submissionTracking.afternoonSubmissionCount >= 2) ||
                           (selectedShift === SHIFT_ENUM.TOI &&
                             submissionTracking.eveningSubmissionCount >= 2)
                             ? "bg-red-100 text-red-700"
@@ -1190,7 +1193,8 @@ export default function SendReportDrawer({
                     <span className="font-bold">
                       {getCurrentSubmissionCount() === 1 ? "Lần 2" : "Lần 1"}
                     </span>
-                    : {getCurrentSubmissionCount() === 1
+                    :{" "}
+                    {getCurrentSubmissionCount() === 1
                       ? "Nhập dữ liệu Nhập - Xuất để kết ca."
                       : "Nhập tồn đầu sau đó Gửi báo cáo để xác nhận bàn giao."}
                     <br />
@@ -1238,16 +1242,21 @@ export default function SendReportDrawer({
                     className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                     onClick={() => {
                       // Tăng ngày lên 1
-                      const nextDate = new Date(selectedDateState || selectedDate);
+                      const nextDate = new Date(
+                        selectedDateState || selectedDate,
+                      );
                       nextDate.setDate(nextDate.getDate() + 1);
-                      const nextDateStr = nextDate.toISOString().split('T')[0];
+                      const nextDateStr = nextDate.toISOString().split("T")[0];
                       setSelectedDateState(nextDateStr);
                     }}
                   >
-                    Báo cáo ngày {(() => {
-                      const nextDate = new Date(selectedDateState || selectedDate);
+                    Báo cáo ngày{" "}
+                    {(() => {
+                      const nextDate = new Date(
+                        selectedDateState || selectedDate,
+                      );
                       nextDate.setDate(nextDate.getDate() + 1);
-                      return nextDate.toLocaleDateString('vi-VN');
+                      return nextDate.toLocaleDateString("vi-VN");
                     })()}
                   </button>
                 </div>

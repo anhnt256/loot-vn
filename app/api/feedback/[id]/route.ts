@@ -24,16 +24,21 @@ export async function GET(
       );
     }
 
-    const [feedbackRows] = await db.execute(
-      `SELECT f.id, f.type, f.note, f.isAnonymous, f.status, f.response, f.stars, f.createdAt, f.updatedAt,
-              c.name as machineName, c.id as machineId
-       FROM Feedback f
-       LEFT JOIN Computer c ON f.machineId = c.id
-       WHERE f.id = ? AND f.userId = ? AND f.branch = ?`,
-      [feedbackId, userId, branch],
-    );
-
-    const feedback = (feedbackRows as any[])[0];
+    const feedback = await db.feedback.findFirst({
+      where: {
+        id: feedbackId,
+        userId: parseInt(userId),
+        branch: branch
+      },
+      include: {
+        computer: {
+          select: {
+            name: true,
+            id: true
+          }
+        }
+      }
+    });
     if (!feedback) {
       return NextResponse.json(
         { error: "Feedback not found" },
@@ -65,12 +70,15 @@ export async function PUT(
     }
 
     // Check if user is admin
-    const [staffRows] = await db.execute(
-      `SELECT isAdmin FROM Staff WHERE id = ? AND branch = ?`,
-      [adminId, branch],
-    );
-
-    const staff = (staffRows as any[])[0];
+    const staff = await db.staff.findFirst({
+      where: {
+        id: parseInt(adminId),
+        branch: branch
+      },
+      select: {
+        isAdmin: true
+      }
+    });
     if (!staff || !staff.isAdmin) {
       return NextResponse.json(
         { error: "Forbidden - Admin access required" },
@@ -89,11 +97,10 @@ export async function PUT(
     }
 
     const result = await updateFeedbackStatus(
-      { ...body, feedbackId },
-      parseInt(adminId),
+      { ...body, feedbackId }
     );
 
-    if (!result.success) {
+    if (!result.data) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
 

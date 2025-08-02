@@ -5,7 +5,7 @@ import { FeedbackSchema } from "./schema";
 import { FeedbackType } from "./type";
 import { getCurrentUser } from "@/lib/server-utils";
 import { getBranchFromCookie } from "@/lib/server-utils";
-import { getCurrentTimeISO } from "@/lib/timezone-utils";
+import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
 import { cookies } from "next/headers";
 
 const handler = async (data: FeedbackType) => {
@@ -20,7 +20,7 @@ const handler = async (data: FeedbackType) => {
       };
     }
 
-    const currentTime = getCurrentTimeISO();
+    const currentTime = getCurrentTimeVNISO();
 
     // Insert feedback into database
     const query = `
@@ -50,7 +50,7 @@ const handler = async (data: FeedbackType) => {
     ];
 
     const { db } = await import("@/lib/db");
-    await db.execute(query, params);
+    await db.$executeRaw`${query}`;
 
     return {
       data: {

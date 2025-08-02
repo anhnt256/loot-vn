@@ -223,7 +223,7 @@ const FeedbackHistory = () => {
                     <div className="relative">
                       <img
                         src={feedback.image}
-                        alt="Feedback image"
+                        alt="Screenshot"
                         className="max-w-full h-auto max-h-48 rounded-lg border"
                         onError={(e) => {
                           e.currentTarget.style.display = "none";

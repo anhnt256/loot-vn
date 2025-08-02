@@ -17,12 +17,15 @@ export async function POST(
     }
 
     // Check if user is admin
-    const [staffRows] = await db.execute(
-      `SELECT isAdmin FROM Staff WHERE id = ? AND branch = ?`,
-      [adminId, branch],
-    );
-
-    const staff = (staffRows as any[])[0];
+    const staff = await db.staff.findFirst({
+      where: {
+        id: parseInt(adminId),
+        branch: branch
+      },
+      select: {
+        isAdmin: true
+      }
+    });
     if (!staff || !staff.isAdmin) {
       return NextResponse.json(
         { error: "Forbidden - Admin access required" },
@@ -41,11 +44,10 @@ export async function POST(
     }
 
     const result = await addFeedbackResponse(
-      { ...body, feedbackId },
-      parseInt(adminId),
+      { ...body, feedbackId }
     );
 
-    if (!result.success) {
+    if (!result.data) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
 

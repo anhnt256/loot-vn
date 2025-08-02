@@ -222,18 +222,18 @@ export default function FeedbackDetailDrawer({
               {/* Basic Info */}
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="block text-sm font-medium text-gray-700 mb-1">
                     Tiêu đề
-                  </label>
+                  </div>
                   <p className="text-gray-900 bg-gray-50 p-3 rounded-md">
                     {feedback.title}
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="block text-sm font-medium text-gray-700 mb-1">
                     Mô tả
-                  </label>
+                  </div>
                   <p className="text-gray-900 bg-gray-50 p-3 rounded-md whitespace-pre-wrap">
                     {feedback.description}
                   </p>
@@ -241,9 +241,9 @@ export default function FeedbackDetailDrawer({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <div className="block text-sm font-medium text-gray-700 mb-1">
                       Danh mục
-                    </label>
+                    </div>
                     <span className="inline-block px-3 py-1 text-sm bg-gray-100 text-gray-800 rounded-full">
                       {FEEDBACK_CATEGORY_LABELS[
                         feedback.category as keyof typeof FEEDBACK_CATEGORY_LABELS
@@ -252,9 +252,9 @@ export default function FeedbackDetailDrawer({
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <div className="block text-sm font-medium text-gray-700 mb-1">
                       Độ ưu tiên
-                    </label>
+                    </div>
                     <span
                       className={`inline-block px-3 py-1 text-sm rounded-full ${getPriorityColor(feedback.priority)}`}
                     >
@@ -267,16 +267,16 @@ export default function FeedbackDetailDrawer({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <div className="block text-sm font-medium text-gray-700 mb-1">
                       Điểm đánh giá
-                    </label>
+                    </div>
                     {renderStars(feedback.rating)}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <div className="block text-sm font-medium text-gray-700 mb-1">
                       Ngày tạo
-                    </label>
+                    </div>
                     <div className="flex items-center text-sm text-gray-600">
                       <Calendar className="w-4 h-4 mr-1" />
                       {new Date(feedback.createdAt).toLocaleDateString("vi-VN")}
@@ -287,16 +287,16 @@ export default function FeedbackDetailDrawer({
                 {/* Image if exists */}
                 {feedback.image && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <div className="block text-sm font-medium text-gray-700 mb-1">
                       Hình ảnh đính kèm
-                    </label>
+                    </div>
                     <div
                       className="relative group cursor-pointer"
                       onClick={() => setImageModalOpen(true)}
                     >
                       <img
                         src={feedback.image}
-                        alt="Feedback attachment"
+                        alt="Screenshot"
                         className="max-w-full h-auto rounded-md border border-gray-200 transition-transform group-hover:scale-105"
                       />
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-md flex items-center justify-center">
@@ -315,10 +315,14 @@ export default function FeedbackDetailDrawer({
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="status"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Trạng thái
                     </label>
                     <select
+                      id="status"
                       value={status}
                       onChange={(e) => setStatus(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -334,10 +338,14 @@ export default function FeedbackDetailDrawer({
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="response"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Phản hồi
                     </label>
                     <textarea
+                      id="response"
                       value={response}
                       onChange={(e) => setResponse(e.target.value)}
                       rows={4}

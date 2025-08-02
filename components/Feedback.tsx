@@ -263,17 +263,17 @@ const Feedback = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
-      if (!target.closest('.dropdown-container')) {
+      if (!target.closest(".dropdown-container")) {
         setShowDropdown(false);
       }
     };
 
     if (showDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showDropdown]);
 
@@ -917,11 +917,10 @@ const Feedback = () => {
                 <MessageCircle className="h-5 w-5 text-blue-600" />
                 <span className="font-medium">Gửi phản hồi</span>
               </button>
-
             </div>
           </div>
         )}
-        
+
         {/* Main Button */}
         <Button
           onClick={() => setShowDropdown(!showDropdown)}
@@ -969,8 +968,8 @@ const Feedback = () => {
                       <div className="flex-1">
                         <p className="text-sm text-blue-800 leading-relaxed mb-2">
                           Mỗi đóng góp của bạn là động lực để chúng tôi phát
-                          triển. Cảm ơn bạn đã
-                          đồng hành cùng chúng tôi vì một mái nhà chung.
+                          triển. Cảm ơn bạn đã đồng hành cùng chúng tôi vì một
+                          mái nhà chung.
                         </p>
                         <p className="text-xs text-blue-600">
                           📸 Chụp hình: Nhấn Shift + Windows + S để chụp màn
@@ -1116,10 +1115,8 @@ const Feedback = () => {
                                 <div className="mt-2">
                                   <div className="flex flex-wrap gap-2">
                                     <div className="relative inline-block">
-                                      <img
-                                        src={feedbackImages[activeCategory.id]}
-                                        alt="feedback screenshot"
-                                        className="h-20 w-20 object-cover rounded border shadow cursor-pointer hover:opacity-80 transition-opacity"
+                                      <button
+                                        type="button"
                                         onClick={() =>
                                           openImageModal(
                                             feedbackImages[activeCategory.id],
@@ -1128,7 +1125,16 @@ const Feedback = () => {
                                             activeCategory.id,
                                           )
                                         }
-                                      />
+                                        className="p-0 border-0 bg-transparent"
+                                      >
+                                        <img
+                                          src={
+                                            feedbackImages[activeCategory.id]
+                                          }
+                                          alt="Screenshot"
+                                          className="h-20 w-20 object-cover rounded border shadow hover:opacity-80 transition-opacity"
+                                        />
+                                      </button>
                                       <button
                                         type="button"
                                         className="absolute -top-1 -right-1 bg-white bg-opacity-90 rounded-full p-1 hover:bg-red-100 border border-gray-200"
@@ -1471,10 +1477,8 @@ const Feedback = () => {
                                     </span>
                                     <div className="mt-2 flex flex-wrap gap-2">
                                       <div className="relative inline-block">
-                                        <img
-                                          src={feedbackImages[category.id]}
-                                          alt="feedback image"
-                                          className="h-16 w-16 object-cover rounded border shadow cursor-pointer hover:opacity-80 transition-opacity"
+                                        <button
+                                          type="button"
                                           onClick={() =>
                                             openImageModal(
                                               feedbackImages[category.id],
@@ -1483,7 +1487,14 @@ const Feedback = () => {
                                               category.id,
                                             )
                                           }
-                                        />
+                                          className="p-0 border-0 bg-transparent"
+                                        >
+                                          <img
+                                            src={feedbackImages[category.id]}
+                                            alt="Screenshot"
+                                            className="h-16 w-16 object-cover rounded border shadow hover:opacity-80 transition-opacity"
+                                          />
+                                        </button>
                                       </div>
                                     </div>
                                     <div className="text-xs text-gray-500 mt-1">
@@ -1598,9 +1609,8 @@ const Feedback = () => {
             {/* Main image */}
             <img
               src={imageModal.imageUrl}
-              alt={`Feedback image ${imageModal.imageIndex + 1}`}
+              alt={`Screenshot ${imageModal.imageIndex + 1}`}
               className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
             />
           </div>
 
