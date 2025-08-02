@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import dayjs from "@/lib/dayjs";
 import { CURRENT_USER } from "@/constants/token.constant";
 import { useLocalStorageValue } from "@/hooks/useLocalStorageValue";
+import Feedback from "@/components/Feedback";
 
 // Hook auto logout sau 1 giờ không hoạt động
 function useAutoLogout(onLogout: () => void, timeout = 60 * 60 * 1000) {
@@ -257,6 +258,15 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
           >
             Đổi thưởng
           </Link>
+          <Link
+            className={cn(
+              "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
+              pathname === "/feedback" ? "bg-gray-700" : "transparent",
+            )}
+            href="/feedback"
+          >
+            Phản hồi đã gửi
+          </Link>
           {/* <Link
             className={cn(
               "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
@@ -313,6 +323,9 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
           children
         )}
       </div>
+
+      {/* Feedback Component - hiển thị xuyên suốt layout */}
+      <Feedback />
     </div>
   );
 };

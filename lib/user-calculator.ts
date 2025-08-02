@@ -22,6 +22,7 @@ export interface UserInfo {
   note: string;
   totalPayment: number;
   giftRound: number;
+  device?: any; // Thêm field device
 }
 
 export interface ActiveUser {
@@ -359,6 +360,50 @@ export async function calculateActiveUsersInfo(
       );
     });
 
+    // Lấy device data cho các machine names từ sessions
+    const machineNames = [
+      ...new Set((userSessions as FnetSession[]).map((s) => s.MachineName)),
+    ];
+    const deviceDataMap = new Map();
+
+    if (machineNames.length > 0) {
+      const machineNamesStr = machineNames.map((name) => `'${name}'`).join(",");
+      const deviceQueryString = `
+        SELECT 
+          d.id,
+          d.computerId,
+          d.monitorStatus,
+          d.keyboardStatus,
+          d.mouseStatus,
+          d.headphoneStatus,
+          d.chairStatus,
+          d.networkStatus,
+          d.computerStatus,
+          d.note,
+          d.createdAt,
+          d.updatedAt,
+          c.name as machineName,
+          c.branch
+        FROM Device d
+        JOIN Computer c ON d.computerId = c.id
+        WHERE c.name IN (${machineNamesStr})
+          AND c.branch = '${branch}'
+      `;
+
+      const deviceData = await db.$queryRawUnsafe(deviceQueryString);
+      (deviceData as any[]).forEach((device) => {
+        deviceDataMap.set(device.machineName, device);
+      });
+
+      // Debug: Log machine names và device data
+      if (isDebug) {
+        console.log("=== DEBUG DEVICE DATA ===");
+        console.log("Machine names from sessions:", machineNames);
+        console.log("Device data found:", deviceData);
+        console.log("Device data map:", Object.fromEntries(deviceDataMap));
+      }
+    }
+
     // Query real-time check in items - convert sang raw query
     const todayCheckInResult = await db.$queryRawUnsafe<CheckInItem[]>(`
       SELECT 
@@ -531,6 +576,18 @@ export async function calculateActiveUsersInfo(
         console.log(">>>> DEBUG USER 244 >>>>", userData);
       }
 
+      // Lấy device data cho machine này
+      const device = machineName ? deviceDataMap.get(machineName) : null;
+
+      if (isDebug && debugUsers.includes(userId)) {
+        console.log(`User ${userId} machineName:`, machineName);
+        console.log(
+          `User ${userId} deviceDataMap keys:`,
+          Array.from(deviceDataMap.keys()),
+        );
+        console.log(`User ${userId} device lookup result:`, device);
+      }
+
       if (isDebug && debugUsers.includes(userId)) {
         console.log(`User ${userId} final result:`, {
           userId,
@@ -550,6 +607,7 @@ export async function calculateActiveUsersInfo(
           totalPayment: userTopUp,
           giftRound: totalGiftRounds,
           machineName: machineName,
+          device: device || null,
         });
       }
 
@@ -569,6 +627,7 @@ export async function calculateActiveUsersInfo(
         totalPayment: userTopUp,
         giftRound: totalGiftRounds,
         machineName: machineName,
+        device: device || null,
       };
 
       results.push(result);

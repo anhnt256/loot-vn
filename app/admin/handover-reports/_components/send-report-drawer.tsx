@@ -32,6 +32,15 @@ interface MaterialReportData {
   isSecondReport?: boolean; // Track if this is second report (has previous data)
 }
 
+interface SubmissionTracking {
+  morningSubmissionCount: number;
+  afternoonSubmissionCount: number;
+  eveningSubmissionCount: number;
+  isMorningComplete: boolean;
+  isAfternoonComplete: boolean;
+  isEveningComplete: boolean;
+}
+
 interface SendReportDrawerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -67,12 +76,84 @@ export default function SendReportDrawer({
   const [submitLoading, setSubmitLoading] = useState(false);
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [submissionTracking, setSubmissionTracking] =
+    useState<SubmissionTracking | null>(null);
 
   const shifts = Object.values(SHIFT_ENUM);
 
   // Helper function to check if this is a second report (has existing data)
   const isSecondReport = () => {
     return materialData.some((item) => item.isSecondReport);
+  };
+
+  // Helper function to check if current shift is complete
+  const isCurrentShiftComplete = () => {
+    if (!submissionTracking || !selectedShift) return false;
+
+    if (selectedShift === SHIFT_ENUM.SANG) {
+      return submissionTracking.isMorningComplete;
+    } else if (selectedShift === SHIFT_ENUM.CHIEU) {
+      return submissionTracking.isAfternoonComplete;
+    } else if (selectedShift === SHIFT_ENUM.TOI) {
+      return submissionTracking.isEveningComplete;
+    }
+    return false;
+  };
+
+  // Helper function to get current submission count
+  const getCurrentSubmissionCount = () => {
+    if (!submissionTracking || !selectedShift) return 0;
+
+    if (selectedShift === SHIFT_ENUM.SANG) {
+      return submissionTracking.morningSubmissionCount;
+    } else if (selectedShift === SHIFT_ENUM.CHIEU) {
+      return submissionTracking.afternoonSubmissionCount;
+    } else if (selectedShift === SHIFT_ENUM.TOI) {
+      return submissionTracking.eveningSubmissionCount;
+    }
+    return 0;
+  };
+
+  // Helper function to check if this is first submission (only beginning allowed)
+  const isFirstSubmission = () => {
+    return getCurrentSubmissionCount() === 0;
+  };
+
+  // Helper function to check if this is second submission (received/issued allowed)
+  const isSecondSubmission = () => {
+    return getCurrentSubmissionCount() === 1;
+  };
+
+  // Helper function to check if all shifts are completed
+  const areAllShiftsCompleted = () => {
+    if (!submissionTracking) return false;
+    
+    // Check if submission tracking has valid data
+    if (submissionTracking.morningSubmissionCount === undefined ||
+        submissionTracking.afternoonSubmissionCount === undefined ||
+        submissionTracking.eveningSubmissionCount === undefined) {
+      return false;
+    }
+
+    const result = (
+      submissionTracking.morningSubmissionCount >= 2 &&
+      submissionTracking.afternoonSubmissionCount >= 2 &&
+      submissionTracking.eveningSubmissionCount >= 2
+    );
+    
+    return result;
+  };
+
+  // Helper function to get available shifts count
+  const getAvailableShiftsCount = () => {
+    if (!submissionTracking) return 3;
+
+    let availableCount = 0;
+    if (submissionTracking.morningSubmissionCount < 2) availableCount++;
+    if (submissionTracking.afternoonSubmissionCount < 2) availableCount++;
+    if (submissionTracking.eveningSubmissionCount < 2) availableCount++;
+
+    return availableCount;
   };
 
   // Helper function to get material status
@@ -186,26 +267,296 @@ export default function SendReportDrawer({
     }
   };
 
-  // Fetch materials when drawer opens or when report type/shift/date changes
-  useEffect(() => {
-    if (isOpen && selectedShift && selectedReportType) {
-      checkReportCompletionAndFetchMaterials();
-    }
-  }, [isOpen, selectedReportType, selectedShift, selectedDateState]);
-
   // Fetch staff list and set initial shift when drawer opens
   useEffect(() => {
     if (isOpen) {
       fetchStaffList();
-      // Auto-select current shift when drawer opens
-      const currentShift = getCurrentShift();
-      setSelectedShift(currentShift);
       // Set default report type if provided
       if (defaultReportType) {
         setSelectedReportType(defaultReportType);
       }
     }
   }, [isOpen, defaultReportType]);
+
+  // Reset selected shift when date changes
+  useEffect(() => {
+    if (isOpen && selectedDateState) {
+      // Reset selected shift when date changes to force recalculation
+      setSelectedShift("");
+      setSelectedStaff("");
+      setMaterialData([]);
+    }
+  }, [selectedDateState]);
+
+  // Initialize data when drawer opens or when date changes
+  useEffect(() => {
+    if (isOpen && selectedReportType) {
+      initializeData();
+    }
+  }, [isOpen, selectedReportType, selectedDateState]);
+
+  // Fetch materials when shift changes
+  useEffect(() => {
+    if (isOpen && selectedShift && selectedReportType) {
+      checkReportCompletionAndFetchMaterials();
+    }
+  }, [selectedShift]);
+
+  // Helper function to process materials data based on shift and submission count
+  const processMaterialsData = (
+    currentDayMaterials: any[],
+    previousDayMaterials: any[],
+    currentShift: string,
+    submissionCount: number,
+  ) => {
+    const materialsMap = new Map();
+
+    // Process current day materials - get data for the current selected shift
+    currentDayMaterials.forEach((material: any) => {
+      const shiftData = material[currentShift.toLowerCase()];
+      if (shiftData) {
+        materialsMap.set(material.id, {
+          id: material.id,
+          materialName: material.materialName,
+          beginning: shiftData.beginning || 0,
+          received: shiftData.received || 0,
+          issued: shiftData.issued || 0,
+          ending: shiftData.ending || 0,
+          isBeginningFromPreviousShift: false,
+          hasBeginningData: shiftData.beginning > 0,
+          isSecondReport: submissionCount > 0,
+        });
+      }
+    });
+
+    // Process beginning inventory logic based on current shift and submission count
+    if (submissionCount === 0) {
+      // First submission: need to get beginning from previous shift
+      if (currentShift === SHIFT_ENUM.SANG) {
+        // Morning shift: get from previous day evening ending
+        previousDayMaterials.forEach((material: any) => {
+          if (!materialsMap.has(material.id)) {
+            materialsMap.set(material.id, {
+              id: material.id,
+              materialName: material.materialName,
+              beginning: material.ending || 0,
+              received: 0,
+              issued: 0,
+              ending: material.ending || 0,
+              isBeginningFromPreviousShift: true,
+              hasBeginningData: material.ending > 0,
+              isSecondReport: false,
+            });
+          } else {
+            const currentMaterial = materialsMap.get(material.id);
+            currentMaterial.beginning = material.ending || 0;
+            currentMaterial.isBeginningFromPreviousShift = true;
+            currentMaterial.hasBeginningData = material.ending > 0;
+          }
+        });
+      } else if (currentShift === SHIFT_ENUM.CHIEU) {
+        // Afternoon shift: get from current day morning ending
+        currentDayMaterials.forEach((material: any) => {
+          const morningData = material.morning;
+          if (morningData && morningData.ending !== undefined) {
+            if (!materialsMap.has(material.id)) {
+              materialsMap.set(material.id, {
+                id: material.id,
+                materialName: material.materialName,
+                beginning: morningData.ending || 0,
+                received: 0,
+                issued: 0,
+                ending: morningData.ending || 0,
+                isBeginningFromPreviousShift: true,
+                hasBeginningData: morningData.ending > 0,
+                isSecondReport: false,
+              });
+            } else {
+              const currentMaterial = materialsMap.get(material.id);
+              currentMaterial.beginning = morningData.ending || 0;
+              currentMaterial.isBeginningFromPreviousShift = true;
+              currentMaterial.hasBeginningData = morningData.ending > 0;
+            }
+          }
+        });
+      } else if (currentShift === SHIFT_ENUM.TOI) {
+        // Evening shift: get from current day afternoon ending
+        currentDayMaterials.forEach((material: any) => {
+          const afternoonData = material.afternoon;
+          if (afternoonData && afternoonData.ending !== undefined) {
+            if (!materialsMap.has(material.id)) {
+              materialsMap.set(material.id, {
+                id: material.id,
+                materialName: material.materialName,
+                beginning: afternoonData.ending || 0,
+                received: 0,
+                issued: 0,
+                ending: afternoonData.ending || 0,
+                isBeginningFromPreviousShift: true,
+                hasBeginningData: afternoonData.ending > 0,
+                isSecondReport: false,
+              });
+            } else {
+              const currentMaterial = materialsMap.get(material.id);
+              currentMaterial.beginning = afternoonData.ending || 0;
+              currentMaterial.isBeginningFromPreviousShift = true;
+              currentMaterial.hasBeginningData = afternoonData.ending > 0;
+            }
+          }
+        });
+      }
+    }
+    // For second submission (submissionCount === 1), keep existing beginning data
+
+    // Convert map to array and sort by material name
+    const processedData = Array.from(materialsMap.values()).sort(
+      (a: MaterialReportData, b: MaterialReportData) =>
+        a.materialName.localeCompare(b.materialName),
+    );
+
+    // Auto-calculate ending for all materials
+    return processedData.map((item: MaterialReportData) => ({
+      ...item,
+      ending: item.beginning + item.received - item.issued,
+    }));
+  };
+
+  // Function to initialize data when drawer opens
+  const initializeData = async () => {
+    setLoading(true);
+    try {
+      // Calculate the appropriate shift based on the selected date
+      let targetShift = getCurrentShift();
+
+      // If a custom date is selected, determine the appropriate shift for that date
+      if (selectedDateState) {
+        const selectedDate = new Date(selectedDateState);
+        const today = new Date();
+
+        // If selected date is today, use current shift
+        if (selectedDate.toDateString() === today.toDateString()) {
+          targetShift = getCurrentShift();
+        } else {
+          // If selected date is different, default to morning shift for historical dates
+          // or determine based on the date context
+          if (selectedDate < today) {
+            // For past dates, default to morning shift
+            targetShift = SHIFT_ENUM.SANG;
+          } else {
+            // For future dates, also default to morning shift
+            targetShift = SHIFT_ENUM.SANG;
+          }
+        }
+      }
+
+      const reportDate = getReportDateForSubmission(
+        targetShift,
+        selectedDateState,
+      );
+
+      const params = new URLSearchParams();
+      params.append("date", reportDate);
+      params.append("reportType", selectedReportType);
+
+      const response = await fetch(
+        `/api/handover-reports/get-report-data?${params.toString()}`,
+      );
+      const result = await response.json();
+
+      if (result.success) {
+        // Save submission tracking data
+        if (result.data.submissionTracking) {
+          setSubmissionTracking(result.data.submissionTracking);
+        } else {
+          setSubmissionTracking(null);
+        }
+
+        // Auto-select available shift based on submission tracking
+        const tracking = result.data.submissionTracking;
+        
+                 if (tracking && tracking.morningSubmissionCount !== undefined) {
+           let availableShift = null;
+
+           // Check morning shift
+           if (tracking.morningSubmissionCount < 2) {
+             availableShift = SHIFT_ENUM.SANG;
+           }
+           // Check afternoon shift
+           else if (tracking.afternoonSubmissionCount < 2) {
+             availableShift = SHIFT_ENUM.CHIEU;
+           }
+           // Check evening shift
+           else if (tracking.eveningSubmissionCount < 2) {
+             availableShift = SHIFT_ENUM.TOI;
+           }
+
+           // If no available shift found, set to first incomplete shift or default
+           if (!availableShift) {
+             // All shifts completed, don't auto-select any shift
+             setSelectedShift("");
+             setSelectedStaff("");
+             setMaterialData([]);
+             return;
+           }
+
+           if (availableShift) {
+            setSelectedShift(availableShift);
+
+            // Auto-select staff for the available shift
+            if (result.data.staffInfo) {
+              let staffId = null;
+              if (availableShift === SHIFT_ENUM.SANG) {
+                staffId = result.data.staffInfo.morningStaffId;
+              } else if (availableShift === SHIFT_ENUM.CHIEU) {
+                staffId = result.data.staffInfo.afternoonStaffId;
+              } else if (availableShift === SHIFT_ENUM.TOI) {
+                staffId = result.data.staffInfo.eveningStaffId;
+              }
+
+              // Only auto-select staff if the shift has existing data
+              if (staffId) {
+                setSelectedStaff(staffId.toString());
+              } else {
+                // Reset staff selection for new shift
+                setSelectedStaff("");
+              }
+            }
+
+            // Process materials data for the selected shift
+            const currentDayMaterials = result.data.materials.currentDay || [];
+            const previousDayMaterials =
+              result.data.materials.previousDay || [];
+            const submissionCount =
+              tracking[`${availableShift.toLowerCase()}SubmissionCount`] || 0;
+
+            const calculatedData = processMaterialsData(
+              currentDayMaterials,
+              previousDayMaterials,
+              availableShift,
+              submissionCount,
+            );
+
+            setMaterialData(calculatedData);
+          } else {
+            // All shifts completed
+            setSelectedShift("");
+            setSelectedStaff("");
+            setMaterialData([]);
+          }
+        } else {
+          // No submission tracking data or invalid data, set default shift based on date
+          const defaultShift = targetShift;
+          setSelectedShift(defaultShift);
+          setSelectedStaff("");
+          setMaterialData([]);
+        }
+      }
+    } catch (error) {
+      console.error("Error initializing data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Initialize material data when materials are loaded
   useEffect(() => {
@@ -265,7 +616,6 @@ export default function SendReportDrawer({
       // If not completed, proceed to fetch materials
       const params = new URLSearchParams();
       params.append("date", reportDate);
-      params.append("shift", selectedShift || getCurrentShift());
       params.append("reportType", selectedReportType);
 
       const response = await fetch(
@@ -274,27 +624,42 @@ export default function SendReportDrawer({
       const result = await response.json();
 
       if (result.success) {
-        // Sort materials by name to ensure consistent order with main table
-        const sortedData = result.data.materials.sort(
-          (a: MaterialReportData, b: MaterialReportData) =>
-            a.materialName.localeCompare(b.materialName),
+        // Get current shift for filtering data
+        const currentShift = selectedShift || getCurrentShift();
+
+        // Get submission count for current shift
+        const submissionCount = getCurrentSubmissionCount();
+
+        // Get all materials from current day data
+        const currentDayMaterials = result.data.materials.currentDay || [];
+        const previousDayMaterials = result.data.materials.previousDay || [];
+
+        // Process materials data using helper function
+        const calculatedData = processMaterialsData(
+          currentDayMaterials,
+          previousDayMaterials,
+          currentShift,
+          submissionCount,
         );
 
-        // Use data from API directly - it already has the correct flags
-        setMaterialData(sortedData);
+        setMaterialData(calculatedData);
+
+        // Save submission tracking data
+        if (result.data.submissionTracking) {
+          setSubmissionTracking(result.data.submissionTracking);
+        }
 
         // Auto-select staff if report already exists and has beginning data
         if (
           result.data.staffInfo &&
-          sortedData.some((item: MaterialReportData) => item.beginning > 0)
+          calculatedData.some((item: MaterialReportData) => item.beginning > 0)
         ) {
-          const shift = selectedShift || getCurrentShift();
           let staffId = null;
-          if (shift === SHIFT_ENUM.SANG) {
+          if (currentShift === SHIFT_ENUM.SANG) {
             staffId = result.data.staffInfo.morningStaffId;
-          } else if (shift === SHIFT_ENUM.CHIEU) {
+          } else if (currentShift === SHIFT_ENUM.CHIEU) {
             staffId = result.data.staffInfo.afternoonStaffId;
-          } else if (shift === SHIFT_ENUM.TOI) {
+          } else if (currentShift === SHIFT_ENUM.TOI) {
             staffId = result.data.staffInfo.eveningStaffId;
           }
           if (staffId) {
@@ -307,70 +672,6 @@ export default function SendReportDrawer({
       }
     } catch (error) {
       console.error("Error checking completion or fetching materials:", error);
-      setMaterialData([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchMaterials = async () => {
-    setLoading(true);
-    try {
-      // Calculate the correct report date based on selected shift and custom date
-      const reportDate = getReportDateForSubmission(
-        selectedShift || getCurrentShift(),
-        selectedDateState,
-      );
-
-      // Always use the selected report date - API will handle getting previous shift data
-      // For morning shift, API will automatically get evening ending from previous day
-      // For afternoon shift, API will get morning ending from same day
-      // For evening shift, API will get afternoon ending from same day
-
-      const params = new URLSearchParams();
-      params.append("date", reportDate);
-      params.append("shift", selectedShift || getCurrentShift());
-      params.append("reportType", selectedReportType);
-
-      const response = await fetch(
-        `/api/handover-reports/get-report-data?${params.toString()}`,
-      );
-      const result = await response.json();
-
-      if (result.success) {
-        // Sort materials by name to ensure consistent order with main table
-        const sortedData = result.data.materials.sort(
-          (a: MaterialReportData, b: MaterialReportData) =>
-            a.materialName.localeCompare(b.materialName),
-        );
-
-        // Use data from API directly - it already has the correct flags
-        setMaterialData(sortedData);
-
-        // Auto-select staff if report already exists and has beginning data
-        if (
-          result.data.staffInfo &&
-          sortedData.some((item: MaterialReportData) => item.beginning > 0)
-        ) {
-          const shift = selectedShift || getCurrentShift();
-          let staffId = null;
-          if (shift === SHIFT_ENUM.SANG) {
-            staffId = result.data.staffInfo.morningStaffId;
-          } else if (shift === SHIFT_ENUM.CHIEU) {
-            staffId = result.data.staffInfo.afternoonStaffId;
-          } else if (shift === SHIFT_ENUM.TOI) {
-            staffId = result.data.staffInfo.eveningStaffId;
-          }
-          if (staffId) {
-            setSelectedStaff(staffId.toString());
-          }
-        }
-      } else {
-        console.error("Failed to fetch materials:", result.error);
-        setMaterialData([]);
-      }
-    } catch (error) {
-      console.error("Error fetching materials:", error);
       setMaterialData([]);
     } finally {
       setLoading(false);
@@ -409,40 +710,56 @@ export default function SendReportDrawer({
       dataIndex: "beginning",
       key: "beginning",
       width: 100,
-      render: (value, record, index) => (
-        <Input
-          type="number"
-          value={value}
-          onChange={(e) =>
-            handleDataChange(index, "beginning", parseFloat(e.target.value) || 0)
-          }
-          className={`text-center ${record.isSecondReport ? "bg-gray-50" : ""}`}
-          disabled={record.isSecondReport || isSecondReport()}
-          min={0}
-          step={0.5}
-          placeholder="Nhập tồn đầu"
-        />
-      ),
+      render: (value, record, index) => {
+        // Disable if shift is complete or if this is second submission
+        const isDisabled = isCurrentShiftComplete() || isSecondSubmission();
+        return (
+          <Input
+            type="number"
+            value={value}
+            onChange={(e) =>
+              handleDataChange(
+                index,
+                "beginning",
+                parseFloat(e.target.value) || 0,
+              )
+            }
+            className={`text-center ${isDisabled ? "bg-gray-50" : ""}`}
+            disabled={isDisabled}
+            min={0}
+            step={0.5}
+            placeholder="Nhập tồn đầu"
+          />
+        );
+      },
     },
     {
       title: "Nhập",
       dataIndex: "received",
       key: "received",
       width: 100,
-      render: (value, record, index) => (
-        <Input
-          type="number"
-          value={value}
-          onChange={(e) =>
-            handleDataChange(index, "received", parseFloat(e.target.value) || 0)
-          }
-          className={`text-center ${!record.isSecondReport ? "bg-gray-50" : ""}`}
-          disabled={!record.isSecondReport}
-          min={0}
-          step={0.5}
-          placeholder="Nhập số lượng"
-        />
-      ),
+      render: (value, record, index) => {
+        // Only enable if shift is not complete and this is second submission
+        const isDisabled = isCurrentShiftComplete() || !isSecondSubmission();
+        return (
+          <Input
+            type="number"
+            value={value}
+            onChange={(e) =>
+              handleDataChange(
+                index,
+                "received",
+                parseFloat(e.target.value) || 0,
+              )
+            }
+            className={`text-center ${isDisabled ? "bg-gray-50" : ""}`}
+            disabled={isDisabled}
+            min={0}
+            step={0.5}
+            placeholder="Nhập số lượng"
+          />
+        );
+      },
     },
     {
       title: "Xuất",
@@ -452,6 +769,8 @@ export default function SendReportDrawer({
       render: (value, record, index) => {
         const maxIssued = record.beginning + record.received;
         const isExceeded = value > maxIssued;
+        // Only enable if shift is not complete and this is second submission
+        const isDisabled = isCurrentShiftComplete() || !isSecondSubmission();
         return (
           <Input
             type="number"
@@ -459,8 +778,8 @@ export default function SendReportDrawer({
             onChange={(e) =>
               handleDataChange(index, "issued", parseFloat(e.target.value) || 0)
             }
-            className={`text-center ${!record.isSecondReport ? "bg-gray-50" : ""} ${isExceeded ? "border-red-500 bg-red-50" : ""}`}
-            disabled={!record.isSecondReport}
+            className={`text-center ${isDisabled ? "bg-gray-50" : ""} ${isExceeded ? "border-red-500 bg-red-50" : ""}`}
+            disabled={isDisabled}
             min={0}
             max={maxIssued}
             step={0.5}
@@ -476,12 +795,10 @@ export default function SendReportDrawer({
       key: "ending",
       width: 100,
       render: (value, record, index) => {
-        const calculatedEnding =
-          record.beginning + record.received - record.issued;
         return (
           <Input
             type="number"
-            value={calculatedEnding}
+            value={value}
             className="text-center bg-gray-50 font-bold text-gray-900"
             disabled
             min={0}
@@ -537,17 +854,28 @@ export default function SendReportDrawer({
       return;
     }
 
+    // Check if shift is already complete
+    if (isCurrentShiftComplete()) {
+      message.error("Ca làm việc này đã hoàn tất, không thể gửi thêm báo cáo!");
+      return;
+    }
+
+    // Check submission count limit
+    const currentCount = getCurrentSubmissionCount();
+    if (currentCount >= 2) {
+      message.error("Ca làm việc này đã đạt tối đa 2 lần gửi báo cáo!");
+      return;
+    }
+
     // Check if this is a second report (has beginning data from API)
     const isSecondReport = materialData.some((item) => item.isSecondReport);
 
-    // For second report, beginning data is locked and cannot be changed
-    // For first report, beginning can be 0 if out of stock
-    if (!isSecondReport) {
+    // Validate based on submission count
+    if (isFirstSubmission()) {
+      // First submission: only beginning data is allowed
       // No validation needed - beginning can be 0 if out of stock
-    }
-
-    // Validate that materials with beginning data have at least some activity (only for second report)
-    if (isSecondReport) {
+    } else if (isSecondSubmission()) {
+      // Second submission: validate that materials with beginning data have at least some activity
       const materialsWithBeginningButNoActivity = materialData.filter(
         (material) =>
           material.beginning > 0 &&
@@ -578,16 +906,21 @@ export default function SendReportDrawer({
       return;
     }
 
-    setSubmitLoading(true);
-    try {
-      // Calculate the correct report date based on selected shift
-      const reportDate = getReportDateForSubmission(selectedShift);
+         setSubmitLoading(true);
+     try {
+       // Calculate the correct report date based on selected shift and custom date
+       const reportDate = getReportDateForSubmission(selectedShift, selectedDateState);
 
-      // Prepare materials data - set received and issued to null for first report
+      // Prepare materials data based on submission count
+      // Recalculate ending to ensure accuracy
       const preparedMaterials = materialData.map((material) => ({
         ...material,
-        received: isSecondReport ? material.received : null,
-        issued: isSecondReport ? material.issued : null,
+        received: isSecondSubmission() ? material.received : null,
+        issued: isSecondSubmission() ? material.issued : null,
+        ending:
+          material.beginning +
+          (isSecondSubmission() ? material.received : 0) -
+          (isSecondSubmission() ? material.issued : 0),
       }));
 
       const response = await fetch("/api/handover-reports/submit-report", {
@@ -690,7 +1023,7 @@ export default function SendReportDrawer({
                     onChange={setSelectedReportType}
                     className="w-full"
                     size="large"
-                    disabled={isSecondReport()}
+                    disabled={isSecondReport() || isCurrentShiftComplete()}
                   >
                     {Object.values(REPORT_TYPE_ENUM).map((type) => (
                       <Select.Option key={type} value={type}>
@@ -712,22 +1045,42 @@ export default function SendReportDrawer({
                   >
                     Ca làm việc *
                   </label>
-                  <Select
-                    id="shift-select"
-                    placeholder="Chọn ca làm việc"
-                    value={selectedShift}
-                    onChange={setSelectedShift}
-                    className="w-full"
-                    size="large"
-                    disabled={isSecondReport()}
-                  >
-                    {shifts.map((shift) => (
-                      <Select.Option key={shift} value={shift}>
-                        {SHIFT_LABELS[shift as keyof typeof SHIFT_LABELS]}
-                        {shift === getCurrentShift() && " (Hiện tại)"}
-                      </Select.Option>
-                    ))}
-                  </Select>
+                                     <Select
+                     id="shift-select"
+                     placeholder={loading ? "Đang tải..." : "Chọn ca làm việc"}
+                     value={selectedShift}
+                     onChange={setSelectedShift}
+                     className="w-full"
+                     size="large"
+                     disabled={
+                       loading || isSecondReport() || isCurrentShiftComplete()
+                     }
+                     loading={loading}
+                   >
+                     {shifts.map((shift) => {
+                       // Check if shift is completed (2/2 submissions)
+                       const isShiftCompleted = submissionTracking
+                         ? (shift === SHIFT_ENUM.SANG &&
+                             submissionTracking.morningSubmissionCount >= 2) ||
+                           (shift === SHIFT_ENUM.CHIEU &&
+                             submissionTracking.afternoonSubmissionCount >= 2) ||
+                           (shift === SHIFT_ENUM.TOI &&
+                             submissionTracking.eveningSubmissionCount >= 2)
+                         : false;
+
+                       return (
+                         <Select.Option 
+                           key={shift} 
+                           value={shift}
+                           disabled={isShiftCompleted}
+                         >
+                           {SHIFT_LABELS[shift as keyof typeof SHIFT_LABELS]}
+                           {shift === getCurrentShift() && " (Hiện tại)"}
+                           {isShiftCompleted && " (Đã hoàn thành)"}
+                         </Select.Option>
+                       );
+                     })}
+                   </Select>
                 </div>
 
                 {/* Date Selection */}
@@ -748,9 +1101,11 @@ export default function SendReportDrawer({
                       )
                     }
                     onChange={(e) => setSelectedDateState(e.target.value)}
-                    disabled={isSecondReport()}
+                    disabled={isSecondReport() || isCurrentShiftComplete()}
                     className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      isSecondReport() ? "bg-gray-100 cursor-not-allowed" : ""
+                      isSecondReport() || isCurrentShiftComplete()
+                        ? "bg-gray-100 cursor-not-allowed"
+                        : ""
                     }`}
                   />
                 </div>
@@ -771,7 +1126,7 @@ export default function SendReportDrawer({
                     className="w-full"
                     size="large"
                     showSearch
-                    disabled={isSecondReport()}
+                    disabled={isSecondReport() || isCurrentShiftComplete()}
                     filterOption={(input, option) =>
                       (option?.children as unknown as string)
                         ?.toLowerCase()
@@ -792,29 +1147,59 @@ export default function SendReportDrawer({
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-md font-medium text-gray-900">
-                  Số lượng ca{" "}
-                  {selectedShift
-                    ? SHIFT_LABELS[
-                        selectedShift as keyof typeof SHIFT_LABELS
-                      ]?.toLowerCase()
-                    : ""}{" "}
-                  ({materialData.length})
+                  Nguyên vật liệu ({materialData.length})
                 </h3>
-                <div
-                  className={`text-sm px-3 py-1 rounded-md ${
-                    materialData.some((item) => item.isSecondReport)
-                      ? "text-orange-600 bg-orange-50"
-                      : "text-gray-600 bg-blue-50"
-                  }`}
-                >
-                  <span className="font-medium">Hướng dẫn:</span>{" "}
-                  {materialData.some((item) => item.isSecondReport)
-                    ? "Cập nhật nhập/xuất cho ca này (thông tin cơ bản đã bị khóa)"
-                    : materialData.some(
-                          (item) => item.isBeginningFromPreviousShift,
-                        )
-                      ? "Tồn đầu đã được lấy từ ca trước, có thể chỉnh sửa"
-                      : "Nhập tồn đầu cho ca mới"}
+                <div className="flex items-center gap-3">
+                  {/* Submission Count */}
+                  {submissionTracking && (
+                    <div className="flex items-center gap-1 text-sm">
+                      <span className="font-medium">Lần gửi:</span>
+                      <span
+                        className={`px-2 py-1 rounded-md ${
+                          (selectedShift === SHIFT_ENUM.SANG &&
+                            submissionTracking.morningSubmissionCount >= 2) ||
+                          (selectedShift === SHIFT_ENUM.CHIEU &&
+                            submissionTracking.afternoonSubmissionCount >=
+                              2) ||
+                          (selectedShift === SHIFT_ENUM.TOI &&
+                            submissionTracking.eveningSubmissionCount >= 2)
+                            ? "bg-red-100 text-red-700"
+                            : "bg-blue-100 text-blue-700"
+                        }`}
+                      >
+                        {(selectedShift === SHIFT_ENUM.SANG &&
+                          submissionTracking.morningSubmissionCount) ||
+                          (selectedShift === SHIFT_ENUM.CHIEU &&
+                            submissionTracking.afternoonSubmissionCount) ||
+                          (selectedShift === SHIFT_ENUM.TOI &&
+                            submissionTracking.eveningSubmissionCount) ||
+                          0}
+                        /2
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Instructions */}
+                  <div
+                    className={`text-sm px-3 py-2 rounded-md ${
+                      getCurrentSubmissionCount() === 1
+                        ? "text-orange-600 bg-orange-50 border border-orange-200"
+                        : "text-gray-600 bg-blue-50 border border-blue-200"
+                    }`}
+                  >
+                    <span className="font-bold">
+                      {getCurrentSubmissionCount() === 1 ? "Lần 2" : "Lần 1"}
+                    </span>
+                    : {getCurrentSubmissionCount() === 1
+                      ? "Nhập dữ liệu Nhập - Xuất để kết ca."
+                      : "Nhập tồn đầu sau đó Gửi báo cáo để xác nhận bàn giao."}
+                    <br />
+                    <span className="text-xs opacity-75">
+                      {getCurrentSubmissionCount() === 1
+                        ? "Lần 1: Nhập tồn đầu sau đó Gửi báo cáo để xác nhận bàn giao."
+                        : "Lần 2: Nhập dữ liệu Nhập - Xuất để kết ca."}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -825,6 +1210,70 @@ export default function SendReportDrawer({
                       <div className="h-16 bg-gray-200 rounded-md"></div>
                     </div>
                   ))}
+                </div>
+              ) : areAllShiftsCompleted() ? (
+                <div className="text-center py-12 text-gray-500">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg
+                      className="w-8 h-8 text-green-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <p className="text-lg font-medium text-green-600">
+                    Đã báo cáo xong cho ngày {selectedDateState || selectedDate}
+                  </p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Bạn có muốn báo cáo cho ngày tiếp theo không?
+                  </p>
+                  <button
+                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    onClick={() => {
+                      // Tăng ngày lên 1
+                      const nextDate = new Date(selectedDateState || selectedDate);
+                      nextDate.setDate(nextDate.getDate() + 1);
+                      const nextDateStr = nextDate.toISOString().split('T')[0];
+                      setSelectedDateState(nextDateStr);
+                    }}
+                  >
+                    Báo cáo ngày {(() => {
+                      const nextDate = new Date(selectedDateState || selectedDate);
+                      nextDate.setDate(nextDate.getDate() + 1);
+                      return nextDate.toLocaleDateString('vi-VN');
+                    })()}
+                  </button>
+                </div>
+              ) : !selectedShift ? (
+                <div className="text-center py-12 text-gray-500">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                    <svg
+                      className="w-8 h-8 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      />
+                    </svg>
+                  </div>
+                  <p className="text-lg font-medium">
+                    Vui lòng chọn ca làm việc
+                  </p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Chọn ca làm việc để xem danh sách nguyên vật liệu
+                  </p>
                 </div>
               ) : materialData.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
@@ -877,13 +1326,18 @@ export default function SendReportDrawer({
                 onClick={handleSubmit}
                 loading={submitLoading}
                 disabled={
-                  !selectedShift || !selectedStaff || !selectedReportType
+                  !selectedShift ||
+                  !selectedStaff ||
+                  !selectedReportType ||
+                  areAllShiftsCompleted()
                 }
                 icon={<Send className="w-4 h-4" />}
                 size="large"
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                Gửi báo cáo
+                {areAllShiftsCompleted()
+                  ? "Tất cả ca đã hoàn thành"
+                  : "Gửi báo cáo"}
               </Button>
             </div>
           </div>

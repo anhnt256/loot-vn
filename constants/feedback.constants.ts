@@ -1,0 +1,62 @@
+export const FEEDBACK_TYPE_ENUM = {
+  IMPROVEMENT: "IMPROVEMENT",
+  BUG_REPORT: "BUG_REPORT", 
+  FEATURE_REQUEST: "FEATURE_REQUEST",
+  GENERAL: "GENERAL"
+} as const;
+
+export const FEEDBACK_CATEGORY_ENUM = {
+  SPACE: "SPACE",
+  STAFF: "STAFF",
+  SERVICE: "SERVICE",
+  EQUIPMENT: "EQUIPMENT",
+  FOOD: "FOOD",
+  OTHER: "OTHER"
+} as const;
+
+export const FEEDBACK_PRIORITY_ENUM = {
+  LOW: "LOW",
+  MEDIUM: "MEDIUM",
+  HIGH: "HIGH"
+} as const;
+
+export const FEEDBACK_STATUS_ENUM = {
+  SUBMITTED: "SUBMITTED",
+  RECEIVED: "RECEIVED",
+  PROCESSING: "PROCESSING",
+  COMPLETED: "COMPLETED"
+} as const;
+
+export const FEEDBACK_TYPE_LABELS = {
+  [FEEDBACK_TYPE_ENUM.IMPROVEMENT]: "Cải thiện",
+  [FEEDBACK_TYPE_ENUM.BUG_REPORT]: "Báo lỗi",
+  [FEEDBACK_TYPE_ENUM.FEATURE_REQUEST]: "Yêu cầu tính năng",
+  [FEEDBACK_TYPE_ENUM.GENERAL]: "Chung"
+} as const;
+
+export const FEEDBACK_CATEGORY_LABELS = {
+  [FEEDBACK_CATEGORY_ENUM.SPACE]: "Không gian",
+  [FEEDBACK_CATEGORY_ENUM.STAFF]: "Nhân viên",
+  [FEEDBACK_CATEGORY_ENUM.SERVICE]: "Dịch vụ",
+  [FEEDBACK_CATEGORY_ENUM.EQUIPMENT]: "Thiết bị",
+  [FEEDBACK_CATEGORY_ENUM.FOOD]: "Đồ ăn",
+  [FEEDBACK_CATEGORY_ENUM.OTHER]: "Khác"
+} as const;
+
+export const FEEDBACK_PRIORITY_LABELS = {
+  [FEEDBACK_PRIORITY_ENUM.LOW]: "Thấp",
+  [FEEDBACK_PRIORITY_ENUM.MEDIUM]: "Trung bình",
+  [FEEDBACK_PRIORITY_ENUM.HIGH]: "Cao"
+} as const;
+
+export const FEEDBACK_STATUS_LABELS = {
+  [FEEDBACK_STATUS_ENUM.SUBMITTED]: "Đã gửi",
+  [FEEDBACK_STATUS_ENUM.RECEIVED]: "Đã nhận",
+  [FEEDBACK_STATUS_ENUM.PROCESSING]: "Đang xử lý",
+  [FEEDBACK_STATUS_ENUM.COMPLETED]: "Hoàn thành"
+} as const;
+
+export type FeedbackType = typeof FEEDBACK_TYPE_ENUM[keyof typeof FEEDBACK_TYPE_ENUM];
+export type FeedbackCategory = typeof FEEDBACK_CATEGORY_ENUM[keyof typeof FEEDBACK_CATEGORY_ENUM];
+export type FeedbackPriority = typeof FEEDBACK_PRIORITY_ENUM[keyof typeof FEEDBACK_PRIORITY_ENUM];
+export type FeedbackStatus = typeof FEEDBACK_STATUS_ENUM[keyof typeof FEEDBACK_STATUS_ENUM]; 

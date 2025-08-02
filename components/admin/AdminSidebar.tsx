@@ -78,6 +78,11 @@ const menuItems = [
     href: "/admin/handover-reports",
     icon: "📝",
   },
+  {
+    title: "Quản lý Feedback",
+    href: "/admin/feedback",
+    icon: "💬",
+  },
   // {
   //   title: "Báo cáo kết ca",
   //   href: "/admin/reports",

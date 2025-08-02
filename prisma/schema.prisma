@@ -109,6 +109,7 @@ model User {
   UserRewardMap UserRewardMap[]
   GameResults   GameResult[]
   premiumOrders BattlePassPremiumOrder[]
+  feedbacks     Feedback[]
 }
 
 model Mission {
@@ -219,6 +220,7 @@ model Computer {
   localIp       String?
   devices       Device[]
   histories     DeviceHistory[]
+  feedbacks     Feedback[]
 }
 
 model Staff {
@@ -526,6 +528,14 @@ model HandoverReport {
   afternoonStaffId Int?
   eveningStaffId   Int?
   morningStaffId   Int?
+  // Tracking report submission count per shift
+  morningSubmissionCount   Int @default(0)
+  afternoonSubmissionCount Int @default(0)
+  eveningSubmissionCount   Int @default(0)
+  // Tracking completion status per shift
+  isMorningComplete   Boolean @default(false)
+  isAfternoonComplete Boolean @default(false)
+  isEveningComplete   Boolean @default(false)
   materials        HandoverMaterial[]
   morningStaff     Staff?             @relation("MorningStaff", fields: [morningStaffId], references: [id])
   afternoonStaff   Staff?             @relation("AfternoonStaff", fields: [afternoonStaffId], references: [id])
@@ -571,6 +581,37 @@ model Material {
   @@index([name])
 }
 
+model Feedback {
+  id          Int            @id @default(autoincrement())
+  userId      Int?
+  computerId  Int?
+  type        FeedbackType
+  title       String         @db.VarChar(255)
+  description String         @db.Text
+  priority    String         @db.VarChar(20) // high, medium, low
+  category    String?        @db.VarChar(50) // space, food, machines, staff, cleanliness
+  rating      Int?           @default(0)
+  image       String?        @db.Text // Base64 encoded image
+  note        String?        @db.Text
+  isAnonymous Boolean        @default(false)
+  status      FeedbackStatus @default(SUBMITTED)
+  response    String?        @db.Text
+  stars       Int?           @default(0)
+  branch      String         @default("GO_VAP")
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  user        User?          @relation(fields: [userId], references: [id])
+  computer    Computer?      @relation(fields: [computerId], references: [id])
+
+  @@index([userId])
+  @@index([computerId])
+  @@index([branch])
+  @@index([status])
+  @@index([createdAt])
+  @@index([category])
+  @@index([priority])
+}
+
 enum BirthdayTransactionType {
   TOPUP
   BONUS
@@ -596,6 +637,7 @@ enum UserStarHistoryType {
   GAME
   RETURN_GIFT
   GIFT_ROUND
+  FEEDBACK
 }
 
 enum PromotionType {
@@ -651,4 +693,18 @@ enum UserRewardMapStatus {
   INITIAL
   APPROVE
   REJECT
+}
+
+enum FeedbackType {
+  IMPROVEMENT
+  BUG_REPORT
+  FEATURE_REQUEST
+  GENERAL
+}
+
+enum FeedbackStatus {
+  SUBMITTED
+  RECEIVED
+  PROCESSING
+  COMPLETED
 }
