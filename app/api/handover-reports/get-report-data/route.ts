@@ -55,6 +55,7 @@ export async function GET(request: NextRequest) {
       eveningStaffId: number | null;
     } | null = null;
     let submissionTracking: any = null;
+    let availableMaterials: any[] = [];
 
     if (currentReportResult.length > 0) {
       const handoverReportId = currentReportResult[0].id;
@@ -162,12 +163,49 @@ export async function GET(request: NextRequest) {
       }));
     }
 
-    // Lấy dữ liệu ca tối của ngày hôm trước
+    // Luôn lấy danh sách materials có sẵn (cần thiết cho cả isInitialData = true và false)
+    const materialsResult = await db.$queryRaw<
+      {
+        id: string;
+        name: string;
+      }[]
+    >`
+      SELECT id, name 
+      FROM Material 
+      WHERE reportType = ${reportType} 
+      AND isActive = true
+      ORDER BY name
+    `;
+
+    availableMaterials = materialsResult.map((material) => ({
+      id: material.id,
+      materialName: material.name,
+      morning: {
+        beginning: 0,
+        received: 0,
+        issued: 0,
+        ending: 0,
+      },
+      afternoon: {
+        beginning: 0,
+        received: 0,
+        issued: 0,
+        ending: 0,
+      },
+      evening: {
+        beginning: 0,
+        received: 0,
+        issued: 0,
+        ending: 0,
+      },
+    }));
+
+    // Lấy dữ liệu ca tối của ngày hôm trước (cho ca sáng)
     const previousDate = new Date(currentDate);
     previousDate.setDate(previousDate.getDate() - 1);
     const formattedPreviousDate = previousDate.toISOString().split("T")[0];
 
-    const previousReportResult = await db.$queryRaw<{ id: string }[]>`
+    const previousReportResult = await db.$queryRaw<{ id: string }[]>` 
       SELECT id FROM HandoverReport 
       WHERE DATE(date) = ${formattedPreviousDate}
       AND reportType = ${reportType}
@@ -179,6 +217,7 @@ export async function GET(request: NextRequest) {
 
     if (previousReportResult.length > 0) {
       const previousHandoverReportId = previousReportResult[0].id;
+      console.log("Found previous report with ID:", previousHandoverReportId);
 
       const previousMaterialsResult = await db.$queryRaw<
         {
@@ -196,24 +235,80 @@ export async function GET(request: NextRequest) {
         WHERE hm.handoverReportId = ${previousHandoverReportId}
       `;
 
+      console.log("Previous materials result:", previousMaterialsResult);
+
       previousEveningData = previousMaterialsResult.map((material) => ({
         id: material.materialId,
         materialName: material.materialName,
         ending: material.eveningEnding || 0,
       }));
+
+      console.log("Mapped previous evening data:", previousEveningData);
+    } else {
+      console.log("No previous report found for date:", formattedPreviousDate);
     }
 
-    return NextResponse.json({
+    // Lấy dữ liệu ca sáng và chiều của ngày hiện tại (cho ca chiều và tối)
+    let currentMorningData: any[] = [];
+    let currentAfternoonData: any[] = [];
+
+    if (currentReportResult.length > 0) {
+      const handoverReportId = currentReportResult[0].id;
+
+      const currentShiftMaterialsResult = await db.$queryRaw<
+        {
+          materialId: string;
+          materialName: string;
+          morningEnding: number;
+          afternoonEnding: number;
+        }[]
+      >`
+        SELECT 
+          m.id as materialId,
+          m.name as materialName,
+          hm.morningEnding,
+          hm.afternoonEnding
+        FROM HandoverMaterial hm
+        LEFT JOIN Material m ON hm.materialId = m.id
+        WHERE hm.handoverReportId = ${handoverReportId}
+      `;
+
+      currentMorningData = currentShiftMaterialsResult.map((material) => ({
+        id: material.materialId,
+        materialName: material.materialName,
+        ending: material.morningEnding || 0,
+      }));
+
+      currentAfternoonData = currentShiftMaterialsResult.map((material) => ({
+        id: material.materialId,
+        materialName: material.materialName,
+        ending: material.afternoonEnding || 0,
+      }));
+    }
+
+    // isInitialData = true chỉ khi cả ngày hiện tại và ngày trước đó không có dữ liệu
+    const isInitialData =
+      currentReportResult.length === 0 && previousReportResult.length === 0;
+
+    const responseData = {
       success: true,
       data: {
         materials: {
           currentDay: currentDayData,
           previousDay: previousEveningData,
+          currentMorning: currentMorningData,
+          currentAfternoon: currentAfternoonData,
+          availableMaterials: availableMaterials,
         },
         staffInfo: staffInfo,
         submissionTracking: submissionTracking,
+        isInitialData: isInitialData,
       },
-    });
+    };
+
+    console.log("API Response data:", JSON.stringify(responseData, null, 2));
+
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error("Error fetching report data:", error);
     return NextResponse.json(

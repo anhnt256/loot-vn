@@ -20,11 +20,11 @@ export async function POST(
     const staff = await db.staff.findFirst({
       where: {
         id: parseInt(adminId),
-        branch: branch
+        branch: branch,
       },
       select: {
-        isAdmin: true
-      }
+        isAdmin: true,
+      },
     });
     if (!staff || !staff.isAdmin) {
       return NextResponse.json(
@@ -43,9 +43,7 @@ export async function POST(
       );
     }
 
-    const result = await addFeedbackResponse(
-      { ...body, feedbackId }
-    );
+    const result = await addFeedbackResponse({ ...body, feedbackId });
 
     if (!result.data) {
       return NextResponse.json({ error: result.error }, { status: 400 });

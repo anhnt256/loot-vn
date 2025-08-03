@@ -110,20 +110,23 @@ export async function POST(request: NextRequest) {
               : reportData.eveningSubmissionCount;
 
         // Check if shift is already complete
-        const isShiftComplete =
-          shift === SHIFT_ENUM.SANG
-            ? reportData.isMorningComplete
-            : shift === SHIFT_ENUM.CHIEU
-              ? reportData.isAfternoonComplete
-              : reportData.isEveningComplete;
+        // Chỉ kiểm tra khi submissionCount >= 2 (ca đã hoàn tất)
+        if (currentSubmissionCount >= 2) {
+          const isShiftComplete =
+            shift === SHIFT_ENUM.SANG
+              ? reportData.isMorningComplete
+              : shift === SHIFT_ENUM.CHIEU
+                ? reportData.isAfternoonComplete
+                : reportData.isEveningComplete;
 
-        if (isShiftComplete) {
-          throw new Error(
-            `Ca làm việc ${shift} cho ngày ${date} đã hoàn tất. Không thể gửi thêm báo cáo.`,
-          );
+          if (isShiftComplete) {
+            throw new Error(
+              `Ca làm việc ${shift} cho ngày ${date} đã hoàn tất. Không thể gửi thêm báo cáo.`,
+            );
+          }
         }
 
-        if (currentSubmissionCount >= 2) {
+        if (currentSubmissionCount >= 3) {
           throw new Error(
             `Ca làm việc ${shift} cho ngày ${date} đã đạt tối đa 2 lần gửi báo cáo.`,
           );
@@ -161,44 +164,47 @@ export async function POST(request: NextRequest) {
         `);
 
         // Check if materials already exist for this shift with complete data (all 4 fields: beginning, received, issued, ending)
-        const existingMaterials = (await tx.$queryRaw`
-          SELECT hm.id, hm.materialId, m.name as materialName,
-            CASE 
-              WHEN ${shift} = 'SANG' THEN (
-                hm.morningBeginning IS NOT NULL AND 
-                hm.morningReceived IS NOT NULL AND 
-                hm.morningIssued IS NOT NULL AND 
-                hm.morningEnding IS NOT NULL
-              )
-              WHEN ${shift} = 'CHIEU' THEN (
-                hm.afternoonBeginning IS NOT NULL AND 
-                hm.afternoonReceived IS NOT NULL AND 
-                hm.afternoonIssued IS NOT NULL AND 
-                hm.afternoonEnding IS NOT NULL
-              )
-              WHEN ${shift} = 'TOI' THEN (
-                hm.eveningBeginning IS NOT NULL AND 
-                hm.eveningReceived IS NOT NULL AND 
-                hm.eveningIssued IS NOT NULL AND 
-                hm.eveningEnding IS NOT NULL
-              )
-            END as hasCompleteShiftData
-          FROM HandoverMaterial hm
-          LEFT JOIN Material m ON hm.materialId = m.id
-          WHERE hm.handoverReportId = ${handoverReportId}
-        `) as any[];
+        // Chỉ kiểm tra khi submissionCount >= 2 (ca đã hoàn tất)
+        if (currentSubmissionCount >= 2) {
+          const existingMaterials = (await tx.$queryRaw`
+            SELECT hm.id, hm.materialId, m.name as materialName,
+              CASE 
+                WHEN ${shift} = 'SANG' THEN (
+                  hm.morningBeginning IS NOT NULL AND 
+                  hm.morningReceived IS NOT NULL AND 
+                  hm.morningIssued IS NOT NULL AND 
+                  hm.morningEnding IS NOT NULL
+                )
+                WHEN ${shift} = 'CHIEU' THEN (
+                  hm.afternoonBeginning IS NOT NULL AND 
+                  hm.afternoonReceived IS NOT NULL AND 
+                  hm.afternoonIssued IS NOT NULL AND 
+                  hm.afternoonEnding IS NOT NULL
+                )
+                WHEN ${shift} = 'TOI' THEN (
+                  hm.eveningBeginning IS NOT NULL AND 
+                  hm.eveningReceived IS NOT NULL AND 
+                  hm.eveningIssued IS NOT NULL AND 
+                  hm.eveningEnding IS NOT NULL
+                )
+              END as hasCompleteShiftData
+            FROM HandoverMaterial hm
+            LEFT JOIN Material m ON hm.materialId = m.id
+            WHERE hm.handoverReportId = ${handoverReportId}
+          `) as any[];
 
-        console.log("Existing materials for shift:", existingMaterials);
+          console.log("Existing materials for shift:", existingMaterials);
 
-        // Check if any material already has complete data for this shift
-        const hasCompleteData = existingMaterials.some(
-          (material: any) => material.hasCompleteShiftData,
-        );
-
-        if (hasCompleteData) {
-          throw new Error(
-            `Ca làm việc ${shift} cho ngày ${date} đã có dữ liệu hoàn tất (đủ 4 cột: tồn đầu, nhập, xuất, tồn cuối). Không thể tạo báo cáo trùng.`,
+          // Check if any material already has complete data for this shift
+          const hasCompleteData = existingMaterials.some(
+            (material: any) => material.hasCompleteShiftData,
           );
+
+          if (hasCompleteData) {
+            throw new Error(
+              `Ca làm việc ${shift} cho ngày ${date} đã có dữ liệu hoàn tất (đủ 4 cột: tồn đầu, nhập, xuất, tồn cuối). Không thể tạo báo cáo trùng.`,
+            );
+          }
         }
 
         // Update existing materials for this shift

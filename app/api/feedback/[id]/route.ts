@@ -28,16 +28,16 @@ export async function GET(
       where: {
         id: feedbackId,
         userId: parseInt(userId),
-        branch: branch
+        branch: branch,
       },
       include: {
         computer: {
           select: {
             name: true,
-            id: true
-          }
-        }
-      }
+            id: true,
+          },
+        },
+      },
     });
     if (!feedback) {
       return NextResponse.json(
@@ -73,11 +73,11 @@ export async function PUT(
     const staff = await db.staff.findFirst({
       where: {
         id: parseInt(adminId),
-        branch: branch
+        branch: branch,
       },
       select: {
-        isAdmin: true
-      }
+        isAdmin: true,
+      },
     });
     if (!staff || !staff.isAdmin) {
       return NextResponse.json(
@@ -96,9 +96,7 @@ export async function PUT(
       );
     }
 
-    const result = await updateFeedbackStatus(
-      { ...body, feedbackId }
-    );
+    const result = await updateFeedbackStatus({ ...body, feedbackId });
 
     if (!result.data) {
       return NextResponse.json({ error: result.error }, { status: 400 });
