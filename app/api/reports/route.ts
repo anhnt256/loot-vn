@@ -1,53 +1,237 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getBranchFromCookie } from "@/lib/server-utils";
+import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
 
-// GET /api/reports?date=yyyy-mm-dd&shift=SANG&branch=...
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const date = searchParams.get("date");
-  const shift = searchParams.get("shift");
-  const branch = searchParams.get("branch");
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const branch = await getBranchFromCookie();
 
-  const where: any = {};
-  if (date) where.date = new Date(date);
-  if (shift) where.shift = shift;
-  if (branch) where.branch = branch;
+    const {
+      date,
+      shift,
+      // Financial fields
+      playtimeMoney = 0,
+      serviceMoney = 0,
+      momo = 0,
+      expenses = 0,
+      // Staff fields
+      counterStaffId,
+      kitchenStaffId,
+      securityStaffId,
+      // Notes
+      notes = null,
+      // File URL (optional)
+      fileUrl = null
+    } = body;
 
-  const reports = await db.report.findMany({
-    where,
-    include: {
-      details: true,
-      counterStaff: true,
-      kitchenStaff: true,
-      securityStaff: true,
-    },
-    orderBy: { date: "desc" },
-  });
-  return NextResponse.json(reports);
+    // Validate required fields
+    if (!date || !shift || !counterStaffId || !kitchenStaffId || !securityStaffId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Missing required fields: date, shift, counterStaffId, kitchenStaffId, securityStaffId are required.",
+        },
+        { status: 400 },
+      );
+    }
+
+    // Validate staff IDs are valid numbers
+    if (isNaN(Number(counterStaffId)) || Number(counterStaffId) <= 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid counterStaffId. Must be a positive number.",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (isNaN(Number(kitchenStaffId)) || Number(kitchenStaffId) <= 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid kitchenStaffId. Must be a positive number.",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (isNaN(Number(securityStaffId)) || Number(securityStaffId) <= 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid securityStaffId. Must be a positive number.",
+        },
+        { status: 400 },
+      );
+    }
+
+    // Parse date using timezone-utils
+    const currentTime = getCurrentTimeVNISO();
+
+    // Use the input date directly since it's already in YYYY-MM-DD format
+    const dateVN = date;
+
+    console.log("Creating report:", {
+      inputDate: date,
+      dateVN: dateVN,
+      currentTime: currentTime,
+      shift: shift,
+      playtimeMoney,
+      serviceMoney,
+      momo,
+      expenses,
+      counterStaffId,
+      kitchenStaffId,
+      securityStaffId,
+    });
+
+    // Check if report already exists for this exact date and shift
+    const existingReports = (await db.$queryRaw`
+      SELECT r.id, r.date, r.shift, r.branch, DATE(r.date) as dateVN
+      FROM Report r
+      WHERE r.shift = ${shift} AND r.branch = ${branch} AND DATE(r.date) = ${dateVN}
+      ORDER BY r.createdAt DESC
+    `) as any[];
+
+    console.log("Existing reports for this date and shift:", existingReports);
+
+    if (existingReports.length > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Báo cáo cho ca ${shift} ngày ${date} đã tồn tại.`,
+        },
+        { status: 400 },
+      );
+    }
+
+    let reportId: number = 0;
+
+    // Use transaction to create report and details
+    await db.$transaction(async (tx) => {
+      // Create new report
+      await tx.$executeRawUnsafe(`
+        INSERT INTO Report (
+          date, shift, branch, fileUrl, note, 
+          counterStaffId, kitchenStaffId, securityStaffId, 
+          createdAt, updatedAt
+        )
+        VALUES (
+          '${date}', '${shift}', '${branch}', 
+          ${fileUrl ? `'${JSON.stringify(fileUrl)}'` : 'NULL'}, 
+          ${notes ? `'${notes.replace(/'/g, "''")}'` : 'NULL'}, 
+          ${Number(counterStaffId)}, 
+          ${Number(kitchenStaffId)}, 
+          ${Number(securityStaffId)}, 
+          '${currentTime}', '${currentTime}'
+        )
+      `);
+
+      // Get the created report ID
+      const createdReport = (await tx.$queryRaw`
+        SELECT id FROM Report 
+        WHERE DATE(date) = ${dateVN} AND shift = ${shift} AND branch = ${branch}
+        ORDER BY createdAt DESC LIMIT 1
+      `) as any[];
+      reportId = createdReport[0].id;
+
+      // Create report details for financial data
+      const details = [
+        { type: 'GIO', value: parseFloat(playtimeMoney || 0) },
+        { type: 'DICH_VU', value: parseFloat(serviceMoney || 0) },
+        { type: 'MOMO', value: parseFloat(momo || 0) },
+        { type: 'CHI', value: parseFloat(expenses || 0) },
+        { type: 'TONG', value: parseFloat(playtimeMoney || 0) + parseFloat(serviceMoney || 0) + parseFloat(momo || 0) - parseFloat(expenses || 0) }
+      ];
+
+      for (const detail of details) {
+        await tx.$executeRawUnsafe(`
+          INSERT INTO ReportDetail (
+            reportId, type, value
+          )
+          VALUES (
+            ${reportId}, '${detail.type}', ${detail.value}
+          )
+        `);
+      }
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: { 
+        id: reportId,
+        total: parseFloat(playtimeMoney || 0) + parseFloat(serviceMoney || 0) + parseFloat(momo || 0) - parseFloat(expenses || 0)
+      },
+    });
+  } catch (error) {
+    console.error("Error creating report:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to create report" },
+      { status: 500 },
+    );
+  }
 }
 
-// POST /api/reports
-export async function POST(req: NextRequest) {
-  const data = await req.json();
-  // data: { date, shift, branch, fileUrl, note, counterStaffId, kitchenStaffId, securityStaffId, details }
-  // details: [{ type, value }]
-  const report = await db.report.create({
-    data: {
-      date: new Date(data.date),
-      shift: data.shift,
-      branch: data.branch,
-      fileUrl: data.fileUrl,
-      note: data.note,
-      counterStaffId: data.counterStaffId,
-      kitchenStaffId: data.kitchenStaffId,
-      securityStaffId: data.securityStaffId,
-      details: {
-        create:
-          data.details?.map((d: any) => ({ type: d.type, value: d.value })) ||
-          [],
-      },
-    },
-    include: { details: true },
-  });
-  return NextResponse.json(report);
+export async function GET(request: NextRequest) {
+  try {
+    const branch = await getBranchFromCookie();
+    const { searchParams } = new URL(request.url);
+    const date = searchParams.get('date');
+    const shift = searchParams.get('shift');
+
+    let query = `
+      SELECT 
+        r.id, r.date, r.shift, r.branch, r.note, r.fileUrl,
+        r.counterStaffId, r.kitchenStaffId, r.securityStaffId,
+        r.createdAt, r.updatedAt,
+        cs.fullName as counterStaffName,
+        ks.fullName as kitchenStaffName,
+        ss.fullName as securityStaffName
+      FROM Report r
+      LEFT JOIN Staff cs ON r.counterStaffId = cs.id
+      LEFT JOIN Staff ks ON r.kitchenStaffId = ks.id
+      LEFT JOIN Staff ss ON r.securityStaffId = ss.id
+      WHERE r.branch = ${branch}
+    `;
+
+    const params: any[] = [];
+
+    if (date) {
+      query += ` AND DATE(r.date) = ${date}`;
+    }
+
+    if (shift) {
+      query += ` AND r.shift = ${shift}`;
+    }
+
+    query += ` ORDER BY r.date DESC, r.createdAt DESC`;
+
+    const reports = (await db.$queryRawUnsafe(query, ...params)) as any[];
+
+    // Get details for each report
+    for (const report of reports) {
+      const details = (await db.$queryRaw`
+        SELECT type, value FROM ReportDetail WHERE reportId = ${report.id}
+      `) as any[];
+
+      report.details = details.reduce((acc: any, detail: any) => {
+        acc[detail.type] = detail.value;
+        return acc;
+      }, {});
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: reports,
+    });
+  } catch (error) {
+    console.error("Error fetching reports:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch reports" },
+      { status: 500 },
+    );
+  }
 }

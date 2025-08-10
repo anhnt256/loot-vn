@@ -79,16 +79,16 @@ const menuItems = [
     icon: "📝",
   },
   {
+    title: "Báo cáo kết ca",
+    href: "/admin/reports",
+    icon: "📝",
+  },
+  {
     title: "Quản lý Feedback",
     href: "/admin/feedback",
     icon: "💬",
+    adminOnly: true,
   },
-  // {
-  //   title: "Báo cáo kết ca",
-  //   href: "/admin/reports",
-  //   icon: "📝",
-  //   adminOnly: true,
-  // },
   // {
   //   title: "Lịch sử giao dịch",
   //   href: "/admin/transactions",
@@ -149,12 +149,13 @@ export function AdminSidebar() {
 
   // Filter menu items based on login type and admin role
   const filteredMenuItems = menuItems.filter((item) => {
-    // If login type is macAddress or mac, show dashboard, reward exchange, and handover reports
+    // If login type is macAddress or mac, show limited menus: Dashboard, Đổi thưởng, Báo cáo bàn giao, Báo cáo kết ca (4 mục)
     if (loginType === "macAddress" || loginType === "mac") {
       return (
         item.href === "/admin" ||
         item.href === "/admin/reward-exchange" ||
-        item.href === "/admin/handover-reports"
+        item.href === "/admin/handover-reports" ||
+        item.href === "/admin/reports"
       );
     }
 

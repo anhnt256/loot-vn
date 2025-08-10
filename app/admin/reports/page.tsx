@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 
 interface Report {
   id: number;
@@ -70,10 +70,13 @@ const shifts = ["Sáng", "Chiều", "Tối"];
 const PAGE_SIZE = 10;
 
 export default function AdminReportsPage() {
-  const [reports, setReports] = useState(initialReports);
+  const [reports, setReports] = useState<Report[]>([]);
+  const [staff, setStaff] = useState(mockStaff);
+  const [loading, setLoading] = useState(true);
   const [filterDate, setFilterDate] = useState("");
   const [filterShift, setFilterShift] = useState("");
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<"create" | "view">("create");
   const [isSourceShiftModalOpen, setIsSourceShiftModalOpen] = useState(false);
@@ -103,26 +106,58 @@ export default function AdminReportsPage() {
     shift: "",
   });
 
-  // Lọc và phân trang dựa trên state `reports`
-  const filteredReports = useMemo(
-    () =>
-      reports.filter((r) => {
-        const matchDate = filterDate ? r.date === filterDate : true;
-        const matchShift = filterShift ? r.shift === filterShift : true;
-        return matchDate && matchShift;
-      }),
-    [reports, filterDate, filterShift],
-  );
+  // Fetch reports from API
+  const fetchReports = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (filterDate) params.append("date", filterDate);
+      if (filterShift) params.append("shift", filterShift);
+      params.append("page", page.toString());
+      params.append("limit", PAGE_SIZE.toString());
 
-  // Phân trang
-  const totalPage = Math.ceil(filteredReports.length / PAGE_SIZE);
-  const paginatedReports = filteredReports.slice(
-    (page - 1) * PAGE_SIZE,
-    page * PAGE_SIZE,
-  );
+      const response = await fetch(`/api/reports?${params}`);
+      if (response.ok) {
+        const data = await response.json();
+        setReports(data.reports || []);
+        setTotalPages(data.pagination?.totalPages || 1);
+      }
+    } catch (error) {
+      console.error("Error fetching reports:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch staff from API
+  const fetchStaff = async () => {
+    try {
+      const response = await fetch("/api/staff");
+      if (response.ok) {
+        const data = await response.json();
+        setStaff(data);
+      }
+    } catch (error) {
+      console.error("Error fetching staff:", error);
+    }
+  };
+
+  // Load data on mount and when filters change
+  useEffect(() => {
+    fetchReports();
+  }, [filterDate, filterShift, page]);
+
+  useEffect(() => {
+    fetchStaff();
+  }, []);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [filterDate, filterShift]);
 
   const handlePrev = () => setPage((p) => Math.max(1, p - 1));
-  const handleNext = () => setPage((p) => Math.min(totalPage, p + 1));
+  const handleNext = () => setPage((p) => Math.min(totalPages, p + 1));
 
   // Reset về trang 1 khi filter thay đổi
   React.useEffect(() => {
@@ -165,23 +200,23 @@ export default function AdminReportsPage() {
     if (hour >= 7 && hour < 15) shift = "Sáng";
     if (hour >= 15 && hour < 22) shift = "Chiều";
 
-    setFormValues({
-      id: 0,
-      date,
-      time,
-      shift,
-      playtimeFee: "0",
-      serviceFee: "0",
-      momo: "0",
-      expense: "0",
-      interShiftExpenseAmount: "0",
-      interShiftExpenseSourceShift: "",
-      interShiftExpenseSourceDate: "",
-      cashier: mockStaff.cashiers[0],
-      kitchenStaff: mockStaff.kitchen[0],
-      securityGuard: mockStaff.security[0],
-      note: "",
-    });
+         setFormValues({
+       id: 0,
+       date,
+       time,
+       shift,
+       playtimeFee: "0",
+       serviceFee: "0",
+       momo: "0",
+       expense: "0",
+       interShiftExpenseAmount: "0",
+       interShiftExpenseSourceShift: "",
+       interShiftExpenseSourceDate: "",
+       cashier: staff.cashiers[0] || "",
+       kitchenStaff: staff.kitchen[0] || "",
+       securityGuard: staff.security[0] || "",
+       note: "",
+     });
     setIsDrawerOpen(true);
   };
 
@@ -210,29 +245,44 @@ export default function AdminReportsPage() {
     }
   };
 
-  const handleCreateReport = (e: React.FormEvent) => {
+  const handleCreateReport = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newReport: Report = {
-      id: Math.max(0, ...reports.map((r) => r.id)) + 1,
-      date: formValues.date,
-      time: formValues.time,
-      shift: formValues.shift,
-      playtimeFee: parseFloat(formValues.playtimeFee) || 0,
-      serviceFee: parseFloat(formValues.serviceFee) || 0,
-      momo: parseFloat(formValues.momo) || 0,
-      expense: parseFloat(formValues.expense) || 0,
-      interShiftExpenseAmount:
-        parseFloat(formValues.interShiftExpenseAmount) || 0,
-      interShiftExpenseSourceShift: formValues.interShiftExpenseSourceShift,
-      interShiftExpenseSourceDate: formValues.interShiftExpenseSourceDate,
-      cashier: formValues.cashier,
-      kitchenStaff: formValues.kitchenStaff,
-      securityGuard: formValues.securityGuard,
-      note: formValues.note,
-      details: formValues.note,
-    };
-    setReports((prev) => [newReport, ...prev]);
-    setIsDrawerOpen(false);
+    try {
+      const response = await fetch("/api/reports", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          date: formValues.date,
+          time: formValues.time,
+          shift: formValues.shift,
+          playtimeFee: formValues.playtimeFee,
+          serviceFee: formValues.serviceFee,
+          momo: formValues.momo,
+          expense: formValues.expense,
+          interShiftExpenseAmount: formValues.interShiftExpenseAmount,
+          interShiftExpenseSourceShift: formValues.interShiftExpenseSourceShift,
+          interShiftExpenseSourceDate: formValues.interShiftExpenseSourceDate,
+          cashier: formValues.cashier,
+          kitchenStaff: formValues.kitchenStaff,
+          securityGuard: formValues.securityGuard,
+          note: formValues.note,
+        }),
+      });
+
+      if (response.ok) {
+        setIsDrawerOpen(false);
+        // Refresh reports list
+        fetchReports();
+      } else {
+        const error = await response.json();
+        alert("Lỗi: " + (error.message || "Không thể lưu báo cáo"));
+      }
+    } catch (error) {
+      console.error("Error creating report:", error);
+      alert("Lỗi khi lưu báo cáo");
+    }
   };
 
   const totalNew =
@@ -340,53 +390,59 @@ export default function AdminReportsPage() {
               <th className="p-3 text-center font-semibold">Chi tiết</th>
             </tr>
           </thead>
-          <tbody>
-            {paginatedReports.length === 0 ? (
-              <tr>
-                <td colSpan={10} className="text-center p-4 text-gray-400">
-                  Không có báo cáo nào khớp với bộ lọc
-                </td>
-              </tr>
-            ) : (
-              paginatedReports.map((r) => {
-                const total = r.playtimeFee + r.serviceFee - r.momo - r.expense;
-                return (
-                  <tr
-                    key={r.id}
-                    className="border-b border-gray-700 hover:bg-gray-600 transition-colors duration-200"
-                  >
-                    <td className="p-3">{r.id}</td>
-                    <td className="p-3">{r.date}</td>
-                    <td className="p-3">{r.time}</td>
-                    <td className="p-3">{r.shift}</td>
-                    <td className="p-3 text-right font-mono">
-                      {r.playtimeFee.toLocaleString()}
-                    </td>
-                    <td className="p-3 text-right font-mono">
-                      {r.serviceFee.toLocaleString()}
-                    </td>
-                    <td className="p-3 text-right font-mono">
-                      {r.momo.toLocaleString()}
-                    </td>
-                    <td className="p-3 text-right font-mono">
-                      {r.expense.toLocaleString()}
-                    </td>
-                    <td className="p-3 text-right font-mono">
-                      {total.toLocaleString()}
-                    </td>
-                    <td className="p-3 text-center">
-                      <button
-                        onClick={() => handleViewDetails(r)}
-                        className="text-green-400 hover:underline"
-                      >
-                        Xem
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
+                     <tbody>
+             {loading ? (
+               <tr>
+                 <td colSpan={10} className="text-center p-4 text-gray-400">
+                   Đang tải...
+                 </td>
+               </tr>
+             ) : reports.length === 0 ? (
+               <tr>
+                 <td colSpan={10} className="text-center p-4 text-gray-400">
+                   Không có báo cáo nào khớp với bộ lọc
+                 </td>
+               </tr>
+             ) : (
+               reports.map((r: Report) => {
+                 const total = r.playtimeFee + r.serviceFee - r.momo - r.expense;
+                 return (
+                   <tr
+                     key={r.id}
+                     className="border-b border-gray-700 hover:bg-gray-600 transition-colors duration-200"
+                   >
+                     <td className="p-3">{r.id}</td>
+                     <td className="p-3">{r.date}</td>
+                     <td className="p-3">{r.time}</td>
+                     <td className="p-3">{r.shift}</td>
+                     <td className="p-3 text-right font-mono">
+                       {r.playtimeFee.toLocaleString()}
+                     </td>
+                     <td className="p-3 text-right font-mono">
+                       {r.serviceFee.toLocaleString()}
+                     </td>
+                     <td className="p-3 text-right font-mono">
+                       {r.momo.toLocaleString()}
+                     </td>
+                     <td className="p-3 text-right font-mono">
+                       {r.expense.toLocaleString()}
+                     </td>
+                     <td className="p-3 text-right font-mono">
+                       {total.toLocaleString()}
+                     </td>
+                     <td className="p-3 text-center">
+                       <button
+                         onClick={() => handleViewDetails(r)}
+                         className="text-green-400 hover:underline"
+                       >
+                         Xem
+                       </button>
+                     </td>
+                   </tr>
+                 );
+               })
+             )}
+           </tbody>
         </table>
       </div>
 
@@ -399,12 +455,12 @@ export default function AdminReportsPage() {
         >
           Trước
         </button>
-        <span className="font-semibold">
-          Trang {page} / {totalPage}
-        </span>
-        <button
-          onClick={handleNext}
-          disabled={page === totalPage}
+                 <span className="font-semibold">
+           Trang {page} / {totalPages}
+         </span>
+         <button
+           onClick={handleNext}
+           disabled={page === totalPages}
           className="px-4 py-2 bg-gray-700 rounded-md hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           Sau
@@ -517,20 +573,20 @@ export default function AdminReportsPage() {
                       >
                         Quầy
                       </label>
-                      <select
-                        id="cashier"
-                        name="cashier"
-                        value={formValues.cashier}
-                        onChange={handleFormChange}
-                        disabled={drawerMode === "view"}
-                        className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
-                      >
-                        {mockStaff.cashiers.map((name) => (
-                          <option key={name} value={name}>
-                            {name}
-                          </option>
-                        ))}
-                      </select>
+                                             <select
+                         id="cashier"
+                         name="cashier"
+                         value={formValues.cashier}
+                         onChange={handleFormChange}
+                         disabled={drawerMode === "view"}
+                         className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
+                       >
+                         {staff.cashiers.map((name) => (
+                           <option key={name} value={name}>
+                             {name}
+                           </option>
+                         ))}
+                       </select>
                     </div>
                     <div className="col-span-4">
                       <label
@@ -539,20 +595,20 @@ export default function AdminReportsPage() {
                       >
                         Bếp
                       </label>
-                      <select
-                        id="kitchenStaff"
-                        name="kitchenStaff"
-                        value={formValues.kitchenStaff}
-                        onChange={handleFormChange}
-                        disabled={drawerMode === "view"}
-                        className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
-                      >
-                        {mockStaff.kitchen.map((name) => (
-                          <option key={name} value={name}>
-                            {name}
-                          </option>
-                        ))}
-                      </select>
+                                             <select
+                         id="kitchenStaff"
+                         name="kitchenStaff"
+                         value={formValues.kitchenStaff}
+                         onChange={handleFormChange}
+                         disabled={drawerMode === "view"}
+                         className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
+                       >
+                         {staff.kitchen.map((name) => (
+                           <option key={name} value={name}>
+                             {name}
+                           </option>
+                         ))}
+                       </select>
                     </div>
                     <div className="col-span-4">
                       <label
@@ -561,20 +617,20 @@ export default function AdminReportsPage() {
                       >
                         Bảo vệ
                       </label>
-                      <select
-                        id="securityGuard"
-                        name="securityGuard"
-                        value={formValues.securityGuard}
-                        onChange={handleFormChange}
-                        disabled={drawerMode === "view"}
-                        className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
-                      >
-                        {mockStaff.security.map((name) => (
-                          <option key={name} value={name}>
-                            {name}
-                          </option>
-                        ))}
-                      </select>
+                                             <select
+                         id="securityGuard"
+                         name="securityGuard"
+                         value={formValues.securityGuard}
+                         onChange={handleFormChange}
+                         disabled={drawerMode === "view"}
+                         className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
+                       >
+                         {staff.security.map((name) => (
+                           <option key={name} value={name}>
+                             {name}
+                           </option>
+                         ))}
+                       </select>
                     </div>
                   </div>
                 </div>
@@ -759,22 +815,6 @@ export default function AdminReportsPage() {
                     disabled={drawerMode === "view"}
                     className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
                   ></textarea>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="file"
-                    className="block text-sm font-medium mb-1"
-                  >
-                    File (nếu có)
-                  </label>
-                  <input
-                    type="file"
-                    id="file"
-                    name="file"
-                    className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-600"
-                    disabled={drawerMode === "view"}
-                  />
                 </div>
               </div>
 
