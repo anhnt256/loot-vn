@@ -23,7 +23,11 @@ export async function POST(request: NextRequest) {
       // Notes
       notes = null,
       // File URL (optional)
-      fileUrl = null
+      fileUrl = null,
+      // Inter-shift expense (optional, UI shows in detail)
+      interShiftExpenseAmount = 0,
+      interShiftExpenseSourceShift = null,
+      interShiftExpenseSourceDate = null,
     } = body;
 
     // Validate required fields
@@ -113,6 +117,28 @@ export async function POST(request: NextRequest) {
     // Use transaction to create report and details
     await db.$transaction(async (tx) => {
       // Create new report
+      // Build JSON metadata in fileUrl to store optional fields (e.g., inter-shift expense)
+      let meta: any = {};
+      try {
+        if (fileUrl && typeof fileUrl === "string") {
+          // try parse incoming JSON string
+          meta = JSON.parse(fileUrl);
+        } else if (fileUrl && typeof fileUrl === "object") {
+          meta = fileUrl;
+        }
+      } catch {}
+
+      const interShiftAmountNum = parseFloat(interShiftExpenseAmount || 0);
+      if (!Number.isNaN(interShiftAmountNum) && interShiftAmountNum > 0) {
+        meta.interShiftExpense = {
+          amount: interShiftAmountNum,
+          sourceShift: interShiftExpenseSourceShift,
+          sourceDate: interShiftExpenseSourceDate,
+        };
+      }
+
+      const fileUrlSqlValue = `'${JSON.stringify(meta).replace(/'/g, "''")}'`;
+
       await tx.$executeRawUnsafe(`
         INSERT INTO Report (
           date, shift, branch, fileUrl, note, 
@@ -121,8 +147,8 @@ export async function POST(request: NextRequest) {
         )
         VALUES (
           '${date}', '${shift}', '${branch}', 
-          ${fileUrl ? `'${JSON.stringify(fileUrl)}'` : 'NULL'}, 
-          ${notes ? `'${notes.replace(/'/g, "''")}'` : 'NULL'}, 
+          ${fileUrlSqlValue}, 
+          ${notes ? `'${(notes as string).replace(/'/g, "''")}'` : 'NULL'}, 
           ${Number(counterStaffId)}, 
           ${Number(kitchenStaffId)}, 
           ${Number(securityStaffId)}, 
@@ -146,6 +172,8 @@ export async function POST(request: NextRequest) {
         { type: 'CHI', value: parseFloat(expenses || 0) },
         { type: 'TONG', value: parseFloat(playtimeMoney || 0) + parseFloat(serviceMoney || 0) + parseFloat(momo || 0) - parseFloat(expenses || 0) }
       ];
+
+      // Note: inter-shift expense kept only in fileUrl JSON metadata to avoid schema changes
 
       for (const detail of details) {
         await tx.$executeRawUnsafe(`
@@ -194,22 +222,31 @@ export async function GET(request: NextRequest) {
       LEFT JOIN Staff cs ON r.counterStaffId = cs.id
       LEFT JOIN Staff ks ON r.kitchenStaffId = ks.id
       LEFT JOIN Staff ss ON r.securityStaffId = ss.id
-      WHERE r.branch = ${branch}
+      WHERE r.branch = '${branch}'
     `;
 
-    const params: any[] = [];
-
     if (date) {
-      query += ` AND DATE(r.date) = ${date}`;
+      query += ` AND DATE(r.date) = '${date}'`;
     }
 
     if (shift) {
-      query += ` AND r.shift = ${shift}`;
+      query += ` AND r.shift = '${shift}'`;
     }
 
     query += ` ORDER BY r.date DESC, r.createdAt DESC`;
 
-    const reports = (await db.$queryRawUnsafe(query, ...params)) as any[];
+    const reports = (await db.$queryRawUnsafe(query)) as any[];
+
+    // Parse fileUrl JSON to object for FE convenience
+    for (const r of reports) {
+      try {
+        if (typeof r.fileUrl === 'string' && r.fileUrl.trim().length) {
+          r.fileUrl = JSON.parse(r.fileUrl);
+        }
+      } catch {
+        // keep as-is if parse fails
+      }
+    }
 
     // Get details for each report
     for (const report of reports) {

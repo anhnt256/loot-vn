@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
         id, fullName, userName, staffType, phone, email,
         isDeleted, isAdmin, branch
       FROM Staff 
-      WHERE branch = ${branch} AND isDeleted = false
+      WHERE branch = '${branch}' AND isDeleted = false AND isAdmin = false
     `;
 
     // Filter by staff type if specified

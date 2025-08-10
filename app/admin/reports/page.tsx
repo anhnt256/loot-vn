@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
+import Cookies from "js-cookie";
 
 interface Report {
   id: number;
@@ -21,60 +22,30 @@ interface Report {
   details: string;
 }
 
-const initialReports: Report[] = [
-  {
-    id: 1,
-    date: "2024-06-01",
-    shift: "Sáng",
-    time: "08:30:15",
-    playtimeFee: 100000,
-    serviceFee: 50000,
-    momo: 50000,
-    expense: 10000,
-    cashier: "Nhân viên A",
-    kitchenStaff: "Đầu bếp X",
-    securityGuard: "Bảo vệ 1",
-    note: "Báo cáo ca sáng",
-    details:
-      "Chi tiết giao dịch 1: Khách chơi 100k, nạp 50k game A, trả 50k qua momo. Chi 10k tiền nước.",
-  },
-  {
-    id: 2,
-    date: "2024-06-01",
-    shift: "Chiều",
-    time: "14:05:45",
-    playtimeFee: 150000,
-    serviceFee: 50000,
-    momo: 0,
-    expense: 20000,
-    interShiftExpenseAmount: 50000,
-    interShiftExpenseSourceShift: "Sáng",
-    interShiftExpenseSourceDate: "2024-06-01",
-    cashier: "Nhân viên B",
-    kitchenStaff: "Không có",
-    securityGuard: "Bảo vệ 2",
-    note: "Báo cáo ca chiều",
-    details:
-      "Chi tiết giao dịch 2: Khách chơi 150k, bán 2 thẻ 25k. Chi 20k tiền ăn. Lấy 50k từ ca sáng.",
-  },
-  // Thêm dữ liệu mẫu khác nếu cần
-];
+// No mock data – all data comes from API
 
-const mockStaff = {
-  cashiers: ["Nhân viên A", "Nhân viên B", "Nhân viên C"],
-  kitchen: ["Đầu bếp X", "Đầu bếp Y", "Không có"],
-  security: ["Bảo vệ 1", "Bảo vệ 2", "Không có"],
-};
 
 const shifts = ["Sáng", "Chiều", "Tối"];
+const branches = ["GO_VAP", "TAN_PHU"];
 const PAGE_SIZE = 10;
 
 export default function AdminReportsPage() {
   const [reports, setReports] = useState<Report[]>([]);
-  const [staff, setStaff] = useState(mockStaff);
+  const [staff, setStaff] = useState<{ cashiers: string[]; kitchen: string[]; security: string[] }>({
+    cashiers: [],
+    kitchen: [],
+    security: [],
+  });
   const [loading, setLoading] = useState(true);
   const [filterDate, setFilterDate] = useState("");
   const [filterShift, setFilterShift] = useState("");
+  const [selectedBranch, setSelectedBranch] = useState(() => {
+    // Get branch from cookie or default to GO_VAP
+    if (typeof window !== "undefined") {
+      return Cookies.get("branch") || "GO_VAP";
+    }
+    return "GO_VAP";
+  });
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -94,9 +65,9 @@ export default function AdminReportsPage() {
     interShiftExpenseAmount: "0",
     interShiftExpenseSourceShift: "",
     interShiftExpenseSourceDate: "",
-    cashier: mockStaff.cashiers[0],
-    kitchenStaff: mockStaff.kitchen[0],
-    securityGuard: mockStaff.security[0],
+    cashier: "Không có",
+    kitchenStaff: "Không có",
+    securityGuard: "Không có",
     note: "",
   });
 
@@ -119,26 +90,71 @@ export default function AdminReportsPage() {
       const response = await fetch(`/api/reports?${params}`);
       if (response.ok) {
         const data = await response.json();
-        setReports(data.reports || []);
-        setTotalPages(data.pagination?.totalPages || 1);
+        if (data.success && data.data) {
+          // Transform API data to match frontend interface
+          const transformedReports = data.data.map((report: any) => {
+            const inter = report?.fileUrl?.interShiftExpense || {};
+            return {
+              id: report.id,
+              date: new Date(report.date).toISOString().split('T')[0],
+              time: new Date(report.date).toTimeString().split(' ')[0].substring(0, 5),
+              shift: report.shift,
+              playtimeFee: report.details?.GIO || 0,
+              serviceFee: report.details?.DICH_VU || 0,
+              momo: report.details?.MOMO || 0,
+              expense: report.details?.CHI || 0,
+              cashier: report.counterStaffName || "N/A",
+              kitchenStaff: report.kitchenStaffName || "N/A",
+              securityGuard: report.securityStaffName || "N/A",
+              note: report.note || "",
+              // map inter-shift expense from JSON fileUrl
+              interShiftExpenseAmount: inter?.amount || 0,
+              interShiftExpenseSourceShift: inter?.sourceShift || "",
+              interShiftExpenseSourceDate: inter?.sourceDate || "",
+              details: "Chi tiết báo cáo",
+            };
+          });
+          setReports(transformedReports);
+          setTotalPages(Math.ceil((data.data?.length || 0) / PAGE_SIZE));
+        } else {
+          setReports([]);
+          setTotalPages(1);
+        }
+      } else {
+        console.error("Failed to fetch reports:", response.status);
+        setReports([]);
+        setTotalPages(1);
       }
     } catch (error) {
       console.error("Error fetching reports:", error);
+      setReports([]);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch staff from API
+  // Fetch staff from API and map the same list to all 3 dropdowns
   const fetchStaff = async () => {
     try {
-      const response = await fetch("/api/staff");
-      if (response.ok) {
-        const data = await response.json();
-        setStaff(data);
-      }
-    } catch (error) {
-      console.error("Error fetching staff:", error);
+      const resp = await fetch(`/api/staff`);
+      if (!resp.ok) return;
+      const json = await resp.json();
+      const list: any[] = json?.data ?? [];
+      const names = list.map((s) => s?.fullName).filter(Boolean);
+      const options = names.length ? names : ["Không có"];
+
+      setStaff({ cashiers: options, kitchen: options, security: options });
+
+      // ensure defaults exist in the options
+      setFormValues((prev) => ({
+        ...prev,
+        cashier: options[0],
+        kitchenStaff: options[0],
+        securityGuard: options[0],
+      }));
+    } catch (err) {
+      console.error("Error fetching staff:", err);
     }
   };
 
@@ -149,6 +165,14 @@ export default function AdminReportsPage() {
 
   useEffect(() => {
     fetchStaff();
+  }, []);
+
+  // Load branch from cookie on mount
+  useEffect(() => {
+    const branchFromCookie = Cookies.get("branch");
+    if (branchFromCookie && branchFromCookie !== selectedBranch) {
+      setSelectedBranch(branchFromCookie);
+    }
   }, []);
 
   // Reset page when filters change
@@ -255,19 +279,18 @@ export default function AdminReportsPage() {
         },
         body: JSON.stringify({
           date: formValues.date,
-          time: formValues.time,
           shift: formValues.shift,
-          playtimeFee: formValues.playtimeFee,
-          serviceFee: formValues.serviceFee,
+          playtimeMoney: formValues.playtimeFee,
+          serviceMoney: formValues.serviceFee,
           momo: formValues.momo,
-          expense: formValues.expense,
+          expenses: formValues.expense,
+          counterStaffId: 1, // TODO: Map from staff names to IDs
+          kitchenStaffId: 1, // TODO: Map from staff names to IDs
+          securityStaffId: 1, // TODO: Map from staff names to IDs
+          notes: formValues.note,
           interShiftExpenseAmount: formValues.interShiftExpenseAmount,
           interShiftExpenseSourceShift: formValues.interShiftExpenseSourceShift,
           interShiftExpenseSourceDate: formValues.interShiftExpenseSourceDate,
-          cashier: formValues.cashier,
-          kitchenStaff: formValues.kitchenStaff,
-          securityGuard: formValues.securityGuard,
-          note: formValues.note,
         }),
       });
 
@@ -323,6 +346,14 @@ export default function AdminReportsPage() {
     }));
   };
 
+  const handleBranchChange = (newBranch: string) => {
+    setSelectedBranch(newBranch);
+    Cookies.set("branch", newBranch, { path: "/" });
+    // Refresh data with new branch
+    fetchReports();
+    fetchStaff();
+  };
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 bg-gray-900 text-gray-100 min-h-screen">
       <div className="flex justify-between items-center mb-6">
@@ -337,6 +368,23 @@ export default function AdminReportsPage() {
 
       {/* Vùng filter */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6 p-4 bg-gray-800 rounded-lg">
+        <div className="flex-1">
+          <label
+            htmlFor="branch-filter"
+            className="block text-sm font-medium mb-1"
+          >
+            Chi nhánh
+          </label>
+          <select
+            id="branch-filter"
+            value={selectedBranch}
+            onChange={(e) => handleBranchChange(e.target.value)}
+            className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="GO_VAP">Gò Vấp</option>
+            <option value="TAN_PHU">Tân Phú</option>
+          </select>
+        </div>
         <div className="flex-1">
           <label
             htmlFor="date-filter"
@@ -501,7 +549,7 @@ export default function AdminReportsPage() {
                     Thông tin ca làm việc
                   </h3>
                   <div className="grid grid-cols-12 gap-4 pt-2">
-                    <div className="col-span-5">
+                    <div className="col-span-4">
                       <label
                         htmlFor="date"
                         className="block text-sm font-medium mb-1"
@@ -518,7 +566,7 @@ export default function AdminReportsPage() {
                         className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
                       />
                     </div>
-                    <div className="col-span-3">
+                    <div className="col-span-4">
                       <label
                         htmlFor="time"
                         className="block text-sm font-medium mb-1"
@@ -573,20 +621,20 @@ export default function AdminReportsPage() {
                       >
                         Quầy
                       </label>
-                                             <select
-                         id="cashier"
-                         name="cashier"
-                         value={formValues.cashier}
-                         onChange={handleFormChange}
-                         disabled={drawerMode === "view"}
-                         className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
-                       >
-                         {staff.cashiers.map((name) => (
-                           <option key={name} value={name}>
-                             {name}
-                           </option>
-                         ))}
-                       </select>
+                      <select
+                        id="cashier"
+                        name="cashier"
+                        value={formValues.cashier}
+                        onChange={handleFormChange}
+                        disabled={drawerMode === "view"}
+                        className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
+                      >
+                        {staff.cashiers.map((name) => (
+                          <option key={name} value={name}>
+                            {name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                     <div className="col-span-4">
                       <label
@@ -595,20 +643,20 @@ export default function AdminReportsPage() {
                       >
                         Bếp
                       </label>
-                                             <select
-                         id="kitchenStaff"
-                         name="kitchenStaff"
-                         value={formValues.kitchenStaff}
-                         onChange={handleFormChange}
-                         disabled={drawerMode === "view"}
-                         className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
-                       >
-                         {staff.kitchen.map((name) => (
-                           <option key={name} value={name}>
-                             {name}
-                           </option>
-                         ))}
-                       </select>
+                      <select
+                        id="kitchenStaff"
+                        name="kitchenStaff"
+                        value={formValues.kitchenStaff}
+                        onChange={handleFormChange}
+                        disabled={drawerMode === "view"}
+                        className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
+                      >
+                        {staff.kitchen.map((name) => (
+                          <option key={name} value={name}>
+                            {name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                     <div className="col-span-4">
                       <label
@@ -617,20 +665,20 @@ export default function AdminReportsPage() {
                       >
                         Bảo vệ
                       </label>
-                                             <select
-                         id="securityGuard"
-                         name="securityGuard"
-                         value={formValues.securityGuard}
-                         onChange={handleFormChange}
-                         disabled={drawerMode === "view"}
-                         className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
-                       >
-                         {staff.security.map((name) => (
-                           <option key={name} value={name}>
-                             {name}
-                           </option>
-                         ))}
-                       </select>
+                      <select
+                        id="securityGuard"
+                        name="securityGuard"
+                        value={formValues.securityGuard}
+                        onChange={handleFormChange}
+                        disabled={drawerMode === "view"}
+                        className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
+                      >
+                        {staff.security.map((name) => (
+                          <option key={name} value={name}>
+                            {name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 </div>
