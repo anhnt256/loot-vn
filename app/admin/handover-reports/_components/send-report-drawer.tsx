@@ -215,7 +215,7 @@ export default function SendReportDrawer({
 
   const [selectedStaff, setSelectedStaff] = useState("");
   const [selectedReportType, setSelectedReportType] = useState(
-    defaultReportType || REPORT_TYPE_ENUM.BAO_CAO_BEP,
+    defaultReportType ?? "",
   );
   const [selectedDateState, setSelectedDateState] = useState(
     selectedDate || "",
@@ -226,6 +226,7 @@ export default function SendReportDrawer({
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [submissionTracking, setSubmissionTracking] = useState<any>(null);
+  const [displayTime, setDisplayTime] = useState<string>("");
 
   // Debug submissionTracking changes
   useEffect(() => {
@@ -271,10 +272,15 @@ export default function SendReportDrawer({
   useEffect(() => {
     if (isOpen) {
       fetchStaffList();
-      // Set default report type if provided
       if (defaultReportType) {
         setSelectedReportType(defaultReportType);
+      } else {
+        // No fallback: explicitly notify to select report type
+        // and prevent fetching until selected
+        setSelectedReportType("");
       }
+      // snapshot current time once when drawer opens to avoid updating on every re-render
+      setDisplayTime(new Date().toLocaleTimeString("vi-VN"));
     }
   }, [isOpen, defaultReportType]);
 
@@ -300,26 +306,27 @@ export default function SendReportDrawer({
             const { isInitialData, submissionTracking } = result.data;
             setSubmissionTracking(submissionTracking);
 
+            // Decide shift first, then map materials using that shift
+            let autoShift: string = SHIFT_ENUM.SANG;
+            if (submissionTracking) {
+              if (submissionTracking.morningSubmissionCount < 2) {
+                autoShift = SHIFT_ENUM.SANG;
+              } else if (submissionTracking.afternoonSubmissionCount < 2) {
+                autoShift = SHIFT_ENUM.CHIEU;
+              } else if (submissionTracking.eveningSubmissionCount < 2) {
+                autoShift = SHIFT_ENUM.TOI;
+              }
+            }
+
+            setSelectedShift(autoShift);
+
             const mappedMaterials = mapMaterialData(
               isInitialData,
               result.data.materials,
               submissionTracking,
-              selectedShift,
+              autoShift,
             );
             setMaterialData(mappedMaterials);
-
-            if (submissionTracking === null) {
-              setSelectedShift(SHIFT_ENUM.SANG);
-            } else {
-              // Auto-select the first incomplete shift
-              if (submissionTracking.morningSubmissionCount < 2) {
-                setSelectedShift(SHIFT_ENUM.SANG);
-              } else if (submissionTracking.afternoonSubmissionCount < 2) {
-                setSelectedShift(SHIFT_ENUM.CHIEU);
-              } else if (submissionTracking.eveningSubmissionCount < 2) {
-                setSelectedShift(SHIFT_ENUM.TOI);
-              }
-            }
           } else {
             console.error("Failed to fetch report data:", result.error);
             setMaterialData([]);
@@ -507,11 +514,11 @@ export default function SendReportDrawer({
                   parseFloat(e.target.value) || 0,
                 )
               }
-              className={`text-center ${isDisabled ? "bg-gray-100" : ""}`}
+              className={`text-center ${(isDisabled || loading) ? "bg-gray-100" : ""}`}
               min={0}
               step={0.5}
               placeholder="Nhập số lượng"
-              disabled={isDisabled}
+              disabled={isDisabled || loading}
               title={
                 isDisabled
                   ? "Trường nhập đã được khóa"
@@ -542,11 +549,11 @@ export default function SendReportDrawer({
                   parseFloat(e.target.value) || 0,
                 )
               }
-              className={`text-center ${isDisabled ? "bg-gray-100" : ""}`}
+              className={`text-center ${(isDisabled || loading) ? "bg-gray-100" : ""}`}
               min={0}
               step={0.5}
               placeholder="Xuất số lượng"
-              disabled={isDisabled}
+              disabled={isDisabled || loading}
               title={
                 isDisabled
                   ? "Trường xuất đã được khóa"
@@ -580,18 +587,27 @@ export default function SendReportDrawer({
     field: keyof MaterialReportData,
     value: number,
   ) => {
-    const newData = [...materialData];
-    newData[index] = { ...newData[index], [field]: value };
+    // Use functional state update to avoid stale closures from memoized columns
+    setMaterialData((prev) => {
+      const newData = [...prev];
+      const currentRow = { ...newData[index], [field]: value } as MaterialReportData;
 
-    // Auto-calculate ending inventory
-    if (field === "beginning" || field === "received" || field === "issued") {
-      newData[index].ending =
-        newData[index].beginning +
-        (newData[index].received || 0) -
-        (newData[index].issued || 0);
-    }
+      if (
+        field === "beginning" ||
+        field === "received" ||
+        field === "issued"
+      ) {
+        const beginning =
+          field === "beginning" ? value : currentRow.beginning ?? 0;
+        const received =
+          field === "received" ? value : currentRow.received ?? 0;
+        const issued = field === "issued" ? value : currentRow.issued ?? 0;
+        currentRow.ending = beginning + received - issued;
+      }
 
-    setMaterialData(newData);
+      newData[index] = currentRow;
+      return newData;
+    });
   };
 
   const handleSubmit = async () => {
@@ -685,7 +701,7 @@ export default function SendReportDrawer({
                   Thông tin báo cáo
                 </h3>
                 <div className="text-sm text-gray-600">
-                  Thời gian hiện tại: {new Date().toLocaleTimeString("vi-VN")}
+                  Thời gian hiện tại: {displayTime}
                 </div>
               </div>
 

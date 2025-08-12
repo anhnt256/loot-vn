@@ -26,7 +26,7 @@ export default function MaterialManagementDrawer({
   isOpen,
   onClose,
 }: MaterialManagementDrawerProps) {
-  const [selectedReportType, setSelectedReportType] = useState("BAO_CAO_NUOC");
+  const [selectedReportType, setSelectedReportType] = useState("");
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -248,7 +248,7 @@ export default function MaterialManagementDrawer({
             </div>
 
             {/* Materials Table - Only show when report type is selected */}
-            {selectedReportType && (
+            {selectedReportType ? (
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-md font-medium text-gray-900">
@@ -314,6 +314,10 @@ export default function MaterialManagementDrawer({
                     />
                   </div>
                 )}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-red-500">
+                Vui lòng chọn loại báo cáo để tải danh sách nguyên vật liệu.
               </div>
             )}
 
