@@ -40,6 +40,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   const IS_MAINTENANCE = process.env.NEXT_PUBLIC_IS_MAINTENANCE === "true";
   const GATEWAY_BIRTHDAY_ENABLE =
     process.env.NEXT_PUBLIC_GATEWAY_BIRTHDAY_ENABLE === "true";
+  const STORE_DISABLED = process.env.NEXT_PUBLIC_STORE_DISABLED === "true";
 
   // Function to call user-calculator API and update localStorage
   const refreshUserData = async () => {
@@ -249,15 +250,21 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
           >
             Trò chơi
           </Link>
-          <Link
-            className={cn(
-              "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
-              pathname === "/store" ? "bg-gray-700" : "transparent",
-            )}
-            href="/store"
-          >
-            Đổi thưởng
-          </Link>
+          {STORE_DISABLED ? (
+            <div className="block py-2.5 px-4 rounded text-gray-500 cursor-not-allowed">
+              Đổi thưởng (Tạm khóa)
+            </div>
+          ) : (
+            <Link
+              className={cn(
+                "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
+                pathname === "/store" ? "bg-gray-700" : "transparent",
+              )}
+              href="/store"
+            >
+              Đổi thưởng
+            </Link>
+          )}
           <Link
             className={cn(
               "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
@@ -317,6 +324,12 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
             <h1>
               Website bảo trì để nâng cấp phần mềm mới. Chúng tôi sẽ quay trở
               lại sớm. Rất mong các bạn thông cảm.
+            </h1>
+          </div>
+        ) : STORE_DISABLED && pathname === "/store" ? (
+          <div className="flex items-center justify-center h-full p-10 text-2xl font-bold bg-gray-400">
+            <h1>
+              Tính năng đổi thưởng đang tạm khóa để bảo trì. Vui lòng thử lại sau.
             </h1>
           </div>
         ) : (

@@ -7,6 +7,28 @@ export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
   console.log("Middleware - Request path:", request.nextUrl.pathname);
 
+  // Check if store is disabled
+  const STORE_DISABLED = process.env.NEXT_PUBLIC_STORE_DISABLED === "true";
+  
+  // Store-related API routes that should be blocked when store is disabled
+  const storeApiRoutes = [
+    "/api/reward",
+    "/api/reward-exchange",
+    "/api/gift-rounds",
+  ];
+
+  // Block store API routes when store is disabled
+  if (STORE_DISABLED && storeApiRoutes.some(route => request.nextUrl.pathname.startsWith(route))) {
+    console.log("Middleware - Store API blocked due to maintenance");
+    return NextResponse.json(
+      { 
+        error: "Service temporarily unavailable", 
+        message: "Tính năng đổi thưởng đang tạm khóa để bảo trì. Vui lòng thử lại sau." 
+      },
+      { status: 503 }
+    );
+  }
+
   const publicPaths = [
     "/",
     "/api/login",
@@ -113,6 +135,12 @@ export async function middleware(request: NextRequest) {
       // Nếu token không hợp lệ, chuyển hướng về trang login
       return NextResponse.redirect(new URL("/", request.url));
     }
+  }
+
+  // Block access to store page when store is disabled
+  if (STORE_DISABLED && request.nextUrl.pathname === "/store") {
+    console.log("Middleware - Store page blocked due to maintenance");
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   return NextResponse.next();
