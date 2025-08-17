@@ -1,6 +1,6 @@
 "use server";
 
-import { db } from "@/lib/db";
+import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
 import { createSafeAction } from "@/lib/create-safe-action";
 import { CreateUserRewardMap } from "./schema";
 import { InputType } from "./type";
@@ -42,6 +42,64 @@ const handler = async (data: InputType): Promise<any> => {
   if (!user) {
     return {
       error: `User with userId ${userId} and branch ${branch} not found`,
+    };
+  }
+
+  // Kiểm tra user có nhiều tài khoản hoặc tài khoản không giống với Fnet
+  const allUserAccounts = await db.$queryRaw`
+    SELECT * FROM User 
+    WHERE userId = ${userId}
+    ORDER BY createdAt DESC
+  `;
+  
+  if ((allUserAccounts as any[]).length > 1) {
+    return {
+      error: "Tài khoản của bạn đã được sử dụng ở nhiều nơi. Vui lòng liên hệ admin để được hỗ trợ.",
+    };
+  }
+
+  // Kiểm tra tài khoản hiện tại có giống với Fnet không
+  try {
+    const fnetDB = await getFnetDB();
+    const fnetPrisma = await getFnetPrisma();
+    
+    // Kiểm tra user có tồn tại trong Fnet database không
+    const fnetUserCount = await fnetDB.$queryRaw<any[]>`
+      SELECT COUNT(*) as count FROM fnet.systemlogtb 
+      WHERE userId = ${userId}
+    `;
+    
+    if (fnetUserCount[0].count === 0) {
+      return {
+        error: "Tài khoản không tồn tại trong hệ thống Fnet. Vui lòng liên hệ admin để được hỗ trợ.",
+      };
+    }
+    
+    // Kiểm tra user có nhiều tài khoản trong Fnet không
+    if (fnetUserCount[0].count > 1) {
+      return {
+        error: "Tài khoản của bạn đã được sử dụng ở nhiều nơi trong hệ thống Fnet. Vui lòng liên hệ admin để được hỗ trợ.",
+      };
+    }
+    
+    // Kiểm tra user có session gần đây trong Fnet không (để đảm bảo tài khoản còn hoạt động)
+    const recentSession = await fnetDB.$queryRaw<any[]>(fnetPrisma.sql`
+      SELECT * FROM fnet.systemlogtb 
+      WHERE userId = ${userId} 
+      ORDER BY LogTime DESC 
+      LIMIT 1
+    `);
+    
+    if (!recentSession[0]) {
+      return {
+        error: "Không tìm thấy hoạt động gần đây của tài khoản trong hệ thống Fnet. Vui lòng liên hệ admin để được hỗ trợ.",
+      };
+    }
+    
+  } catch (error) {
+    console.log("Error checking Fnet database:", error);
+    return {
+      error: "Không thể kiểm tra thông tin tài khoản với hệ thống Fnet. Vui lòng liên hệ admin để được hỗ trợ.",
     };
   }
 

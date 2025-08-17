@@ -15,9 +15,9 @@ interface Report {
   interShiftExpenseAmount?: number;
   interShiftExpenseSourceShift?: string;
   interShiftExpenseSourceDate?: string;
-  cashier: string;
-  kitchenStaff: string;
-  securityGuard: string;
+  counterStaffId: number;
+  kitchenStaffId: number;
+  securityStaffId: number;
   note: string;
   details: string;
 }
@@ -31,7 +31,7 @@ const PAGE_SIZE = 10;
 
 export default function AdminReportsPage() {
   const [reports, setReports] = useState<Report[]>([]);
-  const [staff, setStaff] = useState<{ cashiers: string[]; kitchen: string[]; security: string[] }>({
+  const [staff, setStaff] = useState<{ cashiers: any[]; kitchen: any[]; security: any[] }>({
     cashiers: [],
     kitchen: [],
     security: [],
@@ -52,22 +52,26 @@ export default function AdminReportsPage() {
   const [drawerMode, setDrawerMode] = useState<"create" | "view">("create");
   const [isSourceShiftModalOpen, setIsSourceShiftModalOpen] = useState(false);
   const [amountToWithdraw, setAmountToWithdraw] = useState("0");
+  const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
+
+  // Use existing hook for currentUser
+  // const currentUser = useLocalStorageValue("currentUser", "");
 
   const [formValues, setFormValues] = useState({
     id: 0,
     date: "",
     time: "",
     shift: "Sáng",
-    playtimeFee: "0",
-    serviceFee: "0",
-    momo: "0",
-    expense: "0",
-    interShiftExpenseAmount: "0",
+    playtimeFee: "",
+    serviceFee: "",
+    momo: "",
+    expense: "",
+    interShiftExpenseAmount: "",
     interShiftExpenseSourceShift: "",
     interShiftExpenseSourceDate: "",
-    cashier: "Không có",
-    kitchenStaff: "Không có",
-    securityGuard: "Không có",
+    cashier: "",
+    kitchenStaff: "",
+    securityGuard: "",
     note: "",
   });
 
@@ -77,13 +81,83 @@ export default function AdminReportsPage() {
     shift: "",
   });
 
+  // Helper function to get staff name by ID
+  const getStaffNameById = (staffId: number, staffList: any[]) => {
+    const staff = staffList.find(s => s.id === staffId);
+    return staff?.fullName || `ID: ${staffId}`;
+  };
+
+  // Group reports by date and calculate daily totals
+  const groupedReports = useMemo(() => {
+    const groups: { [key: string]: { reports: Report[]; totals: any } } = {};
+    
+    // Filter reports based on user permissions - only show 2 most recent days for mac user
+    let filteredReports = reports;
+    
+    // Check login type from cookie
+    const loginTypeFromCookie = Cookies.get("loginType");
+    if (loginTypeFromCookie === "macAddress" || loginTypeFromCookie === "mac") {
+      // Get unique dates and sort them
+      const uniqueDates = [...new Set(reports.map(r => r.date))].sort((a, b) => 
+        new Date(b).getTime() - new Date(a).getTime()
+      );
+      
+      // Only take the 2 most recent dates
+      const allowedDates = uniqueDates.slice(0, 2);
+      
+      filteredReports = reports.filter(report => allowedDates.includes(report.date));
+    }
+    
+    filteredReports.forEach(report => {
+      if (!groups[report.date]) {
+        groups[report.date] = {
+          reports: [],
+          totals: {
+            playtimeFee: 0,
+            serviceFee: 0,
+            momo: 0,
+            expense: 0,
+            total: 0
+          }
+        };
+      }
+      
+      groups[report.date].reports.push(report);
+      groups[report.date].totals.playtimeFee += report.playtimeFee;
+      groups[report.date].totals.serviceFee += report.serviceFee;
+      groups[report.date].totals.momo += report.momo;
+      groups[report.date].totals.expense += report.expense;
+      groups[report.date].totals.total += (report.playtimeFee + report.serviceFee - report.expense);
+    });
+    
+    // Sort dates in descending order
+    return Object.entries(groups).sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime());
+  }, [reports]);
+
+  // Toggle collapse for a specific date
+  const toggleDayCollapse = (date: string) => {
+    setCollapsedDays(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(date)) {
+        newSet.delete(date);
+      } else {
+        newSet.add(date);
+      }
+      return newSet;
+    });
+  };
+
   // Fetch reports from API
   const fetchReports = async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
       if (filterDate) params.append("date", filterDate);
-      if (filterShift) params.append("shift", filterShift);
+      if (filterShift) {
+        // Convert display shift to enum format for API
+        const enumShift = filterShift === "Sáng" ? "SANG" : filterShift === "Chiều" ? "CHIEU" : "TOI";
+        params.append("shift", enumShift);
+      }
       params.append("page", page.toString());
       params.append("limit", PAGE_SIZE.toString());
 
@@ -93,19 +167,29 @@ export default function AdminReportsPage() {
         if (data.success && data.data) {
           // Transform API data to match frontend interface
           const transformedReports = data.data.map((report: any) => {
+            console.log("Processing report:", report); // Debug log
+            
             const inter = report?.fileUrl?.interShiftExpense || {};
-            return {
+            
+            // Map shift values from enum to display text
+            let shiftValue = "N/A";
+            if (report.shift === "SANG") shiftValue = "Sáng";
+            else if (report.shift === "CHIEU") shiftValue = "Chiều";
+            else if (report.shift === "TOI") shiftValue = "Tối";
+            else shiftValue = report.shift || "N/A";
+            
+            const transformed = {
               id: report.id,
               date: new Date(report.date).toISOString().split('T')[0],
               time: new Date(report.date).toTimeString().split(' ')[0].substring(0, 5),
-              shift: report.shift,
+              shift: shiftValue,
               playtimeFee: report.details?.GIO || 0,
               serviceFee: report.details?.DICH_VU || 0,
               momo: report.details?.MOMO || 0,
               expense: report.details?.CHI || 0,
-              cashier: report.counterStaffName || "N/A",
-              kitchenStaff: report.kitchenStaffName || "N/A",
-              securityGuard: report.securityStaffName || "N/A",
+              counterStaffId: report.counterStaffId,
+              kitchenStaffId: report.kitchenStaffId,
+              securityStaffId: report.securityStaffId,
               note: report.note || "",
               // map inter-shift expense from JSON fileUrl
               interShiftExpenseAmount: inter?.amount || 0,
@@ -113,9 +197,16 @@ export default function AdminReportsPage() {
               interShiftExpenseSourceDate: inter?.sourceDate || "",
               details: "Chi tiết báo cáo",
             };
+            
+            console.log("Transformed report:", transformed); // Debug log
+            return transformed;
           });
+          
           setReports(transformedReports);
-          setTotalPages(Math.ceil((data.data?.length || 0) / PAGE_SIZE));
+          // For pagination with grouped dates, we need to consider that each page shows PAGE_SIZE reports
+          // but the actual display is grouped by date, so totalPages should be based on total reports
+          const totalReports = data.data?.length || 0;
+          setTotalPages(Math.max(1, Math.ceil(totalReports / PAGE_SIZE)));
         } else {
           setReports([]);
           setTotalPages(1);
@@ -140,19 +231,22 @@ export default function AdminReportsPage() {
       const resp = await fetch(`/api/staff`);
       if (!resp.ok) return;
       const json = await resp.json();
+      console.log("Staff API response:", json); // Debug log
+      
       const list: any[] = json?.data ?? [];
-      const names = list.map((s) => s?.fullName).filter(Boolean);
-      const options = names.length ? names : ["Không có"];
+      console.log("Staff list:", list); // Debug log
 
-      setStaff({ cashiers: options, kitchen: options, security: options });
+      setStaff({ cashiers: list, kitchen: list, security: list });
 
       // ensure defaults exist in the options
-      setFormValues((prev) => ({
-        ...prev,
-        cashier: options[0],
-        kitchenStaff: options[0],
-        securityGuard: options[0],
-      }));
+      if (list.length > 0) {
+        setFormValues((prev) => ({
+          ...prev,
+          cashier: list[0].fullName,
+          kitchenStaff: list[0].fullName,
+          securityGuard: list[0].fullName,
+        }));
+      }
     } catch (err) {
       console.error("Error fetching staff:", err);
     }
@@ -166,6 +260,14 @@ export default function AdminReportsPage() {
   useEffect(() => {
     fetchStaff();
   }, []);
+
+  // Set default collapsed state when reports change
+  useEffect(() => {
+    if (reports.length > 0) {
+      const allDates = reports.map(r => r.date);
+      setCollapsedDays(new Set(allDates));
+    }
+  }, [reports]);
 
   // Load branch from cookie on mount
   useEffect(() => {
@@ -183,11 +285,6 @@ export default function AdminReportsPage() {
   const handlePrev = () => setPage((p) => Math.max(1, p - 1));
   const handleNext = () => setPage((p) => Math.min(totalPages, p + 1));
 
-  // Reset về trang 1 khi filter thay đổi
-  React.useEffect(() => {
-    setPage(1);
-  }, [filterDate, filterShift]);
-
   const handleViewDetails = (report: Report) => {
     setDrawerMode("view");
     setFormValues({
@@ -202,9 +299,9 @@ export default function AdminReportsPage() {
       interShiftExpenseAmount: String(report.interShiftExpenseAmount || "0"),
       interShiftExpenseSourceShift: report.interShiftExpenseSourceShift || "",
       interShiftExpenseSourceDate: report.interShiftExpenseSourceDate || "",
-      cashier: report.cashier,
-      kitchenStaff: report.kitchenStaff,
-      securityGuard: report.securityGuard,
+      cashier: getStaffNameById(report.counterStaffId, staff.cashiers),
+      kitchenStaff: getStaffNameById(report.kitchenStaffId, staff.kitchen),
+      securityGuard: getStaffNameById(report.securityStaffId, staff.security),
       note: report.note,
     });
     setIsDrawerOpen(true);
@@ -224,23 +321,23 @@ export default function AdminReportsPage() {
     if (hour >= 7 && hour < 15) shift = "Sáng";
     if (hour >= 15 && hour < 22) shift = "Chiều";
 
-         setFormValues({
-       id: 0,
-       date,
-       time,
-       shift,
-       playtimeFee: "0",
-       serviceFee: "0",
-       momo: "0",
-       expense: "0",
-       interShiftExpenseAmount: "0",
-       interShiftExpenseSourceShift: "",
-       interShiftExpenseSourceDate: "",
-       cashier: staff.cashiers[0] || "",
-       kitchenStaff: staff.kitchen[0] || "",
-       securityGuard: staff.security[0] || "",
-       note: "",
-     });
+    setFormValues({
+      id: 0,
+      date,
+      time,
+      shift,
+      playtimeFee: "",
+      serviceFee: "",
+      momo: "",
+      expense: "",
+      interShiftExpenseAmount: "",
+      interShiftExpenseSourceShift: "",
+      interShiftExpenseSourceDate: "",
+      cashier: staff.cashiers[0]?.fullName || "",
+      kitchenStaff: staff.kitchen[0]?.fullName || "",
+      securityGuard: staff.security[0]?.fullName || "",
+      note: "",
+    });
     setIsDrawerOpen(true);
   };
 
@@ -259,19 +356,116 @@ export default function AdminReportsPage() {
     ];
 
     if (numericFields.includes(name)) {
+      // playtimeFee allows negative values (for refunds, discounts, etc.)
+      // Other fields only allow positive values
       const isNegativeAllowed = name === "playtimeFee";
-      const regex = isNegativeAllowed ? /^-?\d*\.?\d*$/ : /^\d*\.?\d*$/;
-      if (regex.test(value) || value === "") {
-        setFormValues((prev) => ({ ...prev, [name]: value }));
+      
+      if (isNegativeAllowed) {
+        // For playtimeFee: allow negative and positive, but prevent values between -1000 and 1000
+        const numValue = parseFloat(value);
+        if (value === "" || value === "-" || 
+            (numValue <= -1000) || (numValue >= 1000) || 
+            (numValue > -1000 && numValue < 1000 && numValue !== 0)) {
+          setFormValues((prev) => ({ ...prev, [name]: value }));
+        }
+      } else {
+        // For other fields: only allow positive values >= 1000
+        const regex = /^\d*\.?\d*$/;
+        if (regex.test(value) || value === "") {
+          setFormValues((prev) => ({ ...prev, [name]: value }));
+        }
       }
     } else {
       setFormValues((prev) => ({ ...prev, [name]: value }));
     }
   };
 
+  // Validate field when user leaves (blur event)
+  const handleFieldBlur = (fieldName: string, value: string) => {
+    // Skip validation if field is empty or just whitespace
+    if (!value || value.trim() === "") {
+      return;
+    }
+    
+    const numValue = parseFloat(value) || 0;
+    
+    if (fieldName === "playtimeFee") {
+      // playtimeFee can be negative or positive, but must be <= -1000 or >= 1000
+      if (numValue > -1000 && numValue < 1000 && numValue !== 0) {
+        alert(`Tiền giờ chơi phải <= -1,000 VNĐ hoặc >= 1,000 VNĐ. Giá trị hiện tại: ${numValue}`);
+        // Don't clear the field, let user edit it
+        return;
+      }
+    } else if (fieldName === "serviceFee") {
+      // serviceFee must be >= 1000
+      if (numValue < 1000) {
+        alert(`Tiền dịch vụ phải >= 1,000 VNĐ. Giá trị hiện tại: ${numValue}`);
+        // Don't clear the field, let user edit it
+        return;
+      }
+    } else if (fieldName === "momo") {
+      // momo must be >= 1000
+      if (numValue < 1000) {
+        alert(`Momo phải >= 1,000 VNĐ. Giá trị hiện tại: ${numValue}`);
+        // Don't clear the field, let user edit it
+        return;
+      }
+    } else if (fieldName === "expense") {
+      // expense must be >= 1000
+      if (numValue < 1000) {
+        alert(`Chi phí phải >= 1,000 VNĐ. Giá trị hiện tại: ${numValue}`);
+        // Don't clear the field, let user edit it
+        return;
+      }
+    }
+  };
+
   const handleCreateReport = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate financial data - all amounts must be >= 1000 for positive, <= -1000 for negative
+    const playtimeFee = parseFloat(formValues.playtimeFee) || 0;
+    const serviceFee = parseFloat(formValues.serviceFee) || 0;
+    const momo = parseFloat(formValues.momo) || 0;
+    const expense = parseFloat(formValues.expense) || 0;
+    
+    // Validate playtime fee (can be negative or positive)
+    if (playtimeFee > 0 && playtimeFee < 1000) {
+      alert("Tiền giờ chơi dương phải >= 1,000 VNĐ");
+      return;
+    }
+    if (playtimeFee < 0 && playtimeFee > -1000) {
+      alert("Tiền giờ chơi âm phải <= -1,000 VNĐ");
+      return;
+    }
+    
+    // Validate other fields (must be >= 1000)
+    if (serviceFee < 1000) {
+      alert("Tiền dịch vụ phải >= 1,000 VNĐ");
+      return;
+    }
+    
+    if (momo < 1000) {
+      alert("Momo phải >= 1,000 VNĐ");
+      return;
+    }
+    
+    if (expense < 1000) {
+      alert("Chi phí phải >= 1,000 VNĐ");
+      return;
+    }
+    
     try {
+      // Find staff IDs by name
+      const counterStaff = staff.cashiers.find(s => s.fullName === formValues.cashier);
+      const kitchenStaff = staff.kitchen.find(s => s.fullName === formValues.kitchenStaff);
+      const securityStaff = staff.security.find(s => s.fullName === formValues.securityGuard);
+      
+      if (!counterStaff || !kitchenStaff || !securityStaff) {
+        alert("Vui lòng chọn đầy đủ nhân viên cho tất cả các vị trí");
+        return;
+      }
+
       const response = await fetch("/api/reports", {
         method: "POST",
         headers: {
@@ -279,14 +473,14 @@ export default function AdminReportsPage() {
         },
         body: JSON.stringify({
           date: formValues.date,
-          shift: formValues.shift,
+          shift: formValues.shift === "Sáng" ? "SANG" : formValues.shift === "Chiều" ? "CHIEU" : "TOI",
           playtimeMoney: formValues.playtimeFee,
           serviceMoney: formValues.serviceFee,
           momo: formValues.momo,
           expenses: formValues.expense,
-          counterStaffId: 1, // TODO: Map from staff names to IDs
-          kitchenStaffId: 1, // TODO: Map from staff names to IDs
-          securityStaffId: 1, // TODO: Map from staff names to IDs
+          counterStaffId: counterStaff.id,
+          kitchenStaffId: kitchenStaff.id,
+          securityStaffId: securityStaff.id,
           notes: formValues.note,
           interShiftExpenseAmount: formValues.interShiftExpenseAmount,
           interShiftExpenseSourceShift: formValues.interShiftExpenseSourceShift,
@@ -311,7 +505,6 @@ export default function AdminReportsPage() {
   const totalNew =
     (parseFloat(formValues.playtimeFee) || 0) +
     (parseFloat(formValues.serviceFee) || 0) -
-    (parseFloat(formValues.momo) || 0) -
     (parseFloat(formValues.expense) || 0);
 
   const eligibleShifts = useMemo(() => {
@@ -321,16 +514,19 @@ export default function AdminReportsPage() {
     // Sắp xếp báo cáo từ mới nhất đến cũ nhất để ưu tiên lấy từ ca gần nhất
     return reports
       .filter(
-        (r) => r.playtimeFee + r.serviceFee - r.momo - r.expense >= amount,
+        (r) => r.playtimeFee + r.serviceFee - r.expense >= amount,
       )
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [amountToWithdraw, reports]);
 
   const handleSelectSourceShift = (report: Report) => {
+    // Convert display shift back to enum format
+    const enumShift = report.shift === "Sáng" ? "SANG" : report.shift === "Chiều" ? "CHIEU" : "TOI";
+    
     setFormValues((prev) => ({
       ...prev,
       interShiftExpenseAmount: amountToWithdraw,
-      interShiftExpenseSourceShift: report.shift,
+      interShiftExpenseSourceShift: enumShift,
       interShiftExpenseSourceDate: report.date,
     }));
     setIsSourceShiftModalOpen(false);
@@ -426,71 +622,147 @@ export default function AdminReportsPage() {
         <table className="min-w-full text-sm">
           <thead className="bg-gray-700">
             <tr>
-              <th className="p-3 text-left font-semibold">ID</th>
               <th className="p-3 text-left font-semibold">Ngày</th>
-              <th className="p-3 text-left font-semibold">Giờ</th>
-              <th className="p-3 text-left font-semibold">Ca</th>
               <th className="p-3 text-right font-semibold">Tiền giờ chơi</th>
               <th className="p-3 text-right font-semibold">Tiền dịch vụ</th>
               <th className="p-3 text-right font-semibold">Momo</th>
               <th className="p-3 text-right font-semibold">Chi</th>
               <th className="p-3 text-right font-semibold">Tổng</th>
-              <th className="p-3 text-center font-semibold">Chi tiết</th>
+              <th className="p-3 text-center font-semibold">Thao tác</th>
             </tr>
           </thead>
-                     <tbody>
-             {loading ? (
-               <tr>
-                 <td colSpan={10} className="text-center p-4 text-gray-400">
-                   Đang tải...
-                 </td>
-               </tr>
-             ) : reports.length === 0 ? (
-               <tr>
-                 <td colSpan={10} className="text-center p-4 text-gray-400">
-                   Không có báo cáo nào khớp với bộ lọc
-                 </td>
-               </tr>
-             ) : (
-               reports.map((r: Report) => {
-                 const total = r.playtimeFee + r.serviceFee - r.momo - r.expense;
-                 return (
-                   <tr
-                     key={r.id}
-                     className="border-b border-gray-700 hover:bg-gray-600 transition-colors duration-200"
-                   >
-                     <td className="p-3">{r.id}</td>
-                     <td className="p-3">{r.date}</td>
-                     <td className="p-3">{r.time}</td>
-                     <td className="p-3">{r.shift}</td>
-                     <td className="p-3 text-right font-mono">
-                       {r.playtimeFee.toLocaleString()}
-                     </td>
-                     <td className="p-3 text-right font-mono">
-                       {r.serviceFee.toLocaleString()}
-                     </td>
-                     <td className="p-3 text-right font-mono">
-                       {r.momo.toLocaleString()}
-                     </td>
-                     <td className="p-3 text-right font-mono">
-                       {r.expense.toLocaleString()}
-                     </td>
-                     <td className="p-3 text-right font-mono">
-                       {total.toLocaleString()}
-                     </td>
-                     <td className="p-3 text-center">
-                       <button
-                         onClick={() => handleViewDetails(r)}
-                         className="text-green-400 hover:underline"
-                       >
-                         Xem
-                       </button>
-                     </td>
-                   </tr>
-                 );
-               })
-             )}
-           </tbody>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={7} className="text-center p-4 text-gray-400">
+                  Đang tải...
+                </td>
+              </tr>
+            ) : groupedReports.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="text-center p-4 text-gray-400">
+                  Không có báo cáo nào khớp với bộ lọc
+                </td>
+              </tr>
+            ) : (
+              groupedReports.map(([date, group]) => {
+                const isCollapsed = collapsedDays.has(date);
+                return (
+                  <React.Fragment key={date}>
+                    {/* Daily summary row */}
+                    <tr 
+                      className="border-b border-gray-700 bg-gray-700/50 hover:bg-gray-600 transition-colors duration-200 cursor-pointer"
+                      onClick={() => toggleDayCollapse(date)}
+                    >
+                      <td className="p-3 font-medium">
+                        <div className="flex items-center gap-2">
+                          <svg
+                            className={`w-4 h-4 transition-transform ${isCollapsed ? 'rotate-90' : ''}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                          <div className="text-left">
+                            <div className="font-semibold">
+                              {new Date(date).toLocaleDateString('vi-VN', { 
+                                weekday: 'long', 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-3 text-right font-mono font-medium">
+                        {group.totals.playtimeFee.toLocaleString('en-US')}
+                      </td>
+                      <td className="p-3 text-right font-mono font-medium">
+                        {group.totals.serviceFee.toLocaleString('en-US')}
+                      </td>
+                      <td className="p-3 text-right font-mono font-medium">
+                        {group.totals.momo.toLocaleString('en-US')}
+                      </td>
+                      <td className="p-3 text-right font-mono font-medium">
+                        {group.totals.expense.toLocaleString('en-US')}
+                      </td>
+                      <td className="p-3 text-right font-mono font-bold text-lg">
+                        <span className={`${group.totals.total >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {group.totals.total.toLocaleString('en-US')}
+                        </span>
+                      </td>
+                      <td className="p-3 text-center">
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-xs text-gray-400">
+                            {group.reports.length} ca
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                    
+                    {/* Shift detail rows (when expanded) */}
+                    {!isCollapsed && group.reports.map((report, index) => {
+                      const total = report.playtimeFee + report.serviceFee - report.expense;
+                      return (
+                        <tr
+                          key={report.id}
+                          className="border-b border-gray-700 hover:bg-gray-600 transition-colors duration-200 bg-gray-800/30"
+                          onClick={(e) => e.stopPropagation()} // Prevent click from bubbling up to parent row
+                        >
+                          <td className="p-3 pl-8 text-sm text-gray-300">
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs text-gray-500 bg-gray-700 px-2 py-1 rounded">
+                                ID: {report.id}
+                              </span>
+                              <span className="text-xs text-gray-500 bg-gray-700 px-2 py-1 rounded">
+                                {report.time}
+                              </span>
+                              <span className="px-3 py-1 bg-blue-600/30 text-blue-400 rounded-full text-xs font-medium border border-blue-600/50">
+                                {report.shift}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                Ca {index + 1}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="p-3 text-right font-mono text-sm">
+                            {report.playtimeFee.toLocaleString('en-US')}
+                          </td>
+                          <td className="p-3 text-right font-mono text-sm">
+                            {report.serviceFee.toLocaleString('en-US')}
+                          </td>
+                          <td className="p-3 text-right font-mono text-sm">
+                            {report.momo.toLocaleString('en-US')}
+                          </td>
+                          <td className="p-3 text-right font-mono text-sm">
+                            {report.expense.toLocaleString('en-US')}
+                          </td>
+                          <td className="p-3 text-right font-mono text-sm font-medium">
+                            <span className={`${total >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                              {total.toLocaleString('en-US')}
+                            </span>
+                          </td>
+                          <td className="p-3 text-center">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent click from bubbling up
+                                handleViewDetails(report);
+                              }}
+                              className="text-green-400 hover:text-green-300 hover:underline text-sm px-2 py-1 rounded hover:bg-green-400/10 transition-colors"
+                            >
+                              Xem
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </React.Fragment>
+                );
+              })
+            )}
+          </tbody>
         </table>
       </div>
 
@@ -629,9 +901,9 @@ export default function AdminReportsPage() {
                         disabled={drawerMode === "view"}
                         className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
                       >
-                        {staff.cashiers.map((name) => (
-                          <option key={name} value={name}>
-                            {name}
+                        {staff.cashiers.map((staffMember) => (
+                          <option key={staffMember.id} value={staffMember.fullName}>
+                            {staffMember.fullName}
                           </option>
                         ))}
                       </select>
@@ -651,9 +923,9 @@ export default function AdminReportsPage() {
                         disabled={drawerMode === "view"}
                         className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
                       >
-                        {staff.kitchen.map((name) => (
-                          <option key={name} value={name}>
-                            {name}
+                        {staff.kitchen.map((staffMember) => (
+                          <option key={staffMember.id} value={staffMember.fullName}>
+                            {staffMember.fullName}
                           </option>
                         ))}
                       </select>
@@ -673,9 +945,9 @@ export default function AdminReportsPage() {
                         disabled={drawerMode === "view"}
                         className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
                       >
-                        {staff.security.map((name) => (
-                          <option key={name} value={name}>
-                            {name}
+                        {staff.security.map((staffMember) => (
+                          <option key={staffMember.id} value={staffMember.fullName}>
+                            {staffMember.fullName}
                           </option>
                         ))}
                       </select>
@@ -703,6 +975,7 @@ export default function AdminReportsPage() {
                         name="playtimeFee"
                         value={formValues.playtimeFee}
                         onChange={handleFormChange}
+                        onBlur={(e) => handleFieldBlur("playtimeFee", e.target.value)}
                         disabled={drawerMode === "view"}
                         className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
                       />
@@ -721,6 +994,7 @@ export default function AdminReportsPage() {
                         name="serviceFee"
                         value={formValues.serviceFee}
                         onChange={handleFormChange}
+                        onBlur={(e) => handleFieldBlur("serviceFee", e.target.value)}
                         disabled={drawerMode === "view"}
                         className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
                       />
@@ -739,6 +1013,7 @@ export default function AdminReportsPage() {
                         name="momo"
                         value={formValues.momo}
                         onChange={handleFormChange}
+                        onBlur={(e) => handleFieldBlur("momo", e.target.value)}
                         disabled={drawerMode === "view"}
                         className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
                       />
@@ -757,6 +1032,7 @@ export default function AdminReportsPage() {
                         name="expense"
                         value={formValues.expense}
                         onChange={handleFormChange}
+                        onBlur={(e) => handleFieldBlur("expense", e.target.value)}
                         disabled={drawerMode === "view"}
                         className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
                       />
@@ -822,13 +1098,16 @@ export default function AdminReportsPage() {
                         <span className="font-mono text-red-400">
                           {parseFloat(
                             formValues.interShiftExpenseAmount,
-                          ).toLocaleString()}{" "}
+                          ).toLocaleString('en-US')}{" "}
                           VNĐ
                         </span>
                       </p>
                       <p>
                         <strong>Từ ca:</strong>{" "}
-                        {formValues.interShiftExpenseSourceShift}, Ngày{" "}
+                        {formValues.interShiftExpenseSourceShift === "Sáng" ? "Sáng" : 
+                         formValues.interShiftExpenseSourceShift === "CHIEU" ? "Chiều" : 
+                         formValues.interShiftExpenseSourceShift === "TOI" ? "Tối" : 
+                         formValues.interShiftExpenseSourceShift}, Ngày{" "}
                         {formValues.interShiftExpenseSourceDate}
                       </p>
                     </div>
@@ -842,7 +1121,7 @@ export default function AdminReportsPage() {
                     <span
                       className={`font-mono font-bold ${totalNew < 0 ? "text-red-400" : "text-green-400"}`}
                     >
-                      {totalNew.toLocaleString()} VNĐ
+                      {totalNew.toLocaleString('en-US')} VNĐ
                     </span>
                   </p>
                 </div>
@@ -939,9 +1218,8 @@ export default function AdminReportsPage() {
                         {(
                           report.playtimeFee +
                           report.serviceFee -
-                          report.momo -
                           report.expense
-                        ).toLocaleString()}{" "}
+                        ).toLocaleString('en-US')}{" "}
                         VNĐ
                       </span>
                     </button>

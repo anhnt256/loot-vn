@@ -702,6 +702,21 @@ enum FeedbackType {
   GENERAL
 }
 
+model FnetHistory {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  branch       String
+  oldMoney     Float
+  newMoney     Float
+  userHistoryId Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+  @@index([branch])
+  @@index([createdAt])
+}
+
 enum FeedbackStatus {
   SUBMITTED
   RECEIVED
