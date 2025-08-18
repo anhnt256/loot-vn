@@ -265,11 +265,11 @@ export default function HandoverReportsPage() {
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-3 gap-3">
           <h2 className="text-lg font-semibold text-gray-900">
             Báo cáo hằng ngày -{" "}
-             {selectedReportType
-               ? selectedReportType === "BAO_CAO_BEP"
-                 ? "Bếp"
-                 : "Nước"
-               : "Chưa chọn loại"}
+            {selectedReportType
+              ? selectedReportType === "BAO_CAO_BEP"
+                ? "Bếp"
+                : "Nước"
+              : "Chưa chọn loại"}
           </h2>
           <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
             <button
@@ -325,8 +325,8 @@ export default function HandoverReportsPage() {
 
           {/* Report Type */}
           <select
-             value={selectedReportType}
-             onChange={(e) => setSelectedReportType(e.target.value)}
+            value={selectedReportType}
+            onChange={(e) => setSelectedReportType(e.target.value)}
             required
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
@@ -340,9 +340,9 @@ export default function HandoverReportsPage() {
           {/* Search Button */}
           <button
             onClick={handleSearch}
-             disabled={
-               loading || !selectedDate || !selectedBranch || !selectedReportType
-             }
+            disabled={
+              loading || !selectedDate || !selectedBranch || !selectedReportType
+            }
             className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
@@ -606,11 +606,11 @@ export default function HandoverReportsPage() {
       />
 
       {/* Send Report Drawer */}
-       <SendReportDrawer
+      <SendReportDrawer
         isOpen={isSendReportDrawerOpen}
         onClose={handleCloseSendReportDrawer}
         selectedDate={selectedDate}
-         defaultReportType={selectedReportType}
+        defaultReportType={selectedReportType}
         onReportSubmitted={fetchReports}
       />
     </div>

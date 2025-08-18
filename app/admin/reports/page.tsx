@@ -24,14 +24,17 @@ interface Report {
 
 // No mock data – all data comes from API
 
-
 const shifts = ["Sáng", "Chiều", "Tối"];
 const branches = ["GO_VAP", "TAN_PHU"];
 const PAGE_SIZE = 10;
 
 export default function AdminReportsPage() {
   const [reports, setReports] = useState<Report[]>([]);
-  const [staff, setStaff] = useState<{ cashiers: any[]; kitchen: any[]; security: any[] }>({
+  const [staff, setStaff] = useState<{
+    cashiers: any[];
+    kitchen: any[];
+    security: any[];
+  }>({
     cashiers: [],
     kitchen: [],
     security: [],
@@ -83,32 +86,34 @@ export default function AdminReportsPage() {
 
   // Helper function to get staff name by ID
   const getStaffNameById = (staffId: number, staffList: any[]) => {
-    const staff = staffList.find(s => s.id === staffId);
+    const staff = staffList.find((s) => s.id === staffId);
     return staff?.fullName || `ID: ${staffId}`;
   };
 
   // Group reports by date and calculate daily totals
   const groupedReports = useMemo(() => {
     const groups: { [key: string]: { reports: Report[]; totals: any } } = {};
-    
+
     // Filter reports based on user permissions - only show 2 most recent days for mac user
     let filteredReports = reports;
-    
+
     // Check login type from cookie
     const loginTypeFromCookie = Cookies.get("loginType");
     if (loginTypeFromCookie === "macAddress" || loginTypeFromCookie === "mac") {
       // Get unique dates and sort them
-      const uniqueDates = [...new Set(reports.map(r => r.date))].sort((a, b) => 
-        new Date(b).getTime() - new Date(a).getTime()
+      const uniqueDates = [...new Set(reports.map((r) => r.date))].sort(
+        (a, b) => new Date(b).getTime() - new Date(a).getTime(),
       );
-      
+
       // Only take the 2 most recent dates
       const allowedDates = uniqueDates.slice(0, 2);
-      
-      filteredReports = reports.filter(report => allowedDates.includes(report.date));
+
+      filteredReports = reports.filter((report) =>
+        allowedDates.includes(report.date),
+      );
     }
-    
-    filteredReports.forEach(report => {
+
+    filteredReports.forEach((report) => {
       if (!groups[report.date]) {
         groups[report.date] = {
           reports: [],
@@ -117,26 +122,29 @@ export default function AdminReportsPage() {
             serviceFee: 0,
             momo: 0,
             expense: 0,
-            total: 0
-          }
+            total: 0,
+          },
         };
       }
-      
+
       groups[report.date].reports.push(report);
       groups[report.date].totals.playtimeFee += report.playtimeFee;
       groups[report.date].totals.serviceFee += report.serviceFee;
       groups[report.date].totals.momo += report.momo;
       groups[report.date].totals.expense += report.expense;
-      groups[report.date].totals.total += (report.playtimeFee + report.serviceFee - report.expense);
+      groups[report.date].totals.total +=
+        report.playtimeFee + report.serviceFee - report.expense;
     });
-    
+
     // Sort dates in descending order
-    return Object.entries(groups).sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime());
+    return Object.entries(groups).sort(
+      ([a], [b]) => new Date(b).getTime() - new Date(a).getTime(),
+    );
   }, [reports]);
 
   // Toggle collapse for a specific date
   const toggleDayCollapse = (date: string) => {
-    setCollapsedDays(prev => {
+    setCollapsedDays((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(date)) {
         newSet.delete(date);
@@ -155,7 +163,12 @@ export default function AdminReportsPage() {
       if (filterDate) params.append("date", filterDate);
       if (filterShift) {
         // Convert display shift to enum format for API
-        const enumShift = filterShift === "Sáng" ? "SANG" : filterShift === "Chiều" ? "CHIEU" : "TOI";
+        const enumShift =
+          filterShift === "Sáng"
+            ? "SANG"
+            : filterShift === "Chiều"
+              ? "CHIEU"
+              : "TOI";
         params.append("shift", enumShift);
       }
       params.append("page", page.toString());
@@ -168,20 +181,23 @@ export default function AdminReportsPage() {
           // Transform API data to match frontend interface
           const transformedReports = data.data.map((report: any) => {
             console.log("Processing report:", report); // Debug log
-            
+
             const inter = report?.fileUrl?.interShiftExpense || {};
-            
+
             // Map shift values from enum to display text
             let shiftValue = "N/A";
             if (report.shift === "SANG") shiftValue = "Sáng";
             else if (report.shift === "CHIEU") shiftValue = "Chiều";
             else if (report.shift === "TOI") shiftValue = "Tối";
             else shiftValue = report.shift || "N/A";
-            
+
             const transformed = {
               id: report.id,
-              date: new Date(report.date).toISOString().split('T')[0],
-              time: new Date(report.date).toTimeString().split(' ')[0].substring(0, 5),
+              date: new Date(report.date).toISOString().split("T")[0],
+              time: new Date(report.date)
+                .toTimeString()
+                .split(" ")[0]
+                .substring(0, 5),
               shift: shiftValue,
               playtimeFee: report.details?.GIO || 0,
               serviceFee: report.details?.DICH_VU || 0,
@@ -197,11 +213,11 @@ export default function AdminReportsPage() {
               interShiftExpenseSourceDate: inter?.sourceDate || "",
               details: "Chi tiết báo cáo",
             };
-            
+
             console.log("Transformed report:", transformed); // Debug log
             return transformed;
           });
-          
+
           setReports(transformedReports);
           // For pagination with grouped dates, we need to consider that each page shows PAGE_SIZE reports
           // but the actual display is grouped by date, so totalPages should be based on total reports
@@ -232,7 +248,7 @@ export default function AdminReportsPage() {
       if (!resp.ok) return;
       const json = await resp.json();
       console.log("Staff API response:", json); // Debug log
-      
+
       const list: any[] = json?.data ?? [];
       console.log("Staff list:", list); // Debug log
 
@@ -264,7 +280,7 @@ export default function AdminReportsPage() {
   // Set default collapsed state when reports change
   useEffect(() => {
     if (reports.length > 0) {
-      const allDates = reports.map(r => r.date);
+      const allDates = reports.map((r) => r.date);
       setCollapsedDays(new Set(allDates));
     }
   }, [reports]);
@@ -359,13 +375,17 @@ export default function AdminReportsPage() {
       // playtimeFee allows negative values (for refunds, discounts, etc.)
       // Other fields only allow positive values
       const isNegativeAllowed = name === "playtimeFee";
-      
+
       if (isNegativeAllowed) {
         // For playtimeFee: allow negative and positive, but prevent values between -1000 and 1000
         const numValue = parseFloat(value);
-        if (value === "" || value === "-" || 
-            (numValue <= -1000) || (numValue >= 1000) || 
-            (numValue > -1000 && numValue < 1000 && numValue !== 0)) {
+        if (
+          value === "" ||
+          value === "-" ||
+          numValue <= -1000 ||
+          numValue >= 1000 ||
+          (numValue > -1000 && numValue < 1000 && numValue !== 0)
+        ) {
           setFormValues((prev) => ({ ...prev, [name]: value }));
         }
       } else {
@@ -386,13 +406,15 @@ export default function AdminReportsPage() {
     if (!value || value.trim() === "") {
       return;
     }
-    
+
     const numValue = parseFloat(value) || 0;
-    
+
     if (fieldName === "playtimeFee") {
       // playtimeFee can be negative or positive, but must be <= -1000 or >= 1000
       if (numValue > -1000 && numValue < 1000 && numValue !== 0) {
-        alert(`Tiền giờ chơi phải <= -1,000 VNĐ hoặc >= 1,000 VNĐ. Giá trị hiện tại: ${numValue}`);
+        alert(
+          `Tiền giờ chơi phải <= -1,000 VNĐ hoặc >= 1,000 VNĐ. Giá trị hiện tại: ${numValue}`,
+        );
         // Don't clear the field, let user edit it
         return;
       }
@@ -411,10 +433,13 @@ export default function AdminReportsPage() {
         return;
       }
     } else if (fieldName === "expense") {
-      // expense must be >= 1000
-      if (numValue < 1000) {
-        alert(`Chi phí phải >= 1,000 VNĐ. Giá trị hiện tại: ${numValue}`);
-        // Don't clear the field, let user edit it
+      // expense can be 0 or >= 1000, but cannot be negative
+      if (numValue < 0) {
+        alert(`Chi phí không được âm. Giá trị hiện tại: ${numValue}`);
+        return;
+      }
+      if (numValue > 0 && numValue < 1000) {
+        alert(`Chi phí phải = 0 hoặc >= 1,000 VNĐ. Giá trị hiện tại: ${numValue}`);
         return;
       }
     }
@@ -422,13 +447,13 @@ export default function AdminReportsPage() {
 
   const handleCreateReport = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate financial data - all amounts must be >= 1000 for positive, <= -1000 for negative
     const playtimeFee = parseFloat(formValues.playtimeFee) || 0;
     const serviceFee = parseFloat(formValues.serviceFee) || 0;
     const momo = parseFloat(formValues.momo) || 0;
     const expense = parseFloat(formValues.expense) || 0;
-    
+
     // Validate playtime fee (can be negative or positive)
     if (playtimeFee > 0 && playtimeFee < 1000) {
       alert("Tiền giờ chơi dương phải >= 1,000 VNĐ");
@@ -438,29 +463,39 @@ export default function AdminReportsPage() {
       alert("Tiền giờ chơi âm phải <= -1,000 VNĐ");
       return;
     }
-    
+
     // Validate other fields (must be >= 1000)
     if (serviceFee < 1000) {
       alert("Tiền dịch vụ phải >= 1,000 VNĐ");
       return;
     }
-    
+
     if (momo < 1000) {
       alert("Momo phải >= 1,000 VNĐ");
       return;
     }
-    
-    if (expense < 1000) {
-      alert("Chi phí phải >= 1,000 VNĐ");
+
+    if (expense < 0) {
+      alert("Chi phí không được âm");
       return;
     }
-    
+    if (expense > 0 && expense < 1000) {
+      alert("Chi phí phải = 0 hoặc >= 1,000 VNĐ");
+      return;
+    }
+
     try {
       // Find staff IDs by name
-      const counterStaff = staff.cashiers.find(s => s.fullName === formValues.cashier);
-      const kitchenStaff = staff.kitchen.find(s => s.fullName === formValues.kitchenStaff);
-      const securityStaff = staff.security.find(s => s.fullName === formValues.securityGuard);
-      
+      const counterStaff = staff.cashiers.find(
+        (s) => s.fullName === formValues.cashier,
+      );
+      const kitchenStaff = staff.kitchen.find(
+        (s) => s.fullName === formValues.kitchenStaff,
+      );
+      const securityStaff = staff.security.find(
+        (s) => s.fullName === formValues.securityGuard,
+      );
+
       if (!counterStaff || !kitchenStaff || !securityStaff) {
         alert("Vui lòng chọn đầy đủ nhân viên cho tất cả các vị trí");
         return;
@@ -473,7 +508,12 @@ export default function AdminReportsPage() {
         },
         body: JSON.stringify({
           date: formValues.date,
-          shift: formValues.shift === "Sáng" ? "SANG" : formValues.shift === "Chiều" ? "CHIEU" : "TOI",
+          shift:
+            formValues.shift === "Sáng"
+              ? "SANG"
+              : formValues.shift === "Chiều"
+                ? "CHIEU"
+                : "TOI",
           playtimeMoney: formValues.playtimeFee,
           serviceMoney: formValues.serviceFee,
           momo: formValues.momo,
@@ -513,16 +553,19 @@ export default function AdminReportsPage() {
 
     // Sắp xếp báo cáo từ mới nhất đến cũ nhất để ưu tiên lấy từ ca gần nhất
     return reports
-      .filter(
-        (r) => r.playtimeFee + r.serviceFee - r.expense >= amount,
-      )
+      .filter((r) => r.playtimeFee + r.serviceFee - r.expense >= amount)
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [amountToWithdraw, reports]);
 
   const handleSelectSourceShift = (report: Report) => {
     // Convert display shift back to enum format
-    const enumShift = report.shift === "Sáng" ? "SANG" : report.shift === "Chiều" ? "CHIEU" : "TOI";
-    
+    const enumShift =
+      report.shift === "Sáng"
+        ? "SANG"
+        : report.shift === "Chiều"
+          ? "CHIEU"
+          : "TOI";
+
     setFormValues((prev) => ({
       ...prev,
       interShiftExpenseAmount: amountToWithdraw,
@@ -650,47 +693,54 @@ export default function AdminReportsPage() {
                 return (
                   <React.Fragment key={date}>
                     {/* Daily summary row */}
-                    <tr 
+                    <tr
                       className="border-b border-gray-700 bg-gray-700/50 hover:bg-gray-600 transition-colors duration-200 cursor-pointer"
                       onClick={() => toggleDayCollapse(date)}
                     >
                       <td className="p-3 font-medium">
                         <div className="flex items-center gap-2">
                           <svg
-                            className={`w-4 h-4 transition-transform ${isCollapsed ? 'rotate-90' : ''}`}
+                            className={`w-4 h-4 transition-transform ${isCollapsed ? "rotate-90" : ""}`}
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5l7 7-7 7"
+                            />
                           </svg>
                           <div className="text-left">
                             <div className="font-semibold">
-                              {new Date(date).toLocaleDateString('vi-VN', { 
-                                weekday: 'long', 
-                                year: 'numeric', 
-                                month: 'long', 
-                                day: 'numeric' 
+                              {new Date(date).toLocaleDateString("vi-VN", {
+                                weekday: "long",
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
                               })}
                             </div>
                           </div>
                         </div>
                       </td>
                       <td className="p-3 text-right font-mono font-medium">
-                        {group.totals.playtimeFee.toLocaleString('en-US')}
+                        {group.totals.playtimeFee.toLocaleString("en-US")}
                       </td>
                       <td className="p-3 text-right font-mono font-medium">
-                        {group.totals.serviceFee.toLocaleString('en-US')}
+                        {group.totals.serviceFee.toLocaleString("en-US")}
                       </td>
                       <td className="p-3 text-right font-mono font-medium">
-                        {group.totals.momo.toLocaleString('en-US')}
+                        {group.totals.momo.toLocaleString("en-US")}
                       </td>
                       <td className="p-3 text-right font-mono font-medium">
-                        {group.totals.expense.toLocaleString('en-US')}
+                        {group.totals.expense.toLocaleString("en-US")}
                       </td>
                       <td className="p-3 text-right font-mono font-bold text-lg">
-                        <span className={`${group.totals.total >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {group.totals.total.toLocaleString('en-US')}
+                        <span
+                          className={`${group.totals.total >= 0 ? "text-green-400" : "text-red-400"}`}
+                        >
+                          {group.totals.total.toLocaleString("en-US")}
                         </span>
                       </td>
                       <td className="p-3 text-center">
@@ -701,63 +751,69 @@ export default function AdminReportsPage() {
                         </div>
                       </td>
                     </tr>
-                    
+
                     {/* Shift detail rows (when expanded) */}
-                    {!isCollapsed && group.reports.map((report, index) => {
-                      const total = report.playtimeFee + report.serviceFee - report.expense;
-                      return (
-                        <tr
-                          key={report.id}
-                          className="border-b border-gray-700 hover:bg-gray-600 transition-colors duration-200 bg-gray-800/30"
-                          onClick={(e) => e.stopPropagation()} // Prevent click from bubbling up to parent row
-                        >
-                          <td className="p-3 pl-8 text-sm text-gray-300">
-                            <div className="flex items-center gap-3">
-                              <span className="text-xs text-gray-500 bg-gray-700 px-2 py-1 rounded">
-                                ID: {report.id}
+                    {!isCollapsed &&
+                      group.reports.map((report, index) => {
+                        const total =
+                          report.playtimeFee +
+                          report.serviceFee -
+                          report.expense;
+                        return (
+                          <tr
+                            key={report.id}
+                            className="border-b border-gray-700 hover:bg-gray-600 transition-colors duration-200 bg-gray-800/30"
+                            onClick={(e) => e.stopPropagation()} // Prevent click from bubbling up to parent row
+                          >
+                            <td className="p-3 pl-8 text-sm text-gray-300">
+                              <div className="flex items-center gap-3">
+                                <span className="text-xs text-gray-500 bg-gray-700 px-2 py-1 rounded">
+                                  ID: {report.id}
+                                </span>
+                                <span className="text-xs text-gray-500 bg-gray-700 px-2 py-1 rounded">
+                                  {report.time}
+                                </span>
+                                <span className="px-3 py-1 bg-blue-600/30 text-blue-400 rounded-full text-xs font-medium border border-blue-600/50">
+                                  {report.shift}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  Ca {index + 1}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="p-3 text-right font-mono text-sm">
+                              {report.playtimeFee.toLocaleString("en-US")}
+                            </td>
+                            <td className="p-3 text-right font-mono text-sm">
+                              {report.serviceFee.toLocaleString("en-US")}
+                            </td>
+                            <td className="p-3 text-right font-mono text-sm">
+                              {report.momo.toLocaleString("en-US")}
+                            </td>
+                            <td className="p-3 text-right font-mono text-sm">
+                              {report.expense.toLocaleString("en-US")}
+                            </td>
+                            <td className="p-3 text-right font-mono text-sm font-medium">
+                              <span
+                                className={`${total >= 0 ? "text-green-400" : "text-red-400"}`}
+                              >
+                                {total.toLocaleString("en-US")}
                               </span>
-                              <span className="text-xs text-gray-500 bg-gray-700 px-2 py-1 rounded">
-                                {report.time}
-                              </span>
-                              <span className="px-3 py-1 bg-blue-600/30 text-blue-400 rounded-full text-xs font-medium border border-blue-600/50">
-                                {report.shift}
-                              </span>
-                              <span className="text-xs text-gray-500">
-                                Ca {index + 1}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="p-3 text-right font-mono text-sm">
-                            {report.playtimeFee.toLocaleString('en-US')}
-                          </td>
-                          <td className="p-3 text-right font-mono text-sm">
-                            {report.serviceFee.toLocaleString('en-US')}
-                          </td>
-                          <td className="p-3 text-right font-mono text-sm">
-                            {report.momo.toLocaleString('en-US')}
-                          </td>
-                          <td className="p-3 text-right font-mono text-sm">
-                            {report.expense.toLocaleString('en-US')}
-                          </td>
-                          <td className="p-3 text-right font-mono text-sm font-medium">
-                            <span className={`${total >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                              {total.toLocaleString('en-US')}
-                            </span>
-                          </td>
-                          <td className="p-3 text-center">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation(); // Prevent click from bubbling up
-                                handleViewDetails(report);
-                              }}
-                              className="text-green-400 hover:text-green-300 hover:underline text-sm px-2 py-1 rounded hover:bg-green-400/10 transition-colors"
-                            >
-                              Xem
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                            </td>
+                            <td className="p-3 text-center">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent click from bubbling up
+                                  handleViewDetails(report);
+                                }}
+                                className="text-green-400 hover:text-green-300 hover:underline text-sm px-2 py-1 rounded hover:bg-green-400/10 transition-colors"
+                              >
+                                Xem
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                   </React.Fragment>
                 );
               })
@@ -775,12 +831,12 @@ export default function AdminReportsPage() {
         >
           Trước
         </button>
-                 <span className="font-semibold">
-           Trang {page} / {totalPages}
-         </span>
-         <button
-           onClick={handleNext}
-           disabled={page === totalPages}
+        <span className="font-semibold">
+          Trang {page} / {totalPages}
+        </span>
+        <button
+          onClick={handleNext}
+          disabled={page === totalPages}
           className="px-4 py-2 bg-gray-700 rounded-md hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           Sau
@@ -902,7 +958,10 @@ export default function AdminReportsPage() {
                         className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
                       >
                         {staff.cashiers.map((staffMember) => (
-                          <option key={staffMember.id} value={staffMember.fullName}>
+                          <option
+                            key={staffMember.id}
+                            value={staffMember.fullName}
+                          >
                             {staffMember.fullName}
                           </option>
                         ))}
@@ -924,7 +983,10 @@ export default function AdminReportsPage() {
                         className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
                       >
                         {staff.kitchen.map((staffMember) => (
-                          <option key={staffMember.id} value={staffMember.fullName}>
+                          <option
+                            key={staffMember.id}
+                            value={staffMember.fullName}
+                          >
                             {staffMember.fullName}
                           </option>
                         ))}
@@ -946,7 +1008,10 @@ export default function AdminReportsPage() {
                         className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
                       >
                         {staff.security.map((staffMember) => (
-                          <option key={staffMember.id} value={staffMember.fullName}>
+                          <option
+                            key={staffMember.id}
+                            value={staffMember.fullName}
+                          >
                             {staffMember.fullName}
                           </option>
                         ))}
@@ -975,7 +1040,9 @@ export default function AdminReportsPage() {
                         name="playtimeFee"
                         value={formValues.playtimeFee}
                         onChange={handleFormChange}
-                        onBlur={(e) => handleFieldBlur("playtimeFee", e.target.value)}
+                        onBlur={(e) =>
+                          handleFieldBlur("playtimeFee", e.target.value)
+                        }
                         disabled={drawerMode === "view"}
                         className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
                       />
@@ -994,7 +1061,9 @@ export default function AdminReportsPage() {
                         name="serviceFee"
                         value={formValues.serviceFee}
                         onChange={handleFormChange}
-                        onBlur={(e) => handleFieldBlur("serviceFee", e.target.value)}
+                        onBlur={(e) =>
+                          handleFieldBlur("serviceFee", e.target.value)
+                        }
                         disabled={drawerMode === "view"}
                         className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
                       />
@@ -1032,7 +1101,9 @@ export default function AdminReportsPage() {
                         name="expense"
                         value={formValues.expense}
                         onChange={handleFormChange}
-                        onBlur={(e) => handleFieldBlur("expense", e.target.value)}
+                        onBlur={(e) =>
+                          handleFieldBlur("expense", e.target.value)
+                        }
                         disabled={drawerMode === "view"}
                         className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md"
                       />
@@ -1098,17 +1169,20 @@ export default function AdminReportsPage() {
                         <span className="font-mono text-red-400">
                           {parseFloat(
                             formValues.interShiftExpenseAmount,
-                          ).toLocaleString('en-US')}{" "}
+                          ).toLocaleString("en-US")}{" "}
                           VNĐ
                         </span>
                       </p>
                       <p>
                         <strong>Từ ca:</strong>{" "}
-                        {formValues.interShiftExpenseSourceShift === "Sáng" ? "Sáng" : 
-                         formValues.interShiftExpenseSourceShift === "CHIEU" ? "Chiều" : 
-                         formValues.interShiftExpenseSourceShift === "TOI" ? "Tối" : 
-                         formValues.interShiftExpenseSourceShift}, Ngày{" "}
-                        {formValues.interShiftExpenseSourceDate}
+                        {formValues.interShiftExpenseSourceShift === "Sáng"
+                          ? "Sáng"
+                          : formValues.interShiftExpenseSourceShift === "CHIEU"
+                            ? "Chiều"
+                            : formValues.interShiftExpenseSourceShift === "TOI"
+                              ? "Tối"
+                              : formValues.interShiftExpenseSourceShift}
+                        , Ngày {formValues.interShiftExpenseSourceDate}
                       </p>
                     </div>
                   )}
@@ -1121,7 +1195,7 @@ export default function AdminReportsPage() {
                     <span
                       className={`font-mono font-bold ${totalNew < 0 ? "text-red-400" : "text-green-400"}`}
                     >
-                      {totalNew.toLocaleString('en-US')} VNĐ
+                      {totalNew.toLocaleString("en-US")} VNĐ
                     </span>
                   </p>
                 </div>
@@ -1219,7 +1293,7 @@ export default function AdminReportsPage() {
                           report.playtimeFee +
                           report.serviceFee -
                           report.expense
-                        ).toLocaleString('en-US')}{" "}
+                        ).toLocaleString("en-US")}{" "}
                         VNĐ
                       </span>
                     </button>

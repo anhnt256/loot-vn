@@ -127,11 +127,15 @@ export async function POST(request: NextRequest) {
           `;
 
           if (fnetUserCount[0].count > 1) {
-            throw new Error(`User ${user[0].userId} has multiple accounts (${fnetUserCount[0].count}). Cannot process reward exchange.`);
+            throw new Error(
+              `User ${user[0].userId} has multiple accounts (${fnetUserCount[0].count}). Cannot process reward exchange.`,
+            );
           }
 
           if (fnetUserCount[0].count === 0) {
-            throw new Error(`User ${user[0].userId} not found in fnet database.`);
+            throw new Error(
+              `User ${user[0].userId} not found in fnet database.`,
+            );
           }
 
           // Lấy thông tin tài khoản duy nhất
@@ -157,25 +161,34 @@ export async function POST(request: NextRequest) {
             if (activeSession.length > 0) {
               // Verify userId có trùng không
               if (activeSession[0].UserId !== user[0].userId) {
-                throw new Error(`UserId mismatch: Active session has userId ${activeSession[0].UserId} but reward is for ${user[0].userId}`);
+                throw new Error(
+                  `UserId mismatch: Active session has userId ${activeSession[0].UserId} but reward is for ${user[0].userId}`,
+                );
               }
-              
-              console.log(`User ${user[0].userId} is currently using machine ${activeSession[0].MachineName} since ${activeSession[0].EnterDate} ${activeSession[0].EnterTime}`);
+
+              console.log(
+                `User ${user[0].userId} is currently using machine ${activeSession[0].MachineName} since ${activeSession[0].EnterDate} ${activeSession[0].EnterTime}`,
+              );
             } else {
-              console.log(`User ${user[0].userId} is not currently using any machine`);
+              console.log(
+                `User ${user[0].userId} is not currently using any machine`,
+              );
             }
 
             const oldMoney = fnetUser[0].RemainMoney;
-            const newMoney = Number(oldMoney) + Number(rewardMap[0].reward_value);
-            
-            console.log(`Processing reward for user ${user[0].userId}: ${oldMoney} + ${rewardMap[0].reward_value} = ${newMoney}`);
-            
+            const newMoney =
+              Number(oldMoney) + Number(rewardMap[0].reward_value);
+
+            console.log(
+              `Processing reward for user ${user[0].userId}: ${oldMoney} + ${rewardMap[0].reward_value} = ${newMoney}`,
+            );
+
             // Lưu lịch sử thay đổi số dư TRƯỚC khi update
             await db.$executeRaw`
               INSERT INTO FnetHistory (userId, branch, oldMoney, newMoney, createdAt, updatedAt)
               VALUES (${user[0].userId}, ${branch}, ${oldMoney}, ${newMoney}, NOW(), NOW())
             `;
-            
+
             const today = new Date();
             today.setFullYear(today.getFullYear() - 20);
             const todayFormatted =
@@ -194,8 +207,10 @@ export async function POST(request: NextRequest) {
                   ExpiryDate = ${expiryDateFormatted}
               WHERE UserId = ${user[0].userId}
             `;
-            
-            console.log(`Updated user ${user[0].userId} money: ${oldMoney} -> ${newMoney}`);
+
+            console.log(
+              `Updated user ${user[0].userId} money: ${oldMoney} -> ${newMoney}`,
+            );
           }
         }
       } else if (action === "REJECT") {

@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   try {
     const branch = await getBranchFromCookie();
     const { searchParams } = new URL(request.url);
-    const staffType = searchParams.get('type'); // counter, kitchen, security
+    const staffType = searchParams.get("type"); // counter, kitchen, security
 
     let query = `
       SELECT 

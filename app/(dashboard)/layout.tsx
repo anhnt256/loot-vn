@@ -329,7 +329,8 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
         ) : STORE_DISABLED && pathname === "/store" ? (
           <div className="flex items-center justify-center h-full p-10 text-2xl font-bold bg-gray-400">
             <h1>
-              Tính năng đổi thưởng đang tạm khóa để bảo trì. Vui lòng thử lại sau.
+              Tính năng đổi thưởng đang tạm khóa để bảo trì. Vui lòng thử lại
+              sau.
             </h1>
           </div>
         ) : (

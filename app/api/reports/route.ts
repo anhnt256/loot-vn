@@ -31,11 +31,18 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validate required fields
-    if (!date || !shift || !counterStaffId || !kitchenStaffId || !securityStaffId) {
+    if (
+      !date ||
+      !shift ||
+      !counterStaffId ||
+      !kitchenStaffId ||
+      !securityStaffId
+    ) {
       return NextResponse.json(
         {
           success: false,
-          error: "Missing required fields: date, shift, counterStaffId, kitchenStaffId, securityStaffId are required.",
+          error:
+            "Missing required fields: date, shift, counterStaffId, kitchenStaffId, securityStaffId are required.",
         },
         { status: 400 },
       );
@@ -148,7 +155,7 @@ export async function POST(request: NextRequest) {
         VALUES (
           '${date}', '${shift}', '${branch}', 
           ${fileUrlSqlValue}, 
-          ${notes ? `'${(notes as string).replace(/'/g, "''")}'` : 'NULL'}, 
+          ${notes ? `'${(notes as string).replace(/'/g, "''")}'` : "NULL"}, 
           ${Number(counterStaffId)}, 
           ${Number(kitchenStaffId)}, 
           ${Number(securityStaffId)}, 
@@ -166,11 +173,18 @@ export async function POST(request: NextRequest) {
 
       // Create report details for financial data
       const details = [
-        { type: 'GIO', value: parseFloat(playtimeMoney || 0) },
-        { type: 'DICH_VU', value: parseFloat(serviceMoney || 0) },
-        { type: 'MOMO', value: parseFloat(momo || 0) },
-        { type: 'CHI', value: parseFloat(expenses || 0) },
-        { type: 'TONG', value: parseFloat(playtimeMoney || 0) + parseFloat(serviceMoney || 0) + parseFloat(momo || 0) - parseFloat(expenses || 0) }
+        { type: "GIO", value: parseFloat(playtimeMoney || 0) },
+        { type: "DICH_VU", value: parseFloat(serviceMoney || 0) },
+        { type: "MOMO", value: parseFloat(momo || 0) },
+        { type: "CHI", value: parseFloat(expenses || 0) },
+        {
+          type: "TONG",
+          value:
+            parseFloat(playtimeMoney || 0) +
+            parseFloat(serviceMoney || 0) +
+            parseFloat(momo || 0) -
+            parseFloat(expenses || 0),
+        },
       ];
 
       // Note: inter-shift expense kept only in fileUrl JSON metadata to avoid schema changes
@@ -189,9 +203,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: { 
+      data: {
         id: reportId,
-        total: parseFloat(playtimeMoney || 0) + parseFloat(serviceMoney || 0) + parseFloat(momo || 0) - parseFloat(expenses || 0)
+        total:
+          parseFloat(playtimeMoney || 0) +
+          parseFloat(serviceMoney || 0) +
+          parseFloat(momo || 0) -
+          parseFloat(expenses || 0),
       },
     });
   } catch (error) {
@@ -207,8 +225,8 @@ export async function GET(request: NextRequest) {
   try {
     const branch = await getBranchFromCookie();
     const { searchParams } = new URL(request.url);
-    const date = searchParams.get('date');
-    const shift = searchParams.get('shift');
+    const date = searchParams.get("date");
+    const shift = searchParams.get("shift");
 
     let query = `
       SELECT 
@@ -240,7 +258,7 @@ export async function GET(request: NextRequest) {
     // Parse fileUrl JSON to object for FE convenience
     for (const r of reports) {
       try {
-        if (typeof r.fileUrl === 'string' && r.fileUrl.trim().length) {
+        if (typeof r.fileUrl === "string" && r.fileUrl.trim().length) {
           r.fileUrl = JSON.parse(r.fileUrl);
         }
       } catch {

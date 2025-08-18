@@ -514,7 +514,7 @@ export default function SendReportDrawer({
                   parseFloat(e.target.value) || 0,
                 )
               }
-              className={`text-center ${(isDisabled || loading) ? "bg-gray-100" : ""}`}
+              className={`text-center ${isDisabled || loading ? "bg-gray-100" : ""}`}
               min={0}
               step={0.5}
               placeholder="Nhập số lượng"
@@ -549,7 +549,7 @@ export default function SendReportDrawer({
                   parseFloat(e.target.value) || 0,
                 )
               }
-              className={`text-center ${(isDisabled || loading) ? "bg-gray-100" : ""}`}
+              className={`text-center ${isDisabled || loading ? "bg-gray-100" : ""}`}
               min={0}
               step={0.5}
               placeholder="Xuất số lượng"
@@ -590,18 +590,17 @@ export default function SendReportDrawer({
     // Use functional state update to avoid stale closures from memoized columns
     setMaterialData((prev) => {
       const newData = [...prev];
-      const currentRow = { ...newData[index], [field]: value } as MaterialReportData;
+      const currentRow = {
+        ...newData[index],
+        [field]: value,
+      } as MaterialReportData;
 
-      if (
-        field === "beginning" ||
-        field === "received" ||
-        field === "issued"
-      ) {
+      if (field === "beginning" || field === "received" || field === "issued") {
         const beginning =
-          field === "beginning" ? value : currentRow.beginning ?? 0;
+          field === "beginning" ? value : (currentRow.beginning ?? 0);
         const received =
-          field === "received" ? value : currentRow.received ?? 0;
-        const issued = field === "issued" ? value : currentRow.issued ?? 0;
+          field === "received" ? value : (currentRow.received ?? 0);
+        const issued = field === "issued" ? value : (currentRow.issued ?? 0);
         currentRow.ending = beginning + received - issued;
       }
 
