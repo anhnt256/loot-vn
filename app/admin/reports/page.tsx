@@ -439,7 +439,9 @@ export default function AdminReportsPage() {
         return;
       }
       if (numValue > 0 && numValue < 1000) {
-        alert(`Chi phí phải = 0 hoặc >= 1,000 VNĐ. Giá trị hiện tại: ${numValue}`);
+        alert(
+          `Chi phí phải = 0 hoặc >= 1,000 VNĐ. Giá trị hiện tại: ${numValue}`,
+        );
         return;
       }
     }

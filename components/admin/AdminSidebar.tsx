@@ -165,20 +165,10 @@ export function AdminSidebar() {
     }
   }, [pathname]);
 
-  // Filter menu items based on login type and admin role
+  // Filter menu items based on admin role - tất cả admin đều thấy tất cả menu
   const filteredMenuItems = menuItems.filter((item) => {
-    // If login type is macAddress or mac, show limited menus: Dashboard, Đổi thưởng, Báo cáo bàn giao, Báo cáo kết ca (4 mục)
-    if (loginType === "macAddress" || loginType === "mac") {
-      return (
-        item.href === "/admin" ||
-        item.href === "/admin/reward-exchange" ||
-        item.href === "/admin/handover-reports" ||
-        item.href === "/admin/reports"
-      );
-    }
-
-    // For other login types, show all items except adminOnly items for non-admin users
-    // You can add additional logic here if needed
+    // Tất cả admin (dù login bằng username hay MAC) đều thấy tất cả menu
+    // Logic cũ giới hạn theo loginType không hợp lý vì cả 2 đều là admin
     return true;
   });
 
@@ -212,7 +202,7 @@ export function AdminSidebar() {
             isActive = pathname === "/admin";
           } else {
             // Các trang khác active khi pathname bắt đầu bằng href
-            isActive = pathname.startsWith(item.href);
+            isActive = pathname?.startsWith(item.href) || false;
           }
           
           // Debug: Log tất cả menu items để kiểm tra
@@ -221,7 +211,7 @@ export function AdminSidebar() {
             href: item.href,
             isActive,
             title: item.title,
-            startsWith: pathname.startsWith(item.href)
+            startsWith: pathname?.startsWith(item.href) || false,
           });
 
           return (

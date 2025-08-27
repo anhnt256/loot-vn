@@ -103,7 +103,7 @@ function convertBigIntToString(obj: any): any {
 
 // Helper function để convert BigInt to number
 function convertBigIntToNumber(value: any): number {
-  if (typeof value === 'bigint') {
+  if (typeof value === "bigint") {
     return Number(value);
   }
   if (value === null || value === undefined) {
@@ -151,8 +151,8 @@ export async function calculateActiveUsersInfo(
     // Tối ưu: Gộp tất cả queries thành 3 query chính thay vì 6
     const [
       userSessionsAndTopUps, // Gộp sessions + top ups
-      userDataAndClaims,      // Gộp user data + claims + gift rounds
-      userGameRounds,         // Game rounds riêng vì cần time range khác
+      userDataAndClaims, // Gộp user data + claims + gift rounds
+      userGameRounds, // Game rounds riêng vì cần time range khác
     ] = await Promise.all([
       // 1. Gộp user sessions và top ups trong 1 query FnetDB
       (async () => {
@@ -254,10 +254,12 @@ export async function calculateActiveUsersInfo(
 
     // Tối ưu: Gộp device query vào cùng với user data
     const machineNames = [
-      ...new Set((userSessionsAndTopUps as FnetSession[]).map((s) => s.MachineName)),
+      ...new Set(
+        (userSessionsAndTopUps as FnetSession[]).map((s) => s.MachineName),
+      ),
     ];
-    
-    let deviceDataMap = new Map();
+
+    const deviceDataMap = new Map();
     if (machineNames.length > 0) {
       const machineNamesStr = machineNames.map((name) => `'${name}'`).join(",");
       const deviceQueryString = `
@@ -315,19 +317,19 @@ export async function calculateActiveUsersInfo(
 
     (userSessionsAndTopUps as any[]).forEach((session) => {
       const userId = session.UserId;
-      
+
       // Sessions map
       if (!userSessionsMap.has(userId)) {
         userSessionsMap.set(userId, []);
       }
       userSessionsMap.get(userId)!.push(session);
-      
+
       // Top ups map - convert BigInt to number
       if (session.totalTopUp && session.totalTopUp > 0) {
         const topUpValue = convertBigIntToNumber(session.totalTopUp);
         userTopUpsMap.set(userId, topUpValue);
       }
-      
+
       // Active users map
       if (!activeUsersMap.has(userId)) {
         activeUsersMap.set(userId, {
@@ -343,11 +345,11 @@ export async function calculateActiveUsersInfo(
 
     (userDataAndClaims as any[]).forEach((user) => {
       userDataMap.set(user.userId, user);
-      
+
       // Convert BigInt to number for claims
       const totalClaimed = convertBigIntToNumber(user.totalClaimed);
       userClaimsMap.set(user.userId, totalClaimed);
-      
+
       // Convert BigInt to number for gift rounds
       const totalGiftRounds = convertBigIntToNumber(user.totalGiftRounds);
       userGiftRoundsMap.set(user.userId, totalGiftRounds);
