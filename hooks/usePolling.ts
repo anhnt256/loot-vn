@@ -77,10 +77,8 @@ export function usePolling<T>(url: string, options: PollingOptions = {}) {
       console.log("Initial fetch");
       fetchData();
       isInitialMount.current = false;
-    } else {
-      // Nếu không phải lần đầu, vẫn fetch data khi URL thay đổi
-      fetchData();
     }
+    // Bỏ phần gọi fetchData khi URL thay đổi để tránh gọi 2 lần
 
     // Set up polling interval
     if (intervalRef.current) {

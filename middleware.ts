@@ -98,14 +98,15 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    // Kiểm tra quyền truy cập trang gift-rounds
-    if (request.nextUrl.pathname === "/admin/gift-rounds") {
-      const loginType = request.cookies.get("loginType")?.value;
-      if (loginType !== "username") {
-        console.log("Middleware - Unauthorized access to gift-rounds page");
-        return NextResponse.redirect(new URL("/admin", request.url));
-      }
-    }
+    // Kiểm tra quyền truy cập trang gift-rounds - cho phép tất cả admin
+    // Bỏ logic giới hạn theo loginType vì không hợp lý
+    // if (request.nextUrl.pathname === "/admin/gift-rounds") {
+    //   const loginType = request.cookies.get("loginType")?.value;
+    //   if (loginType !== "username") {
+    //     console.log("Middleware - Unauthorized access to gift-rounds page");
+    //     return NextResponse.redirect(new URL("/admin", request.url));
+    //   }
+    // }
 
     // Nếu không có token, chuyển hướng về trang login
     if (!token) {

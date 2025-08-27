@@ -135,17 +135,35 @@ export function AdminSidebar() {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, [branch]);
 
-  // Polling for pending rewards count
+  // Polling for pending rewards count - chỉ khi cần thiết
   const pendingCountPolling = usePolling<{ pending: number }>(
     `/api/reward-exchange/stats?branch=${branch}&startDate=${new Date().toISOString().split("T")[0]}&endDate=${new Date().toISOString().split("T")[0]}`,
     {
       interval: 60000, // 60 seconds
-      enabled: true,
+      enabled: false, // Disable polling by default - chỉ enable khi cần
       onSuccess: (data) => {
         setPendingCount(data.pending || 0);
       },
     },
   );
+
+  // Chỉ gọi API khi ở trang reward-exchange
+  useEffect(() => {
+    const isRewardExchangePage = pathname === "/admin/reward-exchange";
+    if (isRewardExchangePage && branch) {
+      // Gọi API một lần khi vào trang reward-exchange
+      pendingCountPolling.refetch();
+    }
+  }, [pathname, branch, pendingCountPolling.refetch]);
+
+  // Reset pending count khi rời khỏi trang reward-exchange
+  useEffect(() => {
+    const isRewardExchangePage = pathname === "/admin/reward-exchange";
+    if (!isRewardExchangePage) {
+      // Reset pending count khi không ở trang reward-exchange
+      setPendingCount(0);
+    }
+  }, [pathname]);
 
   // Filter menu items based on login type and admin role
   const filteredMenuItems = menuItems.filter((item) => {
@@ -183,7 +201,28 @@ export function AdminSidebar() {
       </div>
       <nav className="mt-4">
         {filteredMenuItems.map((item) => {
-          const isActive = pathname === item.href;
+          // Logic active menu:
+          // - Dashboard (/admin): Chỉ active khi ở chính xác /admin
+          // - Các trang khác: Active khi pathname bắt đầu bằng href
+          // Ví dụ: /admin/gift-rounds sẽ active menu "Tặng lượt chơi"
+          let isActive = false;
+          
+          if (item.href === "/admin") {
+            // Dashboard chỉ active khi ở chính xác /admin
+            isActive = pathname === "/admin";
+          } else {
+            // Các trang khác active khi pathname bắt đầu bằng href
+            isActive = pathname.startsWith(item.href);
+          }
+          
+          // Debug: Log tất cả menu items để kiểm tra
+          console.log("Debug menu item:", {
+            pathname,
+            href: item.href,
+            isActive,
+            title: item.title,
+            startsWith: pathname.startsWith(item.href)
+          });
 
           return (
             <Link

@@ -113,7 +113,7 @@ const getStatusText = (status: string) => {
   }
 };
 
-const COUNT_DOWN_TIME = 60;
+const COUNT_DOWN_TIME = 90; // 1.5 phút thay vì 5 phút để cập nhật dữ liệu nhanh hơn
 
 const COMBO_BG_COLOR = "bg-purple-700";
 
@@ -190,7 +190,7 @@ const AdminDashboard = () => {
   // Memoize the polling options
   const pollingOptions = useMemo(
     () => ({
-      interval: COUNT_DOWN_TIME * 1000, // 120 seconds
+      interval: COUNT_DOWN_TIME * 1000, // 90 seconds
       onSuccess: (data: any[]) => {
         const computerSorted = _.sortBy(data, (o) => o.name);
         setComputers(computerSorted);
