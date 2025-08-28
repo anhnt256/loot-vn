@@ -171,14 +171,14 @@ export async function GET() {
 
     // Log kết quả từng query để debug
     console.log('Query results:', {
-      computerStatus: computerStatus?.length || 0,
-      deviceHistories: deviceHistoriesRaw?.length || 0,
-      computers: computers?.length || 0,
-      checkInItems: checkInItems?.length || 0
+      computerStatus: Array.isArray(computerStatus) ? computerStatus.length : 0,
+      deviceHistories: Array.isArray(deviceHistoriesRaw) ? deviceHistoriesRaw.length : 0,
+      computers: Array.isArray(computers) ? computers.length : 0,
+      checkInItems: Array.isArray(checkInItems) ? checkInItems.length : 0
     });
 
     // Nếu không có computer data, trả về lỗi
-    if (!computers || computers.length === 0) {
+    if (!Array.isArray(computers) || computers.length === 0) {
       console.warn('No computer data found from local DB');
       return NextResponse.json({ 
         error: 'Unable to fetch computer data',
@@ -202,7 +202,7 @@ export async function GET() {
     }
 
     // Lấy tất cả UserIds có sử dụng máy (chỉ khi có computerStatus data)
-    const activeUserIds = computerStatus && computerStatus.length > 0
+    const activeUserIds = Array.isArray(computerStatus) && computerStatus.length > 0
       ? computerStatus
           .filter((status: any) => status.UserId)
           .map((status: any) => parseInt(status.UserId, 10))
@@ -234,7 +234,7 @@ export async function GET() {
 
     for (const computer of computers as any[]) {
       const { name } = computer || {};
-      const computerStatusData = computerStatus && computerStatus.length > 0
+      const computerStatusData = Array.isArray(computerStatus) && computerStatus.length > 0
         ? computerStatus.find(
             (status: { MachineName: string }) => status.MachineName === name,
           )
