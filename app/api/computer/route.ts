@@ -33,6 +33,39 @@ function convertBigIntToString(obj: any): any {
   return obj;
 }
 
+// Hàm tạo timeout promise
+function createTimeoutPromise<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) => 
+      setTimeout(() => reject(new Error(`Query timeout after ${timeoutMs}ms`)), timeoutMs)
+    )
+  ]);
+}
+
+// Hàm xử lý query với timeout và retry
+async function executeQueryWithTimeout<T>(
+  queryFn: () => Promise<T>, 
+  timeoutMs: number = 8000,
+  retries: number = 1
+): Promise<T | null> {
+  try {
+    return await createTimeoutPromise(queryFn(), timeoutMs);
+  } catch (error) {
+    console.warn(`Query failed, attempt ${retries + 1}:`, error);
+    if (retries > 0) {
+      try {
+        return await createTimeoutPromise(queryFn(), timeoutMs);
+      } catch (retryError) {
+        console.error(`Query retry failed:`, retryError);
+        return null;
+      }
+    }
+    console.error(`Query failed after retries:`, error);
+    return null;
+  }
+}
+
 export async function GET() {
   const cookieStore = await cookies();
   const branchFromCookie = cookieStore.get("branch")?.value;
@@ -46,11 +79,11 @@ export async function GET() {
     const fnetDB = await getFnetDB();
     const fnetPrisma = await getFnetPrisma();
 
-    // Batch tất cả queries cần thiết
-    const [computerStatus, deviceHistoriesRaw, computers, checkInItems] =
-      await Promise.all([
-        // 1. Computer status query (simplified)
-        fnetDB.$queryRaw<any[]>(fnetPrisma.sql`
+    // Sử dụng Promise.allSettled để xử lý từng query độc lập
+    const queryResults = await Promise.allSettled([
+      // 1. Computer status query với timeout
+      executeQueryWithTimeout(async () => {
+        return await fnetDB.$queryRaw<any[]>(fnetPrisma.sql`
         SELECT 
           s.MachineName,
           s.EnterDate,
@@ -72,10 +105,12 @@ export async function GET() {
         WHERE s.MachineName NOT LIKE 'MAY-%'
         AND s.EnterDate >= DATE_SUB(CURDATE(), INTERVAL 1 DAY)
         ORDER BY s.MachineName ASC;
-      `),
+      `);
+      }, 8000),
 
-        // 2. Device histories với timezone conversion
-        db.$queryRaw`
+      // 2. Device histories với timeout
+      executeQueryWithTimeout(async () => {
+        return await db.$queryRaw`
         SELECT 
           h.*,
           CONVERT_TZ(h.createdAt, '+00:00', '+07:00') as createdAt,
@@ -87,10 +122,12 @@ export async function GET() {
           WHERE type IN ('REPORT', 'REPAIR')
         ) h
         WHERE h.rn = 1
-      `,
+      `;
+      }, 5000),
 
-        // 3. Computers với devices
-        db.$queryRaw`
+      // 3. Computers với devices với timeout
+      executeQueryWithTimeout(async () => {
+        return await db.$queryRaw`
         SELECT 
           c.*,
           COALESCE(
@@ -115,13 +152,39 @@ export async function GET() {
         WHERE c.branch = ${branchFromCookie}
         AND c.name != 'ADMIN'
         GROUP BY c.id
-      `,
+      `;
+      }, 5000),
 
-        // 4. Check in items (cache lại)
-        db.$queryRaw`
+      // 4. Check in items với timeout
+      executeQueryWithTimeout(async () => {
+        return await db.$queryRaw`
         SELECT * FROM CheckInItem
-      `,
-      ]);
+      `;
+      }, 3000),
+    ]);
+
+    // Xử lý kết quả từng query
+    const computerStatus = queryResults[0].status === 'fulfilled' ? queryResults[0].value : [];
+    const deviceHistoriesRaw = queryResults[1].status === 'fulfilled' ? queryResults[1].value : [];
+    const computers = queryResults[2].status === 'fulfilled' ? queryResults[2].value : [];
+    const checkInItems = queryResults[3].status === 'fulfilled' ? queryResults[3].value : [];
+
+    // Log kết quả từng query để debug
+    console.log('Query results:', {
+      computerStatus: computerStatus?.length || 0,
+      deviceHistories: deviceHistoriesRaw?.length || 0,
+      computers: computers?.length || 0,
+      checkInItems: checkInItems?.length || 0
+    });
+
+    // Nếu không có computer data, trả về lỗi
+    if (!computers || computers.length === 0) {
+      console.warn('No computer data found from local DB');
+      return NextResponse.json({ 
+        error: 'Unable to fetch computer data',
+        details: 'Local database query failed'
+      }, { status: 500 });
+    }
 
     // Map histories vào từng device
     const deviceIdToHistories: { [key: number]: { REPORT: any; REPAIR: any } } =
@@ -138,16 +201,26 @@ export async function GET() {
       }
     }
 
-    // Lấy tất cả UserIds có sử dụng máy
-    const activeUserIds = computerStatus
-      .filter((status: any) => status.UserId)
-      .map((status: any) => parseInt(status.UserId, 10));
+    // Lấy tất cả UserIds có sử dụng máy (chỉ khi có computerStatus data)
+    const activeUserIds = computerStatus && computerStatus.length > 0
+      ? computerStatus
+          .filter((status: any) => status.UserId)
+          .map((status: any) => parseInt(status.UserId, 10))
+      : [];
 
     // Sử dụng hàm calculateActiveUsersInfo để tính toán thông tin users
-    const usersInfo =
-      activeUserIds.length > 0 && branchFromCookie
-        ? await calculateActiveUsersInfo(activeUserIds, branchFromCookie)
-        : [];
+    let usersInfo: any[] = [];
+    if (activeUserIds.length > 0 && branchFromCookie) {
+      try {
+        usersInfo = await executeQueryWithTimeout(
+          () => calculateActiveUsersInfo(activeUserIds, branchFromCookie),
+          10000
+        ) || [];
+      } catch (error) {
+        console.warn('Failed to calculate active users info:', error);
+        usersInfo = [];
+      }
+    }
 
     console.log("usersInfo", usersInfo);
 
@@ -161,9 +234,11 @@ export async function GET() {
 
     for (const computer of computers as any[]) {
       const { name } = computer || {};
-      const computerStatusData = computerStatus.find(
-        (status: { MachineName: string }) => status.MachineName === name,
-      );
+      const computerStatusData = computerStatus && computerStatus.length > 0
+        ? computerStatus.find(
+            (status: { MachineName: string }) => status.MachineName === name,
+          )
+        : null;
       const { UserId, Status, UserType } = computerStatusData || {};
 
       // Lấy user info từ map
@@ -175,10 +250,10 @@ export async function GET() {
       results.push({
         id: computer.id,
         name: computer.name,
-        status: Status,
-        userId: UserId,
-        userName: userInfo?.userName,
-        userType: UserType,
+        status: Status || 'UNKNOWN',
+        userId: UserId || null,
+        userName: userInfo?.userName || null,
+        userType: UserType || null,
         totalCheckIn: userInfo?.totalCheckIn || 0,
         claimedCheckIn: userInfo?.claimedCheckIn || 0,
         availableCheckIn: userInfo?.availableCheckIn || 0,
