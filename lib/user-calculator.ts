@@ -252,49 +252,49 @@ export async function calculateActiveUsersInfo(
       })(),
     ]);
 
-    // Tối ưu: Gộp device query vào cùng với user data
-    const machineNames = [
-      ...new Set(
-        (userSessionsAndTopUps as FnetSession[]).map((s) => s.MachineName),
-      ),
-    ];
+    // // Tối ưu: Gộp device query vào cùng với user data
+    // const machineNames = [
+    //   ...new Set(
+    //     (userSessionsAndTopUps as FnetSession[]).map((s) => s.MachineName),
+    //   ),
+    // ];
 
-    const deviceDataMap = new Map();
-    if (machineNames.length > 0) {
-      const machineNamesStr = machineNames.map((name) => `'${name}'`).join(",");
-      const deviceQueryString = `
-        SELECT 
-          d.id,
-          d.computerId,
-          d.monitorStatus,
-          d.keyboardStatus,
-          d.mouseStatus,
-          d.headphoneStatus,
-          d.chairStatus,
-          d.networkStatus,
-          d.computerStatus,
-          d.note,
-          d.createdAt,
-          d.updatedAt,
-          c.name as machineName,
-          c.branch
-        FROM Device d
-        JOIN Computer c ON d.computerId = c.id
-        WHERE c.name IN (${machineNamesStr})
-          AND c.branch = '${branch}'
-      `;
+    // const deviceDataMap = new Map();
+    // if (machineNames.length > 0) {
+    //   const machineNamesStr = machineNames.map((name) => `'${name}'`).join(",");
+    //   const deviceQueryString = `
+    //     SELECT
+    //       d.id,
+    //       d.computerId,
+    //       d.monitorStatus,
+    //       d.keyboardStatus,
+    //       d.mouseStatus,
+    //       d.headphoneStatus,
+    //       d.chairStatus,
+    //       d.networkStatus,
+    //       d.computerStatus,
+    //       d.note,
+    //       d.createdAt,
+    //       d.updatedAt,
+    //       c.name as machineName,
+    //       c.branch
+    //     FROM Device d
+    //     JOIN Computer c ON d.computerId = c.id
+    //     WHERE c.name IN (${machineNamesStr})
+    //       AND c.branch = '${branch}'
+    //   `;
 
-      const deviceData = await db.$queryRawUnsafe(deviceQueryString);
-      (deviceData as any[]).forEach((device) => {
-        deviceDataMap.set(device.machineName, device);
-      });
+    //   const deviceData = await db.$queryRawUnsafe(deviceQueryString);
+    //   (deviceData as any[]).forEach((device) => {
+    //     deviceDataMap.set(device.machineName, device);
+    //   });
 
-      if (isDebug) {
-        console.log("=== DEBUG DEVICE DATA ===");
-        console.log("Machine names from sessions:", machineNames);
-        console.log("Device data found:", deviceData);
-      }
-    }
+    //   if (isDebug) {
+    //     console.log("=== DEBUG DEVICE DATA ===");
+    //     console.log("Machine names from sessions:", machineNames);
+    //     console.log("Device data found:", deviceData);
+    //   }
+    // }
 
     // Cache check-in items - chỉ query 1 lần
     const todayCheckInResult = await db.$queryRawUnsafe<CheckInItem[]>(`
@@ -503,7 +503,7 @@ export async function calculateActiveUsersInfo(
         console.log(">>>> DEBUG USER 244 >>>>", userData);
       }
 
-      const device = machineName ? deviceDataMap.get(machineName) : null;
+      // const device = machineName ? deviceDataMap.get(machineName) : null;
 
       if (isDebug && debugUsers.includes(userId)) {
         console.log(`User ${userId} machineName:`, machineName);
@@ -526,7 +526,7 @@ export async function calculateActiveUsersInfo(
           totalPayment: userTopUp,
           giftRound: totalGiftRounds,
           machineName: machineName,
-          device: device || null,
+          // device: device || null,
         });
       }
 
@@ -546,7 +546,7 @@ export async function calculateActiveUsersInfo(
         totalPayment: userTopUp,
         giftRound: totalGiftRounds,
         machineName: machineName,
-        device: device || null,
+        // device: device || null,
       };
 
       results.push(result);
