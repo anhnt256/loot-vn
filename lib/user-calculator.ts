@@ -507,7 +507,7 @@ export async function calculateActiveUsersInfo(
 
       if (isDebug && debugUsers.includes(userId)) {
         console.log(`User ${userId} machineName:`, machineName);
-        console.log(`User ${userId} device lookup result:`, device);
+        // console.log(`User ${userId} device lookup result:`, device);
         console.log(`User ${userId} final result:`, {
           userId,
           userName: userData?.userName,
