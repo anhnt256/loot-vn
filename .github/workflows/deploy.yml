@@ -1,0 +1,32 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main   # hoặc branch bạn muốn deploy
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          # Tắt xác minh host để khỏi bị hỏi yes/no
+          echo -e "Host *\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+
+      - name: Deploy via SSH
+        run: |
+          ssh -i ~/.ssh/id_ed25519 ${{ github.VPS_USER }}@${{ secrets.VPS_IP }} << 'EOF'
+            cd /var/www/gateway-app/loot-vn   # Đường dẫn tới thư mục chứa project trên VPS
+            git pull origin main   # Cập nhật code
+            docker compose down    # Tắt container cũ (nếu có)
+            docker compose build   # Build lại image
+            docker compose up -d   # Chạy lại container
+          EOF

@@ -1,0 +1,8 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    container_name: gateway-gaming
+    ports:
+      - "3000:3000"
+    restart: always
