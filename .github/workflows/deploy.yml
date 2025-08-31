@@ -3,30 +3,47 @@ name: Deploy to VPS
 on:
   push:
     branches:
-      - main   # hoặc branch bạn muốn deploy
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          # Tắt xác minh host để khỏi bị hỏi yes/no
-          echo -e "Host *\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+    # Nếu cần build image trước (tuỳ project)
+    #- name: Build Docker image
+    #  run: docker build -t myapp:latest .
 
-      - name: Deploy via SSH
-        run: |
-          ssh -i ~/.ssh/id_ed25519 ${{ github.VPS_USER }}@${{ secrets.VPS_IP }} << 'EOF'
-            cd /var/www/gateway-app/loot-vn   # Đường dẫn tới thư mục chứa project trên VPS
-            git pull origin main   # Cập nhật code
-            docker compose down    # Tắt container cũ (nếu có)
-            docker compose build   # Build lại image
-            docker compose up -d   # Chạy lại container
-          EOF
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v0.1.10
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          cd /var/www/gateway-app/loot-vn
+          git fetch --all
+          git reset --hard origin/main
+
+          # Tạo file .env từ GitHub Secrets
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
+          echo "FNET_GV_DATABASE_URL=${{ secrets.FNET_GV_DATABASE_URL }}" >> .env
+          echo "FNET_TP_DATABASE_URL=${{ secrets.FNET_TP_DATABASE_URL }}" >> .env
+          echo "GATEWAY_BONUS_DEADLINE=${{ secrets.GATEWAY_BONUS_DEADLINE }}" >> .env
+          echo "IS_DEBUG_GO_VAP=${{ secrets.IS_DEBUG_GO_VAP }}" >> .env
+          echo "IS_DEBUG_TAN_PHU=${{ secrets.IS_DEBUG_TAN_PHU }}" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+          echo "NEXT_PUBLIC_GATEWAY_BIRTHDAY_ENABLE=${{ secrets.NEXT_PUBLIC_GATEWAY_BIRTHDAY_ENABLE }}" >> .env
+          echo "NEXT_PUBLIC_IS_MAINTENANCE=${{ secrets.NEXT_PUBLIC_IS_MAINTENANCE }}" >> .env
+          echo "NEXT_PUBLIC_SPEND_PER_ROUND=${{ secrets.NEXT_PUBLIC_SPEND_PER_ROUND }}" >> .env
+          echo "NEXT_PUBLIC_STORE_DISABLED=${{ secrets.NEXT_PUBLIC_STORE_DISABLED }}" >> .env
+          echo "NEXT_PUBLIC_UP_RATE_AMOUNT=${{ secrets.NEXT_PUBLIC_UP_RATE_AMOUNT }}" >> .env
+          echo "USE_DEFAULT_USER_ID=${{ secrets.USE_DEFAULT_USER_ID }}" >> .env
+          echo "NODE_ENV=production" >> .env
+
+          # Build + run docker compose
+          docker compose down
+          docker compose up -d --build
