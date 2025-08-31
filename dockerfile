@@ -1,51 +1,37 @@
-# ---- Stage 1: Build ----
+# Stage 1: Builder
 FROM node:20-slim AS builder
 
-# Cài gói cần thiết cho build
-RUN apt-get update \
-    && apt-get install -y openssl \
-    && rm -rf /var/lib/apt/lists/*
+# Cài openssl (nếu project dùng Prisma cần SSL)
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy file package.json và lock để cài dependencies
+# Copy package.json + lockfile + prisma trước
 COPY package*.json ./
+COPY prisma ./prisma
 
-# Cài dependencies (bao gồm devDependencies để build)
+# Cài dependencies (nếu có preinstall cũng không lỗi vì prisma đã có)
 RUN npm install
 
-# Copy toàn bộ source code TRƯỚC KHI generate Prisma
+# Copy toàn bộ source code
 COPY . .
 
-# Generate Prisma Client (sau khi đã copy source code)
-RUN npx prisma generate
-
-# Build NestJS (TS → JS)
+# Build project (NestJS -> tạo dist/)
 RUN npm run build
 
-# ---- Stage 2: Runtime ----
-FROM node:20-slim AS runner
 
-# Cài openssl (nếu runtime cần)
-RUN apt-get update \
-    && apt-get install -y openssl \
-    && rm -rf /var/lib/apt/lists/*
+# Stage 2: Production
+FROM node:20-slim AS production
 
 WORKDIR /app
 
-# Chỉ copy file package.json & lock để cài dependencies production
-COPY package*.json ./
+# Copy node_modules từ builder (đã cài đủ)
+COPY --from=builder /app/node_modules ./node_modules
 
-# Cài dependencies production (loại bỏ dev)
-RUN npm install --omit=dev
-
-# Copy dist (JS build) và Prisma schema
+# Copy dist và prisma để runtime có schema
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
+COPY package*.json ./
 
-# Expose port
-EXPOSE 3000
-
-# Start app
-CMD ["npm", "run", "start"]
-    
+# Chạy app
+CMD ["node", "dist/main.js"]
