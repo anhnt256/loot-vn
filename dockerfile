@@ -1,23 +1,52 @@
-# Sử dụng NodeJS base image
-FROM node:20-alpine
+# ---- Stage 1: Build ----
+    FROM node:20-slim AS builder
 
-# Tạo thư mục làm việc
-WORKDIR /app
-
-# Copy package trước để cache
-COPY package*.json ./
-
-# Cài dependencies
-RUN npm install --production
-
-# Copy toàn bộ source
-COPY . .
-
-# Build (nếu cần, ví dụ NestJS)
-# RUN npm run build
-
-# Expose port (ví dụ 3000)
-EXPOSE 3000
-
-# Command chạy app
-CMD ["npm", "start"]
+    # Cài gói cần thiết cho build
+    RUN apt-get update \
+        && apt-get install -y openssl \
+        && rm -rf /var/lib/apt/lists/*
+    
+    WORKDIR /app
+    
+    # Copy file package.json và lock để cài dependencies
+    COPY package*.json ./
+    
+    # Cài dependencies (bao gồm devDependencies để build)
+    RUN npm install
+    
+    # Copy toàn bộ source code
+    COPY . .
+    
+    # Generate Prisma Client
+    RUN npx prisma generate
+    
+    # Build NestJS (TS → JS)
+    RUN npm run build
+    
+    
+    # ---- Stage 2: Runtime ----
+    FROM node:20-slim AS runner
+    
+    # Cài openssl (nếu runtime cần)
+    RUN apt-get update \
+        && apt-get install -y openssl \
+        && rm -rf /var/lib/apt/lists/*
+    
+    WORKDIR /app
+    
+    # Chỉ copy file package.json & lock để cài dependencies production
+    COPY package*.json ./
+    
+    # Cài dependencies production (loại bỏ dev)
+    RUN npm install --omit=dev
+    
+    # Copy dist (JS build) và Prisma schema
+    COPY --from=builder /app/dist ./dist
+    COPY --from=builder /app/prisma ./prisma
+    
+    # Expose port
+    EXPOSE 3000
+    
+    # Start app
+    CMD ["npm", "run", "start"]
+    
