@@ -16,7 +16,7 @@ RUN npm install
 # Copy toàn bộ source code
 COPY . .
 
-# Build project (NestJS -> tạo dist/)
+# Build project (Next.js -> tạo .next/)
 RUN npm run build
 
 
@@ -28,10 +28,11 @@ WORKDIR /app
 # Copy node_modules từ builder (đã cài đủ)
 COPY --from=builder /app/node_modules ./node_modules
 
-# Copy dist và prisma để runtime có schema
-COPY --from=builder /app/dist ./dist
+# Copy .next và prisma để runtime có schema
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
 COPY package*.json ./
 
 # Chạy app
-CMD ["node", "dist/main.js"]
+CMD ["npm", "start"]
