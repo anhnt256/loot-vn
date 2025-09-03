@@ -1,38 +1,51 @@
 # Stage 1: Builder
+# Use a lightweight base image for building
 FROM node:20-slim AS builder
 
-# Cài openssl (nếu project dùng Prisma cần SSL)
-RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+# Install the correct OpenSSL version needed by Prisma
+# 'libssl1.1' is the specific package that provides 'libssl.so.1.1'
+RUN apt-get update && apt-get install -y libssl1.1 && rm -rf /var/lib/apt/lists/*
 
+# Set the working directory
 WORKDIR /app
 
-# Copy package.json + lockfile + prisma trước
+# Copy dependency files first to leverage Docker's build cache
 COPY package*.json ./
 COPY prisma ./prisma
 
-# Cài dependencies (nếu có preinstall cũng không lỗi vì prisma đã có)
-RUN npm install
+# Install dependencies, including devDependencies for Prisma generation
+# Use 'npm ci' for a clean, deterministic install
+RUN npm ci
 
-# Copy toàn bộ source code
+# Copy the rest of the application source code
 COPY . .
 
-# Build project (Next.js -> tạo .next/)
-RUN npm run build
+# Generate Prisma Client and build the Next.js application
+# The Prisma Query Engine is generated and included in the build output
+RUN npx prisma generate && npm run build
 
 
 # Stage 2: Production
+# Use the same lightweight base image for the final production image
 FROM node:20-slim AS production
 
+# Set the working directory
 WORKDIR /app
 
-# Copy node_modules từ builder (đã cài đủ)
+# Only copy the essential files needed to run the application
+# This keeps the final image as small and secure as possible
+# The Prisma Query Engine is already included within the .next directory
 COPY --from=builder /app/node_modules ./node_modules
-
-# Copy .next và prisma để runtime có schema
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/prisma ./prisma
-COPY package*.json ./
+COPY --from=builder /app/package*.json ./
 
-# Chạy app
+# The Prisma binary target directory is also needed for the runtime
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/prisma ./prisma
+
+# Expose the port your application listens on
+EXPOSE 3000
+
+# Start the application in production mode
 CMD ["npm", "start"]
