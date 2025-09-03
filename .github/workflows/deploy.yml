@@ -29,21 +29,23 @@ jobs:
           git fetch --all
           git reset --hard origin/main
 
-          # Tạo file .env từ GitHub Secrets
-          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
-          echo "FNET_GV_DATABASE_URL=${{ secrets.FNET_GV_DATABASE_URL }}" >> .env
-          echo "FNET_TP_DATABASE_URL=${{ secrets.FNET_TP_DATABASE_URL }}" >> .env
-          echo "GATEWAY_BONUS_DEADLINE=${{ secrets.GATEWAY_BONUS_DEADLINE }}" >> .env
-          echo "IS_DEBUG_GO_VAP=${{ secrets.IS_DEBUG_GO_VAP }}" >> .env
-          echo "IS_DEBUG_TAN_PHU=${{ secrets.IS_DEBUG_TAN_PHU }}" >> .env
-          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
-          echo "NEXT_PUBLIC_GATEWAY_BIRTHDAY_ENABLE=${{ secrets.NEXT_PUBLIC_GATEWAY_BIRTHDAY_ENABLE }}" >> .env
-          echo "NEXT_PUBLIC_IS_MAINTENANCE=${{ secrets.NEXT_PUBLIC_IS_MAINTENANCE }}" >> .env
-          echo "NEXT_PUBLIC_SPEND_PER_ROUND=${{ secrets.NEXT_PUBLIC_SPEND_PER_ROUND }}" >> .env
-          echo "NEXT_PUBLIC_STORE_DISABLED=${{ secrets.NEXT_PUBLIC_STORE_DISABLED }}" >> .env
-          echo "NEXT_PUBLIC_UP_RATE_AMOUNT=${{ secrets.NEXT_PUBLIC_UP_RATE_AMOUNT }}" >> .env
-          echo "USE_DEFAULT_USER_ID=${{ secrets.USE_DEFAULT_USER_ID }}" >> .env
-          echo "NODE_ENV=production" >> .env
+          # Tạo file .env từ GitHub Secrets bằng heredoc (EOF)
+          cat << 'EOF' > .env
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          FNET_GV_DATABASE_URL=${{ secrets.FNET_GV_DATABASE_URL }}
+          FNET_TP_DATABASE_URL=${{ secrets.FNET_TP_DATABASE_URL }}
+          GATEWAY_BONUS_DEADLINE=${{ secrets.GATEWAY_BONUS_DEADLINE }}
+          IS_DEBUG_GO_VAP=${{ secrets.IS_DEBUG_GO_VAP }}
+          IS_DEBUG_TAN_PHU=${{ secrets.IS_DEBUG_TAN_PHU }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          NEXT_PUBLIC_GATEWAY_BIRTHDAY_ENABLE=${{ secrets.NEXT_PUBLIC_GATEWAY_BIRTHDAY_ENABLE }}
+          NEXT_PUBLIC_IS_MAINTENANCE=${{ secrets.NEXT_PUBLIC_IS_MAINTENANCE }}
+          NEXT_PUBLIC_SPEND_PER_ROUND=${{ secrets.NEXT_PUBLIC_SPEND_PER_ROUND }}
+          NEXT_PUBLIC_STORE_DISABLED=${{ secrets.NEXT_PUBLIC_STORE_DISABLED }}
+          NEXT_PUBLIC_UP_RATE_AMOUNT=${{ secrets.NEXT_PUBLIC_UP_RATE_AMOUNT }}
+          USE_DEFAULT_USER_ID=${{ secrets.USE_DEFAULT_USER_ID }}
+          NODE_ENV=production
+          EOF
 
           # Build + run docker compose
           docker compose down
