@@ -1,5 +1,5 @@
 # Stage 1: Builder
-FROM node:20-slim AS builder
+FROM node:20-bookworm AS builder
 
 # Cài openssl (nếu project dùng Prisma cần SSL)
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
@@ -21,7 +21,7 @@ RUN npm run build
 
 
 # Stage 2: Production
-FROM node:20-slim AS production
+FROM node:20-bookworm AS production
 
 WORKDIR /app
 
