@@ -1,23 +1,15 @@
-name: Deploy to VPS
+name: Deploy to Production
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: CI-CD
-
+    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    # Nếu cần build image trước (tuỳ project)
-    #- name: Build Docker image
-    #  run: docker build -t myapp:latest .
-
     - name: Deploy via SSH
       uses: appleboy/ssh-action@v0.1.10
       with:
@@ -29,8 +21,8 @@ jobs:
           git fetch --all
           git reset --hard origin/main
 
-          # Tạo file .env từ GitHub Secrets bằng heredoc (EOF)
-          cat << 'EOF' > .env
+          # Tạo file .env
+          cat << EOF > .env
           DATABASE_URL=${{ secrets.DATABASE_URL }}
           FNET_GV_DATABASE_URL=${{ secrets.FNET_GV_DATABASE_URL }}
           FNET_TP_DATABASE_URL=${{ secrets.FNET_TP_DATABASE_URL }}
@@ -47,6 +39,9 @@ jobs:
           NODE_ENV=production
           EOF
 
-          # Build + run docker compose
+          # Debug: in nội dung .env
+          echo "=== .env content on VPS ==="
+          cat .env
+
           docker compose down
           docker compose up -d --build
