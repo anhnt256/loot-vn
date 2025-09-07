@@ -40,7 +40,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     // Create user using raw SQL
     const result = await db.$queryRaw`
       INSERT INTO User (userId, branch, rankId, stars, createdAt, updatedAt)
-      VALUES (${userId}, ${branch}, ${rankId}, ${stars}, '${getCurrentTimeVNDB()}', '${getCurrentTimeVNDB()}')
+      VALUES (${userId}, ${branch}, ${rankId}, ${stars}, ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
       RETURNING *
     `;
     createUser = (result as any[])[0];

@@ -23,8 +23,8 @@ export async function POST(request: Request) {
     const currentSeasons = await db.$queryRaw<any[]>`
       SELECT * FROM BattlePassSeason 
       WHERE isActive = true
-        AND startDate <= DATE('${getCurrentTimeVNDB()}')
-        AND endDate >= DATE('${getCurrentTimeVNDB()}')
+        AND startDate <= DATE(${getCurrentTimeVNDB()})
+        AND endDate >= DATE(${getCurrentTimeVNDB()})
       LIMIT 1
     `;
 
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       // Create new user progress
       await db.$executeRaw`
         INSERT INTO UserBattlePass (userId, seasonId, level, experience, isPremium, totalSpent, branch, createdAt, updatedAt)
-        VALUES (${decoded.userId}, ${currentSeason.id}, 0, ${experience || 0}, false, ${totalSpent || 0}, 'GO_VAP', '${getCurrentTimeVNDB()}', '${getCurrentTimeVNDB()}')
+        VALUES (${decoded.userId}, ${currentSeason.id}, 0, ${experience || 0}, false, ${totalSpent || 0}, 'GO_VAP', ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
       `;
 
       const newProgress = await db.$queryRaw<any[]>`
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
 
       await db.$executeRaw`
         UPDATE UserBattlePass 
-        SET experience = ${newExperience}, totalSpent = ${newTotalSpent}, updatedAt = '${getCurrentTimeVNDB()}'
+        SET experience = ${newExperience}, totalSpent = ${newTotalSpent}, updatedAt = ${getCurrentTimeVNDB()}
         WHERE id = ${userProgress.id}
       `;
 

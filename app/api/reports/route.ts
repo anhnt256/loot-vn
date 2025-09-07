@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
           ${Number(counterStaffId)}, 
           ${Number(kitchenStaffId)}, 
           ${Number(securityStaffId)}, 
-          '${getCurrentTimeVNDB()}', '${getCurrentTimeVNDB()}'
+          ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()}
         )
       `);
 
