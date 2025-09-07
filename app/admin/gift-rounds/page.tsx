@@ -219,7 +219,7 @@ export default function GiftRoundsPage() {
         </div>
         <button
           onClick={() => {
-            console.log("Opening form modal");
+            // console.log("Opening form modal");
             setShowForm(true);
           }}
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -234,7 +234,7 @@ export default function GiftRoundsPage() {
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
-              console.log("Clicking outside modal to close");
+              // console.log("Clicking outside modal to close");
               setShowForm(false);
               setSelectedGiftRound(null);
             }
@@ -248,7 +248,7 @@ export default function GiftRoundsPage() {
               initialData={selectedGiftRound || undefined}
               onSuccess={handleFormSuccess}
               onCancel={() => {
-                console.log("Closing form modal");
+                // console.log("Closing form modal");
                 setShowForm(false);
                 setSelectedGiftRound(null);
               }}

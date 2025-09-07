@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Cookies from "js-cookie";
-import { usePolling } from "@/hooks/usePolling";
 import { useEffect, useState, createContext, useContext } from "react";
 
 // Context để chia sẻ số lượt pending
@@ -135,41 +134,46 @@ export function AdminSidebar() {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, [branch]);
 
-  // Polling for pending rewards count - chỉ khi cần thiết
-  const pendingCountPolling = usePolling<{ pending: number }>(
-    `/api/reward-exchange/stats?branch=${branch}&startDate=${new Date().toISOString().split("T")[0]}&endDate=${new Date().toISOString().split("T")[0]}`,
-    {
-      interval: 60000, // 60 seconds
-      enabled: false, // Disable polling by default - chỉ enable khi cần
-      onSuccess: (data) => {
-        setPendingCount(data.pending || 0);
-      },
-    },
-  );
-
-  // Chỉ gọi API khi ở trang reward-exchange
+  // Không cần polling riêng - sẽ nhận data từ RewardExchangePage
+  // Chỉ fetch một lần khi vào trang reward-exchange để có initial data
   useEffect(() => {
     const isRewardExchangePage = pathname === "/admin/reward-exchange";
     if (isRewardExchangePage && branch) {
-      // Gọi API một lần khi vào trang reward-exchange
-      pendingCountPolling.refetch();
+      // Fetch một lần để có initial data
+      fetch(`/api/reward-exchange/stats?branch=${branch}&startDate=${new Date().toISOString().split("T")[0]}&endDate=${new Date().toISOString().split("T")[0]}`)
+        .then(res => res.json())
+        .then(data => {
+          setPendingCount(data.pending || 0);
+        })
+        .catch(err => console.error("Error fetching initial stats:", err));
     }
-  }, [pathname, branch, pendingCountPolling.refetch]);
+  }, [pathname, branch]);
 
   // Reset pending count khi rời khỏi trang reward-exchange
   useEffect(() => {
     const isRewardExchangePage = pathname === "/admin/reward-exchange";
-    if (!isRewardExchangePage) {
-      // Reset pending count khi không ở trang reward-exchange
+    if (!isRewardExchangePage && pendingCount > 0) {
+      // Reset pending count khi không ở trang reward-exchange và có pending count
       setPendingCount(0);
     }
-  }, [pathname]);
+  }, [pathname, pendingCount]);
 
-  // Filter menu items based on admin role - tất cả admin đều thấy tất cả menu
+  // Filter menu items based on admin role
   const filteredMenuItems = menuItems.filter((item) => {
-    // Tất cả admin (dù login bằng username hay MAC) đều thấy tất cả menu
-    // Logic cũ giới hạn theo loginType không hợp lý vì cả 2 đều là admin
-    return true;
+    // Nếu là admin (loginType === "username"), hiển thị tất cả menu
+    if (loginType === "username") {
+      return true;
+    }
+    
+    // Nếu không phải admin (loginType === "mac"), chỉ hiển thị các menu được phép
+    const allowedMenus = [
+      "/admin", // Dashboard
+      "/admin/reward-exchange", // Quản lý đổi thưởng
+      "/admin/handover-reports", // Báo cáo bàn giao
+      "/admin/reports", // Báo cáo kết ca
+    ];
+    
+    return allowedMenus.includes(item.href);
   });
 
   // Don't render until client-side hydration is complete
@@ -205,14 +209,6 @@ export function AdminSidebar() {
             isActive = pathname?.startsWith(item.href) || false;
           }
           
-          // Debug: Log tất cả menu items để kiểm tra
-          console.log("Debug menu item:", {
-            pathname,
-            href: item.href,
-            isActive,
-            title: item.title,
-            startsWith: pathname?.startsWith(item.href) || false,
-          });
 
           return (
             <Link

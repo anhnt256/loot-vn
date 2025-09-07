@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import Cookies from "js-cookie";
+import { useStaffContext } from "@/components/providers/StaffProvider";
 
 interface Report {
   id: number;
@@ -30,15 +31,7 @@ const PAGE_SIZE = 10;
 
 export default function AdminReportsPage() {
   const [reports, setReports] = useState<Report[]>([]);
-  const [staff, setStaff] = useState<{
-    cashiers: any[];
-    kitchen: any[];
-    security: any[];
-  }>({
-    cashiers: [],
-    kitchen: [],
-    security: [],
-  });
+  const { staff } = useStaffContext();
   const [loading, setLoading] = useState(true);
   const [filterDate, setFilterDate] = useState("");
   const [filterShift, setFilterShift] = useState("");
@@ -56,6 +49,7 @@ export default function AdminReportsPage() {
   const [isSourceShiftModalOpen, setIsSourceShiftModalOpen] = useState(false);
   const [amountToWithdraw, setAmountToWithdraw] = useState("0");
   const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
+  const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Use existing hook for currentUser
   // const currentUser = useLocalStorageValue("currentUser", "");
@@ -180,7 +174,7 @@ export default function AdminReportsPage() {
         if (data.success && data.data) {
           // Transform API data to match frontend interface
           const transformedReports = data.data.map((report: any) => {
-            console.log("Processing report:", report); // Debug log
+            // console.log("Processing report:", report); // Debug log
 
             const inter = report?.fileUrl?.interShiftExpense || {};
 
@@ -214,7 +208,7 @@ export default function AdminReportsPage() {
               details: "Chi tiết báo cáo",
             };
 
-            console.log("Transformed report:", transformed); // Debug log
+            // console.log("Transformed report:", transformed); // Debug log
             return transformed;
           });
 
@@ -242,40 +236,35 @@ export default function AdminReportsPage() {
   };
 
   // Fetch staff from API and map the same list to all 3 dropdowns
-  const fetchStaff = async () => {
-    try {
-      const resp = await fetch(`/api/staff`);
-      if (!resp.ok) return;
-      const json = await resp.json();
-      console.log("Staff API response:", json); // Debug log
-
-      const list: any[] = json?.data ?? [];
-      console.log("Staff list:", list); // Debug log
-
-      setStaff({ cashiers: list, kitchen: list, security: list });
-
-      // ensure defaults exist in the options
-      if (list.length > 0) {
-        setFormValues((prev) => ({
-          ...prev,
-          cashier: list[0].fullName,
-          kitchenStaff: list[0].fullName,
-          securityGuard: list[0].fullName,
-        }));
-      }
-    } catch (err) {
-      console.error("Error fetching staff:", err);
+  // Set default staff values when staff data is available
+  useEffect(() => {
+    const allStaff = [...staff.cashiers, ...staff.kitchen, ...staff.security];
+    if (allStaff.length > 0) {
+      setFormValues((prev) => ({
+        ...prev,
+        cashier: allStaff[0].fullName,
+        kitchenStaff: allStaff[0].fullName,
+        securityGuard: allStaff[0].fullName,
+      }));
     }
-  };
+  }, [staff]);
 
   // Load data on mount and when filters change
   useEffect(() => {
-    fetchReports();
+    if (fetchTimeoutRef.current) {
+      clearTimeout(fetchTimeoutRef.current);
+    }
+    fetchTimeoutRef.current = setTimeout(() => {
+      fetchReports();
+    }, 100);
+    
+    return () => {
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+      }
+    };
   }, [filterDate, filterShift, page]);
 
-  useEffect(() => {
-    fetchStaff();
-  }, []);
 
   // Set default collapsed state when reports change
   useEffect(() => {
@@ -477,12 +466,9 @@ export default function AdminReportsPage() {
       return;
     }
 
-    if (expense < 0) {
+    // Validate expense (can be 0 or positive, cannot be negative)
+    if (isNaN(expense) || expense < 0) {
       alert("Chi phí không được âm");
-      return;
-    }
-    if (expense > 0 && expense < 1000) {
-      alert("Chi phí phải = 0 hoặc >= 1,000 VNĐ");
       return;
     }
 
@@ -592,7 +578,6 @@ export default function AdminReportsPage() {
     Cookies.set("branch", newBranch, { path: "/" });
     // Refresh data with new branch
     fetchReports();
-    fetchStaff();
   };
 
   return (

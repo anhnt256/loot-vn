@@ -89,8 +89,8 @@ export function GiftRoundForm({
   const onSubmit = async (data: GiftRoundInput) => {
     try {
       setIsLoading(true);
-      console.log("Submitting data:", data);
-      console.log("Form errors:", errors);
+      // console.log("Submitting data:", data);
+      // console.log("Form errors:", errors);
 
       const url = initialData
         ? `/api/gift-rounds/${initialData.id}`
@@ -105,7 +105,7 @@ export function GiftRoundForm({
         body: JSON.stringify(data),
       });
 
-      console.log("Response status:", response.status);
+      // console.log("Response status:", response.status);
 
       if (!response.ok) {
         const error = await response.json();
@@ -114,7 +114,7 @@ export function GiftRoundForm({
       }
 
       const result = await response.json();
-      console.log("Success result:", result);
+      // console.log("Success result:", result);
 
       toast.success(initialData ? "Cập nhật thành công" : "Tạo mới thành công");
       onSuccess?.();

@@ -11,7 +11,7 @@ import { CreateCheckInResult } from "./schema";
 import { InputType, ReturnType } from "./type";
 import dayjs from "@/lib/dayjs";
 import { calculateActiveUsersInfo } from "@/lib/user-calculator";
-import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
+import { getCurrentTimeVNISO, getCurrentTimeVNDB } from "@/lib/timezone-utils";
 import { cookies } from "next/headers";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
@@ -88,13 +88,13 @@ const handler = async (data: InputType): Promise<ReturnType> => {
       };
     }
 
-    console.log('getCurrentTimeVNISO', getCurrentTimeVNISO())
+    // console.log('getCurrentTimeVNISO', getCurrentTimeVNISO())
 
     await db.$transaction(async (tx) => {
       // Create checkInResult using raw SQL
       await tx.$executeRaw`
         INSERT INTO CheckInResult (userId, branch, createdAt)
-        VALUES (${userId}, ${branch}, ${getCurrentTimeVNISO()})
+        VALUES (${userId}, ${branch}, ${getCurrentTimeVNDB()})
       `;
       
       // Get the inserted record ID
@@ -125,13 +125,13 @@ const handler = async (data: InputType): Promise<ReturnType> => {
           // Create UserStarHistory using raw SQL
           await tx.$executeRaw`
             INSERT INTO UserStarHistory (userId, type, oldStars, newStars, targetId, createdAt, branch)
-            VALUES (${userId}, 'CHECK_IN', ${oldStars}, ${newStars}, ${id}, ${getCurrentTimeVNISO()}, ${branch})
+            VALUES (${userId}, 'CHECK_IN', ${oldStars}, ${newStars}, ${id}, ${getCurrentTimeVNDB()}, ${branch})
           `;
 
           // Update user stars using raw SQL
           await tx.$executeRaw`
             UPDATE User 
-            SET stars = ${newStars}, updatedAt = ${getCurrentTimeVNISO()}
+            SET stars = ${newStars}, updatedAt = ${getCurrentTimeVNDB()}
             WHERE id = ${user.id}
           `;
         }

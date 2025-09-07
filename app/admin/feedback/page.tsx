@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Calendar, Search, Eye, Star, Filter } from "lucide-react";
 import Cookies from "js-cookie";
 import {
@@ -98,6 +98,7 @@ export default function FeedbackManagementPage() {
   const [loginType, setLoginType] = useState(
     Cookies.get("loginType") || "username",
   );
+  const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchFeedbacks = async () => {
     setLoading(true);
@@ -114,7 +115,7 @@ export default function FeedbackManagementPage() {
       const result = await response.json();
 
       if (result.success || result.statusCode === 200) {
-        console.log("Feedbacks data:", result.data);
+        // console.log("Feedbacks data:", result.data);
         setFeedbacks(result.data || []);
       } else {
         console.error("Failed to fetch feedbacks:", result.error);
@@ -162,9 +163,20 @@ export default function FeedbackManagementPage() {
 
   useEffect(() => {
     if (selectedBranch) {
-      fetchFeedbacks();
-      fetchStats();
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+      }
+      fetchTimeoutRef.current = setTimeout(() => {
+        fetchFeedbacks();
+        fetchStats();
+      }, 100);
     }
+    
+    return () => {
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+      }
+    };
   }, [
     selectedBranch,
     startDate,

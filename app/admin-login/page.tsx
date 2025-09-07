@@ -63,6 +63,11 @@ const AdminLogin = () => {
             expires: new Date(expirationDate),
           });
         } else {
+          // Admin đăng nhập bằng username - set branch mặc định là GO_VAP
+          setCookie("branch", "GO_VAP", {
+            path: "/",
+            expires: new Date(expirationDate),
+          });
           setCookie("loginType", "username", {
             path: "/",
             expires: new Date(expirationDate),

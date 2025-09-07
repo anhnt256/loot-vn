@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getBranchFromCookie } from "@/lib/server-utils";
-import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
+import { getCurrentTimeVNISO, getCurrentTimeVNDB } from "@/lib/timezone-utils";
 
 export async function POST(request: NextRequest) {
   try {
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
           ${Number(counterStaffId)}, 
           ${Number(kitchenStaffId)}, 
           ${Number(securityStaffId)}, 
-          '${currentTime}', '${currentTime}'
+          '${getCurrentTimeVNDB()}', '${getCurrentTimeVNDB()}'
         )
       `);
 

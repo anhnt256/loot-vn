@@ -60,6 +60,19 @@ export async function POST(req: Request, res: Response): Promise<any> {
         path: "/",
       });
 
+      // Set branch cookie nếu chưa có (cho admin đăng nhập bằng username)
+      if (!branchFromCookie) {
+        response.cookies.set({
+          name: "branch",
+          value: "GO_VAP",
+          maxAge: 86400,
+          httpOnly: false,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "strict",
+          path: "/",
+        });
+      }
+
       return response;
     }
 

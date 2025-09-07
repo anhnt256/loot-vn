@@ -192,6 +192,18 @@ export async function POST(request: NextRequest) {
 
       if (fnetUser.length > 0) {
         console.log("Updating fnet.usertb with bonus...");
+        
+        const oldMoney = fnetUser[0].RemainMoney;
+        const newMoney = Number(fnetUser[0].RemainMoney) + Number(tier.bonusAmount);
+        
+        console.log(`Processing birthday bonus for user ${userId}: ${oldMoney} + ${tier.bonusAmount} = ${newMoney}`);
+
+        // Lưu lịch sử thay đổi số dư TRƯỚC khi update
+        await db.$executeRaw`
+          INSERT INTO FnetHistory (userId, branch, oldMoney, newMoney, createdAt, updatedAt)
+          VALUES (${userId}, ${branch}, ${oldMoney}, ${newMoney}, NOW(), NOW())
+        `;
+
         const today = new Date();
         today.setFullYear(today.getFullYear() - 20);
         const todayFormatted =
@@ -202,14 +214,15 @@ export async function POST(request: NextRequest) {
         const expiryDateFormatted =
           expiryDate.toISOString().split("T")[0] + "T00:00:00.000Z";
 
+        // Update user SAU khi đã lưu lịch sử
         await fnetDB.$executeRaw`
           UPDATE usertb 
-          SET RemainMoney = ${Number(fnetUser[0].RemainMoney) + Number(tier.bonusAmount)},
+          SET RemainMoney = ${newMoney},
               Birthdate = ${todayFormatted},
               ExpiryDate = ${expiryDateFormatted}
           WHERE UserId = ${userId}
         `;
-        console.log("Updated fnet.usertb successfully");
+        console.log(`Updated user ${userId} money: ${oldMoney} -> ${newMoney}`);
       }
 
       // Final verification: Check if we actually created the progress record

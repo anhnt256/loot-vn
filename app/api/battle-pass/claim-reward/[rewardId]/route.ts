@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
+import { getCurrentTimeVNDB } from "@/lib/timezone-utils";
 
 export async function POST(
   request: Request,
@@ -27,8 +27,8 @@ export async function POST(
     const currentSeasons = await db.$queryRaw<any[]>`
       SELECT * FROM BattlePassSeason 
       WHERE isActive = true
-        AND startDate <= DATE(${getCurrentTimeVNISO()})
-        AND endDate >= DATE(${getCurrentTimeVNISO()})
+        AND startDate <= DATE('${getCurrentTimeVNDB()}')
+        AND endDate >= DATE('${getCurrentTimeVNDB()}')
       LIMIT 1
     `;
 
@@ -116,7 +116,7 @@ export async function POST(
     // Create claimed reward record
     await db.$executeRaw`
       INSERT INTO UserBattlePassReward (userId, seasonId, rewardId, createdAt, updatedAt)
-      VALUES (${decoded.userId}, ${currentSeason.id}, ${rewardId}, ${getCurrentTimeVNISO()}, ${getCurrentTimeVNISO()})
+      VALUES (${decoded.userId}, ${currentSeason.id}, ${rewardId}, '${getCurrentTimeVNDB()}', '${getCurrentTimeVNDB()}')
     `;
 
     // TODO: Implement actual reward distribution logic here

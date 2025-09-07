@@ -146,7 +146,7 @@ const RewardExchangePage = () => {
   const statsPolling = usePolling<StatsResponse>(
     `/api/reward-exchange/stats?branch=${selectedBranch}&startDate=${selectedDateRange[0].format("YYYY-MM-DD")}&endDate=${selectedDateRange[1].format("YYYY-MM-DD")}`,
     {
-      interval: 60000, // 60 seconds
+      interval: 120000, // 120 seconds (2 minutes)
       enabled: isPollingEnabled,
       onSuccess: (data) => {
         queryClient.setQueryData(
@@ -191,19 +191,9 @@ const RewardExchangePage = () => {
       enabled: activeTab === "history",
     });
 
-  const { data: stats, isLoading: statsLoading } = useQuery<StatsResponse>({
-    queryKey: [
-      "reward-exchange-stats",
-      selectedBranch,
-      selectedDateRange[0].format("YYYY-MM-DD"),
-      selectedDateRange[1].format("YYYY-MM-DD"),
-    ],
-    queryFn: () =>
-      fetcher(
-        `/api/reward-exchange/stats?branch=${selectedBranch}&startDate=${selectedDateRange[0].format("YYYY-MM-DD")}&endDate=${selectedDateRange[1].format("YYYY-MM-DD")}`,
-      ),
-    initialData: statsPolling.data || undefined,
-  });
+  // Use polling data directly instead of duplicate useQuery
+  const stats = statsPolling.data;
+  const statsLoading = statsPolling.isLoading;
 
   // Cập nhật số lượt pending khi stats thay đổi
   useEffect(() => {
@@ -215,7 +205,6 @@ const RewardExchangePage = () => {
   // Manual refresh function
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ["reward-exchange-pending"] });
-    queryClient.invalidateQueries({ queryKey: ["reward-exchange-stats"] });
     if (activeTab === "history") {
       queryClient.invalidateQueries({ queryKey: ["reward-exchange-history"] });
     }
@@ -237,7 +226,6 @@ const RewardExchangePage = () => {
     Cookies.set("branch", value, { path: "/" });
     // Invalidate queries to refetch data with new branch
     queryClient.invalidateQueries({ queryKey: ["reward-exchange-pending"] });
-    queryClient.invalidateQueries({ queryKey: ["reward-exchange-stats"] });
     if (activeTab === "history") {
       queryClient.invalidateQueries({ queryKey: ["reward-exchange-history"] });
     }
@@ -247,7 +235,6 @@ const RewardExchangePage = () => {
     if (dates && dates[0] && dates[1]) {
       setSelectedDateRange([dates[0], dates[1]]);
       // Invalidate queries to refetch data with new date range
-      queryClient.invalidateQueries({ queryKey: ["reward-exchange-stats"] });
       if (activeTab === "history") {
         queryClient.invalidateQueries({
           queryKey: ["reward-exchange-history"],
@@ -284,7 +271,6 @@ const RewardExchangePage = () => {
       setAction(null);
       setNote("");
       queryClient.invalidateQueries({ queryKey: ["reward-exchange-pending"] });
-      queryClient.invalidateQueries({ queryKey: ["reward-exchange-stats"] });
 
       // Cập nhật số lượt pending ngay lập tức
       if (stats) {

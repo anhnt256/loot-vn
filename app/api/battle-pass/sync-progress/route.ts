@@ -1,21 +1,21 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
+import { getCurrentTimeVNDB } from "@/lib/timezone-utils";
 
 export async function POST(request: Request) {
   try {
-    console.log("=== SYNC PROGRESS API START ===");
+    // console.log("=== SYNC PROGRESS API START ===");
 
     // Get user info from headers (set by middleware)
     const userHeader = request.headers.get("user");
-    console.log("User header:", userHeader);
+    // console.log("User header:", userHeader);
 
     if (!userHeader) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const decoded = JSON.parse(userHeader);
-    console.log("Decoded user:", decoded);
+    // console.log("Decoded user:", decoded);
 
     if (!decoded || !decoded.userId) {
       return NextResponse.json({ error: "Invalid user data" }, { status: 401 });
@@ -28,18 +28,18 @@ export async function POST(request: Request) {
     }
 
     // Get current active season
-    console.log("Getting current season...");
+    // console.log("Getting current season...");
     const currentSeasons = await db.$queryRaw<any[]>`
       SELECT * FROM BattlePassSeason 
       WHERE isActive = true
-        AND startDate <= DATE(${getCurrentTimeVNISO()})
-        AND endDate >= DATE(${getCurrentTimeVNISO()})
+        AND startDate <= DATE(${getCurrentTimeVNDB()})
+        AND endDate >= DATE(${getCurrentTimeVNDB()})
       LIMIT 1
     `;
 
     const currentSeason = currentSeasons[0];
 
-    console.log("Current season:", currentSeason);
+    // console.log("Current season:", currentSeason);
 
     if (!currentSeason) {
       return NextResponse.json(
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     }
 
     // Find user progress
-    console.log("Finding user progress...");
+    // console.log("Finding user progress...");
     const existingProgress = await db.$queryRaw<any[]>`
       SELECT * FROM UserBattlePass 
       WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id}
@@ -57,14 +57,14 @@ export async function POST(request: Request) {
     `;
 
     let userProgress = existingProgress[0];
-    console.log("Existing user progress:", userProgress);
+    // console.log("Existing user progress:", userProgress);
 
     if (!userProgress) {
-      console.log("Creating new user progress...");
+      // console.log("Creating new user progress...");
       // Create new user progress with default values
       await db.$executeRaw`
         INSERT INTO UserBattlePass (userId, seasonId, level, experience, isPremium, totalSpent, branch, createdAt, updatedAt)
-        VALUES (${decoded.userId}, ${currentSeason.id}, 0, 0, false, 0, 'GO_VAP', ${getCurrentTimeVNISO()}, ${getCurrentTimeVNISO()})
+        VALUES (${decoded.userId}, ${currentSeason.id}, 0, 0, false, 0, 'GO_VAP', ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
       `;
 
       const newProgress = await db.$queryRaw<any[]>`
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
         LIMIT 1
       `;
       userProgress = newProgress[0];
-      console.log("Created user progress:", userProgress);
+      // console.log("Created user progress:", userProgress);
     }
 
     const response = {
@@ -83,8 +83,8 @@ export async function POST(request: Request) {
       totalSpent: userProgress.totalSpent,
     };
 
-    console.log("Response:", response);
-    console.log("=== SYNC PROGRESS API END ===");
+    // console.log("Response:", response);
+    // console.log("=== SYNC PROGRESS API END ===");
 
     return NextResponse.json(response);
   } catch (error) {

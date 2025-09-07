@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { getBranchFromCookie } from "@/lib/server-utils";
 import { SHIFT_ENUM } from "@/constants/handover-reports.constants";
 import {
-  getCurrentTimeVNISO,
+  getCurrentTimeVNDB,
   getCurrentDateVNString,
 } from "@/lib/timezone-utils";
 
@@ -13,6 +13,8 @@ export async function POST(request: NextRequest) {
     const branch = await getBranchFromCookie();
 
     const { date, shift, reportType, staffId, materials } = body;
+    
+    // // console.log(`Debug request body:`, { materials, staffId, shift, reportType, date });
 
     // Validate required fields
     if (!date || !shift || !reportType || !staffId || !materials) {
@@ -37,22 +39,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse date using timezone-utils
-    const currentTime = getCurrentTimeVNISO();
+    const currentTime = getCurrentTimeVNDB();
 
     // Use the input date directly since it's already in YYYY-MM-DD format
     const dateVN = date;
 
-    console.log("Date parsing:", {
-      inputDate: date,
-      dateVN: dateVN,
-      currentTime: currentTime,
-      shift: shift,
-      reportType: reportType,
-    });
+    // // console.log("Date parsing:", {
+    //   inputDate: date,
+    //   dateVN: dateVN,
+    //   currentTime: currentTime,
+    //   shift: shift,
+    //   reportType: reportType,
+    // });
 
     // Check if report already exists for this exact date and report type using raw query
     // Convert date to Vietnam timezone for comparison
-    console.log("Checking existing reports with dateVN:", dateVN);
+    // console.log("Checking existing reports with dateVN:", dateVN);
 
     const existingReports = (await db.$queryRaw`
       SELECT hr.id, hr.date, hr.reportType, hr.branch, DATE(hr.date) as dateVN
@@ -61,7 +63,7 @@ export async function POST(request: NextRequest) {
       ORDER BY hr.createdAt DESC
     `) as any[];
 
-    console.log(
+    // console.log(
       "Existing reports for this date, type and branch:",
       existingReports,
     );
@@ -73,7 +75,7 @@ export async function POST(request: NextRequest) {
     // Use transaction to handle both cases: create new or update existing
     await db.$transaction(async (tx) => {
       if (existingReport) {
-        console.log("Found existing report:", {
+        // console.log("Found existing report:", {
           reportId: existingReport.id,
           reportDate: existingReport.date,
           reportType: existingReport.reportType,
@@ -82,6 +84,9 @@ export async function POST(request: NextRequest) {
         });
 
         handoverReportId = existingReport.id;
+        if (!handoverReportId || handoverReportId <= 0) {
+          throw new Error(`Invalid handoverReportId: ${handoverReportId}`);
+        }
 
         // Get current submission count and completion status for this shift
         const currentReport = (await tx.$queryRaw`
@@ -154,14 +159,34 @@ export async function POST(request: NextRequest) {
               ? "afternoonStaffId"
               : "eveningStaffId";
 
-        await tx.$executeRawUnsafe(`
-          UPDATE HandoverReport SET 
-            ${staffIdField} = ${Number(staffId)}, 
-            ${submissionCountField} = ${newSubmissionCount},
-            ${completionStatusField} = ${willBeComplete},
-            updatedAt = '${currentTime}'
-          WHERE id = ${handoverReportId}
-        `);
+        if (shift === SHIFT_ENUM.SANG) {
+          await tx.$executeRaw`
+            UPDATE HandoverReport SET 
+              morningStaffId = ${Number(staffId)}, 
+              morningSubmissionCount = ${newSubmissionCount},
+              isMorningComplete = ${willBeComplete},
+              updatedAt = ${currentTime}
+            WHERE id = ${handoverReportId}
+          `;
+        } else if (shift === SHIFT_ENUM.CHIEU) {
+          await tx.$executeRaw`
+            UPDATE HandoverReport SET 
+              afternoonStaffId = ${Number(staffId)}, 
+              afternoonSubmissionCount = ${newSubmissionCount},
+              isAfternoonComplete = ${willBeComplete},
+              updatedAt = ${currentTime}
+            WHERE id = ${handoverReportId}
+          `;
+        } else {
+          await tx.$executeRaw`
+            UPDATE HandoverReport SET 
+              eveningStaffId = ${Number(staffId)}, 
+              eveningSubmissionCount = ${newSubmissionCount},
+              isEveningComplete = ${willBeComplete},
+              updatedAt = ${currentTime}
+            WHERE id = ${handoverReportId}
+          `;
+        }
 
         // Check if materials already exist for this shift with complete data (all 4 fields: beginning, received, issued, ending)
         // Chỉ kiểm tra khi submissionCount >= 2 (ca đã hoàn tất)
@@ -193,7 +218,7 @@ export async function POST(request: NextRequest) {
             WHERE hm.handoverReportId = ${handoverReportId}
           `) as any[];
 
-          console.log("Existing materials for shift:", existingMaterials);
+          // console.log("Existing materials for shift:", existingMaterials);
 
           // Check if any material already has complete data for this shift
           const hasCompleteData = existingMaterials.some(
@@ -209,16 +234,25 @@ export async function POST(request: NextRequest) {
 
         // Update existing materials for this shift
         for (const materialData of materials) {
+          // console.log(`Debug materialData:`, materialData);
+          
           // Find material by name to get materialId
+          if (!materialData.materialName) {
+            throw new Error(`Material name is required but got: ${materialData.materialName}`);
+          }
+          
           const materials = (await tx.$queryRaw`
             SELECT id FROM Material WHERE name = ${materialData.materialName} LIMIT 1
           `) as any[];
           const materialRecord = materials[0];
+          if (!materialRecord?.id) {
+            throw new Error(`Material not found for name: ${materialData.materialName}`);
+          }
 
           // Check if material already exists for this report
           const existingMaterial = (await tx.$queryRaw`
             SELECT id FROM HandoverMaterial 
-            WHERE handoverReportId = ${handoverReportId} AND materialId = ${materialRecord?.id || null}
+            WHERE handoverReportId = ${handoverReportId} AND materialId = ${materialRecord.id}
             LIMIT 1
           `) as any[];
 
@@ -250,38 +284,116 @@ export async function POST(request: NextRequest) {
                   : "eveningEnding";
 
             // Calculate ending based on beginning, received, and issued
+            // console.log(`Debug beginning value:`, { 
+              beginning: materialData.beginning, 
+              type: typeof materialData.beginning
+            });
+            
             const beginning = parseFloat(materialData.beginning || 0);
-            const received =
-              materialData.received === null
-                ? 0
-                : parseFloat(materialData.received);
-            const issued =
-              materialData.issued === null
-                ? 0
-                : parseFloat(materialData.issued);
+            if (isNaN(beginning)) {
+              throw new Error(`Invalid beginning value: ${materialData.beginning} (type: ${typeof materialData.beginning})`);
+            }
+            
+            // console.log(`Debug received value:`, { 
+              received: materialData.received, 
+              type: typeof materialData.received,
+              isNull: materialData.received === null,
+              isUndefined: materialData.received === undefined
+            });
+            
+            const received = materialData.received === null || materialData.received === undefined
+              ? 0
+              : parseFloat(materialData.received);
+            if (materialData.received !== null && materialData.received !== undefined && isNaN(received)) {
+              throw new Error(`Invalid received value: ${materialData.received} (type: ${typeof materialData.received})`);
+            }
+            
+            // console.log(`Debug issued value:`, { 
+              issued: materialData.issued, 
+              type: typeof materialData.issued,
+              isNull: materialData.issued === null,
+              isUndefined: materialData.issued === undefined
+            });
+            
+            const issued = materialData.issued === null || materialData.issued === undefined
+              ? 0
+              : parseFloat(materialData.issued);
+            if (materialData.issued !== null && materialData.issued !== undefined && isNaN(issued)) {
+              throw new Error(`Invalid issued value: ${materialData.issued} (type: ${typeof materialData.issued})`);
+            }
             const calculatedEnding = beginning + received - issued;
 
-            await tx.$executeRawUnsafe(`
-              UPDATE HandoverMaterial SET
-                ${beginningField} = ${beginning},
-                ${receivedField} = ${materialData.received === null ? "NULL" : received},
-                ${issuedField} = ${materialData.issued === null ? "NULL" : issued},
-                ${endingField} = ${calculatedEnding},
-                updatedAt = '${currentTime}'
-              WHERE id = ${existingMaterial[0].id}
-            `);
+            if (shift === SHIFT_ENUM.SANG) {
+              await tx.$executeRaw`
+                UPDATE HandoverMaterial SET
+                  morningBeginning = ${beginning},
+                  morningReceived = ${materialData.received === null || materialData.received === undefined ? null : received},
+                  morningIssued = ${materialData.issued === null || materialData.issued === undefined ? null : issued},
+                  morningEnding = ${calculatedEnding},
+                  updatedAt = ${currentTime}
+                WHERE id = ${existingMaterial[0].id}
+              `;
+            } else if (shift === SHIFT_ENUM.CHIEU) {
+              await tx.$executeRaw`
+                UPDATE HandoverMaterial SET
+                  afternoonBeginning = ${beginning},
+                  afternoonReceived = ${materialData.received === null || materialData.received === undefined ? null : received},
+                  afternoonIssued = ${materialData.issued === null || materialData.issued === undefined ? null : issued},
+                  afternoonEnding = ${calculatedEnding},
+                  updatedAt = ${currentTime}
+                WHERE id = ${existingMaterial[0].id}
+              `;
+            } else {
+              await tx.$executeRaw`
+                UPDATE HandoverMaterial SET
+                  eveningBeginning = ${beginning},
+                  eveningReceived = ${materialData.received === null || materialData.received === undefined ? null : received},
+                  eveningIssued = ${materialData.issued === null || materialData.issued === undefined ? null : issued},
+                  eveningEnding = ${calculatedEnding},
+                  updatedAt = ${currentTime}
+                WHERE id = ${existingMaterial[0].id}
+              `;
+            }
           } else {
             // Create new material record for this shift
             // Calculate ending based on beginning, received, and issued
+            // console.log(`Debug beginning value:`, { 
+              beginning: materialData.beginning, 
+              type: typeof materialData.beginning
+            });
+            
             const beginning = parseFloat(materialData.beginning || 0);
-            const received =
-              materialData.received === null
-                ? 0
-                : parseFloat(materialData.received);
-            const issued =
-              materialData.issued === null
-                ? 0
-                : parseFloat(materialData.issued);
+            if (isNaN(beginning)) {
+              throw new Error(`Invalid beginning value: ${materialData.beginning} (type: ${typeof materialData.beginning})`);
+            }
+            
+            // console.log(`Debug received value:`, { 
+              received: materialData.received, 
+              type: typeof materialData.received,
+              isNull: materialData.received === null,
+              isUndefined: materialData.received === undefined
+            });
+            
+            const received = materialData.received === null || materialData.received === undefined
+              ? 0
+              : parseFloat(materialData.received);
+            if (materialData.received !== null && materialData.received !== undefined && isNaN(received)) {
+              throw new Error(`Invalid received value: ${materialData.received} (type: ${typeof materialData.received})`);
+            }
+            
+            // console.log(`Debug issued value:`, { 
+              issued: materialData.issued, 
+              type: typeof materialData.issued,
+              isNull: materialData.issued === null,
+              isUndefined: materialData.issued === undefined
+            });
+            
+            const issued = materialData.issued === null || materialData.issued === undefined
+              ? 0
+              : parseFloat(materialData.issued);
+            if (materialData.issued !== null && materialData.issued !== undefined && isNaN(issued)) {
+              throw new Error(`Invalid issued value: ${materialData.issued} (type: ${typeof materialData.issued})`);
+            }
             const calculatedEnding = beginning + received - issued;
 
             await tx.$executeRaw`
@@ -293,18 +405,18 @@ export async function POST(request: NextRequest) {
                 createdAt, updatedAt
               ) VALUES (
                 ${handoverReportId},
-                ${materialRecord?.id || null},
+                ${materialRecord.id},
                 ${shift === SHIFT_ENUM.SANG ? beginning : null},
-                ${shift === SHIFT_ENUM.SANG ? (materialData.received === null ? null : received) : null},
-                ${shift === SHIFT_ENUM.SANG ? (materialData.issued === null ? null : issued) : null},
+                ${shift === SHIFT_ENUM.SANG ? (materialData.received === null || materialData.received === undefined ? null : received) : null},
+                ${shift === SHIFT_ENUM.SANG ? (materialData.issued === null || materialData.issued === undefined ? null : issued) : null},
                 ${shift === SHIFT_ENUM.SANG ? calculatedEnding : null},
                 ${shift === SHIFT_ENUM.CHIEU ? beginning : null},
-                ${shift === SHIFT_ENUM.CHIEU ? (materialData.received === null ? null : received) : null},
-                ${shift === SHIFT_ENUM.CHIEU ? (materialData.issued === null ? null : issued) : null},
+                ${shift === SHIFT_ENUM.CHIEU ? (materialData.received === null || materialData.received === undefined ? null : received) : null},
+                ${shift === SHIFT_ENUM.CHIEU ? (materialData.issued === null || materialData.issued === undefined ? null : issued) : null},
                 ${shift === SHIFT_ENUM.CHIEU ? calculatedEnding : null},
                 ${shift === SHIFT_ENUM.TOI ? beginning : null},
-                ${shift === SHIFT_ENUM.TOI ? (materialData.received === null ? null : received) : null},
-                ${shift === SHIFT_ENUM.TOI ? (materialData.issued === null ? null : issued) : null},
+                ${shift === SHIFT_ENUM.TOI ? (materialData.received === null || materialData.received === undefined ? null : received) : null},
+                ${shift === SHIFT_ENUM.TOI ? (materialData.issued === null || materialData.issued === undefined ? null : issued) : null},
                 ${shift === SHIFT_ENUM.TOI ? calculatedEnding : null},
                 ${currentTime},
                 ${currentTime}
@@ -329,16 +441,40 @@ export async function POST(request: NextRequest) {
               ? "afternoonSubmissionCount"
               : "eveningSubmissionCount";
 
-        await tx.$executeRawUnsafe(`
-          INSERT INTO HandoverReport (
-            date, reportType, branch, note, ${staffIdField}, 
-            ${submissionCountField}, createdAt, updatedAt
-          )
-          VALUES (
-            '${date}', '${reportType}', '${branch}', NULL, ${Number(staffId)}, 
-            1, '${currentTime}', '${currentTime}'
-          )
-        `);
+        if (shift === SHIFT_ENUM.SANG) {
+          await tx.$executeRaw`
+            INSERT INTO HandoverReport (
+              date, reportType, branch, note, morningStaffId, 
+              morningSubmissionCount, createdAt, updatedAt
+            )
+            VALUES (
+              ${date}, ${reportType}, ${branch}, NULL, ${Number(staffId)}, 
+              1, ${currentTime}, ${currentTime}
+            )
+          `;
+        } else if (shift === SHIFT_ENUM.CHIEU) {
+          await tx.$executeRaw`
+            INSERT INTO HandoverReport (
+              date, reportType, branch, note, afternoonStaffId, 
+              afternoonSubmissionCount, createdAt, updatedAt
+            )
+            VALUES (
+              ${date}, ${reportType}, ${branch}, NULL, ${Number(staffId)}, 
+              1, ${currentTime}, ${currentTime}
+            )
+          `;
+        } else {
+          await tx.$executeRaw`
+            INSERT INTO HandoverReport (
+              date, reportType, branch, note, eveningStaffId, 
+              eveningSubmissionCount, createdAt, updatedAt
+            )
+            VALUES (
+              ${date}, ${reportType}, ${branch}, NULL, ${Number(staffId)}, 
+              1, ${currentTime}, ${currentTime}
+            )
+          `;
+        }
 
         // Get the created report ID
         const createdReport = (await tx.$queryRaw`
@@ -347,10 +483,19 @@ export async function POST(request: NextRequest) {
           ORDER BY createdAt DESC LIMIT 1
         `) as any[];
         handoverReportId = createdReport[0].id;
+        if (!handoverReportId || handoverReportId <= 0) {
+          throw new Error(`Failed to create handover report, got invalid ID: ${handoverReportId}`);
+        }
 
         // Create materials for the specific shift
         for (const materialData of materials) {
+          // console.log(`Debug materialData:`, materialData);
+          
           // Find material by name to get materialId
+          if (!materialData.materialName) {
+            throw new Error(`Material name is required but got: ${materialData.materialName}`);
+          }
+          
           const materials = (await tx.$queryRaw`
             SELECT id FROM Material WHERE name = ${materialData.materialName} LIMIT 1
           `) as any[];
@@ -359,12 +504,23 @@ export async function POST(request: NextRequest) {
           // Create new material using raw query
           // Calculate ending based on beginning, received, and issued
           const beginning = parseFloat(materialData.beginning || 0);
-          const received =
-            materialData.received === null
-              ? 0
-              : parseFloat(materialData.received);
-          const issued =
-            materialData.issued === null ? 0 : parseFloat(materialData.issued);
+          if (isNaN(beginning)) {
+            throw new Error(`Invalid beginning value: ${materialData.beginning}`);
+          }
+          
+          const received = materialData.received === null || materialData.received === undefined
+            ? 0
+            : parseFloat(materialData.received);
+          if (materialData.received !== null && materialData.received !== undefined && isNaN(received)) {
+            throw new Error(`Invalid received value: ${materialData.received}`);
+          }
+          
+          const issued = materialData.issued === null || materialData.issued === undefined 
+            ? 0 
+            : parseFloat(materialData.issued);
+          if (materialData.issued !== null && materialData.issued !== undefined && isNaN(issued)) {
+            throw new Error(`Invalid issued value: ${materialData.issued}`);
+          }
           const calculatedEnding = beginning + received - issued;
 
           await tx.$executeRaw`
@@ -378,16 +534,16 @@ export async function POST(request: NextRequest) {
               ${handoverReportId},
               ${materialRecord?.id || null},
               ${shift === SHIFT_ENUM.SANG ? beginning : null},
-              ${shift === SHIFT_ENUM.SANG ? (materialData.received === null ? null : received) : null},
-              ${shift === SHIFT_ENUM.SANG ? (materialData.issued === null ? null : issued) : null},
+              ${shift === SHIFT_ENUM.SANG ? (materialData.received === null || materialData.received === undefined ? null : received) : null},
+              ${shift === SHIFT_ENUM.SANG ? (materialData.issued === null || materialData.issued === undefined ? null : issued) : null},
               ${shift === SHIFT_ENUM.SANG ? calculatedEnding : null},
               ${shift === SHIFT_ENUM.CHIEU ? beginning : null},
-              ${shift === SHIFT_ENUM.CHIEU ? (materialData.received === null ? null : received) : null},
-              ${shift === SHIFT_ENUM.CHIEU ? (materialData.issued === null ? null : issued) : null},
+              ${shift === SHIFT_ENUM.CHIEU ? (materialData.received === null || materialData.received === undefined ? null : received) : null},
+              ${shift === SHIFT_ENUM.CHIEU ? (materialData.issued === null || materialData.issued === undefined ? null : issued) : null},
               ${shift === SHIFT_ENUM.CHIEU ? calculatedEnding : null},
               ${shift === SHIFT_ENUM.TOI ? beginning : null},
-              ${shift === SHIFT_ENUM.TOI ? (materialData.received === null ? null : received) : null},
-              ${shift === SHIFT_ENUM.TOI ? (materialData.issued === null ? null : issued) : null},
+              ${shift === SHIFT_ENUM.TOI ? (materialData.received === null || materialData.received === undefined ? null : received) : null},
+              ${shift === SHIFT_ENUM.TOI ? (materialData.issued === null || materialData.issued === undefined ? null : issued) : null},
               ${shift === SHIFT_ENUM.TOI ? calculatedEnding : null},
               ${currentTime},
               ${currentTime}

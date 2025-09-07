@@ -7,7 +7,7 @@ import { checkGameRollRateLimit } from "@/lib/rate-limit";
 
 import { GameItemResults, InputType, ReturnType } from "./type";
 import { CreateGameResult } from "@/actions/create-gameResult/schema";
-import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
+import { getCurrentTimeVNISO, getCurrentTimeVNDB } from "@/lib/timezone-utils";
 
 const UP_RATE = 0.5;
 const ROUND_COST = process.env.NEXT_PUBLIC_SPEND_PER_ROUND; // 30000 một vòng quay
@@ -233,7 +233,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
             try {
               await tx.$executeRaw`
                 INSERT INTO GameResult (userId, itemId, createdAt, updatedAt)
-                VALUES (${userId}, ${selectedItem.id}, ${getCurrentTimeVNISO()}, ${getCurrentTimeVNISO()})
+                VALUES (${userId}, ${selectedItem.id}, ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
               `;
               console.log(`[DEBUG] GameResult inserted successfully in Gift transaction`);
             } catch (error) {
@@ -251,7 +251,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
             try {
               await tx.$executeRaw`
                 INSERT INTO UserStarHistory (userId, type, oldStars, newStars, targetId, createdAt, branch)
-                VALUES (${userId}, 'GIFT_ROUND', ${currentStars}, ${currentStars + addedStar}, ${gameResult.id}, ${getCurrentTimeVNISO()}, ${branch})
+                VALUES (${userId}, 'GIFT_ROUND', ${currentStars}, ${currentStars + addedStar}, ${gameResult.id}, ${getCurrentTimeVNDB()}, ${branch})
               `;
               console.log(`[DEBUG] UserStarHistory inserted successfully in Gift transaction`);
             } catch (error) {
@@ -279,7 +279,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
               UPDATE GiftRound 
               SET usedAmount = ${newUsedAmount}, 
                   isUsed = ${isUsed}, 
-                  updatedAt = ${getCurrentTimeVNISO()}
+                  updatedAt = ${getCurrentTimeVNDB()}
               WHERE id = ${currentGiftRound.id}
             `;
             console.log(`[DEBUG] GiftRound ${currentGiftRound.id} updated successfully in Gift transaction`);
@@ -297,7 +297,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         try {
           await tx.$executeRaw`
             UPDATE User 
-            SET stars = ${user.stars + totalAddedStars}, updatedAt = ${getCurrentTimeVNISO()}
+            SET stars = ${user.stars + totalAddedStars}, updatedAt = ${getCurrentTimeVNDB()}
             WHERE id = ${user.id}
           `;
           console.log(`[DEBUG] User updated successfully in Gift transaction`);
@@ -371,7 +371,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
           try {
             await tx.$executeRaw`
               INSERT INTO GameResult (userId, itemId, createdAt, updatedAt)
-              VALUES (${userId}, ${selectedItem.id}, ${getCurrentTimeVNISO()}, ${getCurrentTimeVNISO()})
+              VALUES (${userId}, ${selectedItem.id}, ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
             `;
             console.log(`[DEBUG] GameResult inserted successfully in transaction`);
           } catch (error) {
@@ -389,7 +389,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
           try {
             await tx.$executeRaw`
               INSERT INTO UserStarHistory (userId, type, oldStars, newStars, targetId, createdAt, branch)
-              VALUES (${userId}, 'GAME', ${currentStars}, ${currentStars + addedStar}, ${gameResult.id}, ${getCurrentTimeVNISO()}, ${branch})
+              VALUES (${userId}, 'GAME', ${currentStars}, ${currentStars + addedStar}, ${gameResult.id}, ${getCurrentTimeVNDB()}, ${branch})
             `;
             console.log(`[DEBUG] UserStarHistory inserted successfully in transaction`);
           } catch (error) {
@@ -414,7 +414,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
             UPDATE User 
             SET stars = ${user.stars + totalAddedStars}, 
                 magicStone = ${user.magicStone - rolls}, 
-                updatedAt = ${getCurrentTimeVNISO()}
+                updatedAt = ${getCurrentTimeVNDB()}
             WHERE id = ${user.id}
           `;
           console.log(`[DEBUG] User updated successfully in transaction`);

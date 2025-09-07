@@ -10,11 +10,26 @@ export async function middleware(request: NextRequest) {
   // Check if store is disabled
   const STORE_DISABLED = process.env.NEXT_PUBLIC_STORE_DISABLED === "true";
   
+  // Check if battle pass is disabled
+  const BATTLE_PASS_DISABLED = process.env.NEXT_PUBLIC_GATEWAY_BATTLE_PASS_ENABLE !== "true";
+  
   // Store-related API routes that should be blocked when store is disabled
   const storeApiRoutes = [
     "/api/reward",
     "/api/reward-exchange",
     "/api/gift-rounds",
+  ];
+
+  // Battle Pass-related API routes that should be blocked when battle pass is disabled
+  const battlePassApiRoutes = [
+    "/api/battle-pass/progress",
+    "/api/battle-pass/sync-progress",
+    "/api/battle-pass/update-progress",
+    "/api/battle-pass/update-spending",
+    "/api/battle-pass/claim-reward",
+    "/api/battle-pass/purchase-vip",
+    "/api/battle-pass/check-vip-status",
+    "/api/battle-pass/current-season",
   ];
 
   // Block store API routes when store is disabled
@@ -24,6 +39,18 @@ export async function middleware(request: NextRequest) {
       { 
         error: "Service temporarily unavailable", 
         message: "Tính năng đổi thưởng đang tạm khóa để bảo trì. Vui lòng thử lại sau." 
+      },
+      { status: 503 }
+    );
+  }
+
+  // Block battle pass API routes when battle pass is disabled
+  if (BATTLE_PASS_DISABLED && battlePassApiRoutes.some(route => request.nextUrl.pathname.startsWith(route))) {
+    console.log("Middleware - Battle Pass API blocked due to feature disabled");
+    return NextResponse.json(
+      { 
+        error: "Service temporarily unavailable", 
+        message: "Tính năng Battle Pass đang tạm khóa. Vui lòng thử lại sau." 
       },
       { status: 503 }
     );
@@ -129,6 +156,24 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/", request.url));
       }
 
+      // Kiểm tra quyền truy cập trang dựa trên loại đăng nhập
+      const loginType = request.cookies.get("loginType")?.value;
+      const currentPath = request.nextUrl.pathname;
+      
+      // Các trang chỉ admin (loginType === "username") mới được truy cập
+      const adminOnlyPages = [
+        "/admin/gift-rounds",
+        "/admin/battle-pass-seasons", 
+        "/admin/battle-pass-premium-packages",
+        "/admin/feedback"
+      ];
+      
+      // Nếu là trang chỉ dành cho admin và user không phải admin (loginType !== "username")
+      if (adminOnlyPages.includes(currentPath) && loginType !== "username") {
+        console.log("Middleware - Unauthorized access to admin-only page:", currentPath);
+        return NextResponse.redirect(new URL("/admin", request.url));
+      }
+
       console.log("Middleware - Admin access granted");
       return NextResponse.next();
     } catch (error) {
@@ -141,6 +186,12 @@ export async function middleware(request: NextRequest) {
   // Block access to store page when store is disabled
   if (STORE_DISABLED && request.nextUrl.pathname === "/store") {
     console.log("Middleware - Store page blocked due to maintenance");
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  // Block access to battle pass page when battle pass is disabled
+  if (BATTLE_PASS_DISABLED && request.nextUrl.pathname === "/battle-pass") {
+    console.log("Middleware - Battle Pass page blocked due to feature disabled");
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

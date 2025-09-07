@@ -183,11 +183,13 @@ export async function POST(request: NextRequest) {
               `Processing reward for user ${user[0].userId}: ${oldMoney} + ${rewardMap[0].reward_value} = ${newMoney}`,
             );
 
-            // Lưu lịch sử thay đổi số dư TRƯỚC khi update
-            await db.$executeRaw`
+            // Lưu lịch sử thay đổi số dư TRƯỚC khi update (trong transaction chính)
+            await tx.$executeRaw`
               INSERT INTO FnetHistory (userId, branch, oldMoney, newMoney, createdAt, updatedAt)
               VALUES (${user[0].userId}, ${branch}, ${oldMoney}, ${newMoney}, NOW(), NOW())
             `;
+
+            console.log(`FnetHistory saved for user ${user[0].userId}: ${oldMoney} -> ${newMoney}`);
 
             const today = new Date();
             today.setFullYear(today.getFullYear() - 20);
@@ -200,17 +202,20 @@ export async function POST(request: NextRequest) {
               expiryDate.toISOString().split("T")[0] + "T00:00:00.000Z";
 
             // Update user SAU khi đã lưu lịch sử
-            await fnetDB.$executeRaw`
-              UPDATE usertb 
-              SET RemainMoney = ${newMoney},
-                  Birthdate = ${todayFormatted},
-                  ExpiryDate = ${expiryDateFormatted}
-              WHERE UserId = ${user[0].userId}
-            `;
+            try {
+              await fnetDB.$executeRaw`
+                UPDATE usertb 
+                SET RemainMoney = ${newMoney},
+                    Birthdate = ${todayFormatted},
+                    ExpiryDate = ${expiryDateFormatted}
+                WHERE UserId = ${user[0].userId}
+              `;
 
-            console.log(
-              `Updated user ${user[0].userId} money: ${oldMoney} -> ${newMoney}`,
-            );
+              console.log(`Updated user ${user[0].userId} money: ${oldMoney} -> ${newMoney}`);
+            } catch (error) {
+              console.error(`Error updating fnet usertb for user ${user[0].userId}:`, error);
+              throw new Error(`Failed to update fnet user money: ${error.message}`);
+            }
           }
         }
       } else if (action === "REJECT") {

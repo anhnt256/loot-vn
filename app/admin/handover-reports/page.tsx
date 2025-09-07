@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Calendar, Search, Download, Package, Send } from "lucide-react";
 import Cookies from "js-cookie";
 import {
@@ -80,7 +80,10 @@ export default function HandoverReportsPage() {
     const today = new Date();
     return today.toISOString().split("T")[0];
   });
-  const [selectedReportType, setSelectedReportType] = useState("");
+  const [selectedReportType, setSelectedReportType] = useState(() => {
+    const reportTypes = Object.values(REPORT_TYPE_ENUM);
+    return reportTypes.length > 0 ? reportTypes[0] : "";
+  });
   const [selectedBranch, setSelectedBranch] = useState("GO_VAP");
   const [reports, setReports] = useState<HandoverReport[]>([]);
   const [loading, setLoading] = useState(false);
@@ -90,6 +93,7 @@ export default function HandoverReportsPage() {
   const [loginType, setLoginType] = useState(
     Cookies.get("loginType") || "username",
   );
+  const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchReports = async () => {
     setLoading(true);
@@ -105,7 +109,7 @@ export default function HandoverReportsPage() {
       const result = await response.json();
 
       if (result.success) {
-        console.log("Reports data:", result.data);
+        // console.log("Reports data:", result.data);
         setReports(result.data);
       } else {
         console.error("Failed to fetch reports:", result.error);
@@ -129,8 +133,23 @@ export default function HandoverReportsPage() {
 
   useEffect(() => {
     if (selectedBranch) {
-      fetchReports();
+      // Clear previous timeout to prevent multiple calls
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+      }
+      
+      // Debounce the API call to prevent multiple rapid calls
+      fetchTimeoutRef.current = setTimeout(() => {
+        fetchReports();
+      }, 100);
     }
+    
+    // Cleanup timeout on unmount
+    return () => {
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+      }
+    };
   }, [selectedBranch, selectedDate, selectedReportType]);
 
   const handleBranchChange = (value: string) => {
@@ -330,6 +349,7 @@ export default function HandoverReportsPage() {
             required
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
+            <option value="">Chọn loại báo cáo</option>
             {reportTypes.map((type) => (
               <option key={type} value={type}>
                 {REPORT_TYPE_LABELS[type as keyof typeof REPORT_TYPE_LABELS]}

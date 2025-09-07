@@ -58,46 +58,61 @@ export async function GET(request: Request) {
       userCompletions.map((c) => c.missionId),
     );
 
-    console.log("completedMissionIds", completedMissionIds);
+    // console.log("completedMissionIds", completedMissionIds);
 
     // Get play sessions for the entire day and overnight sessions from previous day
-    const playSessions = await fnetDB.$queryRaw<any[]>(fnetPrisma.sql`
-      SELECT *
-      FROM fnet.systemlogtb
-      WHERE UserId = ${userId}
-        AND status = 3
-        AND (
-          EnterDate = ${curDate} 
-          OR EndDate = ${curDate}
-          OR (EnterDate = DATE_SUB(${curDate}, INTERVAL 1 DAY) AND EndDate = ${curDate})
-          OR (EndDate IS NULL AND EnterDate = DATE_SUB(${curDate}, INTERVAL 1 DAY))
-        )
-    `);
+    let playSessions: any[] = [];
+    try {
+      playSessions = await fnetDB.$queryRaw<any[]>(fnetPrisma.sql`
+        SELECT *
+        FROM fnet.systemlogtb
+        WHERE UserId = ${userId}
+          AND status = 3
+          AND (
+            EnterDate = ${curDate} 
+            OR EndDate = ${curDate}
+            OR (EnterDate = DATE_SUB(${curDate}, INTERVAL 1 DAY) AND EndDate = ${curDate})
+            OR (EndDate IS NULL AND EnterDate = DATE_SUB(${curDate}, INTERVAL 1 DAY))
+          )
+        LIMIT 1000
+      `);
+    } catch (error) {
+      console.error("Error fetching play sessions:", error);
+      playSessions = []; // Fallback to empty array
+    }
 
     // Get ORDER and TOPUP data for the entire day
-    const orderPayments = await fnetDB.$queryRaw<any[]>(fnetPrisma.sql`
-      SELECT COALESCE(CAST(SUM(ABS(AutoAmount)) AS DECIMAL(18,2)), 0) AS total
-      FROM fnet.paymenttb
-      WHERE PaymentType = 4
-        AND UserId = ${userId}
-        AND Note LIKE N'%Thời gian phí (cấn trừ từ ffood%'
-        AND ServeDate = ${curDate}
-    `);
-    const orderProgress = parseFloat(
-      orderPayments[0]?.total?.toString() || "0",
-    );
+    let orderProgress = 0;
+    let topupProgress = 0;
+    
+    try {
+      const orderPayments = await fnetDB.$queryRaw<any[]>(fnetPrisma.sql`
+        SELECT COALESCE(CAST(SUM(ABS(AutoAmount)) AS DECIMAL(18,2)), 0) AS total
+        FROM fnet.paymenttb
+        WHERE PaymentType = 4
+          AND UserId = ${userId}
+          AND Note LIKE N'%Thời gian phí (cấn trừ từ ffood%'
+          AND ServeDate = ${curDate}
+      `);
+      orderProgress = parseFloat(
+        orderPayments[0]?.total?.toString() || "0",
+      );
 
-    const topupPayments = await fnetDB.$queryRaw<any[]>(fnetPrisma.sql`
-      SELECT COALESCE(CAST(SUM(AutoAmount) AS DECIMAL(18,2)), 0) AS total
-      FROM fnet.paymenttb
-      WHERE PaymentType = 4
-        AND UserId = ${userId}
-        AND Note NOT LIKE N'%Thời gian phí (cấn trừ từ ffood%'
-        AND ServeDate = ${curDate}
-    `);
-    const topupProgress = parseFloat(
-      topupPayments[0]?.total?.toString() || "0",
-    );
+      const topupPayments = await fnetDB.$queryRaw<any[]>(fnetPrisma.sql`
+        SELECT COALESCE(CAST(SUM(AutoAmount) AS DECIMAL(18,2)), 0) AS total
+        FROM fnet.paymenttb
+        WHERE PaymentType = 4
+          AND UserId = ${userId}
+          AND Note NOT LIKE N'%Thời gian phí (cấn trừ từ ffood%'
+          AND ServeDate = ${curDate}
+      `);
+      topupProgress = parseFloat(
+        topupPayments[0]?.total?.toString() || "0",
+      );
+    } catch (error) {
+      console.error("Error fetching payment data:", error);
+      // Keep default values (0)
+    }
 
     // Enhance missions with user progress and completion status
     const missionsWithProgress = missions.map((mission) => {

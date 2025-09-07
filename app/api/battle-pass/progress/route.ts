@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { calculateLevel } from "@/lib/battle-pass-utils";
-import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
+import { getCurrentTimeVNDB } from "@/lib/timezone-utils";
 
 export async function GET(request: Request) {
   try {
@@ -19,8 +19,8 @@ export async function GET(request: Request) {
     const currentSeasons = await db.$queryRaw<any[]>`
       SELECT * FROM BattlePassSeason 
       WHERE isActive = true
-        AND startDate <= DATE(${getCurrentTimeVNISO()})
-        AND endDate >= DATE(${getCurrentTimeVNISO()})
+        AND startDate <= DATE(${getCurrentTimeVNDB()})
+        AND endDate >= DATE(${getCurrentTimeVNDB()})
       LIMIT 1
     `;
 
@@ -53,7 +53,7 @@ export async function GET(request: Request) {
 
       await db.$executeRaw`
         INSERT INTO UserBattlePass (userId, seasonId, level, experience, isPremium, totalSpent, branch, createdAt, updatedAt)
-        VALUES (${decoded.userId}, ${currentSeason.id}, ${calculatedLevel}, ${experience}, false, 0, 'GO_VAP', ${getCurrentTimeVNISO()}, ${getCurrentTimeVNISO()})
+        VALUES (${decoded.userId}, ${currentSeason.id}, ${calculatedLevel}, ${experience}, false, 0, 'GO_VAP', ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
       `;
 
       const newProgress = await db.$queryRaw<any[]>`

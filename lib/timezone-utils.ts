@@ -11,6 +11,29 @@ export const getCurrentTimeVNISO = () => {
   return nowVN.format();
 };
 
+// ===== DATABASE DATETIME FUNCTIONS =====
+// Cho database với timezone VN (+7) nhưng format MySQL compatible
+
+export const getCurrentTimeVNDB = () => {
+  const nowVN = dayjs().utcOffset(7);
+  return nowVN.format("YYYY-MM-DD HH:mm:ss");
+};
+
+export const getCurrentTimeVNDBWithMs = () => {
+  const nowVN = dayjs().utcOffset(7);
+  return nowVN.format("YYYY-MM-DD HH:mm:ss.SSS");
+};
+
+export const getStartOfDayVNDB = () => {
+  const nowVN = dayjs().utcOffset(7);
+  return nowVN.startOf("day").format("YYYY-MM-DD HH:mm:ss");
+};
+
+export const getEndOfDayVNDB = () => {
+  const nowVN = dayjs().utcOffset(7);
+  return nowVN.endOf("day").format("YYYY-MM-DD HH:mm:ss");
+};
+
 export const getStartOfDayVNISO = () => {
   const nowVN = dayjs().utcOffset(7);
   return nowVN.startOf("day").format();

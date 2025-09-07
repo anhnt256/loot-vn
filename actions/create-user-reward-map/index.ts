@@ -5,7 +5,7 @@ import { createSafeAction } from "@/lib/create-safe-action";
 import { CreateUserRewardMap } from "./schema";
 import { InputType } from "./type";
 import dayjs from "@/lib/dayjs";
-import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
+import { getCurrentTimeVNISO, getCurrentTimeVNDB } from "@/lib/timezone-utils";
 
 const expirationDuration = 1;
 
@@ -52,6 +52,9 @@ const handler = async (data: InputType): Promise<any> => {
     ORDER BY createdAt DESC
   `;
   
+
+  console.log('allUserAccounts------', allUserAccounts)
+
   if ((allUserAccounts as any[]).length > 1) {
     return {
       error: "Tài khoản của bạn đã được sử dụng ở nhiều nơi. Vui lòng liên hệ admin để được hỗ trợ.",
@@ -65,8 +68,8 @@ const handler = async (data: InputType): Promise<any> => {
     
     // Kiểm tra user có tồn tại trong Fnet database không
     const fnetUserCount = await fnetDB.$queryRaw<any[]>`
-      SELECT COUNT(*) as count FROM fnet.systemlogtb 
-      WHERE userId = ${userId}
+      SELECT COUNT(*) as count FROM fnet.usertb 
+      WHERE UserId = ${userId}
     `;
     
     if (fnetUserCount[0].count === 0) {
@@ -74,6 +77,8 @@ const handler = async (data: InputType): Promise<any> => {
         error: "Tài khoản không tồn tại trong hệ thống Fnet. Vui lòng liên hệ admin để được hỗ trợ.",
       };
     }
+
+    console.log('fnetUserCount', fnetUserCount)
     
     // Kiểm tra user có nhiều tài khoản trong Fnet không
     if (fnetUserCount[0].count > 1) {
@@ -83,12 +88,24 @@ const handler = async (data: InputType): Promise<any> => {
     }
     
     // Kiểm tra user có session gần đây trong Fnet không (để đảm bảo tài khoản còn hoạt động)
-    const recentSession = await fnetDB.$queryRaw<any[]>(fnetPrisma.sql`
-      SELECT * FROM fnet.systemlogtb 
-      WHERE userId = ${userId} 
-      ORDER BY LogTime DESC 
+    // Follow cấu trúc từ user-calculator.ts: JOIN systemlogtb với usertb
+    const recentSession = await fnetDB.$queryRaw<any[]>`
+      SELECT 
+        s.UserId,
+        s.EnterDate,
+        s.EndDate,
+        s.EnterTime,
+        s.EndTime,
+        s.status,
+        u.UserType,
+        s.MachineName
+      FROM fnet.systemlogtb s
+      JOIN usertb u ON s.UserId = u.UserId
+      WHERE s.UserId = ${userId}
+        AND s.status = 3
+      ORDER BY s.EnterDate DESC, s.EnterTime DESC
       LIMIT 1
-    `);
+    `;
     
     if (!recentSession[0]) {
       return {
@@ -155,7 +172,7 @@ const handler = async (data: InputType): Promise<any> => {
         // Update promotionCode: set isUsed = true
         await tx.$executeRaw`
           UPDATE PromotionCode 
-          SET isUsed = true, updatedAt = ${getCurrentTimeVNISO()}
+          SET isUsed = true, updatedAt = '${getCurrentTimeVNDB()}'
           WHERE id = ${id}
         `;
         
@@ -163,7 +180,7 @@ const handler = async (data: InputType): Promise<any> => {
         // Insert vào userRewardMap với internal id của user để relation đúng
         await tx.$executeRaw`
           INSERT INTO UserRewardMap (userId, rewardId, promotionCodeId, duration, isUsed, branch, createdAt, updatedAt)
-          VALUES (${user.id}, ${rewardId}, ${id}, ${duration}, ${isUsed}, ${branch}, ${getCurrentTimeVNISO()}, ${getCurrentTimeVNISO()})
+          VALUES (${user.id}, ${rewardId}, ${id}, ${duration}, ${isUsed}, ${branch}, '${getCurrentTimeVNDB()}', '${getCurrentTimeVNDB()}')
         `;
         
         // Get the inserted record ID
@@ -181,7 +198,7 @@ const handler = async (data: InputType): Promise<any> => {
         // Update số sao trong table User
         await tx.$executeRaw`
           UPDATE User 
-          SET stars = ${newStars}, updatedAt = ${getCurrentTimeVNISO()}
+          SET stars = ${newStars}, updatedAt = '${getCurrentTimeVNDB()}'
           WHERE id = ${user.id}
         `;
         

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { calculateLevel } from "@/lib/battle-pass-utils";
-import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
+import { getCurrentTimeVNDB } from "@/lib/timezone-utils";
 
 export async function POST(request: Request) {
   try {
@@ -51,8 +51,8 @@ export async function POST(request: Request) {
     const currentSeasons = await db.$queryRaw<any[]>`
       SELECT * FROM BattlePassSeason 
       WHERE isActive = true
-        AND startDate <= DATE(${getCurrentTimeVNISO()})
-        AND endDate >= DATE(${getCurrentTimeVNISO()})
+        AND startDate <= DATE('${getCurrentTimeVNDB()}')
+        AND endDate >= DATE('${getCurrentTimeVNDB()}')
       LIMIT 1
     `;
 
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
       // Update existing progress
       await db.$executeRaw`
         UPDATE UserBattlePass 
-        SET isPremium = true, updatedAt = ${getCurrentTimeVNISO()}
+        SET isPremium = true, updatedAt = '${getCurrentTimeVNDB()}'
         WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id}
       `;
 
@@ -96,7 +96,7 @@ export async function POST(request: Request) {
       // Create new progress
       await db.$executeRaw`
         INSERT INTO UserBattlePass (userId, seasonId, level, experience, isPremium, totalSpent, branch, createdAt, updatedAt)
-        VALUES (${decoded.userId}, ${currentSeason.id}, ${calculateLevel(0, currentSeason.maxLevel)}, 0, true, 0, 'GO_VAP', ${getCurrentTimeVNISO()}, ${getCurrentTimeVNISO()})
+        VALUES (${decoded.userId}, ${currentSeason.id}, ${calculateLevel(0, currentSeason.maxLevel)}, 0, true, 0, 'GO_VAP', '${getCurrentTimeVNDB()}', '${getCurrentTimeVNDB()}')
       `;
 
       const newProgress = await db.$queryRaw<any[]>`

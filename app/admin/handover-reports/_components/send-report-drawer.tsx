@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { X, Send, User, Clock } from "lucide-react";
 import { Table, Input, Button, Select, message } from "antd";
 import type { ColumnsType } from "antd/es/table";
@@ -11,6 +11,7 @@ import {
   REPORT_TYPE_LABELS,
 } from "@/constants/handover-reports.constants";
 import { CURRENT_USER } from "@/constants/token.constant";
+import { useStaffContext } from "@/components/providers/StaffProvider";
 
 interface Material {
   id: number;
@@ -223,10 +224,13 @@ export default function SendReportDrawer({
   const [materialData, setMaterialData] = useState<MaterialReportData[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
-  const [staffList, setStaffList] = useState<Staff[]>([]);
+  const { getAllStaff } = useStaffContext();
+  const staffList = getAllStaff();
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [submissionTracking, setSubmissionTracking] = useState<any>(null);
   const [displayTime, setDisplayTime] = useState<string>("");
+  const hasInitializedRef = useRef(false);
+  const isAutoSettingShiftRef = useRef(false);
 
   // Debug submissionTracking changes
   useEffect(() => {
@@ -250,28 +254,10 @@ export default function SendReportDrawer({
     }
   }, []);
 
-  // Fetch staff list from API
-  const fetchStaffList = async () => {
-    try {
-      const response = await fetch("/api/staff");
-      const result = await response.json();
 
-      if (result.success) {
-        setStaffList(result.data);
-      } else {
-        console.error("Failed to fetch staff list:", result.error);
-        setStaffList([]);
-      }
-    } catch (error) {
-      console.error("Error fetching staff list:", error);
-      setStaffList([]);
-    }
-  };
-
-  // Fetch staff list and set initial shift when drawer opens
+  // Set initial shift when drawer opens
   useEffect(() => {
     if (isOpen) {
-      fetchStaffList();
       if (defaultReportType) {
         setSelectedReportType(defaultReportType);
       } else {
@@ -286,7 +272,7 @@ export default function SendReportDrawer({
 
   // Call API get-report-data when init and set into materialData state
   useEffect(() => {
-    if (isOpen && selectedReportType) {
+    if (isOpen && selectedReportType && !hasInitializedRef.current) {
       const fetchReportData = async () => {
         setLoading(true);
         try {
@@ -318,7 +304,9 @@ export default function SendReportDrawer({
               }
             }
 
+            isAutoSettingShiftRef.current = true;
             setSelectedShift(autoShift);
+            isAutoSettingShiftRef.current = false;
 
             const mappedMaterials = mapMaterialData(
               isInitialData,
@@ -336,6 +324,8 @@ export default function SendReportDrawer({
           setMaterialData([]);
         } finally {
           setLoading(false);
+          // Always set initialized flag to prevent duplicate calls
+          hasInitializedRef.current = true;
         }
       };
 
@@ -343,9 +333,16 @@ export default function SendReportDrawer({
     }
   }, [isOpen, selectedReportType, selectedDateState]);
 
-  // Update material data when selectedShift changes
+  // Reset initialization flag when drawer closes
   useEffect(() => {
-    if (isOpen && selectedReportType && selectedShift) {
+    if (!isOpen) {
+      hasInitializedRef.current = false;
+    }
+  }, [isOpen]);
+
+  // Update material data when selectedShift changes (only for manual changes)
+  useEffect(() => {
+    if (isOpen && selectedReportType && selectedShift && hasInitializedRef.current && submissionTracking && !isAutoSettingShiftRef.current) {
       const fetchReportData = async () => {
         setLoading(true);
         try {
