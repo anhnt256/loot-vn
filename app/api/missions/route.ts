@@ -84,7 +84,7 @@ export async function GET(request: Request) {
     // Get ORDER and TOPUP data for the entire day
     let orderProgress = 0;
     let topupProgress = 0;
-    
+
     try {
       const orderPayments = await fnetDB.$queryRaw<any[]>(fnetPrisma.sql`
         SELECT COALESCE(CAST(SUM(ABS(AutoAmount)) AS DECIMAL(18,2)), 0) AS total
@@ -94,9 +94,7 @@ export async function GET(request: Request) {
           AND Note LIKE N'%Thời gian phí (cấn trừ từ ffood%'
           AND ServeDate = ${curDate}
       `);
-      orderProgress = parseFloat(
-        orderPayments[0]?.total?.toString() || "0",
-      );
+      orderProgress = parseFloat(orderPayments[0]?.total?.toString() || "0");
 
       const topupPayments = await fnetDB.$queryRaw<any[]>(fnetPrisma.sql`
         SELECT COALESCE(CAST(SUM(AutoAmount) AS DECIMAL(18,2)), 0) AS total
@@ -106,9 +104,7 @@ export async function GET(request: Request) {
           AND Note NOT LIKE N'%Thời gian phí (cấn trừ từ ffood%'
           AND ServeDate = ${curDate}
       `);
-      topupProgress = parseFloat(
-        topupPayments[0]?.total?.toString() || "0",
-      );
+      topupProgress = parseFloat(topupPayments[0]?.total?.toString() || "0");
     } catch (error) {
       console.error("Error fetching payment data:", error);
       // Keep default values (0)

@@ -41,7 +41,8 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   const GATEWAY_BIRTHDAY_ENABLE =
     process.env.NEXT_PUBLIC_GATEWAY_BIRTHDAY_ENABLE === "true";
   const STORE_DISABLED = process.env.NEXT_PUBLIC_STORE_DISABLED === "true";
-  const BATTLE_PASS_ENABLE = process.env.NEXT_PUBLIC_GATEWAY_BATTLE_PASS_ENABLE === "true";
+  const BATTLE_PASS_ENABLE =
+    process.env.NEXT_PUBLIC_GATEWAY_BATTLE_PASS_ENABLE === "true";
 
   // Function to call user-calculator API and update localStorage
   const refreshUserData = async () => {

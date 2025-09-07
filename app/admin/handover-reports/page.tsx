@@ -137,13 +137,13 @@ export default function HandoverReportsPage() {
       if (fetchTimeoutRef.current) {
         clearTimeout(fetchTimeoutRef.current);
       }
-      
+
       // Debounce the API call to prevent multiple rapid calls
       fetchTimeoutRef.current = setTimeout(() => {
         fetchReports();
       }, 100);
     }
-    
+
     // Cleanup timeout on unmount
     return () => {
       if (fetchTimeoutRef.current) {

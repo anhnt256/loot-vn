@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     const branch = await getBranchFromCookie();
 
     const { date, shift, reportType, staffId, materials } = body;
-    
+
     // // console.log(`Debug request body:`, { materials, staffId, shift, reportType, date });
 
     // Validate required fields
@@ -63,11 +63,6 @@ export async function POST(request: NextRequest) {
       ORDER BY hr.createdAt DESC
     `) as any[];
 
-    // console.log(
-      "Existing reports for this date, type and branch:",
-      existingReports,
-    );
-
     const existingReport = existingReports[0];
 
     let handoverReportId: number = 0;
@@ -76,12 +71,12 @@ export async function POST(request: NextRequest) {
     await db.$transaction(async (tx) => {
       if (existingReport) {
         // console.log("Found existing report:", {
-          reportId: existingReport.id,
-          reportDate: existingReport.date,
-          reportType: existingReport.reportType,
-          requestedDate: date,
-          requestedShift: shift,
-        });
+        //   reportId: existingReport.id,
+        //   reportDate: existingReport.date,
+        //   reportType: existingReport.reportType,
+        //   requestedDate: date,
+        //   requestedShift: shift,
+        // });
 
         handoverReportId = existingReport.id;
         if (!handoverReportId || handoverReportId <= 0) {
@@ -235,18 +230,22 @@ export async function POST(request: NextRequest) {
         // Update existing materials for this shift
         for (const materialData of materials) {
           // console.log(`Debug materialData:`, materialData);
-          
+
           // Find material by name to get materialId
           if (!materialData.materialName) {
-            throw new Error(`Material name is required but got: ${materialData.materialName}`);
+            throw new Error(
+              `Material name is required but got: ${materialData.materialName}`,
+            );
           }
-          
+
           const materials = (await tx.$queryRaw`
             SELECT id FROM Material WHERE name = ${materialData.materialName} LIMIT 1
           `) as any[];
           const materialRecord = materials[0];
           if (!materialRecord?.id) {
-            throw new Error(`Material not found for name: ${materialData.materialName}`);
+            throw new Error(
+              `Material not found for name: ${materialData.materialName}`,
+            );
           }
 
           // Check if material already exists for this report
@@ -284,42 +283,59 @@ export async function POST(request: NextRequest) {
                   : "eveningEnding";
 
             // Calculate ending based on beginning, received, and issued
-            // console.log(`Debug beginning value:`, { 
-              beginning: materialData.beginning, 
-              type: typeof materialData.beginning
-            });
-            
+            // console.log(`Debug beginning value:`, {
+            //   beginning: materialData.beginning,
+            //   type: typeof materialData.beginning
+            // });
+
             const beginning = parseFloat(materialData.beginning || 0);
             if (isNaN(beginning)) {
-              throw new Error(`Invalid beginning value: ${materialData.beginning} (type: ${typeof materialData.beginning})`);
+              throw new Error(
+                `Invalid beginning value: ${materialData.beginning} (type: ${typeof materialData.beginning})`,
+              );
             }
-            
-            // console.log(`Debug received value:`, { 
-              received: materialData.received, 
-              type: typeof materialData.received,
-              isNull: materialData.received === null,
-              isUndefined: materialData.received === undefined
-            });
-            
-            const received = materialData.received === null || materialData.received === undefined
-              ? 0
-              : parseFloat(materialData.received);
-            if (materialData.received !== null && materialData.received !== undefined && isNaN(received)) {
-              throw new Error(`Invalid received value: ${materialData.received} (type: ${typeof materialData.received})`);
+
+            // console.log(`Debug received value:`, {
+            //   received: materialData.received,
+            //   type: typeof materialData.received,
+            //   isNull: materialData.received === null,
+            //   isUndefined: materialData.received === undefined
+            // });
+
+            const received =
+              materialData.received === null ||
+              materialData.received === undefined
+                ? 0
+                : parseFloat(materialData.received);
+            if (
+              materialData.received !== null &&
+              materialData.received !== undefined &&
+              isNaN(received)
+            ) {
+              throw new Error(
+                `Invalid received value: ${materialData.received} (type: ${typeof materialData.received})`,
+              );
             }
-            
-            // console.log(`Debug issued value:`, { 
-              issued: materialData.issued, 
-              type: typeof materialData.issued,
-              isNull: materialData.issued === null,
-              isUndefined: materialData.issued === undefined
-            });
-            
-            const issued = materialData.issued === null || materialData.issued === undefined
-              ? 0
-              : parseFloat(materialData.issued);
-            if (materialData.issued !== null && materialData.issued !== undefined && isNaN(issued)) {
-              throw new Error(`Invalid issued value: ${materialData.issued} (type: ${typeof materialData.issued})`);
+
+            // console.log(`Debug issued value:`, {
+            //   issued: materialData.issued,
+            //   type: typeof materialData.issued,
+            //   isNull: materialData.issued === null,
+            //   isUndefined: materialData.issued === undefined
+            // });
+
+            const issued =
+              materialData.issued === null || materialData.issued === undefined
+                ? 0
+                : parseFloat(materialData.issued);
+            if (
+              materialData.issued !== null &&
+              materialData.issued !== undefined &&
+              isNaN(issued)
+            ) {
+              throw new Error(
+                `Invalid issued value: ${materialData.issued} (type: ${typeof materialData.issued})`,
+              );
             }
             const calculatedEnding = beginning + received - issued;
 
@@ -357,42 +373,59 @@ export async function POST(request: NextRequest) {
           } else {
             // Create new material record for this shift
             // Calculate ending based on beginning, received, and issued
-            // console.log(`Debug beginning value:`, { 
-              beginning: materialData.beginning, 
-              type: typeof materialData.beginning
-            });
-            
+            // console.log(`Debug beginning value:`, {
+            //   beginning: materialData.beginning,
+            //   type: typeof materialData.beginning
+            // });
+
             const beginning = parseFloat(materialData.beginning || 0);
             if (isNaN(beginning)) {
-              throw new Error(`Invalid beginning value: ${materialData.beginning} (type: ${typeof materialData.beginning})`);
+              throw new Error(
+                `Invalid beginning value: ${materialData.beginning} (type: ${typeof materialData.beginning})`,
+              );
             }
-            
-            // console.log(`Debug received value:`, { 
-              received: materialData.received, 
-              type: typeof materialData.received,
-              isNull: materialData.received === null,
-              isUndefined: materialData.received === undefined
-            });
-            
-            const received = materialData.received === null || materialData.received === undefined
-              ? 0
-              : parseFloat(materialData.received);
-            if (materialData.received !== null && materialData.received !== undefined && isNaN(received)) {
-              throw new Error(`Invalid received value: ${materialData.received} (type: ${typeof materialData.received})`);
+
+            // console.log(`Debug received value:`, {
+            //   received: materialData.received,
+            //   type: typeof materialData.received,
+            //   isNull: materialData.received === null,
+            //   isUndefined: materialData.received === undefined
+            // });
+
+            const received =
+              materialData.received === null ||
+              materialData.received === undefined
+                ? 0
+                : parseFloat(materialData.received);
+            if (
+              materialData.received !== null &&
+              materialData.received !== undefined &&
+              isNaN(received)
+            ) {
+              throw new Error(
+                `Invalid received value: ${materialData.received} (type: ${typeof materialData.received})`,
+              );
             }
-            
-            // console.log(`Debug issued value:`, { 
-              issued: materialData.issued, 
-              type: typeof materialData.issued,
-              isNull: materialData.issued === null,
-              isUndefined: materialData.issued === undefined
-            });
-            
-            const issued = materialData.issued === null || materialData.issued === undefined
-              ? 0
-              : parseFloat(materialData.issued);
-            if (materialData.issued !== null && materialData.issued !== undefined && isNaN(issued)) {
-              throw new Error(`Invalid issued value: ${materialData.issued} (type: ${typeof materialData.issued})`);
+
+            // console.log(`Debug issued value:`, {
+            //   issued: materialData.issued,
+            //   type: typeof materialData.issued,
+            //   isNull: materialData.issued === null,
+            //   isUndefined: materialData.issued === undefined
+            // });
+
+            const issued =
+              materialData.issued === null || materialData.issued === undefined
+                ? 0
+                : parseFloat(materialData.issued);
+            if (
+              materialData.issued !== null &&
+              materialData.issued !== undefined &&
+              isNaN(issued)
+            ) {
+              throw new Error(
+                `Invalid issued value: ${materialData.issued} (type: ${typeof materialData.issued})`,
+              );
             }
             const calculatedEnding = beginning + received - issued;
 
@@ -484,18 +517,22 @@ export async function POST(request: NextRequest) {
         `) as any[];
         handoverReportId = createdReport[0].id;
         if (!handoverReportId || handoverReportId <= 0) {
-          throw new Error(`Failed to create handover report, got invalid ID: ${handoverReportId}`);
+          throw new Error(
+            `Failed to create handover report, got invalid ID: ${handoverReportId}`,
+          );
         }
 
         // Create materials for the specific shift
         for (const materialData of materials) {
           // console.log(`Debug materialData:`, materialData);
-          
+
           // Find material by name to get materialId
           if (!materialData.materialName) {
-            throw new Error(`Material name is required but got: ${materialData.materialName}`);
+            throw new Error(
+              `Material name is required but got: ${materialData.materialName}`,
+            );
           }
-          
+
           const materials = (await tx.$queryRaw`
             SELECT id FROM Material WHERE name = ${materialData.materialName} LIMIT 1
           `) as any[];
@@ -505,20 +542,33 @@ export async function POST(request: NextRequest) {
           // Calculate ending based on beginning, received, and issued
           const beginning = parseFloat(materialData.beginning || 0);
           if (isNaN(beginning)) {
-            throw new Error(`Invalid beginning value: ${materialData.beginning}`);
+            throw new Error(
+              `Invalid beginning value: ${materialData.beginning}`,
+            );
           }
-          
-          const received = materialData.received === null || materialData.received === undefined
-            ? 0
-            : parseFloat(materialData.received);
-          if (materialData.received !== null && materialData.received !== undefined && isNaN(received)) {
+
+          const received =
+            materialData.received === null ||
+            materialData.received === undefined
+              ? 0
+              : parseFloat(materialData.received);
+          if (
+            materialData.received !== null &&
+            materialData.received !== undefined &&
+            isNaN(received)
+          ) {
             throw new Error(`Invalid received value: ${materialData.received}`);
           }
-          
-          const issued = materialData.issued === null || materialData.issued === undefined 
-            ? 0 
-            : parseFloat(materialData.issued);
-          if (materialData.issued !== null && materialData.issued !== undefined && isNaN(issued)) {
+
+          const issued =
+            materialData.issued === null || materialData.issued === undefined
+              ? 0
+              : parseFloat(materialData.issued);
+          if (
+            materialData.issued !== null &&
+            materialData.issued !== undefined &&
+            isNaN(issued)
+          ) {
             throw new Error(`Invalid issued value: ${materialData.issued}`);
           }
           const calculatedEnding = beginning + received - issued;

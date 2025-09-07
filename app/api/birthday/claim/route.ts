@@ -192,11 +192,14 @@ export async function POST(request: NextRequest) {
 
       if (fnetUser.length > 0) {
         console.log("Updating fnet.usertb with bonus...");
-        
+
         const oldMoney = fnetUser[0].RemainMoney;
-        const newMoney = Number(fnetUser[0].RemainMoney) + Number(tier.bonusAmount);
-        
-        console.log(`Processing birthday bonus for user ${userId}: ${oldMoney} + ${tier.bonusAmount} = ${newMoney}`);
+        const newMoney =
+          Number(fnetUser[0].RemainMoney) + Number(tier.bonusAmount);
+
+        console.log(
+          `Processing birthday bonus for user ${userId}: ${oldMoney} + ${tier.bonusAmount} = ${newMoney}`,
+        );
 
         // Lưu lịch sử thay đổi số dư TRƯỚC khi update
         await db.$executeRaw`

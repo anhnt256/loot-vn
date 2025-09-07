@@ -51,7 +51,7 @@ export async function POST(
     currentSeason.rewards = rewards;
 
     // Double check - ensure season hasn't ended
-    const currentDate = getCurrentTimeVNISO().split("T")[0];
+    const currentDate = getCurrentTimeVNDB().split("T")[0];
     if (currentDate >= currentSeason.endDate) {
       return NextResponse.json(
         { error: "Season has ended - cannot claim rewards" },

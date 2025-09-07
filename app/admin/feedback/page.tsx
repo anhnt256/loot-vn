@@ -171,7 +171,7 @@ export default function FeedbackManagementPage() {
         fetchStats();
       }, 100);
     }
-    
+
     return () => {
       if (fetchTimeoutRef.current) {
         clearTimeout(fetchTimeoutRef.current);

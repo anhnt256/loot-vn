@@ -140,12 +140,14 @@ export function AdminSidebar() {
     const isRewardExchangePage = pathname === "/admin/reward-exchange";
     if (isRewardExchangePage && branch) {
       // Fetch một lần để có initial data
-      fetch(`/api/reward-exchange/stats?branch=${branch}&startDate=${new Date().toISOString().split("T")[0]}&endDate=${new Date().toISOString().split("T")[0]}`)
-        .then(res => res.json())
-        .then(data => {
+      fetch(
+        `/api/reward-exchange/stats?branch=${branch}&startDate=${new Date().toISOString().split("T")[0]}&endDate=${new Date().toISOString().split("T")[0]}`,
+      )
+        .then((res) => res.json())
+        .then((data) => {
           setPendingCount(data.pending || 0);
         })
-        .catch(err => console.error("Error fetching initial stats:", err));
+        .catch((err) => console.error("Error fetching initial stats:", err));
     }
   }, [pathname, branch]);
 
@@ -164,7 +166,7 @@ export function AdminSidebar() {
     if (loginType === "username") {
       return true;
     }
-    
+
     // Nếu không phải admin (loginType === "mac"), chỉ hiển thị các menu được phép
     const allowedMenus = [
       "/admin", // Dashboard
@@ -172,7 +174,7 @@ export function AdminSidebar() {
       "/admin/handover-reports", // Báo cáo bàn giao
       "/admin/reports", // Báo cáo kết ca
     ];
-    
+
     return allowedMenus.includes(item.href);
   });
 
@@ -200,7 +202,7 @@ export function AdminSidebar() {
           // - Các trang khác: Active khi pathname bắt đầu bằng href
           // Ví dụ: /admin/gift-rounds sẽ active menu "Tặng lượt chơi"
           let isActive = false;
-          
+
           if (item.href === "/admin") {
             // Dashboard chỉ active khi ở chính xác /admin
             isActive = pathname === "/admin";
@@ -208,7 +210,6 @@ export function AdminSidebar() {
             // Các trang khác active khi pathname bắt đầu bằng href
             isActive = pathname?.startsWith(item.href) || false;
           }
-          
 
           return (
             <Link

@@ -254,7 +254,6 @@ export default function SendReportDrawer({
     }
   }, []);
 
-
   // Set initial shift when drawer opens
   useEffect(() => {
     if (isOpen) {
@@ -342,7 +341,14 @@ export default function SendReportDrawer({
 
   // Update material data when selectedShift changes (only for manual changes)
   useEffect(() => {
-    if (isOpen && selectedReportType && selectedShift && hasInitializedRef.current && submissionTracking && !isAutoSettingShiftRef.current) {
+    if (
+      isOpen &&
+      selectedReportType &&
+      selectedShift &&
+      hasInitializedRef.current &&
+      submissionTracking &&
+      !isAutoSettingShiftRef.current
+    ) {
       const fetchReportData = async () => {
         setLoading(true);
         try {

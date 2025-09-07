@@ -257,14 +257,13 @@ export default function AdminReportsPage() {
     fetchTimeoutRef.current = setTimeout(() => {
       fetchReports();
     }, 100);
-    
+
     return () => {
       if (fetchTimeoutRef.current) {
         clearTimeout(fetchTimeoutRef.current);
       }
     };
   }, [filterDate, filterShift, page]);
-
 
   // Set default collapsed state when reports change
   useEffect(() => {

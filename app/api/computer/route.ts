@@ -34,20 +34,26 @@ function convertBigIntToString(obj: any): any {
 }
 
 // Hàm tạo timeout promise
-function createTimeoutPromise<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+function createTimeoutPromise<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+): Promise<T> {
   return Promise.race([
     promise,
-    new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error(`Query timeout after ${timeoutMs}ms`)), timeoutMs)
-    )
+    new Promise<never>((_, reject) =>
+      setTimeout(
+        () => reject(new Error(`Query timeout after ${timeoutMs}ms`)),
+        timeoutMs,
+      ),
+    ),
   ]);
 }
 
 // Hàm xử lý query với timeout và retry
 async function executeQueryWithTimeout<T>(
-  queryFn: () => Promise<T>, 
+  queryFn: () => Promise<T>,
   timeoutMs: number = 8000,
-  retries: number = 1
+  retries: number = 1,
 ): Promise<T | null> {
   try {
     return await createTimeoutPromise(queryFn(), timeoutMs);
@@ -164,26 +170,35 @@ export async function GET() {
     ]);
 
     // Xử lý kết quả từng query
-    const computerStatus = queryResults[0].status === 'fulfilled' ? queryResults[0].value : [];
-    const deviceHistoriesRaw = queryResults[1].status === 'fulfilled' ? queryResults[1].value : [];
-    const computers = queryResults[2].status === 'fulfilled' ? queryResults[2].value : [];
-    const checkInItems = queryResults[3].status === 'fulfilled' ? queryResults[3].value : [];
+    const computerStatus =
+      queryResults[0].status === "fulfilled" ? queryResults[0].value : [];
+    const deviceHistoriesRaw =
+      queryResults[1].status === "fulfilled" ? queryResults[1].value : [];
+    const computers =
+      queryResults[2].status === "fulfilled" ? queryResults[2].value : [];
+    const checkInItems =
+      queryResults[3].status === "fulfilled" ? queryResults[3].value : [];
 
     // Log kết quả từng query để debug
-    console.log('Query results:', {
+    console.log("Query results:", {
       computerStatus: Array.isArray(computerStatus) ? computerStatus.length : 0,
-      deviceHistories: Array.isArray(deviceHistoriesRaw) ? deviceHistoriesRaw.length : 0,
+      deviceHistories: Array.isArray(deviceHistoriesRaw)
+        ? deviceHistoriesRaw.length
+        : 0,
       computers: Array.isArray(computers) ? computers.length : 0,
-      checkInItems: Array.isArray(checkInItems) ? checkInItems.length : 0
+      checkInItems: Array.isArray(checkInItems) ? checkInItems.length : 0,
     });
 
     // Nếu không có computer data, trả về lỗi
     if (!Array.isArray(computers) || computers.length === 0) {
-      console.warn('No computer data found from local DB');
-      return NextResponse.json({ 
-        error: 'Unable to fetch computer data',
-        details: 'Local database query failed'
-      }, { status: 500 });
+      console.warn("No computer data found from local DB");
+      return NextResponse.json(
+        {
+          error: "Unable to fetch computer data",
+          details: "Local database query failed",
+        },
+        { status: 500 },
+      );
     }
 
     // Map histories vào từng device
@@ -202,22 +217,24 @@ export async function GET() {
     }
 
     // Lấy tất cả UserIds có sử dụng máy (chỉ khi có computerStatus data)
-    const activeUserIds = Array.isArray(computerStatus) && computerStatus.length > 0
-      ? computerStatus
-          .filter((status: any) => status.UserId)
-          .map((status: any) => parseInt(status.UserId, 10))
-      : [];
+    const activeUserIds =
+      Array.isArray(computerStatus) && computerStatus.length > 0
+        ? computerStatus
+            .filter((status: any) => status.UserId)
+            .map((status: any) => parseInt(status.UserId, 10))
+        : [];
 
     // Sử dụng hàm calculateActiveUsersInfo để tính toán thông tin users
     let usersInfo: any[] = [];
     if (activeUserIds.length > 0 && branchFromCookie) {
       try {
-        usersInfo = await executeQueryWithTimeout(
-          () => calculateActiveUsersInfo(activeUserIds, branchFromCookie),
-          10000
-        ) || [];
+        usersInfo =
+          (await executeQueryWithTimeout(
+            () => calculateActiveUsersInfo(activeUserIds, branchFromCookie),
+            10000,
+          )) || [];
       } catch (error) {
-        console.warn('Failed to calculate active users info:', error);
+        console.warn("Failed to calculate active users info:", error);
         usersInfo = [];
       }
     }
@@ -234,11 +251,12 @@ export async function GET() {
 
     for (const computer of computers as any[]) {
       const { name } = computer || {};
-      const computerStatusData = Array.isArray(computerStatus) && computerStatus.length > 0
-        ? computerStatus.find(
-            (status: { MachineName: string }) => status.MachineName === name,
-          )
-        : null;
+      const computerStatusData =
+        Array.isArray(computerStatus) && computerStatus.length > 0
+          ? computerStatus.find(
+              (status: { MachineName: string }) => status.MachineName === name,
+            )
+          : null;
       const { UserId, Status, UserType } = computerStatusData || {};
 
       // Lấy user info từ map
@@ -250,7 +268,7 @@ export async function GET() {
       results.push({
         id: computer.id,
         name: computer.name,
-        status: Status || 'UNKNOWN',
+        status: Status || "UNKNOWN",
         userId: UserId || null,
         userName: userInfo?.userName || null,
         userType: UserType || null,
