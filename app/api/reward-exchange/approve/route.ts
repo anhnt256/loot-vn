@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
 import { cookies } from "next/headers";
-import { getCurrentTimeVNISO } from "@/lib/timezone-utils";
+import { getCurrentTimeVNISO, getCurrentTimeVNDB } from "@/lib/timezone-utils";
 import { calculateActiveUsersInfo } from "@/lib/user-calculator";
 
 export async function POST(request: NextRequest) {
@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
             // Lưu lịch sử thay đổi số dư TRƯỚC khi update (trong transaction chính)
             await tx.$executeRaw`
               INSERT INTO FnetHistory (userId, branch, oldMoney, newMoney, createdAt, updatedAt)
-              VALUES (${user[0].userId}, ${branch}, ${oldMoney}, ${newMoney}, NOW(), NOW())
+              VALUES (${user[0].userId}, ${branch}, ${oldMoney}, ${newMoney}, ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
             `;
 
             console.log(

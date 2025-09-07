@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, getFnetDB } from "@/lib/db";
 import { cookies } from "next/headers";
+import { getCurrentTimeVNDB } from "@/lib/timezone-utils";
 
 export async function POST(request: NextRequest) {
   try {
@@ -204,7 +205,7 @@ export async function POST(request: NextRequest) {
         // Lưu lịch sử thay đổi số dư TRƯỚC khi update
         await db.$executeRaw`
           INSERT INTO FnetHistory (userId, branch, oldMoney, newMoney, createdAt, updatedAt)
-          VALUES (${userId}, ${branch}, ${oldMoney}, ${newMoney}, NOW(), NOW())
+          VALUES (${userId}, ${branch}, ${oldMoney}, ${newMoney}, ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
         `;
 
         const today = new Date();

@@ -29,6 +29,36 @@ const handler = async (data: InputType): Promise<any> => {
   console.log("value:", value);
   console.log("branch:", branch);
 
+  // Validate rewardId
+  if (!rewardId || typeof rewardId !== 'number' || rewardId <= 0) {
+    console.error("Invalid rewardId:", rewardId);
+    return {
+      error: "Invalid reward ID",
+    };
+  }
+
+  // Validate other required fields
+  if (typeof newStars !== 'number' || typeof oldStars !== 'number') {
+    console.error("Invalid stars values:", { newStars, oldStars });
+    return {
+      error: "Invalid stars values",
+    };
+  }
+
+  if (typeof duration !== 'number' || duration <= 0) {
+    console.error("Invalid duration:", duration);
+    return {
+      error: "Invalid duration",
+    };
+  }
+
+  if (typeof isUsed !== 'boolean') {
+    console.error("Invalid isUsed:", isUsed);
+    return {
+      error: "Invalid isUsed value",
+    };
+  }
+
   let createUserRewardMap;
 
   // Verify user exists with correct userId and branch first using raw SQL
@@ -172,7 +202,7 @@ const handler = async (data: InputType): Promise<any> => {
         // Update promotionCode: set isUsed = true
         await tx.$executeRaw`
           UPDATE PromotionCode 
-          SET isUsed = true, updatedAt = '${getCurrentTimeVNDB()}'
+          SET isUsed = true, updatedAt = ${getCurrentTimeVNDB()}
           WHERE id = ${id}
         `;
         
@@ -180,7 +210,7 @@ const handler = async (data: InputType): Promise<any> => {
         // Insert vào userRewardMap với internal id của user để relation đúng
         await tx.$executeRaw`
           INSERT INTO UserRewardMap (userId, rewardId, promotionCodeId, duration, isUsed, branch, createdAt, updatedAt)
-          VALUES (${user.id}, ${rewardId}, ${id}, ${duration}, ${isUsed}, ${branch}, '${getCurrentTimeVNDB()}', '${getCurrentTimeVNDB()}')
+          VALUES (${user.id}, ${rewardId}, ${id}, ${duration}, ${isUsed}, ${branch}, ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
         `;
         
         // Get the inserted record ID
@@ -198,7 +228,7 @@ const handler = async (data: InputType): Promise<any> => {
         // Update số sao trong table User
         await tx.$executeRaw`
           UPDATE User 
-          SET stars = ${newStars}, updatedAt = '${getCurrentTimeVNDB()}'
+          SET stars = ${newStars}, updatedAt = ${getCurrentTimeVNDB()}
           WHERE id = ${user.id}
         `;
         
