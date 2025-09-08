@@ -173,9 +173,7 @@ export const clearUserData = () => {
   if (typeof window !== "undefined") {
     localStorage.removeItem("currentUser");
     localStorage.removeItem("token");
-    // Clear any other user-related items that might exist
-    localStorage.removeItem("userInfo");
-    localStorage.removeItem("user_info");
-    localStorage.removeItem("user-info");
+    localStorage.removeItem("gateway_staff_data");
+    localStorage.removeItem("gateway_staff_fetch_time");
   }
 };

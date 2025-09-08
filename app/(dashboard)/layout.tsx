@@ -98,6 +98,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
     if (statusCode === 200) {
       // Xóa thông tin user khỏi localStorage
       clearUserData();
+      localStorage.clear();
 
       if (typeof window !== "undefined" && window.electron) {
         // @ts-ignore
