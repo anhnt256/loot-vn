@@ -2,6 +2,8 @@ version: '3.8'
 services:
   app:
     build: .
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
     container_name: gateway-gaming
     ports:
       - "3000:3000"
