@@ -188,7 +188,8 @@ export default function BattlePassPage() {
       toast.error("🚫 Mùa đã kết thúc - Không thể mua Premium");
       return;
     }
-    setShowPremiumModal(true);
+    // Hiển thị modal thông báo tính năng sẽ mở sau
+    toast.info("🚧 Tính năng mua Premium Pass sẽ được mở trong thời gian tới!");
   };
 
   const handleConfirmPurchase = () => {
