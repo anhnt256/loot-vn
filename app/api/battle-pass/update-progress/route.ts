@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentTimeVNDB } from "@/lib/timezone-utils";
+import { cookies } from "next/headers";
 
 export async function POST(request: Request) {
   try {
@@ -13,6 +14,16 @@ export async function POST(request: Request) {
     const decoded = JSON.parse(userHeader);
     if (!decoded || !decoded.userId) {
       return NextResponse.json({ error: "Invalid user data" }, { status: 401 });
+    }
+
+    // Get branch from cookie
+    const cookieStore = await cookies();
+    const branch = cookieStore.get("branch")?.value;
+    if (!branch) {
+      return NextResponse.json(
+        { error: "Branch cookie is required" },
+        { status: 400 },
+      );
     }
 
     // Get request body
@@ -39,7 +50,7 @@ export async function POST(request: Request) {
     // Find or create user progress
     const existingProgress = await db.$queryRaw<any[]>`
       SELECT * FROM UserBattlePass 
-      WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id}
+      WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id} AND branch = ${branch}
       LIMIT 1
     `;
 
@@ -49,12 +60,12 @@ export async function POST(request: Request) {
       // Create new user progress
       await db.$executeRaw`
         INSERT INTO UserBattlePass (userId, seasonId, level, experience, isPremium, totalSpent, branch, createdAt, updatedAt)
-        VALUES (${decoded.userId}, ${currentSeason.id}, 0, ${experience || 0}, false, ${totalSpent || 0}, 'GO_VAP', ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
+        VALUES (${decoded.userId}, ${currentSeason.id}, 0, ${experience || 0}, false, ${totalSpent || 0}, ${branch}, ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
       `;
 
       const newProgress = await db.$queryRaw<any[]>`
         SELECT * FROM UserBattlePass 
-        WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id}
+        WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id} AND branch = ${branch}
         LIMIT 1
       `;
       userProgress = newProgress[0];

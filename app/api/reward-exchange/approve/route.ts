@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     if (rewardMap[0].userId) {
       user = await db.$queryRaw<any[]>`
         SELECT id, userId, userName, stars, branch FROM User 
-        WHERE id = ${rewardMap[0].userId} 
+        WHERE userId = ${rewardMap[0].userId} 
         AND branch = ${branch}
         LIMIT 1
       `;

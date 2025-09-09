@@ -369,11 +369,13 @@ model UserBattlePassReward {
   userId    Int
   seasonId  Int
   rewardId  Int
+  branch    String   @default("GO_VAP")
   claimedAt DateTime @default(now())
 
   @@unique([userId, rewardId])
   @@index([seasonId])
   @@index([userId])
+  @@index([branch])
 }
 
 model BattlePassPremiumPackage {

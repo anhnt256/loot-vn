@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { cookies } from "next/headers";
 
+const FIX_DATA_DATE = '2025-09-09 15:00:00';
+
 export async function GET(request: Request) {
   try {
     const cookieStore = await cookies();
@@ -46,22 +48,24 @@ export async function GET(request: Request) {
           r.name as reward_name,
           r.value as reward_value,
           r.stars as reward_stars,
-          pc.id as promotionCode_id,
-          pc.code as promotionCode_code,
-          pc.name as promotionCode_name,
-          pc.value as promotionCode_value
+          pr.id as promotionCode_id,
+          pr.name as promotionCode_name,
+          pr.value as promotionCode_value,
+          pr.starsValue as promotionCode_starsValue
         FROM UserRewardMap urm
         LEFT JOIN Reward r ON urm.rewardId = r.id
-        LEFT JOIN PromotionCode pc ON urm.promotionCodeId = pc.id
-        WHERE urm.userId = ${user[0].id}
+        LEFT JOIN PromotionReward pr ON urm.promotionCodeId = pr.id
+        WHERE urm.userId = ${user[0].userId}
           AND urm.branch = ${branch}
+          AND urm.createdAt >= ${FIX_DATA_DATE}
         ORDER BY urm.createdAt DESC
         LIMIT ${limit} OFFSET ${offset}
       `,
       db.$queryRaw<any[]>`
         SELECT COUNT(*) as count FROM UserRewardMap 
-        WHERE userId = ${user[0].id}
+        WHERE userId = ${user[0].userId}
           AND branch = ${branch}
+          AND createdAt >= ${FIX_DATA_DATE}
       `,
     ]);
 

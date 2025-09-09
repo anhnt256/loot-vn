@@ -31,16 +31,19 @@ export async function GET(request: Request) {
       `;
 
       if (user.length > 0) {
-        userFilter = `AND urm.userId = ${user[0].id}`;
+        userFilter = `AND urm.userId = ${user[0].userId}`;
         userJoin = `
-          LEFT JOIN User u ON urm.userId = u.id AND u.branch = '${branch}'
+          LEFT JOIN User u ON urm.userId = u.userId AND u.branch = '${branch}'
         `;
       }
     } else {
       userJoin = `
-        LEFT JOIN User u ON urm.userId = u.id AND u.branch = '${branch}'
+        LEFT JOIN User u ON urm.userId = u.userId AND u.branch = '${branch}'
       `;
     }
+
+    console.log('userFilter------', userFilter)
+    console.log('userJoin------', userJoin)
 
     const pendingRewards = await db.$queryRawUnsafe<any[]>(`
       SELECT 

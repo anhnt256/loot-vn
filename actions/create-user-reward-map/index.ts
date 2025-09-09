@@ -78,7 +78,7 @@ const handler = async (data: InputType): Promise<any> => {
   // Kiểm tra user có nhiều tài khoản hoặc tài khoản không giống với Fnet
   const allUserAccounts = await db.$queryRaw`
     SELECT * FROM User 
-    WHERE userId = ${userId}
+    WHERE userId = ${userId} AND branch = ${branch}
     ORDER BY createdAt DESC
   `;
   
@@ -212,7 +212,7 @@ const handler = async (data: InputType): Promise<any> => {
         // Insert vào userRewardMap với promotionCodeId (sử dụng rewardId làm promotionCodeId)
         await tx.$executeRaw`
           INSERT INTO UserRewardMap (userId, rewardId, promotionCodeId, duration, isUsed, branch, createdAt, updatedAt)
-          VALUES (${user.id}, ${rewardId}, ${rewardId}, ${duration}, ${isUsedParam}, ${branch}, ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
+          VALUES (${user.userId}, ${rewardId}, ${rewardId}, ${duration}, ${isUsedParam}, ${branch}, ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
         `;
       
       // Get the inserted record ID

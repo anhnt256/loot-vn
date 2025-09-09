@@ -67,7 +67,7 @@ export async function GET(request: Request) {
         ush.createdAt as userStarHistory_createdAt
       FROM UserRewardMap urm
       LEFT JOIN PromotionReward pr ON urm.promotionCodeId = pr.id
-      LEFT JOIN User u ON urm.userId = u.id AND u.branch = '${branch}'
+      LEFT JOIN User u ON urm.userId = u.userId AND u.branch = '${branch}'
       LEFT JOIN (
         SELECT ush1.*
         FROM UserStarHistory ush1

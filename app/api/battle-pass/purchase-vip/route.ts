@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     // Check if user progress exists
     const existingProgress = await db.$queryRaw<any[]>`
       SELECT * FROM UserBattlePass 
-      WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id}
+      WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id} AND branch = ${branch}
       LIMIT 1
     `;
 
@@ -83,12 +83,12 @@ export async function POST(request: Request) {
       await db.$executeRaw`
         UPDATE UserBattlePass 
         SET isPremium = true, updatedAt = ${getCurrentTimeVNDB()}
-        WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id}
+        WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id} AND branch = ${branch}
       `;
 
       const updatedProgress = await db.$queryRaw<any[]>`
         SELECT * FROM UserBattlePass 
-        WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id}
+        WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id} AND branch = ${branch}
         LIMIT 1
       `;
       userProgress = updatedProgress[0];
@@ -96,12 +96,12 @@ export async function POST(request: Request) {
       // Create new progress
       await db.$executeRaw`
         INSERT INTO UserBattlePass (userId, seasonId, level, experience, isPremium, totalSpent, branch, createdAt, updatedAt)
-        VALUES (${decoded.userId}, ${currentSeason.id}, ${calculateLevel(0, currentSeason.maxLevel)}, 0, true, 0, 'GO_VAP', ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
+        VALUES (${decoded.userId}, ${currentSeason.id}, ${calculateLevel(0, currentSeason.maxLevel)}, 0, true, 0, ${branch}, ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
       `;
 
       const newProgress = await db.$queryRaw<any[]>`
         SELECT * FROM UserBattlePass 
-        WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id}
+        WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id} AND branch = ${branch}
         LIMIT 1
       `;
       userProgress = newProgress[0];
