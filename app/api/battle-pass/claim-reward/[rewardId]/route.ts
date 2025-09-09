@@ -113,23 +113,49 @@ export async function POST(
       );
     }
 
-    // Create claimed reward record
-    await db.$executeRaw`
-      INSERT INTO UserBattlePassReward (userId, seasonId, rewardId, createdAt, updatedAt)
-      VALUES (${decoded.userId}, ${currentSeason.id}, ${rewardId}, ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
-    `;
+    // Use transaction to ensure data consistency
+    await db.$transaction(async (tx) => {
+      // Create claimed reward record
+      await tx.$executeRaw`
+        INSERT INTO UserBattlePassReward (userId, seasonId, rewardId, claimedAt)
+        VALUES (${decoded.userId}, ${currentSeason.id}, ${rewardId}, ${getCurrentTimeVNDB()})
+      `;
 
-    // TODO: Implement actual reward distribution logic here
-    // This could involve:
-    // - Adding items to user inventory
-    // - Adding currency to user balance
-    // - Unlocking special features
-    // - etc.
+      // Add stars to user and log to UserStarHistory
+      if (reward.rewardType === "stars" && reward.rewardValue) {
+        // Get current user stars
+        const userResult = await tx.$queryRaw<any[]>`
+          SELECT stars FROM User 
+          WHERE userId = ${decoded.userId} AND branch = ${decoded.branch || "GO_VAP"}
+          LIMIT 1
+        `;
+
+        const currentUser = userResult[0];
+        if (currentUser) {
+          const oldStars = currentUser.stars;
+          const newStars = oldStars + reward.rewardValue;
+
+          // Update user stars
+          await tx.$executeRaw`
+            UPDATE User 
+            SET stars = ${newStars}, updatedAt = ${getCurrentTimeVNDB()}
+            WHERE userId = ${decoded.userId} AND branch = ${decoded.branch || "GO_VAP"}
+          `;
+
+          // Log to UserStarHistory
+          await tx.$executeRaw`
+            INSERT INTO UserStarHistory (userId, oldStars, newStars, type, createdAt, branch)
+            VALUES (${decoded.userId}, ${oldStars}, ${newStars}, 'BATTLE_PASS', ${getCurrentTimeVNDB()}, ${decoded.branch || "GO_VAP"})
+          `;
+        }
+      }
+    });
 
     return NextResponse.json({
       success: true,
       message: "Reward claimed successfully",
       reward,
+      starsAdded: reward.rewardType === "stars" ? reward.rewardValue : 0,
     });
   } catch (error) {
     console.error("Error claiming reward:", error);

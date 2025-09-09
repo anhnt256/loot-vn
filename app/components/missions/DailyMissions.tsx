@@ -120,13 +120,10 @@ export function DailyMissions({ className }: DailyMissionsProps) {
       });
       if (!response.ok) throw new Error("Không thể tải nhiệm vụ");
       const data = await response.json();
-      console.log("Missions API response:", data);
       return data;
     },
     refetchInterval: false, // Manual refresh only
   });
-
-  console.log("Missions data:", missions);
 
   // Get current time period based on available missions
   const getCurrentTimePeriod = () => {

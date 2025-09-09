@@ -3,6 +3,7 @@ import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
 import { Prisma } from "@/prisma/generated/prisma-client";
 import {
   getCurrentTimeVNISO,
+  getCurrentTimeVNDB,
   getStartOfDayVNISO,
   getCurrentDateVNString,
 } from "@/lib/timezone-utils";
@@ -192,7 +193,7 @@ export async function POST(
     }
 
     // Create mission completion record within transaction
-    const currentTime = getCurrentTimeVNISO();
+    const currentTime = getCurrentTimeVNDB();
     console.log("[DEBUG] Creating completion record:", {
       userId,
       missionId,
@@ -203,8 +204,8 @@ export async function POST(
     });
 
     const completion = await db.$queryRaw<any[]>(Prisma.sql`
-      INSERT INTO UserMissionCompletion (userId, missionId, branch, completedAt, actualValue, createdAt)
-      VALUES (${userId}, ${missionId}, ${branch}, ${currentTime}, ${actualValue}, ${currentTime})
+      INSERT INTO UserMissionCompletion (userId, missionId, branch, completedAt, actualValue, createdAt, updatedAt)
+      VALUES (${userId}, ${missionId}, ${branch}, ${currentTime}, ${actualValue}, ${currentTime}, ${currentTime})
     `);
 
     // Add XP to user's battle pass progress

@@ -638,6 +638,7 @@ enum UserStarHistoryType {
   RETURN_GIFT
   GIFT_ROUND
   FEEDBACK
+  BATTLE_PASS
 }
 
 enum PromotionType {
