@@ -280,6 +280,11 @@ export async function GET() {
         note: userInfo?.note || "",
         totalPayment: userInfo?.totalPayment || 0,
         giftRound: userInfo?.giftRound || 0,
+        battlePass: userInfo?.battlePass || {
+          isUsed: false,
+          isPremium: false,
+          data: null,
+        },
         devices: devices
           .filter((device: any) => device && device.id)
           .map((device: any) => ({

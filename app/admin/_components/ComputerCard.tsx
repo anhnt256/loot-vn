@@ -160,36 +160,42 @@ const ComputerCard: React.FC<ComputerCardProps> = ({ computer, onClick }) => {
 
         {/* Battle Pass Info - Only show when machine is in use */}
         {isUseApp === true && !isEmpty(userName) && (
-          <div className="text-[8px] text-cyan-300 font-bold flex items-center gap-1">
-            <Crown className="w-2 h-2 text-yellow-400 flex-shrink-0" />
-            <span>Battle Pass:</span>
-            {battlePass?.isUsed ? (
-              <div className="w-2 h-2 rounded-full bg-green-500 flex items-center justify-center">
-                <svg
-                  className="w-1.5 h-1.5 text-white"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-            ) : (
-              <div className="w-2 h-2 rounded-full bg-red-500 flex items-center justify-center">
-                <svg
-                  className="w-1.5 h-1.5 text-white"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+          <div className="text-[8px] text-cyan-300 font-bold">
+            <div className="flex items-center gap-1 mb-1">
+              <Crown className="w-2 h-2 text-yellow-400 flex-shrink-0" />
+              <span>Battle Pass:</span>
+              {battlePass?.isUsed ? (
+                <span className={`text-[7px] font-bold px-1.5 py-0.5 rounded ${
+                  battlePass.isPremium 
+                    ? 'bg-orange-500 text-white' 
+                    : 'bg-gray-500 text-white'
+                }`}>
+                  {battlePass.isPremium ? 'Premium' : 'Free'}
+                </span>
+              ) : (
+                <div className="w-2 h-2 rounded-full bg-red-500 flex items-center justify-center">
+                  <svg
+                    className="w-1.5 h-1.5 text-white"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+              )}
+            </div>
+            {battlePass?.isUsed && battlePass.data && (
+              <div className="text-[7px] flex items-center gap-2">
+                <span className="text-blue-300 font-bold">
+                  Lv.{battlePass.data.level}
+                </span>
+                <span className="text-green-300 font-bold">
+                  EXP:{battlePass.data.exp}
+                </span>
               </div>
             )}
           </div>
