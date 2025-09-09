@@ -40,7 +40,7 @@ export async function GET(
       totalPromotion: reward.totalPromotion,
       startDate: null,
       endDate: null,
-      updateAt: null
+      updateAt: null,
     }));
 
     return NextResponse.json(transformedRewards);

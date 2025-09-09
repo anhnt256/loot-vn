@@ -86,16 +86,16 @@ export default function RewardExchangeCard({
               {/* Date and Status on the right */}
               <div className="flex items-center space-x-3">
                 <span className="text-sm text-gray-600">
-                  {dayjs
-                    .utc(reward.createdAt)
-                    .format("DD/MM/YYYY HH:mm")}
+                  {dayjs.utc(reward.createdAt).format("DD/MM/YYYY HH:mm")}
                 </span>
                 {getStatusBadge(reward.status)}
               </div>
             </div>
 
             {/* User stats grid - 3 cards in 1 row */}
-            <div className={`grid gap-4 ${reward.status === "REJECT" ? "grid-cols-2" : "grid-cols-3"}`}>
+            <div
+              className={`grid gap-4 ${reward.status === "REJECT" ? "grid-cols-2" : "grid-cols-3"}`}
+            >
               {/* Card 1: Phần thưởng */}
               <div className="bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg p-3">
                 <div className="text-center">
@@ -124,7 +124,10 @@ export default function RewardExchangeCard({
                       <div className="flex justify-between items-center">
                         <span className="text-xs text-gray-500">Hiện tại:</span>
                         <span className="text-sm font-bold text-green-700">
-                          {((reward.user?.stars || 0) + (reward.reward?.stars || 0)).toLocaleString()}
+                          {(
+                            (reward.user?.stars || 0) +
+                            (reward.reward?.stars || 0)
+                          ).toLocaleString()}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
@@ -141,7 +144,9 @@ export default function RewardExchangeCard({
               {/* Card 3: Số tiền Fnet */}
               <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-3">
                 <div className="text-center">
-                  <p className="text-xs text-gray-600 font-medium mb-2">Số tiền Fnet</p>
+                  <p className="text-xs text-gray-600 font-medium mb-2">
+                    Số tiền Fnet
+                  </p>
                   <div className="space-y-1">
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-gray-500">Hiện tại:</span>
@@ -152,7 +157,10 @@ export default function RewardExchangeCard({
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-gray-500">Sau đổi:</span>
                       <span className="text-sm font-bold text-red-600">
-                        {((reward.user?.fnetMoney || 0) + (reward.reward?.value || 0)).toLocaleString()}
+                        {(
+                          (reward.user?.fnetMoney || 0) +
+                          (reward.reward?.value || 0)
+                        ).toLocaleString()}
                       </span>
                     </div>
                   </div>
@@ -171,7 +179,7 @@ export default function RewardExchangeCard({
           </div>
         </div>
       </CardHeader>
-      
+
       {/* Action buttons - only show for INITIAL status */}
       {showActions && reward.status === "INITIAL" && (
         <CardContent className="pt-0">

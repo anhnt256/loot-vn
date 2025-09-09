@@ -107,18 +107,23 @@ const ComputerCard: React.FC<ComputerCardProps> = ({ computer, onClick }) => {
           COMBO
         </div>
       )}
-      
+
       <div className="absolute top-2 left-2">
         <div>{name}</div>
         {!isEmpty(userName) && isUseApp === true && (
-          <div className="text-[9px] truncate">
-            {userName.toUpperCase()}
-          </div>
+          <div className="text-[9px] truncate">{userName.toUpperCase()}</div>
         )}
-        {isEmpty(userName) && status === EnumComputerStatus.ON.id && (
-          <div className="text-[11px] truncate text-red-300 overflow-hidden display-webkit-box webkit-line-clamp-2 webkit-box-orient-vertical">
-            Chưa sử dụng
-          </div>
+        
+        {/* Show "Chưa sử dụng" when userName is null but machine is active (ON status) */}
+        {isEmpty(userName) && isUseApp === true && Number(status) === EnumComputerStatus.ON.id && (
+          <>
+            <div className="text-[11px] truncate text-red-300 overflow-hidden display-webkit-box webkit-line-clamp-2 webkit-box-orient-vertical">
+              Chưa sử dụng
+            </div>
+            <div className="text-[9px] truncate text-orange-300 font-bold">
+              {userId}
+            </div>
+          </>
         )}
 
         {/* Show "Không sử dụng" in red when isUseApp is false */}
@@ -145,15 +150,13 @@ const ComputerCard: React.FC<ComputerCardProps> = ({ computer, onClick }) => {
           </>
         )}
 
-        {!isEmpty(userName) &&
-          userId !== 0 &&
-          isUseApp === true && (
-            <div
-              className={`text-[9px] truncate font-bold ${stars > 100000 ? "text-red-400" : "text-yellow-300"}`}
-            >
-              {`⭐ ${Number(stars) ? Number(stars).toLocaleString() : "0"}`}
-            </div>
-          )}
+        {!isEmpty(userName) && userId !== 0 && isUseApp === true && (
+          <div
+            className={`text-[9px] truncate font-bold ${stars > 100000 ? "text-red-400" : "text-yellow-300"}`}
+          >
+            {`⭐ ${Number(stars) ? Number(stars).toLocaleString() : "0"}`}
+          </div>
+        )}
 
         {/* Battle Pass Info - Only show when machine is in use */}
         {isUseApp === true && !isEmpty(userName) && (
@@ -162,14 +165,30 @@ const ComputerCard: React.FC<ComputerCardProps> = ({ computer, onClick }) => {
             <span>Battle Pass:</span>
             {battlePass?.isUsed ? (
               <div className="w-2 h-2 rounded-full bg-green-500 flex items-center justify-center">
-                <svg className="w-1.5 h-1.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                <svg
+                  className="w-1.5 h-1.5 text-white"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
             ) : (
               <div className="w-2 h-2 rounded-full bg-red-500 flex items-center justify-center">
-                <svg className="w-1.5 h-1.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                <svg
+                  className="w-1.5 h-1.5 text-white"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
             )}
@@ -177,9 +196,8 @@ const ComputerCard: React.FC<ComputerCardProps> = ({ computer, onClick }) => {
         )}
       </div>
 
-      {/* Device Status Icons - Only show when machine is in use */}
-      {isUseApp === true && !isEmpty(userName) && (
-        <div className="absolute bottom-2 right-2 flex flex-col gap-1">
+      {/* Device Status Icons - Show for all machines */}
+      <div className="absolute bottom-2 right-2 flex flex-col gap-1">
           <FaDesktop
             className={getStatusColor(monitorStatus || "GOOD")}
             size={10}
@@ -204,8 +222,7 @@ const ComputerCard: React.FC<ComputerCardProps> = ({ computer, onClick }) => {
             className={getStatusColor(networkStatus || "GOOD")}
             size={10}
           />
-        </div>
-      )}
+      </div>
     </div>
   );
 };

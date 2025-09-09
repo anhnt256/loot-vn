@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { cookies } from "next/headers";
 
-const FIX_DATA_DATE = '2025-09-09 15:00:00';
+const FIX_DATA_DATE = "2025-09-09 15:00:00";
 
 export async function GET(request: Request) {
   try {

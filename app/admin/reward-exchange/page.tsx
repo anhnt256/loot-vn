@@ -269,14 +269,14 @@ const RewardExchangePage = () => {
   };
 
   const handleApprove = (id: number) => {
-    const reward = pendingRewards?.find(r => r.id === id);
+    const reward = pendingRewards?.find((r) => r.id === id);
     if (reward) {
       openActionDialog(reward, "APPROVE");
     }
   };
 
   const handleReject = (id: number) => {
-    const reward = pendingRewards?.find(r => r.id === id);
+    const reward = pendingRewards?.find((r) => r.id === id);
     if (reward) {
       openActionDialog(reward, "REJECT");
     }

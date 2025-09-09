@@ -837,22 +837,31 @@ const AdminDashboard = () => {
                             {currentComputer.battlePass?.isUsed ? (
                               <div className="flex items-center gap-2">
                                 <div className="flex items-center gap-1">
-                                  <Crown className={`w-4 h-4 ${currentComputer.battlePass.isPremium ? 'text-yellow-400' : 'text-gray-400'}`} />
-                                  <span className={`font-bold ${currentComputer.battlePass.isPremium ? 'text-yellow-400' : 'text-gray-400'}`}>
-                                    {currentComputer.battlePass.isPremium ? 'Premium' : 'Free'}
+                                  <Crown
+                                    className={`w-4 h-4 ${currentComputer.battlePass.isPremium ? "text-yellow-400" : "text-gray-400"}`}
+                                  />
+                                  <span
+                                    className={`font-bold ${currentComputer.battlePass.isPremium ? "text-yellow-400" : "text-gray-400"}`}
+                                  >
+                                    {currentComputer.battlePass.isPremium
+                                      ? "Premium"
+                                      : "Free"}
                                   </span>
                                 </div>
                                 {currentComputer.battlePass.data && (
                                   <div className="flex items-center gap-1">
                                     <Trophy className="w-4 h-4 text-blue-400" />
                                     <span className="text-blue-400 font-bold">
-                                      Lv.{currentComputer.battlePass.data.level} ({currentComputer.battlePass.data.exp} XP)
+                                      Lv.{currentComputer.battlePass.data.level}{" "}
+                                      ({currentComputer.battlePass.data.exp} XP)
                                     </span>
                                   </div>
                                 )}
                               </div>
                             ) : (
-                              <span className="text-gray-500 font-bold">Chưa tham gia</span>
+                              <span className="text-gray-500 font-bold">
+                                Chưa tham gia
+                              </span>
                             )}
                           </div>
                           <div className="text-gray-400">Quan tâm App:</div>

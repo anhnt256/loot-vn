@@ -97,9 +97,9 @@ export async function GET(request: Request) {
     const total = Number(totalResult[0].count);
 
     // Get Fnet money from FnetHistory for each reward exchange
-    const targetIds = allUserRewardMaps.map(r => r.id).filter(Boolean);
+    const targetIds = allUserRewardMaps.map((r) => r.id).filter(Boolean);
     let fnetHistoryRecords = [];
-    
+
     if (targetIds.length > 0) {
       fnetHistoryRecords = await db.$queryRawUnsafe<any[]>(`
         SELECT 
@@ -110,7 +110,7 @@ export async function GET(request: Request) {
           fh.type,
           fh.createdAt
         FROM FnetHistory fh
-        WHERE fh.targetId IN (${targetIds.join(',')})
+        WHERE fh.targetId IN (${targetIds.join(",")})
           AND fh.branch = '${branch}'
           AND fh.type = 'REWARD'
       `);
@@ -118,10 +118,10 @@ export async function GET(request: Request) {
 
     // Create a map for quick lookup - map by targetId (UserRewardMap.id)
     const fnetMoneyMap = new Map();
-    fnetHistoryRecords.forEach(record => {
+    fnetHistoryRecords.forEach((record) => {
       fnetMoneyMap.set(record.targetId, {
         oldMoney: record.oldMoney,
-        newMoney: record.newMoney
+        newMoney: record.newMoney,
       });
     });
 
@@ -145,7 +145,10 @@ export async function GET(request: Request) {
       user: {
         userId: userRewardMap.userUserId,
         userName: userRewardMap.userName,
-        stars: userRewardMap.userStarHistory_newStars || userRewardMap.userStars || 0,
+        stars:
+          userRewardMap.userStarHistory_newStars ||
+          userRewardMap.userStars ||
+          0,
         branch: userRewardMap.userBranch,
         fnetMoney: fnetMoneyMap.get(userRewardMap.id)?.oldMoney || 0,
       },

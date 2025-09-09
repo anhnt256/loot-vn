@@ -42,8 +42,8 @@ export async function GET(request: Request) {
       `;
     }
 
-    console.log('userFilter------', userFilter)
-    console.log('userJoin------', userJoin)
+    console.log("userFilter------", userFilter);
+    console.log("userJoin------", userJoin);
 
     const pendingRewards = await db.$queryRawUnsafe<any[]>(`
       SELECT 
@@ -76,20 +76,22 @@ export async function GET(request: Request) {
 
     // Get Fnet money for each user
     const fnetDB = await getFnetDB();
-    const userIds = [...new Set(pendingRewards.map(r => r.userUserId).filter(Boolean))];
-    
+    const userIds = [
+      ...new Set(pendingRewards.map((r) => r.userUserId).filter(Boolean)),
+    ];
+
     let fnetUsers = [];
     if (userIds.length > 0) {
       fnetUsers = await fnetDB.$queryRaw<any[]>`
         SELECT UserId, RemainMoney 
         FROM usertb 
-        WHERE UserId IN (${userIds.join(',')})
+        WHERE UserId IN (${userIds.join(",")})
       `;
     }
 
     // Create a map for quick lookup
     const fnetMoneyMap = new Map();
-    fnetUsers.forEach(user => {
+    fnetUsers.forEach((user) => {
       fnetMoneyMap.set(user.UserId, user.RemainMoney);
     });
 
@@ -99,7 +101,7 @@ export async function GET(request: Request) {
       const currentStars = reward.userStars;
       // Số sao sau đổi = số sao hiện tại - rewardValue (sẽ trừ thêm khi approve)
       const afterExchangeStars = currentStars - reward.rewardStars;
-      
+
       return {
         id: reward.id,
         promotionCodeId: reward.promotionCodeId,

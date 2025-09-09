@@ -33,6 +33,7 @@ export interface UserInfo {
   note: string;
   totalPayment: number;
   giftRound: number;
+  machineName: string; // Thêm field machineName
   device?: any; // Thêm field device
   battlePass: BattlePass; // Thêm field battlePass
 }
@@ -583,7 +584,7 @@ export async function calculateActiveUsersInfo(
           note: userData?.note || "",
           totalPayment: userTopUp,
           giftRound: totalGiftRounds,
-          machineName: machineName,
+          machineName: machineName || "",
           device: device || null,
           battlePass: battlePass,
         });
@@ -604,7 +605,7 @@ export async function calculateActiveUsersInfo(
         note: userData?.note || "",
         totalPayment: userTopUp,
         giftRound: totalGiftRounds,
-        machineName: machineName,
+        machineName: machineName || "",
         device: device || null,
         battlePass: battlePass,
       };
