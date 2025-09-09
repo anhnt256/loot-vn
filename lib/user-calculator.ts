@@ -8,6 +8,17 @@ import {
   getCurrentDayOfWeekVN,
 } from "@/lib/timezone-utils";
 
+export interface BattlePassData {
+  level: number;
+  exp: number;
+}
+
+export interface BattlePass {
+  isUsed: boolean;
+  isPremium: boolean;
+  data: BattlePassData | null;
+}
+
 export interface UserInfo {
   userId: number;
   userName?: string;
@@ -23,6 +34,7 @@ export interface UserInfo {
   totalPayment: number;
   giftRound: number;
   device?: any; // Thêm field device
+  battlePass: BattlePass; // Thêm field battlePass
 }
 
 export interface ActiveUser {
@@ -148,11 +160,12 @@ export async function calculateActiveUsersInfo(
       console.log("endOfWeekVN:", endOfWeekVN);
     }
 
-    // Tối ưu: Gộp tất cả queries thành 3 query chính thay vì 6
+    // Tối ưu: Gộp tất cả queries thành 4 query chính thay vì 6
     const [
       userSessionsAndTopUps, // Gộp sessions + top ups
       userDataAndClaims, // Gộp user data + claims + gift rounds
       userGameRounds, // Game rounds riêng vì cần time range khác
+      userBattlePassData, // UserBattlePass data
     ] = await Promise.all([
       // 1. Gộp user sessions và top ups trong 1 query FnetDB
       (async () => {
@@ -250,51 +263,69 @@ export async function calculateActiveUsersInfo(
         const result = await db.$queryRawUnsafe(queryString);
         return result;
       })(),
+
+      // 4. UserBattlePass data
+      (async () => {
+        const userIdsStr = finalListUsers.join(",");
+        const queryString = `
+        SELECT 
+          userId,
+          level,
+          experience,
+          isPremium
+        FROM UserBattlePass
+        WHERE userId IN (${userIdsStr})
+          AND branch = '${branch}'
+        `;
+
+        const result = await db.$queryRawUnsafe(queryString);
+        return result;
+      })(),
     ]);
 
-    // // Tối ưu: Gộp device query vào cùng với user data
-    // const machineNames = [
-    //   ...new Set(
-    //     (userSessionsAndTopUps as FnetSession[]).map((s) => s.MachineName),
-    //   ),
-    // ];
+    // Tối ưu: Gộp device query vào cùng với user data
+    const machineNames = [
+      ...new Set(
+        (userSessionsAndTopUps as FnetSession[]).map((s) => s.MachineName),
+      ),
+    ];
 
-    // const deviceDataMap = new Map();
-    // if (machineNames.length > 0) {
-    //   const machineNamesStr = machineNames.map((name) => `'${name}'`).join(",");
-    //   const deviceQueryString = `
-    //     SELECT
-    //       d.id,
-    //       d.computerId,
-    //       d.monitorStatus,
-    //       d.keyboardStatus,
-    //       d.mouseStatus,
-    //       d.headphoneStatus,
-    //       d.chairStatus,
-    //       d.networkStatus,
-    //       d.computerStatus,
-    //       d.note,
-    //       d.createdAt,
-    //       d.updatedAt,
-    //       c.name as machineName,
-    //       c.branch
-    //     FROM Device d
-    //     JOIN Computer c ON d.computerId = c.id
-    //     WHERE c.name IN (${machineNamesStr})
-    //       AND c.branch = '${branch}'
-    //   `;
+    const deviceDataMap = new Map();
+    if (machineNames.length > 0) {
+      const machineNamesStr = machineNames.map((name) => `'${name}'`).join(",");
+      const deviceQueryString = `
+        SELECT
+          d.id,
+          d.computerId,
+          d.monitorStatus,
+          d.keyboardStatus,
+          d.mouseStatus,
+          d.headphoneStatus,
+          d.chairStatus,
+          d.networkStatus,
+          d.computerStatus,
+          d.note,
+          d.createdAt,
+          d.updatedAt,
+          c.name as machineName,
+          c.branch
+        FROM Device d
+        JOIN Computer c ON d.computerId = c.id
+        WHERE c.name IN (${machineNamesStr})
+          AND c.branch = '${branch}'
+      `;
 
-    //   const deviceData = await db.$queryRawUnsafe(deviceQueryString);
-    //   (deviceData as any[]).forEach((device) => {
-    //     deviceDataMap.set(device.machineName, device);
-    //   });
+      const deviceData = await db.$queryRawUnsafe(deviceQueryString);
+      (deviceData as any[]).forEach((device) => {
+        deviceDataMap.set(device.machineName, device);
+      });
 
-    //   if (isDebug) {
-    //     console.log("=== DEBUG DEVICE DATA ===");
-    //     console.log("Machine names from sessions:", machineNames);
-    //     console.log("Device data found:", deviceData);
-    //   }
-    // }
+      if (isDebug) {
+        console.log("=== DEBUG DEVICE DATA ===");
+        console.log("Machine names from sessions:", machineNames);
+        console.log("Device data found:", deviceData);
+      }
+    }
 
     // Cache check-in items - chỉ query 1 lần
     const todayCheckInResult = await db.$queryRawUnsafe<CheckInItem[]>(`
@@ -360,6 +391,15 @@ export async function calculateActiveUsersInfo(
       // Convert BigInt to number for game rounds
       const gameRounds = convertBigIntToNumber(round.gameRounds);
       userGameRoundsMap.set(round.userId, gameRounds);
+    });
+
+    const userBattlePassMap = new Map();
+    (userBattlePassData as any[]).forEach((battlePass) => {
+      userBattlePassMap.set(battlePass.userId, {
+        level: convertBigIntToNumber(battlePass.level),
+        experience: convertBigIntToNumber(battlePass.experience),
+        isPremium: Boolean(battlePass.isPremium),
+      });
     });
 
     const activeUsers = Array.from(activeUsersMap.values());
@@ -503,10 +543,28 @@ export async function calculateActiveUsersInfo(
         console.log(">>>> DEBUG USER 244 >>>>", userData);
       }
 
-      // const device = machineName ? deviceDataMap.get(machineName) : null;
+      const device = machineName ? deviceDataMap.get(machineName) : null;
+
+      // Xử lý battlePass data
+      const battlePassData = userBattlePassMap.get(userId);
+      const battlePass: BattlePass = battlePassData
+        ? {
+            isUsed: true,
+            isPremium: battlePassData.isPremium,
+            data: {
+              level: battlePassData.level,
+              exp: battlePassData.experience,
+            },
+          }
+        : {
+            isUsed: false,
+            isPremium: false,
+            data: null,
+          };
 
       if (isDebug && debugUsers.includes(userId)) {
         console.log(`User ${userId} machineName:`, machineName);
+        console.log(`User ${userId} battlePass:`, battlePass);
         // console.log(`User ${userId} device lookup result:`, device);
         console.log(`User ${userId} final result:`, {
           userId,
@@ -526,11 +584,12 @@ export async function calculateActiveUsersInfo(
           totalPayment: userTopUp,
           giftRound: totalGiftRounds,
           machineName: machineName,
-          // device: device || null,
+          device: device || null,
+          battlePass: battlePass,
         });
       }
 
-      const result = {
+      const result: UserInfo = {
         userId,
         userName: userData?.userName,
         userType: userType?.toString(),
@@ -546,7 +605,8 @@ export async function calculateActiveUsersInfo(
         totalPayment: userTopUp,
         giftRound: totalGiftRounds,
         machineName: machineName,
-        // device: device || null,
+        device: device || null,
+        battlePass: battlePass,
       };
 
       results.push(result);

@@ -248,7 +248,7 @@ const handler = async (data: InputType): Promise<any> => {
       await tx.$executeRaw`
         UPDATE User 
         SET stars = ${newStars}, updatedAt = ${getCurrentTimeVNDB()}
-        WHERE userId = ${user.userId} AND branch = ${branch}
+        WHERE id = ${user.id} AND branch = ${branch}
       `;
       
       console.log(`Updated user stars from ${oldStars} to ${newStars}`);

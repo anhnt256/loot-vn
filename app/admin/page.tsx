@@ -30,6 +30,8 @@ import {
   FaInfoCircle,
   FaEye,
 } from "react-icons/fa";
+import { Crown, Trophy } from "lucide-react";
+import ComputerCard from "./_components/ComputerCard";
 import "./admin-tabs.css";
 
 interface DeviceHistory {
@@ -79,6 +81,14 @@ interface Computer {
   userType?: number;
   isUseApp?: boolean;
   note?: string;
+  battlePass?: {
+    isUsed: boolean;
+    isPremium: boolean;
+    data: {
+      level: number;
+      exp: number;
+    } | null;
+  };
 }
 
 interface DeviceStatusOption {
@@ -613,130 +623,16 @@ const AdminDashboard = () => {
           </div>
 
           <div className="flex flex-wrap justify-start items-center">
-            {computers.map((item, index) => {
-              const {
-                name,
-                status,
-                userName,
-                userId,
-                round,
-                totalCheckIn,
-                claimedCheckIn,
-                availableCheckIn,
-                stars,
-                devices,
-                userType,
-                isUseApp,
-              } = item || {};
-              const {
-                monitorStatus,
-                keyboardStatus,
-                mouseStatus,
-                headphoneStatus,
-                chairStatus,
-                networkStatus,
-              } = devices[0] || {};
-              let bgColor = "bg-gray-600";
-              if (userType === 5) {
-                bgColor = COMBO_BG_COLOR;
-              } else if (Number(status) === EnumComputerStatus.ON.id) {
-                bgColor = "bg-blue-600";
-              } else if (Number(status) === EnumComputerStatus.READY.id) {
-                bgColor = "bg-orange-600";
-              }
-              return (
-                <div
-                  key={index}
-                  className={`${bgColor} text-white font-bold h-32 w-32 m-2 relative cursor-pointer hover:opacity-90 transition-opacity duration-200 rounded-lg shadow-md`}
-                  onClick={() => {
-                    setCurrentComputer(item);
-                    setShowDetailDrawer(true);
-                  }}
-                >
-                  {userType === 5 && (
-                    <div className="absolute top-2 right-2 bg-white text-purple-700 text-xs font-bold px-2 py-1 rounded shadow">
-                      COMBO
-                    </div>
-                  )}
-                  <div className="absolute top-2 left-2">
-                    <div>{name}</div>
-                    {!isEmpty(userName) && isUseApp === true && (
-                      <div className="text-[9px] truncate">
-                        {userName.toUpperCase()}
-                      </div>
-                    )}
-                    {isEmpty(userName) &&
-                      status === EnumComputerStatus.ON.id && (
-                        <div className="text-[11px] truncate text-red-300 overflow-hidden display-webkit-box webkit-line-clamp-2 webkit-box-orient-vertical">
-                          Chưa sử dụng
-                        </div>
-                      )}
-
-                    {/* Show "Không sử dụng" in red when isUseApp is false */}
-                    {isUseApp === false && (
-                      <div className="text-[11px] truncate text-red-500 font-bold overflow-hidden display-webkit-box webkit-line-clamp-2 webkit-box-orient-vertical">
-                        Không sử dụng
-                      </div>
-                    )}
-
-                    {/* Hide UserId, Điểm danh, Lượt quay when isUseApp is false */}
-                    {isUseApp !== false && (
-                      <>
-                        <div className="text-[9px] truncate text-orange-300 font-bold">
-                          {userId}
-                        </div>
-
-                        <div className="text-[9px] truncate text-purple-300 font-bold">
-                          {`Điểm danh: ${availableCheckIn.toLocaleString()}`}
-                        </div>
-
-                        <div className="text-[9px] truncate text-blue-300 font-bold">
-                          {`Lượt quay: ${round.toLocaleString()}`}
-                        </div>
-                      </>
-                    )}
-
-                    {!isEmpty(userName) &&
-                      userId !== 0 &&
-                      isUseApp === true && (
-                        <div
-                          className={`text-[9px] truncate font-bold ${stars > 100000 ? "text-red-400" : "text-yellow-300"}`}
-                        >
-                          {`⭐ ${Number(stars) ? Number(stars).toLocaleString() : "0"}`}
-                        </div>
-                      )}
-                  </div>
-
-                  {/* Device Status Icons */}
-                  <div className="absolute bottom-2 right-2 flex flex-col gap-1">
-                    <FaDesktop
-                      className={getStatusColor(monitorStatus || "GOOD")}
-                      size={10}
-                    />
-                    <FaKeyboard
-                      className={getStatusColor(keyboardStatus || "GOOD")}
-                      size={10}
-                    />
-                    <FaMouse
-                      className={getStatusColor(mouseStatus || "GOOD")}
-                      size={10}
-                    />
-                    <FaHeadphones
-                      className={getStatusColor(headphoneStatus || "GOOD")}
-                      size={10}
-                    />
-                    <FaChair
-                      className={getStatusColor(chairStatus || "GOOD")}
-                      size={10}
-                    />
-                    <FaWifi
-                      className={getStatusColor(networkStatus || "GOOD")}
-                      size={10}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+            {computers.map((item, index) => (
+              <ComputerCard
+                key={index}
+                computer={item}
+                onClick={() => {
+                  setCurrentComputer(item);
+                  setShowDetailDrawer(true);
+                }}
+              />
+            ))}
           </div>
         </div>
       </div>
@@ -935,6 +831,29 @@ const AdminDashboard = () => {
                                     currentComputer.magicStone,
                                   ).toLocaleString()
                                 : "0"}
+                          </div>
+                          <div className="text-gray-400">Battle Pass:</div>
+                          <div className="flex items-center gap-2">
+                            {currentComputer.battlePass?.isUsed ? (
+                              <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1">
+                                  <Crown className={`w-4 h-4 ${currentComputer.battlePass.isPremium ? 'text-yellow-400' : 'text-gray-400'}`} />
+                                  <span className={`font-bold ${currentComputer.battlePass.isPremium ? 'text-yellow-400' : 'text-gray-400'}`}>
+                                    {currentComputer.battlePass.isPremium ? 'Premium' : 'Free'}
+                                  </span>
+                                </div>
+                                {currentComputer.battlePass.data && (
+                                  <div className="flex items-center gap-1">
+                                    <Trophy className="w-4 h-4 text-blue-400" />
+                                    <span className="text-blue-400 font-bold">
+                                      Lv.{currentComputer.battlePass.data.level} ({currentComputer.battlePass.data.exp} XP)
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-gray-500 font-bold">Chưa tham gia</span>
+                            )}
                           </div>
                           <div className="text-gray-400">Quan tâm App:</div>
                           <div className="flex items-center gap-2">
