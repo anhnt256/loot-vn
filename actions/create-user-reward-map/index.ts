@@ -157,7 +157,7 @@ const handler = async (data: InputType): Promise<any> => {
   // Kiểm tra xem user có đang có yêu cầu đổi thưởng đang chờ duyệt không
   const pendingRewardExchanges = await db.$queryRaw`
     SELECT * FROM UserRewardMap 
-    WHERE userId = ${user.id} AND branch = ${branch} AND status = 'INITIAL'
+    WHERE userId = ${user.userId} AND branch = ${branch} AND status = 'INITIAL'
     LIMIT 1
   `;
   const pendingRewardExchange = (pendingRewardExchanges as any[])[0];
@@ -248,7 +248,7 @@ const handler = async (data: InputType): Promise<any> => {
       await tx.$executeRaw`
         UPDATE User 
         SET stars = ${newStars}, updatedAt = ${getCurrentTimeVNDB()}
-        WHERE id = ${user.id}
+        WHERE userId = ${user.userId} AND branch = ${branch}
       `;
       
       console.log(`Updated user stars from ${oldStars} to ${newStars}`);
