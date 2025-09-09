@@ -11,46 +11,48 @@ jobs:
     environment: CI-CD
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    # Nếu cần build image trước (tuỳ project)
-    #- name: Build Docker image
-    #  run: docker build -t myapp:latest .
+      # Nếu cần build image trước (tuỳ project)
+      #- name: Build Docker image
+      #  run: docker build -t myapp:latest .
 
-    - name: Deploy via SSH
-      uses: appleboy/ssh-action@v0.1.10
-      with:
-        host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script: |
-          cd /var/www/gateway-app/loot-vn
-          git fetch --all
-          git reset --hard origin/main
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/gateway-app/loot-vn
+            git fetch --all
+            git reset --hard origin/main
 
-          # Tạo file .env từ GitHub Secrets
-          cat > .env << EOF
-          DATABASE_URL=${{ secrets.DATABASE_URL }}
-          FNET_GV_DATABASE_URL=${{ secrets.FNET_GV_DATABASE_URL }}
-          FNET_TP_DATABASE_URL=${{ secrets.FNET_TP_DATABASE_URL }}
-          GATEWAY_BONUS_DEADLINE=${{ secrets.GATEWAY_BONUS_DEADLINE }}
-          IS_DEBUG_GO_VAP=${{ secrets.IS_DEBUG_GO_VAP }}
-          IS_DEBUG_TAN_PHU=${{ secrets.IS_DEBUG_TAN_PHU }}
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          NEXT_PUBLIC_GATEWAY_BIRTHDAY_ENABLE=${{ secrets.NEXT_PUBLIC_GATEWAY_BIRTHDAY_ENABLE }}
-          NEXT_PUBLIC_IS_MAINTENANCE=${{ secrets.NEXT_PUBLIC_IS_MAINTENANCE }}
-          NEXT_PUBLIC_SPEND_PER_ROUND=${{ secrets.NEXT_PUBLIC_SPEND_PER_ROUND }}
-          NEXT_PUBLIC_STORE_DISABLED=${{ secrets.NEXT_PUBLIC_STORE_DISABLED }}
-          NEXT_PUBLIC_UP_RATE_AMOUNT=${{ secrets.NEXT_PUBLIC_UP_RATE_AMOUNT }}
-          USE_DEFAULT_USER_ID=${{ secrets.USE_DEFAULT_USER_ID }}
-          NODE_ENV=production
-          EOF
+            # Tạo file .env từ GitHub Secrets
+            cat > .env << EOF
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            FNET_GV_DATABASE_URL=${{ secrets.FNET_GV_DATABASE_URL }}
+            FNET_TP_DATABASE_URL=${{ secrets.FNET_TP_DATABASE_URL }}
+            GATEWAY_BONUS_DEADLINE=${{ secrets.GATEWAY_BONUS_DEADLINE }}
+            IS_DEBUG_GO_VAP=${{ secrets.IS_DEBUG_GO_VAP }}
+            IS_DEBUG_TAN_PHU=${{ secrets.IS_DEBUG_TAN_PHU }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            NEXT_PUBLIC_GATEWAY_BIRTHDAY_ENABLE=${{ secrets.NEXT_PUBLIC_GATEWAY_BIRTHDAY_ENABLE }}
+            NEXT_PUBLIC_IS_MAINTENANCE=${{ secrets.NEXT_PUBLIC_IS_MAINTENANCE }}
+            NEXT_PUBLIC_SPEND_PER_ROUND=${{ secrets.NEXT_PUBLIC_SPEND_PER_ROUND }}
+            NEXT_PUBLIC_STORE_DISABLED=${{ secrets.NEXT_PUBLIC_STORE_DISABLED }}
+            NEXT_PUBLIC_UP_RATE_AMOUNT=${{ secrets.NEXT_PUBLIC_UP_RATE_AMOUNT }}
+            NEXT_PUBLIC_GATEWAY_BATTLE_PASS_ENABLE =${{ secrets.NEXT_PUBLIC_GATEWAY_BATTLE_PASS_ENABLE  }}
+            NEXT_PUBLIC_GATEWAY_BATTLE_PASS_PREMIUM_ENABLE =${{ secrets.NEXT_PUBLIC_GATEWAY_BATTLE_PASS_PREMIUM_ENABLE  }}
+            USE_DEFAULT_USER_ID=${{ secrets.USE_DEFAULT_USER_ID }}
+            NODE_ENV=production
+            EOF
 
-          # Debug: in nội dung .env
-          echo "=== .env content on VPS ==="
-          cat .env
+            # Debug: in nội dung .env
+            echo "=== .env content on VPS ==="
+            cat .env
 
-          # Build + run docker compose
-          docker compose down
-          docker compose up -d --build
+            # Build + run docker compose
+            docker compose down
+            docker compose up -d --build
