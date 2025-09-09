@@ -239,8 +239,6 @@ export async function GET() {
       }
     }
 
-    console.log("usersInfo", usersInfo);
-
     // Tạo map để lookup nhanh user info
     const userInfoMap = new Map();
     usersInfo.forEach((userInfo) => {

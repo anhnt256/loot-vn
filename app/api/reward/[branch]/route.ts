@@ -7,27 +7,45 @@ export async function GET(
   { params }: { params: { branch: string } },
 ) {
   try {
+    // Lấy dữ liệu từ PromotionReward table
     const rewards: any = await db.$queryRaw<any[]>`
-      SELECT * FROM Reward
+      SELECT 
+        id,
+        name,
+        value,
+        starsValue as stars,
+        branch,
+        quantity,
+        isActive,
+        createdAt,
+        updatedAt,
+        quantity as totalPromotion
+      FROM PromotionReward 
+      WHERE branch = ${params.branch} 
+        AND isActive = true
+      ORDER BY value ASC
     `;
 
-    if (rewards.length > 0) {
-      await Promise.all(
-        rewards.map(async (reward: any, index: number) => {
-          const { value } = reward;
-          const countResult = await db.$queryRaw<any[]>`
-            SELECT COUNT(*) as count FROM PromotionCode 
-            WHERE value = ${value} 
-            AND isUsed = false 
-            AND branch = ${params.branch}
-          `;
-          rewards[index].totalPromotion = Number(countResult[0].count);
-        }),
-      );
-    }
+    // Transform data để match với cấu trúc cũ
+    const transformedRewards = rewards.map((reward: any) => ({
+      id: reward.id,
+      name: reward.name,
+      value: reward.value,
+      stars: reward.stars,
+      branch: reward.branch,
+      quantity: reward.quantity,
+      isActive: reward.isActive,
+      createdAt: reward.createdAt,
+      updatedAt: reward.updatedAt,
+      totalPromotion: reward.totalPromotion,
+      startDate: null,
+      endDate: null,
+      updateAt: null
+    }));
 
-    return NextResponse.json(rewards);
+    return NextResponse.json(transformedRewards);
   } catch (error) {
+    console.error("Error fetching promotion rewards:", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

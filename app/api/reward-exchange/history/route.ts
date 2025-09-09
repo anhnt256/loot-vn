@@ -35,7 +35,7 @@ export async function GET(request: Request) {
       dateFilter = `AND urm.createdAt >= '${date}T00:00:00.000Z' AND urm.createdAt < '${date}T23:59:59.999Z'`;
     }
 
-    let statusFilter = "";
+    let statusFilter = "AND urm.status != 'INITIAL'"; // Chỉ lấy records không phải chờ duyệt
     if (status && status !== "ALL") {
       statusFilter = `AND urm.status = '${status}'`;
     }
@@ -43,21 +43,30 @@ export async function GET(request: Request) {
     // Get UserRewardMap records with pagination
     const allUserRewardMaps = await db.$queryRawUnsafe<any[]>(`
       SELECT 
-        urm.*,
-        r.id as reward_id,
-        r.name as reward_name,
-        r.value as reward_value,
-        u.id as user_id,
-        u.userId as user_userId,
-        u.userName as user_userName,
-        u.stars as user_stars,
-        u.branch as user_branch,
+        urm.id,
+        urm.userId,
+        urm.rewardId,
+        urm.promotionCodeId,
+        urm.duration,
+        urm.isUsed,
+        urm.status,
+        urm.branch,
+        urm.createdAt,
+        urm.updatedAt,
+        urm.note,
+        pr.name as rewardName,
+        pr.value as rewardValue,
+        pr.starsValue as rewardStars,
+        u.userId as userUserId,
+        u.userName,
+        u.stars as userStars,
+        u.branch as userBranch,
         ush.id as userStarHistory_id,
         ush.oldStars as userStarHistory_oldStars,
         ush.newStars as userStarHistory_newStars,
         ush.createdAt as userStarHistory_createdAt
       FROM UserRewardMap urm
-      LEFT JOIN Reward r ON urm.rewardId = r.id
+      LEFT JOIN PromotionReward pr ON urm.promotionCodeId = pr.id
       LEFT JOIN User u ON urm.userId = u.id AND u.branch = '${branch}'
       LEFT JOIN (
         SELECT ush1.*
@@ -87,39 +96,59 @@ export async function GET(request: Request) {
 
     const total = Number(totalResult[0].count);
 
+    // Get Fnet money from FnetHistory for each reward exchange
+    const targetIds = allUserRewardMaps.map(r => r.id).filter(Boolean);
+    let fnetHistoryRecords = [];
+    
+    if (targetIds.length > 0) {
+      fnetHistoryRecords = await db.$queryRawUnsafe<any[]>(`
+        SELECT 
+          fh.userId,
+          fh.oldMoney,
+          fh.newMoney,
+          fh.targetId,
+          fh.type,
+          fh.createdAt
+        FROM FnetHistory fh
+        WHERE fh.targetId IN (${targetIds.join(',')})
+          AND fh.branch = '${branch}'
+          AND fh.type = 'REWARD'
+      `);
+    }
+
+    // Create a map for quick lookup - map by targetId (UserRewardMap.id)
+    const fnetMoneyMap = new Map();
+    fnetHistoryRecords.forEach(record => {
+      fnetMoneyMap.set(record.targetId, {
+        oldMoney: record.oldMoney,
+        newMoney: record.newMoney
+      });
+    });
+
     // Transform data to match expected format
     const historiesWithUser = allUserRewardMaps.map((userRewardMap) => ({
       id: userRewardMap.id,
-      userId: userRewardMap.userId,
-      rewardId: userRewardMap.rewardId,
+      promotionCodeId: userRewardMap.promotionCodeId,
+      duration: userRewardMap.duration,
+      isUsed: userRewardMap.isUsed,
       status: userRewardMap.status,
-      note: userRewardMap.note,
+      branch: userRewardMap.branch,
       createdAt: userRewardMap.createdAt,
       updatedAt: userRewardMap.updatedAt,
-      reward: userRewardMap.reward_id
-        ? {
-            id: userRewardMap.reward_id,
-            name: userRewardMap.reward_name,
-            value: userRewardMap.reward_value,
-          }
-        : null,
-      user: userRewardMap.user_id
-        ? {
-            id: userRewardMap.user_id,
-            userId: userRewardMap.user_userId,
-            userName: userRewardMap.user_userName,
-            stars: userRewardMap.user_stars,
-            branch: userRewardMap.user_branch,
-          }
-        : null,
-      userStarHistory: userRewardMap.userStarHistory_id
-        ? {
-            id: userRewardMap.userStarHistory_id,
-            oldStars: userRewardMap.userStarHistory_oldStars,
-            newStars: userRewardMap.userStarHistory_newStars,
-            createdAt: userRewardMap.userStarHistory_createdAt,
-          }
-        : null,
+      note: userRewardMap.note,
+      reward: {
+        id: userRewardMap.rewardId,
+        name: userRewardMap.rewardName,
+        value: userRewardMap.rewardValue,
+        stars: userRewardMap.rewardStars,
+      },
+      user: {
+        userId: userRewardMap.userUserId,
+        userName: userRewardMap.userName,
+        stars: userRewardMap.userStarHistory_newStars || userRewardMap.userStars || 0,
+        branch: userRewardMap.userBranch,
+        fnetMoney: fnetMoneyMap.get(userRewardMap.id)?.oldMoney || 0,
+      },
     }));
 
     console.log("histories", historiesWithUser);

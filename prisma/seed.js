@@ -3,9 +3,7 @@ const { PrismaClient } = require("./generated/prisma-client");
 const prisma = new PrismaClient();
 
 async function main() {
-  // Xóa toàn bộ BattlePassReward cũ cho seasonId = 1
-  await prisma.battlePassReward.deleteMany({ where: { seasonId: 1 } });
-  console.log("🧹 Đã xóa BattlePassReward cũ");
+  console.log("🌱 Bắt đầu seed dữ liệu...");
 
   // Bảng XP từng mốc cho 30 cấp
   const expPerLevel = [
@@ -153,99 +151,110 @@ async function main() {
     },
   ];
 
-  // Seed reward cho 30 cấp
-  let cumulativeExp = 0;
-  for (let i = 0; i < 30; i++) {
-    cumulativeExp += expPerLevel[i];
-    // Tìm reward free
-    const free = freeRewards.find((r) => r.level === i + 1);
-    if (free) {
-      await prisma.battlePassReward.create({
-        data: {
-          seasonId: 1,
-          level: free.level,
-          name: free.name,
-          description: `Free reward tại level ${free.level}`,
-          type: "free",
-          rewardType: free.rewardType,
-          rewardValue: free.rewardValue,
-          imageUrl: "/star.png",
-          experience: cumulativeExp,
-        },
-      });
-    }
-    // Tìm reward premium
-    const premium = premiumRewards.find((r) => r.level === i + 1);
-    if (premium) {
-      await prisma.battlePassReward.create({
-        data: {
-          seasonId: 1,
-          level: premium.level,
-          name: premium.name,
-          description: `Premium reward tại level ${premium.level}`,
-          type: "premium",
-          rewardType: premium.rewardType,
-          rewardValue: premium.rewardValue,
-          imageUrl:
-            premium.rewardType === "stars" ? "/star.png" : "/voucher.png",
-          experience: cumulativeExp,
-        },
-      });
-    }
-  }
-
-  // Seed bonus reward (level 31+)
-  for (const reward of bonusRewards) {
-    cumulativeExp += bonusExpPerLevel;
-    await prisma.battlePassReward.create({
-      data: {
-        seasonId: 1,
-        level: reward.level,
-        name: reward.name,
-        description: reward.description,
-        type: reward.type,
-        rewardType: reward.rewardType,
-        rewardValue: reward.rewardValue,
-        imageUrl: reward.imageUrl,
-        isBonus: reward.isBonus,
-        experience: cumulativeExp,
-      },
-    });
-  }
-
-  console.log(
-    "✅ Đã seed lại bảng BattlePassReward với experience chuẩn từng mốc!",
-  );
-
-  // Seed PromotionCode data
-  console.log("🌱 Seeding PromotionCode data...");
+  // Kiểm tra xem đã có BattlePassReward chưa
+  const existingRewards = await prisma.battlePassReward.count({ where: { seasonId: 1 } });
   
-  // Xóa dữ liệu cũ
-  await prisma.promotionCode.deleteMany();
-  console.log("🧹 Đã xóa PromotionCode cũ");
-
-  // Tạo dữ liệu PromotionCode cho các reward
-  const rewards = await prisma.reward.findMany();
-  
-  for (const reward of rewards) {
-    if (reward.value) {
-      // Tạo 10 promotion codes cho mỗi reward value
-      for (let i = 1; i <= 10; i++) {
-        await prisma.promotionCode.create({
+  if (existingRewards === 0) {
+    console.log("📝 Tạo BattlePassReward mới...");
+    
+    // Seed reward cho 30 cấp
+    let cumulativeExp = 0;
+    for (let i = 0; i < 30; i++) {
+      cumulativeExp += expPerLevel[i];
+      // Tìm reward free
+      const free = freeRewards.find((r) => r.level === i + 1);
+      if (free) {
+        await prisma.battlePassReward.create({
           data: {
-            name: `${reward.name || 'Reward'} - Code ${i}`,
-            code: `PROMO_${reward.value}_${i}`,
-            value: reward.value,
-            branch: "GO_VAP",
-            isUsed: false,
+            seasonId: 1,
+            level: free.level,
+            name: free.name,
+            description: `Free reward tại level ${free.level}`,
+            type: "free",
+            rewardType: free.rewardType,
+            rewardValue: free.rewardValue,
+            imageUrl: "/star.png",
+            experience: cumulativeExp,
           },
         });
       }
-      console.log(`✅ Đã tạo 10 promotion codes cho reward value ${reward.value}`);
+      // Tìm reward premium
+      const premium = premiumRewards.find((r) => r.level === i + 1);
+      if (premium) {
+        await prisma.battlePassReward.create({
+          data: {
+            seasonId: 1,
+            level: premium.level,
+            name: premium.name,
+            description: `Premium reward tại level ${premium.level}`,
+            type: "premium",
+            rewardType: premium.rewardType,
+            rewardValue: premium.rewardValue,
+            imageUrl:
+              premium.rewardType === "stars" ? "/star.png" : "/voucher.png",
+            experience: cumulativeExp,
+          },
+        });
+      }
     }
+
+    // Seed bonus reward (level 31+)
+    for (const reward of bonusRewards) {
+      cumulativeExp += bonusExpPerLevel;
+      await prisma.battlePassReward.create({
+        data: {
+          seasonId: 1,
+          level: reward.level,
+          name: reward.name,
+          description: reward.description,
+          type: reward.type,
+          rewardType: reward.rewardType,
+          rewardValue: reward.rewardValue,
+          imageUrl: reward.imageUrl,
+          isBonus: reward.isBonus,
+          experience: cumulativeExp,
+        },
+      });
+    }
+
+    console.log("✅ Đã tạo BattlePassReward mới!");
+  } else {
+    console.log(`⏭️ BattlePassReward đã tồn tại (${existingRewards} records), bỏ qua...`);
   }
 
-  console.log("✅ Đã seed xong PromotionCode data!");
+  // Seed PromotionCode data
+  console.log("🌱 Kiểm tra PromotionCode data...");
+  
+  const existingPromoCodes = await prisma.promotionCode.count();
+  
+  if (existingPromoCodes === 0) {
+    console.log("📝 Tạo PromotionCode mới...");
+    
+    // Tạo dữ liệu PromotionCode cho các reward
+    const rewards = await prisma.reward.findMany();
+    
+    for (const reward of rewards) {
+      if (reward.value) {
+        // Tạo 10 promotion codes cho mỗi reward value
+        for (let i = 1; i <= 10; i++) {
+          await prisma.promotionCode.create({
+            data: {
+              name: `${reward.name || 'Reward'} - Code ${i}`,
+              code: `PROMO_${reward.value}_${i}`,
+              value: reward.value,
+              branch: "GO_VAP",
+              isUsed: false,
+            },
+          });
+        }
+        console.log(`✅ Đã tạo 10 promotion codes cho reward value ${reward.value}`);
+      }
+    }
+
+    console.log("✅ Đã tạo PromotionCode mới!");
+  } else {
+    console.log(`⏭️ PromotionCode đã tồn tại (${existingPromoCodes} records), bỏ qua...`);
+  }
 }
 
 main()

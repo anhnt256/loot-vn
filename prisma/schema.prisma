@@ -709,12 +709,15 @@ model FnetHistory {
   branch       String
   oldMoney     Float
   newMoney     Float
-  userHistoryId Int?
+  targetId     Int?     // ID tham chiếu đến table reward (UserRewardMap.id)
+  type         String?  // Enum: REWARD, BATTLE_PASS, etc.
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   @@index([userId])
   @@index([branch])
+  @@index([targetId])
+  @@index([type])
   @@index([createdAt])
 }
 
@@ -723,4 +726,19 @@ enum FeedbackStatus {
   RECEIVED
   PROCESSING
   COMPLETED
+}
+
+model PromotionReward {
+  id          Int      @id @default(autoincrement())
+  name        String
+  value       Int
+  starsValue  Int
+  branch      String
+  quantity    Int
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([branch])
+  @@index([isActive])
 }

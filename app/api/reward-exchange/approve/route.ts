@@ -36,18 +36,22 @@ export async function POST(request: NextRequest) {
     // Get the reward map
     const rewardMap = await db.$queryRaw<any[]>`
       SELECT 
-        urm.*,
-        r.id as reward_id,
-        r.name as reward_name,
-        r.value as reward_value,
-        r.stars as reward_stars,
-        pc.id as promotionCode_id,
-        pc.code as promotionCode_code,
-        pc.name as promotionCode_name,
-        pc.value as promotionCode_value
+        urm.id,
+        urm.userId,
+        urm.rewardId,
+        urm.promotionCodeId,
+        urm.duration,
+        urm.isUsed,
+        urm.status,
+        urm.branch,
+        urm.createdAt,
+        urm.updatedAt,
+        urm.note,
+        pr.name as rewardName,
+        pr.value as rewardValue,
+        pr.starsValue as rewardStars
       FROM UserRewardMap urm
-      LEFT JOIN Reward r ON urm.rewardId = r.id
-      LEFT JOIN PromotionCode pc ON urm.promotionCodeId = pc.id
+      LEFT JOIN PromotionReward pr ON urm.promotionCodeId = pr.id
       WHERE urm.id = ${rewardMapId}
         AND urm.branch = ${branch}
         AND urm.status = 'INITIAL'
@@ -82,19 +86,12 @@ export async function POST(request: NextRequest) {
         UPDATE UserRewardMap 
         SET status = ${action === "APPROVE" ? "APPROVE" : "REJECT"},
             note = ${note || null},
-            updatedAt = NOW()
+            updatedAt = ${getCurrentTimeVNDB()}
         WHERE id = ${rewardMapId}
       `;
 
       if (action === "APPROVE") {
-        // Mark promotion code as used
-        if (rewardMap[0].promotionCodeId) {
-          await tx.$executeRaw`
-            UPDATE PromotionCode 
-            SET isUsed = true, updatedAt = NOW()
-            WHERE id = ${rewardMap[0].promotionCodeId}
-          `;
-        }
+        // Không cần update PromotionReward vì đã giảm quantity khi tạo request
 
         // Mark reward map as used
         await tx.$executeRaw`
@@ -108,16 +105,16 @@ export async function POST(request: NextRequest) {
           VALUES (
             ${user[0].userId},
             'REWARD',
-            ${user[0].stars + (rewardMap[0].reward_stars || 0)},
+            ${user[0].stars + (rewardMap[0].rewardStars || 0)},
             ${user[0].stars},
             ${rewardMapId},
-            NOW(),
+            ${getCurrentTimeVNDB()},
             ${branch}
           )
         `;
 
         // Update money in fnet database
-        if (rewardMap[0].reward_value && user[0].userId) {
+        if (rewardMap[0].rewardValue && user[0].userId) {
           const fnetDB = await getFnetDB();
 
           // Kiểm tra user có bao nhiêu tài khoản
@@ -177,16 +174,16 @@ export async function POST(request: NextRequest) {
 
             const oldMoney = fnetUser[0].RemainMoney;
             const newMoney =
-              Number(oldMoney) + Number(rewardMap[0].reward_value);
+              Number(oldMoney) + Number(rewardMap[0].rewardValue);
 
             console.log(
-              `Processing reward for user ${user[0].userId}: ${oldMoney} + ${rewardMap[0].reward_value} = ${newMoney}`,
+              `Processing reward for user ${user[0].userId}: ${oldMoney} + ${rewardMap[0].rewardValue} = ${newMoney}`,
             );
 
             // Lưu lịch sử thay đổi số dư TRƯỚC khi update (trong transaction chính)
             await tx.$executeRaw`
-              INSERT INTO FnetHistory (userId, branch, oldMoney, newMoney, createdAt, updatedAt)
-              VALUES (${user[0].userId}, ${branch}, ${oldMoney}, ${newMoney}, ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
+              INSERT INTO FnetHistory (userId, branch, oldMoney, newMoney, targetId, type, createdAt, updatedAt)
+              VALUES (${user[0].userId}, ${branch}, ${oldMoney}, ${newMoney}, ${rewardMapId}, 'REWARD', ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
             `;
 
             console.log(
@@ -229,32 +226,32 @@ export async function POST(request: NextRequest) {
         }
       } else if (action === "REJECT") {
         // Hoàn trả số sao cho user khi từ chối
-        if (rewardMap[0].reward_stars) {
+        if (rewardMap[0].rewardStars) {
           await tx.$executeRaw`
             UPDATE User 
-            SET stars = ${Number(user[0].stars) + Number(rewardMap[0].reward_stars)},
-                updatedAt = NOW()
+            SET stars = ${Number(user[0].stars) + Number(rewardMap[0].rewardStars)},
+                updatedAt = ${getCurrentTimeVNDB()}
             WHERE id = ${user[0].id}
           `;
         }
       }
     });
 
-    // Gọi user-calculator để cập nhật thông tin user sau khi xử lý
-    try {
-      if (user[0].userId) {
-        await calculateActiveUsersInfo([user[0].userId], branch);
-        console.log(
-          `User calculator called for userId: ${user[0].userId} after ${action.toLowerCase()}ing reward exchange`,
-        );
-      }
-    } catch (calculatorError) {
-      console.error(
-        "Error calling user-calculator after reward exchange approval:",
-        calculatorError,
-      );
-      // Không fail request nếu user-calculator lỗi, chỉ log lỗi
-    }
+    // // Gọi user-calculator để cập nhật thông tin user sau khi xử lý
+    // try {
+    //   if (user[0].userId) {
+    //     await calculateActiveUsersInfo([user[0].userId], branch);
+    //     console.log(
+    //       `User calculator called for userId: ${user[0].userId} after ${action.toLowerCase()}ing reward exchange`,
+    //     );
+    //   }
+    // } catch (calculatorError) {
+    //   console.error(
+    //     "Error calling user-calculator after reward exchange approval:",
+    //     calculatorError,
+    //   );
+    //   // Không fail request nếu user-calculator lỗi, chỉ log lỗi
+    // }
 
     return NextResponse.json({
       success: true,

@@ -14,10 +14,10 @@ const handler = async (data: InputType): Promise<any> => {
     userId,
     rewardId,
     duration = 7,
-    isUsed = true,
+    isUsed: isUsedParam = true,
     value,
-    oldStars,
-    newStars,
+    oldStars: oldStarsParam,
+    newStars: newStarsParam,
     branch,
     createdAt,
   } = data;
@@ -38,8 +38,8 @@ const handler = async (data: InputType): Promise<any> => {
   }
 
   // Validate other required fields
-  if (typeof newStars !== 'number' || typeof oldStars !== 'number') {
-    console.error("Invalid stars values:", { newStars, oldStars });
+  if (typeof newStarsParam !== 'number' || typeof oldStarsParam !== 'number') {
+    console.error("Invalid stars values:", { newStars: newStarsParam, oldStars: oldStarsParam });
     return {
       error: "Invalid stars values",
     };
@@ -52,8 +52,8 @@ const handler = async (data: InputType): Promise<any> => {
     };
   }
 
-  if (typeof isUsed !== 'boolean') {
-    console.error("Invalid isUsed:", isUsed);
+  if (typeof isUsedParam !== 'boolean') {
+    console.error("Invalid isUsed:", isUsedParam);
     return {
       error: "Invalid isUsed value",
     };
@@ -150,12 +150,9 @@ const handler = async (data: InputType): Promise<any> => {
     };
   }
 
-  // Kiểm tra số sao thực tế từ database
-  if (user.stars < value) {
-    return {
-      error: `User chỉ có ${user.stars.toLocaleString()} sao, không đủ để đổi thưởng này (cần ${value.toLocaleString()} sao).`,
-    };
-  }
+  // Tính toán stars cần thiết và mới (sẽ được cập nhật sau khi tìm promotionReward)
+  let oldStars = user.stars;
+  let newStars = user.stars;
 
   // Kiểm tra xem user có đang có yêu cầu đổi thưởng đang chờ duyệt không
   const pendingRewardExchanges = await db.$queryRaw`
@@ -171,80 +168,96 @@ const handler = async (data: InputType): Promise<any> => {
     };
   }
 
-  // Tìm reward trước để lấy name
-  const rewards = await db.$queryRaw`
-    SELECT * FROM Reward WHERE id = ${rewardId}
+  // Tìm promotion reward từ PromotionReward table
+  const promotionRewards = await db.$queryRaw`
+    SELECT * FROM PromotionReward 
+    WHERE id = ${rewardId} AND branch = ${branch} AND isActive = true
+    LIMIT 1
   `;
-  const reward = (rewards as any[])[0];
+  const promotionReward = (promotionRewards as any[])[0];
 
-  if (!reward) {
+  if (!promotionReward) {
     return {
-      error: "Reward không tồn tại.",
+      error: "Promotion reward không tồn tại hoặc đã bị vô hiệu hóa.",
     };
   }
 
-  // Tìm promotionCode hợp lệ - tìm theo name của reward và branch
-  const promotions = await db.$queryRaw`
-    SELECT * FROM PromotionCode 
-    WHERE name = ${reward.name} AND branch = ${branch} AND isUsed = false
-    LIMIT 1
-  `;
-  const promotion = (promotions as any[])[0];
+  // Kiểm tra số lượng còn lại
+  if (promotionReward.quantity <= 0) {
+    return {
+      error: "Thẻ cào này đã hết hàng.",
+    };
+  }
 
-  console.log("promotion found:", promotion);
+  // Kiểm tra số sao cần thiết
+  if (user.stars < promotionReward.starsValue) {
+    return {
+      error: `User chỉ có ${user.stars.toLocaleString()} sao, không đủ để đổi thưởng này (cần ${promotionReward.starsValue.toLocaleString()} sao).`,
+    };
+  }
 
-  if (promotion) {
-    try {
-      await db.$transaction(async (tx) => {
-        const { id } = promotion;
-        console.log("Updating promotionCode with id:", id);
-        
-        // Update promotionCode: set isUsed = true
-        await tx.$executeRaw`
-          UPDATE PromotionCode 
-          SET isUsed = true, updatedAt = ${getCurrentTimeVNDB()}
-          WHERE id = ${id}
-        `;
-        
-        console.log("Creating userRewardMap...");
-        // Insert vào userRewardMap với internal id của user để relation đúng
+  // Cập nhật stars sau khi trừ đi
+  newStars = oldStars - promotionReward.starsValue;
+
+  try {
+    await db.$transaction(async (tx) => {
+      // Giảm số lượng promotion reward
+      await tx.$executeRaw`
+        UPDATE PromotionReward 
+        SET quantity = quantity - 1, updatedAt = ${getCurrentTimeVNDB()}
+        WHERE id = ${rewardId}
+      `;
+      
+      console.log("Creating userRewardMap...");
+        // Insert vào userRewardMap với promotionCodeId (sử dụng rewardId làm promotionCodeId)
         await tx.$executeRaw`
           INSERT INTO UserRewardMap (userId, rewardId, promotionCodeId, duration, isUsed, branch, createdAt, updatedAt)
-          VALUES (${user.id}, ${rewardId}, ${id}, ${duration}, ${isUsed}, ${branch}, ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
+          VALUES (${user.id}, ${rewardId}, ${rewardId}, ${duration}, ${isUsedParam}, ${branch}, ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
         `;
-        
-        // Get the inserted record ID
-        const userRewardMapResults = await tx.$queryRaw`SELECT LAST_INSERT_ID() as id`;
-        const userRewardMapId = (userRewardMapResults as any[])[0]?.id;
-        
-        // Get the full userRewardMap record
-        const userRewardMapRecords = await tx.$queryRaw`
-          SELECT * FROM UserRewardMap WHERE id = ${userRewardMapId}
-        `;
-        createUserRewardMap = (userRewardMapRecords as any[])[0];
-        
-        console.log("userRewardMap created:", createUserRewardMap);
-        
-        // Update số sao trong table User
-        await tx.$executeRaw`
-          UPDATE User 
-          SET stars = ${newStars}, updatedAt = ${getCurrentTimeVNDB()}
-          WHERE id = ${user.id}
-        `;
-        
-        console.log(`Updated user stars from ${oldStars} to ${newStars}`);
-      });
-    } catch (error) {
-      console.log("=== ERROR in createUserRewardMap ===");
-      console.log("error", error);
-      return {
-        error: "Failed to create.",
-      };
-    }
-  } else {
-    console.log("No valid promotion code found");
+      
+      // Get the inserted record ID
+      const userRewardMapResults = await tx.$queryRaw`SELECT LAST_INSERT_ID() as id`;
+      const userRewardMapId = (userRewardMapResults as any[])[0]?.id;
+      
+      // Get the full userRewardMap record
+      const userRewardMapRecords = await tx.$queryRaw`
+        SELECT * FROM UserRewardMap WHERE id = ${userRewardMapId}
+      `;
+      createUserRewardMap = (userRewardMapRecords as any[])[0];
+      
+      console.log("userRewardMap created:", createUserRewardMap);
+      
+      // Lấy số dư Fnet hiện tại từ database Fnet
+      const fnetDB = await getFnetDB();
+      const fnetUser = await fnetDB.$queryRaw<any[]>`
+        SELECT RemainMoney FROM usertb 
+        WHERE UserId = ${user.userId}
+        LIMIT 1
+      `;
+      
+      const currentFnetMoney = fnetUser.length > 0 ? fnetUser[0].RemainMoney : 0;
+      const newFnetMoney = currentFnetMoney + promotionReward.value;
+      
+      // Lưu FnetHistory khi tạo request (newMoney = oldMoney + reward.value)
+      await tx.$executeRaw`
+        INSERT INTO FnetHistory (userId, branch, oldMoney, newMoney, targetId, type, createdAt, updatedAt)
+        VALUES (${user.userId}, ${branch}, ${currentFnetMoney}, ${newFnetMoney}, ${userRewardMapId}, 'REWARD', ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
+      `;
+      
+      // Update số sao trong table User
+      await tx.$executeRaw`
+        UPDATE User 
+        SET stars = ${newStars}, updatedAt = ${getCurrentTimeVNDB()}
+        WHERE id = ${user.id}
+      `;
+      
+      console.log(`Updated user stars from ${oldStars} to ${newStars}`);
+    });
+  } catch (error) {
+    console.log("=== ERROR in createUserRewardMap ===");
+    console.log("error", error);
     return {
-      error: "Promotion code không hợp lệ hoặc đã sử dụng.",
+      error: "Failed to create.",
     };
   }
 

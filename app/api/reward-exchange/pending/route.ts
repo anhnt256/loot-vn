@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db, getFnetDB } from "@/lib/db";
 import { cookies } from "next/headers";
 
 export async function GET(request: Request) {
@@ -44,23 +44,26 @@ export async function GET(request: Request) {
 
     const pendingRewards = await db.$queryRawUnsafe<any[]>(`
       SELECT 
-        urm.*,
-        r.id as reward_id,
-        r.name as reward_name,
-        r.value as reward_value,
-        r.stars as reward_stars,
-        pc.id as promotionCode_id,
-        pc.code as promotionCode_code,
-        pc.name as promotionCode_name,
-        pc.value as promotionCode_value,
-        u.id as user_id,
-        u.userId as user_userId,
-        u.userName as user_userName,
-        u.stars as user_stars,
-        u.branch as user_branch
+        urm.id,
+        urm.userId,
+        urm.rewardId,
+        urm.promotionCodeId,
+        urm.duration,
+        urm.isUsed,
+        urm.status,
+        urm.branch,
+        urm.createdAt,
+        urm.updatedAt,
+        urm.note,
+        pr.name as rewardName,
+        pr.value as rewardValue,
+        pr.starsValue as rewardStars,
+        u.userId as userUserId,
+        u.userName,
+        u.stars as userStars,
+        u.branch as userBranch
       FROM UserRewardMap urm
-      LEFT JOIN Reward r ON urm.rewardId = r.id
-      LEFT JOIN PromotionCode pc ON urm.promotionCodeId = pc.id
+      LEFT JOIN PromotionReward pr ON urm.promotionCodeId = pr.id
       ${userJoin}
       WHERE urm.status = 'INITIAL'
         AND urm.branch = '${branch}'
@@ -68,35 +71,58 @@ export async function GET(request: Request) {
       ORDER BY urm.createdAt DESC
     `);
 
-    // Transform data to match expected format
-    const rewardsWithUser = pendingRewards.map((reward) => ({
-      ...reward,
-      reward: reward.reward_id
-        ? {
-            id: reward.reward_id,
-            name: reward.reward_name,
-            value: reward.reward_value,
-            stars: reward.reward_stars,
-          }
-        : null,
-      promotionCode: reward.promotionCode_id
-        ? {
-            id: reward.promotionCode_id,
-            code: reward.promotionCode_code,
-            name: reward.promotionCode_name,
-            value: reward.promotionCode_value,
-          }
-        : null,
-      user: reward.user_id
-        ? {
-            id: reward.user_id,
-            userId: reward.user_userId,
-            userName: reward.user_userName,
-            stars: reward.user_stars,
-            branch: reward.user_branch,
-          }
-        : null,
-    }));
+    // Get Fnet money for each user
+    const fnetDB = await getFnetDB();
+    const userIds = [...new Set(pendingRewards.map(r => r.userUserId).filter(Boolean))];
+    
+    let fnetUsers = [];
+    if (userIds.length > 0) {
+      fnetUsers = await fnetDB.$queryRaw<any[]>`
+        SELECT UserId, RemainMoney 
+        FROM usertb 
+        WHERE UserId IN (${userIds.join(',')})
+      `;
+    }
+
+    // Create a map for quick lookup
+    const fnetMoneyMap = new Map();
+    fnetUsers.forEach(user => {
+      fnetMoneyMap.set(user.UserId, user.RemainMoney);
+    });
+
+    // Transform data to simplified format
+    const rewardsWithUser = pendingRewards.map((reward) => {
+      // Số sao hiện tại = số sao trong DB (đã trừ rồi khi tạo request)
+      const currentStars = reward.userStars;
+      // Số sao sau đổi = số sao hiện tại - rewardValue (sẽ trừ thêm khi approve)
+      const afterExchangeStars = currentStars - reward.rewardStars;
+      
+      return {
+        id: reward.id,
+        promotionCodeId: reward.promotionCodeId,
+        duration: reward.duration,
+        isUsed: reward.isUsed,
+        status: reward.status,
+        branch: reward.branch,
+        createdAt: reward.createdAt,
+        updatedAt: reward.updatedAt,
+        note: reward.note,
+        reward: {
+          id: reward.rewardId,
+          name: reward.rewardName,
+          value: reward.rewardValue,
+          stars: reward.rewardStars,
+        },
+        user: {
+          userId: reward.userUserId,
+          userName: reward.userName,
+          stars: currentStars, // Hiển thị số sao hiện tại (đã cộng thêm rewardValue)
+          afterExchangeStars: afterExchangeStars, // Thêm số sao sau đổi
+          branch: reward.userBranch,
+          fnetMoney: fnetMoneyMap.get(reward.userUserId) || 0,
+        },
+      };
+    });
 
     return NextResponse.json(rewardsWithUser);
   } catch (error) {
