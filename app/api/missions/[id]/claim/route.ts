@@ -48,30 +48,30 @@ export async function POST(
       return NextResponse.json({ error: "Mission not found" }, { status: 404 });
     }
 
-    // Check if mission is currently active
-    const now = dayjs().tz("Asia/Ho_Chi_Minh");
-    const currentHour = now.hour();
-    const { startHours, endHours } = mission;
+    // // Check if mission is currently active
+    // const now = dayjs().tz("Asia/Ho_Chi_Minh");
+    // const currentHour = now.hour();
+    // const { startHours, endHours } = mission;
 
-    const isMissionActive = () => {
-      // All day missions are always active
-      if (startHours === 0 && endHours === 23) return true;
+    // const isMissionActive = () => {
+    //   // All day missions are always active
+    //   if (startHours === 0 && endHours === 23) return true;
 
-      // Handle overnight missions (e.g., 22-6)
-      if (startHours > endHours) {
-        return currentHour >= startHours || currentHour <= endHours;
-      }
+    //   // Handle overnight missions (e.g., 22-6)
+    //   if (startHours > endHours) {
+    //     return currentHour >= startHours || currentHour <= endHours;
+    //   }
 
-      // Normal time range
-      return currentHour >= startHours && currentHour <= endHours;
-    };
+    //   // Normal time range
+    //   return currentHour >= startHours && currentHour <= endHours;
+    // };
 
-    if (!isMissionActive()) {
-      return NextResponse.json(
-        { error: "Mission is not active at this time" },
-        { status: 400 },
-      );
-    }
+    // if (!isMissionActive()) {
+    //   return NextResponse.json(
+    //     { error: "Mission is not active at this time" },
+    //     { status: 400 },
+    //   );
+    // }
 
     // Check if user already completed this mission today
     const today = getStartOfDayVNISO();
