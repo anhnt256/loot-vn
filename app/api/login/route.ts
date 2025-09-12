@@ -23,7 +23,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
     const { userName, machineName, isAdmin } = JSON.parse(body);
 
-    // Xử lý đăng nhập admin
+    // Xử lý đăng nhập admin/staff
     if (isAdmin) {
       if (userName !== "gateway_admin") {
         return NextResponse.json(
@@ -36,11 +36,41 @@ export async function POST(req: Request, res: Response): Promise<any> {
         );
       }
 
+      // Check loginType to determine if this is admin or staff
+      const loginTypeFromCookie = cookieStore.get("loginType")?.value;
+      const loginType = loginTypeFromCookie || 'username';
+      
+      console.log('Admin login - loginType from cookie:', loginTypeFromCookie);
+      console.log('Admin login - branch from cookie:', branchFromCookie);
+      console.log('Admin login - final loginType:', loginType);
+      let userId, role;
+      
+      if (loginType === 'username') {
+        // Admin login
+        userId = -99;
+        role = "admin";
+      } else if (loginType === 'mac') {
+        // Staff login - determine userId based on branch
+        if (branchFromCookie === 'GO_VAP') {
+          userId = -98; // Staff GO_VAP
+        } else if (branchFromCookie === 'TAN_PHU') {
+          userId = -97; // Staff TAN_PHU
+        } else {
+          userId = -99; // Default to admin if branch not recognized
+        }
+        role = "staff";
+      } else {
+        userId = -99; // Default to admin
+        role = "admin";
+      }
+
       const adminData = {
-        userId: "admin",
-        id: "admin",
+        userId: userId,
+        id: userId,
         userName: "gateway_admin",
-        role: "admin",
+        role: role,
+        loginType: loginType,
+        branch: branchFromCookie,
       };
 
       const token = await signJWT(adminData);
@@ -55,6 +85,17 @@ export async function POST(req: Request, res: Response): Promise<any> {
         value: token,
         maxAge: 86400,
         httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        path: "/",
+      });
+
+      // Set loginType cookie
+      response.cookies.set({
+        name: "loginType",
+        value: loginType,
+        maxAge: 86400,
+        httpOnly: false,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
         path: "/",

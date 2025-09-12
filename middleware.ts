@@ -5,7 +5,6 @@ import { verifyJWT } from "@/lib/jwt";
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
-  console.log("Middleware - Request path:", request.nextUrl.pathname);
 
   // Check if store is disabled
   const STORE_DISABLED = process.env.NEXT_PUBLIC_STORE_DISABLED === "true";
@@ -34,7 +33,6 @@ export async function middleware(request: NextRequest) {
 
   // Block store API routes when store is disabled
   if (STORE_DISABLED && storeApiRoutes.some(route => request.nextUrl.pathname.startsWith(route))) {
-    console.log("Middleware - Store API blocked due to maintenance");
     return NextResponse.json(
       { 
         error: "Service temporarily unavailable", 
@@ -46,7 +44,6 @@ export async function middleware(request: NextRequest) {
 
   // Block battle pass API routes when battle pass is disabled
   if (BATTLE_PASS_DISABLED && battlePassApiRoutes.some(route => request.nextUrl.pathname.startsWith(route))) {
-    console.log("Middleware - Battle Pass API blocked due to feature disabled");
     return NextResponse.json(
       { 
         error: "Service temporarily unavailable", 
@@ -72,17 +69,12 @@ export async function middleware(request: NextRequest) {
   ];
 
   if (publicPaths.includes(request.nextUrl.pathname)) {
-    console.log("Middleware - Public path, allowing access");
     return response;
   }
 
   // Verify token cho tất cả API routes
   if (request.nextUrl.pathname.startsWith("/api/")) {
     const token = request.cookies.get("token")?.value;
-    console.log(
-      "Middleware - API route, token:",
-      token ? "exists" : "not found",
-    );
 
     if (!token) {
       return NextResponse.json(
@@ -92,7 +84,6 @@ export async function middleware(request: NextRequest) {
     }
 
     const payload = await verifyJWT(token);
-    console.log("Middleware - API route, payload:", payload);
 
     if (!payload) {
       return NextResponse.json(
@@ -114,11 +105,9 @@ export async function middleware(request: NextRequest) {
 
   // Lấy token từ cookie
   const token = request.cookies.get("token")?.value;
-  console.log("Middleware - Token:", token ? "exists" : "not found");
 
   // Kiểm tra nếu route bắt đầu bằng /admin
   if (request.nextUrl.pathname.startsWith("/admin")) {
-    console.log("Middleware - Admin route detected");
 
     // Skip authentication check for admin login page
     if (request.nextUrl.pathname === "/admin-login") {
@@ -137,22 +126,18 @@ export async function middleware(request: NextRequest) {
 
     // Nếu không có token, chuyển hướng về trang login
     if (!token) {
-      console.log("Middleware - No token, redirecting to login");
       return NextResponse.redirect(new URL("/admin-login", request.url));
     }
 
     try {
       const payload = await verifyJWT(token);
-      console.log("Middleware - Admin route, payload:", payload);
 
       if (!payload) {
-        console.log("Middleware - Invalid token, redirecting to login");
         return NextResponse.redirect(new URL("/", request.url));
       }
 
-      // Kiểm tra quyền admin
-      if (payload.role !== "admin") {
-        console.log("Middleware - Not admin role, redirecting to login");
+      // Kiểm tra quyền admin/staff
+      if (payload.role !== "admin" && payload.role !== "staff") {
         return NextResponse.redirect(new URL("/", request.url));
       }
 
@@ -170,14 +155,11 @@ export async function middleware(request: NextRequest) {
       
       // Nếu là trang chỉ dành cho admin và user không phải admin (loginType !== "username")
       if (adminOnlyPages.includes(currentPath) && loginType !== "username") {
-        console.log("Middleware - Unauthorized access to admin-only page:", currentPath);
         return NextResponse.redirect(new URL("/admin", request.url));
       }
 
-      console.log("Middleware - Admin access granted");
       return NextResponse.next();
     } catch (error) {
-      console.error("Middleware - Token verification error:", error);
       // Nếu token không hợp lệ, chuyển hướng về trang login
       return NextResponse.redirect(new URL("/", request.url));
     }
@@ -185,13 +167,11 @@ export async function middleware(request: NextRequest) {
 
   // Block access to store page when store is disabled
   if (STORE_DISABLED && request.nextUrl.pathname === "/store") {
-    console.log("Middleware - Store page blocked due to maintenance");
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   // Block access to battle pass page when battle pass is disabled
   if (BATTLE_PASS_DISABLED && request.nextUrl.pathname === "/battle-pass") {
-    console.log("Middleware - Battle Pass page blocked due to feature disabled");
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

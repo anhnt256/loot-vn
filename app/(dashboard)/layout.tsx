@@ -11,6 +11,7 @@ import dayjs from "@/lib/dayjs";
 import { CURRENT_USER } from "@/constants/token.constant";
 import { useLocalStorageValue } from "@/hooks/useLocalStorageValue";
 import Feedback from "@/components/Feedback";
+import { ChatPanel } from "@/components/chat/ChatPanel";
 
 // Hook auto logout sau 1 giờ không hoạt động
 function useAutoLogout(onLogout: () => void, timeout = 60 * 60 * 1000) {
@@ -205,7 +206,8 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="flex h-screen bg-gray-200">
-      <div className="bg-gray-800 text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out">
+      {/* Left Sidebar */}
+      <div className="bg-gray-800 text-white w-64 space-y-6 py-7 px-2 flex-shrink-0">
         <nav>
           <div className="flex justify-end mb-4">
             <div className="flex gap-2">
@@ -323,7 +325,8 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
         </nav>
       </div>
 
-      <div className="flex-1 overflow-hidden">
+      {/* Main Content Area - Scaled down to make room for chat */}
+      <div className="flex-1 overflow-hidden" style={{ width: 'calc(100% - 320px)' }}>
         {IS_MAINTENANCE ? (
           <div className="flex items-center justify-center h-full p-10 text-2xl font-bold bg-gray-400">
             <h1>
@@ -339,8 +342,19 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
             </h1>
           </div>
         ) : (
-          children
+          <div className="h-full overflow-auto">
+            {children}
+          </div>
         )}
+      </div>
+
+      {/* Fixed Chat Panel - Always visible on the right */}
+      <div className="w-80 bg-white border-l border-gray-200 shadow-lg flex-shrink-0">
+        <ChatPanel
+          isOpen={true}
+          onClose={() => {}} // Disable close for always-visible mode
+          className="h-full"
+        />
       </div>
 
       {/* Feedback Component - hiển thị xuyên suốt layout */}

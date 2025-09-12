@@ -902,10 +902,10 @@ const Feedback = () => {
   return (
     <>
       {/* Multi-purpose Button with Dropdown */}
-      <div className="fixed bottom-20 right-8 z-50 dropdown-container">
+      <div className="fixed bottom-6 left-6 z-50 dropdown-container">
         {/* Dropdown Menu */}
         {showDropdown && (
-          <div className="absolute bottom-16 right-0 mb-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
+          <div className="absolute bottom-16 left-0 mb-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
             <div className="py-1">
               <button
                 onClick={() => {
