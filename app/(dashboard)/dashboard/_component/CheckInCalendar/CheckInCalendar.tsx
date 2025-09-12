@@ -26,12 +26,18 @@ const CheckInCalendar = () => {
       const date = dayjs(new Date(year, month - 1, day)).format("YYYY-MM-DD");
 
       const currentResult = userCheckIn?.filter((item: UserStarHistory) => {
-        return dayjs(item.createdAt).tz("Asia/Ho_Chi_Minh").format("YYYY-MM-DD") === date;
+        return (
+          dayjs(item.createdAt).tz("Asia/Ho_Chi_Minh").format("YYYY-MM-DD") ===
+          date
+        );
       });
 
       if (isEmpty(currentResult)) {
         const isExpire = dayjs(date).isBefore(dayjs().tz("Asia/Ho_Chi_Minh"));
-        const isToday = dayjs(date).isSame(dayjs().tz("Asia/Ho_Chi_Minh"), "day");
+        const isToday = dayjs(date).isSame(
+          dayjs().tz("Asia/Ho_Chi_Minh"),
+          "day",
+        );
 
         const currentDate: CheckInDay = {
           date: dayjs(date).date().toString(),

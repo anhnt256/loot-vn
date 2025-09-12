@@ -326,7 +326,10 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
       </div>
 
       {/* Main Content Area - Scaled down to make room for chat */}
-      <div className="flex-1 overflow-hidden" style={{ width: 'calc(100% - 320px)' }}>
+      <div
+        className="flex-1 overflow-hidden"
+        style={{ width: "calc(100% - 320px)" }}
+      >
         {IS_MAINTENANCE ? (
           <div className="flex items-center justify-center h-full p-10 text-2xl font-bold bg-gray-400">
             <h1>
@@ -342,9 +345,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
             </h1>
           </div>
         ) : (
-          <div className="h-full overflow-auto">
-            {children}
-          </div>
+          <div className="h-full overflow-auto">{children}</div>
         )}
       </div>
 

@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { ChatWindow } from '@/components/chat/ChatWindow';
-import { useLocalStorageValue } from '@/hooks/useLocalStorageValue';
-import { X, MessageCircle } from 'lucide-react';
-import { useAdminChat } from './AdminChatProvider';
-import Cookies from 'js-cookie';
+import React, { useState, useEffect } from "react";
+import { ChatWindow } from "@/components/chat/ChatWindow";
+import { useLocalStorageValue } from "@/hooks/useLocalStorageValue";
+import { X, MessageCircle } from "lucide-react";
+import { useAdminChat } from "./AdminChatProvider";
+import Cookies from "js-cookie";
 
-const CURRENT_USER = 'currentUser';
+const CURRENT_USER = "currentUser";
 
 interface AdminChatDrawerProps {
   isOpen: boolean;
@@ -18,14 +18,15 @@ export function AdminChatDrawer({ isOpen, onClose }: AdminChatDrawerProps) {
   const [isMinimized, setIsMinimized] = useState(false);
   const userData = useLocalStorageValue(CURRENT_USER, null);
   const { isChatEnabled } = useAdminChat();
-  const loginType = Cookies.get('loginType');
-  
+  const loginType = Cookies.get("loginType");
+
   // Try to get userId from different sources
-  const userId = (userData as any)?.userId || 
-                 (userData as any)?.id || 
-                 Cookies.get('userId') ||
-                 Cookies.get('id') ||
-                 -99; // Admin uses -99 as userId
+  const userId =
+    (userData as any)?.userId ||
+    (userData as any)?.id ||
+    Cookies.get("userId") ||
+    Cookies.get("id") ||
+    -99; // Admin uses -99 as userId
 
   // Test: Always render if isOpen, ignore other conditions temporarily
   if (!isOpen) {
@@ -53,15 +54,15 @@ export function AdminChatDrawer({ isOpen, onClose }: AdminChatDrawerProps) {
   }
 
   return (
-    <div
-      className="fixed top-6 right-6 z-40 w-80 h-[calc(100vh-3rem)] bg-gray-900 border border-gray-700 shadow-xl rounded-lg flex flex-col"
-    >
+    <div className="fixed top-6 right-6 z-40 w-80 h-[calc(100vh-3rem)] bg-gray-900 border border-gray-700 shadow-xl rounded-lg flex flex-col">
       {/* Header */}
       <div className="bg-gray-800 border-b border-gray-700 p-3 rounded-t-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <MessageCircle className="w-4 h-4 text-blue-400" />
-            <h3 className="text-sm font-semibold text-white">Admin Chat - All Machines</h3>
+            <h3 className="text-sm font-semibold text-white">
+              Admin Chat - All Machines
+            </h3>
           </div>
           <div className="flex items-center space-x-1">
             <button
@@ -86,9 +87,11 @@ export function AdminChatDrawer({ isOpen, onClose }: AdminChatDrawerProps) {
           <ChatWindow
             machineName="ALL" // Chat với tất cả máy
             branch={(userData as any)?.branch}
-            staffId={(userData as any)?.userType === 'staff' ? userId : undefined}
+            staffId={
+              (userData as any)?.userType === "staff" ? userId : undefined
+            }
             currentUserId={userId}
-            currentMachineName={loginType === 'username' ? 'ADMIN' : 'STAFF'}
+            currentMachineName={loginType === "username" ? "ADMIN" : "STAFF"}
             currentBranch={(userData as any)?.branch}
             currentLoginType={loginType}
             isAdminChat={true} // Đây là admin chat view

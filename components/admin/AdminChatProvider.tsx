@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState } from "react";
 
 interface AdminChatContextType {
   isChatEnabled: boolean;
@@ -9,7 +9,9 @@ interface AdminChatContextType {
   setDrawerOpen: (open: boolean) => void;
 }
 
-const AdminChatContext = createContext<AdminChatContextType | undefined>(undefined);
+const AdminChatContext = createContext<AdminChatContextType | undefined>(
+  undefined,
+);
 
 export function AdminChatProvider({ children }: { children: React.ReactNode }) {
   const [isChatEnabled, setIsChatEnabled] = useState(true);
@@ -29,12 +31,12 @@ export function AdminChatProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AdminChatContext.Provider 
-      value={{ 
-        isChatEnabled, 
-        toggleChat, 
-        isDrawerOpen, 
-        setDrawerOpen 
+    <AdminChatContext.Provider
+      value={{
+        isChatEnabled,
+        toggleChat,
+        isDrawerOpen,
+        setDrawerOpen,
       }}
     >
       {children}
@@ -45,7 +47,7 @@ export function AdminChatProvider({ children }: { children: React.ReactNode }) {
 export function useAdminChat() {
   const context = useContext(AdminChatContext);
   if (context === undefined) {
-    throw new Error('useAdminChat must be used within an AdminChatProvider');
+    throw new Error("useAdminChat must be used within an AdminChatProvider");
   }
   return context;
 }

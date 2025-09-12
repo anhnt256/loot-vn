@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from 'react';
-import { Menu, MessageCircle } from 'lucide-react';
-import { AdminChatDrawer } from './AdminChatDrawer';
-import { useAdminChat } from './AdminChatProvider';
+import React, { useState } from "react";
+import { Menu, MessageCircle } from "lucide-react";
+import { AdminChatDrawer } from "./AdminChatDrawer";
+import { useAdminChat } from "./AdminChatProvider";
 
 export function AdminChatButton() {
   const [showChatIcon, setShowChatIcon] = useState(false);
@@ -41,9 +41,9 @@ export function AdminChatButton() {
       </div>
 
       {/* Chat Drawer */}
-      <AdminChatDrawer 
-        isOpen={isDrawerOpen} 
-        onClose={() => setDrawerOpen(false)} 
+      <AdminChatDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setDrawerOpen(false)}
       />
     </>
   );

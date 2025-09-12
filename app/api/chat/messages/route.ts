@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
           message: "Invalid pagination parameters",
           data: { errors: paginationValidation.errors },
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -42,15 +42,15 @@ export async function GET(req: NextRequest) {
             message: "Invalid machine name",
             data: { errors: machineValidation.errors },
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
 
     // Check rate limit
-    const rateLimitKey = `messages:${branchFromCookie || 'all'}`;
+    const rateLimitKey = `messages:${branchFromCookie || "all"}`;
     const rateLimit = await apiRateLimit.checkLimit(rateLimitKey);
-    
+
     if (!rateLimit.allowed) {
       return NextResponse.json(
         {
@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
             resetTime: rateLimit.resetTime,
           },
         },
-        { status: 429 }
+        { status: 429 },
       );
     }
 
@@ -95,7 +95,7 @@ export async function GET(req: NextRequest) {
           },
         },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Error fetching messages:", error);
@@ -105,7 +105,7 @@ export async function GET(req: NextRequest) {
         message: "Internal server error",
         data: null,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

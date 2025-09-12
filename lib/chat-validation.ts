@@ -11,11 +11,14 @@ export interface ValidationResult {
  * Sanitize message content
  */
 export function sanitizeMessage(content: string): string {
-  return content
-    .trim()
-    .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
-    .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-    .substring(0, 1000); // Limit to 1000 characters
+  return (
+    content
+      .trim()
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\x00-\x1F\x7F]/g, "") // Remove control characters
+      .replace(/\s+/g, " ") // Replace multiple spaces with single space
+      .substring(0, 1000)
+  ); // Limit to 1000 characters
 }
 
 /**
@@ -25,15 +28,15 @@ export function validateMessage(content: string): ValidationResult {
   const errors: string[] = [];
 
   if (!content || content.trim().length === 0) {
-    errors.push('Message content cannot be empty');
+    errors.push("Message content cannot be empty");
   }
 
   if (content.length > 1000) {
-    errors.push('Message content too long (max 1000 characters)');
+    errors.push("Message content too long (max 1000 characters)");
   }
 
   if (content.length < 1) {
-    errors.push('Message content too short (min 1 character)');
+    errors.push("Message content too short (min 1 character)");
   }
 
   // Check for spam patterns
@@ -41,12 +44,12 @@ export function validateMessage(content: string): ValidationResult {
     /(.)\1{10,}/g, // Repeated characters (more than 10)
     /https?:\/\/[^\s]+/g, // URLs
     /[A-Z]{10,}/g, // All caps (more than 10)
-    /[!@#$%^&*()_+=\[\]{}|;':",./<>?]{5,}/g, // Special characters spam
+    /[!@#$%^&*()_+=[\]{}|;':",./<>?]{5,}/g, // Special characters spam
   ];
 
   for (const pattern of spamPatterns) {
     if (pattern.test(content)) {
-      errors.push('Message contains spam patterns');
+      errors.push("Message contains spam patterns");
       break;
     }
   }
@@ -63,7 +66,7 @@ export function validateMessage(content: string): ValidationResult {
 
   for (const pattern of harmfulPatterns) {
     if (pattern.test(content)) {
-      errors.push('Message contains potentially harmful content');
+      errors.push("Message contains potentially harmful content");
       break;
     }
   }
@@ -81,17 +84,17 @@ export function validateMachineName(machineName: string): ValidationResult {
   const errors: string[] = [];
 
   if (!machineName || machineName.trim().length === 0) {
-    errors.push('Machine name is required');
+    errors.push("Machine name is required");
   }
 
   if (machineName.length > 255) {
-    errors.push('Machine name too long (max 255 characters)');
+    errors.push("Machine name too long (max 255 characters)");
   }
 
   // Check for valid machine name pattern
-  const validPattern = /^[a-zA-Z0-9\-_\.]+$/;
+  const validPattern = /^[a-zA-Z0-9\-_.]+$/;
   if (!validPattern.test(machineName)) {
-    errors.push('Machine name contains invalid characters');
+    errors.push("Machine name contains invalid characters");
   }
 
   return {
@@ -112,15 +115,16 @@ export function validateUserId(userId: any): ValidationResult {
 
   const numUserId = parseInt(userId.toString(), 10);
   if (isNaN(numUserId)) {
-    errors.push('Invalid user ID format');
+    errors.push("Invalid user ID format");
   }
 
   if (numUserId < 1) {
-    errors.push('User ID must be positive');
+    errors.push("User ID must be positive");
   }
 
-  if (numUserId > 2147483647) { // Max int32
-    errors.push('User ID too large');
+  if (numUserId > 2147483647) {
+    // Max int32
+    errors.push("User ID too large");
   }
 
   return {
@@ -141,15 +145,16 @@ export function validateStaffId(staffId: any): ValidationResult {
 
   const numStaffId = parseInt(staffId.toString(), 10);
   if (isNaN(numStaffId)) {
-    errors.push('Invalid staff ID format');
+    errors.push("Invalid staff ID format");
   }
 
   if (numStaffId < 1) {
-    errors.push('Staff ID must be positive');
+    errors.push("Staff ID must be positive");
   }
 
-  if (numStaffId > 2147483647) { // Max int32
-    errors.push('Staff ID too large');
+  if (numStaffId > 2147483647) {
+    // Max int32
+    errors.push("Staff ID too large");
   }
 
   return {
@@ -164,19 +169,19 @@ export function validateStaffId(staffId: any): ValidationResult {
 export function validatePagination(page: any, limit: any): ValidationResult {
   const errors: string[] = [];
 
-  const numPage = parseInt(page?.toString() || '1', 10);
-  const numLimit = parseInt(limit?.toString() || '50', 10);
+  const numPage = parseInt(page?.toString() || "1", 10);
+  const numLimit = parseInt(limit?.toString() || "50", 10);
 
   if (isNaN(numPage) || numPage < 1) {
-    errors.push('Page must be a positive integer');
+    errors.push("Page must be a positive integer");
   }
 
   if (isNaN(numLimit) || numLimit < 1) {
-    errors.push('Limit must be a positive integer');
+    errors.push("Limit must be a positive integer");
   }
 
   if (numLimit > 100) {
-    errors.push('Limit cannot exceed 100');
+    errors.push("Limit cannot exceed 100");
   }
 
   return {

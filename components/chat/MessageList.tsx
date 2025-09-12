@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from 'react';
-import { format } from 'date-fns';
-import { vi } from 'date-fns/locale';
-import { ChatMessage } from '@/hooks/useChat';
-import { filterProfanity } from '@/lib/profanity-filter';
+import React, { useEffect, useRef, useState } from "react";
+import { format } from "date-fns";
+import { vi } from "date-fns/locale";
+import { ChatMessage } from "@/hooks/useChat";
+import { filterProfanity } from "@/lib/profanity-filter";
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -19,17 +19,17 @@ interface MessageListProps {
   isAdminChat?: boolean; // true if this is admin chat view, false if user chat view
 }
 
-export function MessageList({ 
-  messages, 
-  isLoading, 
-  hasMore, 
-  onLoadMore, 
+export function MessageList({
+  messages,
+  isLoading,
+  hasMore,
+  onLoadMore,
   messagesEndRef,
   currentUserId,
   currentMachineName,
   currentBranch,
   currentLoginType,
-  isAdminChat = false
+  isAdminChat = false,
 }: MessageListProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const [showLoadMore, setShowLoadMore] = useState(false);
@@ -45,17 +45,17 @@ export function MessageList({
   useEffect(() => {
     const list = listRef.current;
     if (list) {
-      list.addEventListener('scroll', handleScroll);
-      return () => list.removeEventListener('scroll', handleScroll);
+      list.addEventListener("scroll", handleScroll);
+      return () => list.removeEventListener("scroll", handleScroll);
     }
   }, [hasMore]);
 
   const formatTime = (dateString: string) => {
     try {
       const date = new Date(dateString);
-      return format(date, 'HH:mm', { locale: vi });
+      return format(date, "HH:mm", { locale: vi });
     } catch {
-      return '--:--';
+      return "--:--";
     }
   };
 
@@ -64,81 +64,81 @@ export function MessageList({
       const date = new Date(dateString);
       const now = new Date();
       const isToday = date.toDateString() === now.toDateString();
-      
+
       if (isToday) {
-        return 'Hôm nay';
+        return "Hôm nay";
       }
-      
+
       const yesterday = new Date(now);
       yesterday.setDate(yesterday.getDate() - 1);
       const isYesterday = date.toDateString() === yesterday.toDateString();
-      
+
       if (isYesterday) {
-        return 'Hôm qua';
+        return "Hôm qua";
       }
-      
-      return format(date, 'dd/MM/yyyy', { locale: vi });
+
+      return format(date, "dd/MM/yyyy", { locale: vi });
     } catch {
-      return '';
+      return "";
     }
   };
 
   const getMessageSender = (message: ChatMessage) => {
     if (message.staffId) {
-      return `Staff (${message.userName || 'Unknown'})`;
+      return `Staff (${message.userName || "Unknown"})`;
     }
     // For user messages, show Machine(Branch) instead of userName for security
     if (message.userId) {
       // Check if this is admin message (userId: -99)
       if (message.userId === -99) {
-        return 'ADMIN';
+        return "ADMIN";
       }
       // Check if this is staff message (userId: -98, -97)
       if (message.userId === -98) {
-        return 'STAFF(GO_VAP)';
+        return "STAFF(GO_VAP)";
       }
       if (message.userId === -97) {
-        return 'STAFF(TAN_PHU)';
+        return "STAFF(TAN_PHU)";
       }
       // Check if this is current user's message
       if (currentUserId && message.userId === currentUserId) {
-        if (currentLoginType === 'username') {
-          return 'ADMIN'; // Admin không có branch
-        } else if (currentLoginType === 'mac') {
+        if (currentLoginType === "username") {
+          return "ADMIN"; // Admin không có branch
+        } else if (currentLoginType === "mac") {
           return `STAFF(${currentBranch})`; // Staff có branch
         }
       }
       return `${message.machineName}(${message.branch})`;
     }
-    return 'User';
+    return "User";
   };
 
   const getMessageType = (message: ChatMessage) => {
     if (message.staffId) {
-      return 'staff';
+      return "staff";
     }
     if (message.userId) {
       // Check if this is the current user's message first
       if (currentUserId && message.userId === currentUserId) {
         // Check login type to determine message type
-        if (currentLoginType === 'username') {
-          return 'admin'; // Admin messages
-        } else if (currentLoginType === 'mac') {
-          return 'staff'; // Staff messages
+        if (currentLoginType === "username") {
+          return "admin"; // Admin messages
+        } else if (currentLoginType === "mac") {
+          return "staff"; // Staff messages
         }
-        return 'current-user';
+        return "current-user";
       }
       // Check if this is admin message (userId: -99)
       if (message.userId === -99) {
-        return 'admin';
+        return "admin";
       }
       // Check if this is staff message (userId: -98, -97)
       if (message.userId === -98 || message.userId === -97) {
-        return 'staff';
+        return "staff";
       }
-      return 'user';
+      return "user";
     }
-    return 'system';
+    return "system";
   };
 
   return (
@@ -151,21 +151,23 @@ export function MessageList({
             disabled={isLoading}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
           >
-            {isLoading ? 'Đang tải...' : 'Tải thêm tin nhắn'}
+            {isLoading ? "Đang tải..." : "Tải thêm tin nhắn"}
           </button>
         </div>
       )}
 
       {/* Messages list */}
-      <div 
+      <div
         ref={listRef}
         className="flex-1 overflow-y-auto p-1 space-y-1 bg-gray-900"
       >
         {messages.map((message, index) => {
           const messageType = getMessageType(message);
           const sender = getMessageSender(message);
-          const showDate = index === 0 || 
-            formatDate(messages[index - 1].createdAt) !== formatDate(message.createdAt);
+          const showDate =
+            index === 0 ||
+            formatDate(messages[index - 1].createdAt) !==
+              formatDate(message.createdAt);
 
           return (
             <div key={message.id}>
@@ -177,36 +179,52 @@ export function MessageList({
               )}
 
               {/* Message */}
-              <div className={`flex ${
-                // Only show messages on right if they are from the current user
-                // This applies to all contexts: admin, staff, or user chat
-                (currentUserId && message.userId === currentUserId)
-                  ? 'justify-end' 
-                  : 'justify-start'
-              }`}>
-                <div className={`max-w-xs lg:max-w-md px-2 py-1 rounded-lg ${
-                  messageType === 'staff' 
-                    ? 'bg-orange-600 text-white' 
-                    : messageType === 'current-user'
-                    ? 'bg-green-600 text-white'
-                    : messageType === 'admin'
-                    ? 'bg-purple-600 text-white'
-                    : messageType === 'user'
-                    ? 'bg-gray-700 text-gray-100'
-                    : 'bg-yellow-600 text-yellow-100'
-                }`}>
-                  <div className="text-xs font-medium mb-0" style={{ fontSize: '10px' }}>
+              <div
+                className={`flex ${
+                  // Only show messages on right if they are from the current user
+                  // This applies to all contexts: admin, staff, or user chat
+                  currentUserId && message.userId === currentUserId
+                    ? "justify-end"
+                    : "justify-start"
+                }`}
+              >
+                <div
+                  className={`max-w-xs lg:max-w-md px-2 py-1 rounded-lg ${
+                    messageType === "staff"
+                      ? "bg-orange-600 text-white"
+                      : messageType === "current-user"
+                        ? "bg-green-600 text-white"
+                        : messageType === "admin"
+                          ? "bg-purple-600 text-white"
+                          : messageType === "user"
+                            ? "bg-gray-700 text-gray-100"
+                            : "bg-yellow-600 text-yellow-100"
+                  }`}
+                >
+                  <div
+                    className="text-xs font-medium mb-0"
+                    style={{ fontSize: "10px" }}
+                  >
                     {sender}
                   </div>
-                  <div className="text-xs whitespace-pre-wrap" style={{ fontSize: '10px' }}>
+                  <div
+                    className="text-xs whitespace-pre-wrap"
+                    style={{ fontSize: "10px" }}
+                  >
                     {filterProfanity(message.content)}
                   </div>
-                  <div className={`text-xs mt-0 ${
-                    messageType === 'staff' ? 'text-orange-200' 
-                    : messageType === 'current-user' ? 'text-green-200'
-                    : messageType === 'admin' ? 'text-purple-200'
-                    : 'text-gray-400'
-                  }`} style={{ fontSize: '9px' }}>
+                  <div
+                    className={`text-xs mt-0 ${
+                      messageType === "staff"
+                        ? "text-orange-200"
+                        : messageType === "current-user"
+                          ? "text-green-200"
+                          : messageType === "admin"
+                            ? "text-purple-200"
+                            : "text-gray-400"
+                    }`}
+                    style={{ fontSize: "9px" }}
+                  >
                     {formatTime(message.createdAt)}
                   </div>
                 </div>

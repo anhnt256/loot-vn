@@ -15,13 +15,13 @@ export async function GET(req: NextRequest) {
           message: "Branch cookie is required",
           data: null,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Try to get cached stats first
     let stats = await chatCache.getCachedStats(branchFromCookie);
-    
+
     if (!stats) {
       stats = await getChatStats(branchFromCookie);
       // Cache the stats
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
         message: "Chat statistics retrieved successfully",
         data: stats,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Error fetching chat stats:", error);
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
         message: "Internal server error",
         data: null,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

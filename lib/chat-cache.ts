@@ -1,4 +1,4 @@
-import { redisService } from './redis-service';
+import { redisService } from "./redis-service";
 
 export class ChatCache {
   private static instance: ChatCache;
@@ -21,25 +21,36 @@ export class ChatCache {
   /**
    * Cache recent messages for a machine
    */
-  async cacheMessages(machineName: string, branch: string, messages: any[]): Promise<void> {
+  async cacheMessages(
+    machineName: string,
+    branch: string,
+    messages: any[],
+  ): Promise<void> {
     const key = `chat:messages:${branch}:${machineName}`;
     try {
-      await redisService.setex(key, this.TTL.MESSAGES, JSON.stringify(messages));
+      await redisService.setex(
+        key,
+        this.TTL.MESSAGES,
+        JSON.stringify(messages),
+      );
     } catch (error) {
-      console.error('Error caching messages:', error);
+      console.error("Error caching messages:", error);
     }
   }
 
   /**
    * Get cached messages for a machine
    */
-  async getCachedMessages(machineName: string, branch: string): Promise<any[] | null> {
+  async getCachedMessages(
+    machineName: string,
+    branch: string,
+  ): Promise<any[] | null> {
     const key = `chat:messages:${branch}:${machineName}`;
     try {
       const cached = await redisService.get(key);
       return cached ? JSON.parse(cached) : null;
     } catch (error) {
-      console.error('Error getting cached messages:', error);
+      console.error("Error getting cached messages:", error);
       return null;
     }
   }
@@ -52,7 +63,7 @@ export class ChatCache {
     try {
       await redisService.setex(key, this.TTL.STATS, JSON.stringify(stats));
     } catch (error) {
-      console.error('Error caching stats:', error);
+      console.error("Error caching stats:", error);
     }
   }
 
@@ -65,7 +76,7 @@ export class ChatCache {
       const cached = await redisService.get(key);
       return cached ? JSON.parse(cached) : null;
     } catch (error) {
-      console.error('Error getting cached stats:', error);
+      console.error("Error getting cached stats:", error);
       return null;
     }
   }
@@ -73,12 +84,20 @@ export class ChatCache {
   /**
    * Cache user information
    */
-  async cacheUserInfo(userId: number, branch: string, userInfo: any): Promise<void> {
+  async cacheUserInfo(
+    userId: number,
+    branch: string,
+    userInfo: any,
+  ): Promise<void> {
     const key = `chat:user:${branch}:${userId}`;
     try {
-      await redisService.setex(key, this.TTL.USER_INFO, JSON.stringify(userInfo));
+      await redisService.setex(
+        key,
+        this.TTL.USER_INFO,
+        JSON.stringify(userInfo),
+      );
     } catch (error) {
-      console.error('Error caching user info:', error);
+      console.error("Error caching user info:", error);
     }
   }
 
@@ -91,7 +110,7 @@ export class ChatCache {
       const cached = await redisService.get(key);
       return cached ? JSON.parse(cached) : null;
     } catch (error) {
-      console.error('Error getting cached user info:', error);
+      console.error("Error getting cached user info:", error);
       return null;
     }
   }
@@ -99,25 +118,36 @@ export class ChatCache {
   /**
    * Cache machine status
    */
-  async cacheMachineStatus(machineName: string, branch: string, status: any): Promise<void> {
+  async cacheMachineStatus(
+    machineName: string,
+    branch: string,
+    status: any,
+  ): Promise<void> {
     const key = `chat:machine:${branch}:${machineName}`;
     try {
-      await redisService.setex(key, this.TTL.MACHINE_STATUS, JSON.stringify(status));
+      await redisService.setex(
+        key,
+        this.TTL.MACHINE_STATUS,
+        JSON.stringify(status),
+      );
     } catch (error) {
-      console.error('Error caching machine status:', error);
+      console.error("Error caching machine status:", error);
     }
   }
 
   /**
    * Get cached machine status
    */
-  async getCachedMachineStatus(machineName: string, branch: string): Promise<any | null> {
+  async getCachedMachineStatus(
+    machineName: string,
+    branch: string,
+  ): Promise<any | null> {
     const key = `chat:machine:${branch}:${machineName}`;
     try {
       const cached = await redisService.get(key);
       return cached ? JSON.parse(cached) : null;
     } catch (error) {
-      console.error('Error getting cached machine status:', error);
+      console.error("Error getting cached machine status:", error);
       return null;
     }
   }
@@ -125,16 +155,19 @@ export class ChatCache {
   /**
    * Invalidate cache for a machine
    */
-  async invalidateMachineCache(machineName: string, branch: string): Promise<void> {
+  async invalidateMachineCache(
+    machineName: string,
+    branch: string,
+  ): Promise<void> {
     const keys = [
       `chat:messages:${branch}:${machineName}`,
       `chat:machine:${branch}:${machineName}`,
     ];
 
     try {
-      await Promise.all(keys.map(key => redisService.del(key)));
+      await Promise.all(keys.map((key) => redisService.del(key)));
     } catch (error) {
-      console.error('Error invalidating machine cache:', error);
+      console.error("Error invalidating machine cache:", error);
     }
   }
 
@@ -146,10 +179,10 @@ export class ChatCache {
       const pattern = `chat:*:${branch}:*`;
       const keys = await redisService.keys(pattern);
       if (keys.length > 0) {
-        await Promise.all(keys.map(key => redisService.del(key)));
+        await Promise.all(keys.map((key) => redisService.del(key)));
       }
     } catch (error) {
-      console.error('Error invalidating branch cache:', error);
+      console.error("Error invalidating branch cache:", error);
     }
   }
 
@@ -161,16 +194,16 @@ export class ChatCache {
     memoryUsage: string;
   }> {
     try {
-      const keys = await redisService.keys('chat:*');
+      const keys = await redisService.keys("chat:*");
       return {
         totalKeys: keys.length,
-        memoryUsage: 'N/A', // Would need Redis INFO command for memory usage
+        memoryUsage: "N/A", // Would need Redis INFO command for memory usage
       };
     } catch (error) {
-      console.error('Error getting cache stats:', error);
+      console.error("Error getting cache stats:", error);
       return {
         totalKeys: 0,
-        memoryUsage: 'Error',
+        memoryUsage: "Error",
       };
     }
   }
@@ -180,12 +213,12 @@ export class ChatCache {
    */
   async clearAllCache(): Promise<void> {
     try {
-      const keys = await redisService.keys('chat:*');
+      const keys = await redisService.keys("chat:*");
       if (keys.length > 0) {
-        await Promise.all(keys.map(key => redisService.del(key)));
+        await Promise.all(keys.map((key) => redisService.del(key)));
       }
     } catch (error) {
-      console.error('Error clearing all cache:', error);
+      console.error("Error clearing all cache:", error);
     }
   }
 }

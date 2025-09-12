@@ -1,4 +1,4 @@
-import { redisService } from './redis-service';
+import { redisService } from "./redis-service";
 
 interface RateLimitConfig {
   windowMs: number; // Time window in milliseconds
@@ -48,11 +48,23 @@ class ChatRateLimit {
 
       if (count === 0) {
         // First request in window, set TTL
-        await redisService.setex(key, Math.ceil(this.config.windowMs / 1000), newCount.toString());
-        await redisService.setex(`${key}:ttl`, Math.ceil(this.config.windowMs / 1000), resetTime.toString());
+        await redisService.setex(
+          key,
+          Math.ceil(this.config.windowMs / 1000),
+          newCount.toString(),
+        );
+        await redisService.setex(
+          `${key}:ttl`,
+          Math.ceil(this.config.windowMs / 1000),
+          resetTime.toString(),
+        );
       } else {
         // Update count
-        await redisService.setex(key, Math.ceil(this.config.windowMs / 1000), newCount.toString());
+        await redisService.setex(
+          key,
+          Math.ceil(this.config.windowMs / 1000),
+          newCount.toString(),
+        );
       }
 
       return {
@@ -61,7 +73,7 @@ class ChatRateLimit {
         resetTime,
       };
     } catch (error) {
-      console.error('Rate limit check error:', error);
+      console.error("Rate limit check error:", error);
       // On error, allow the request
       return {
         allowed: true,
@@ -80,7 +92,7 @@ class ChatRateLimit {
       await redisService.del(key);
       await redisService.del(`${key}:ttl`);
     } catch (error) {
-      console.error('Rate limit reset error:', error);
+      console.error("Rate limit reset error:", error);
     }
   }
 }
@@ -89,17 +101,17 @@ class ChatRateLimit {
 export const messageRateLimit = new ChatRateLimit({
   windowMs: 60 * 1000, // 1 minute
   maxRequests: 30, // 30 messages per minute
-  keyPrefix: 'chat:message',
+  keyPrefix: "chat:message",
 });
 
 export const connectionRateLimit = new ChatRateLimit({
   windowMs: 60 * 1000, // 1 minute
   maxRequests: 10, // 10 connections per minute
-  keyPrefix: 'chat:connection',
+  keyPrefix: "chat:connection",
 });
 
 export const apiRateLimit = new ChatRateLimit({
   windowMs: 60 * 1000, // 1 minute
   maxRequests: 100, // 100 API calls per minute
-  keyPrefix: 'chat:api',
+  keyPrefix: "chat:api",
 });

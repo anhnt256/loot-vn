@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { MessageList } from './MessageList';
-import { MessageInput } from './MessageInput';
-import { ChatStatus } from './ChatStatus';
-import { useChat } from '@/hooks/useChat';
-import { MessageCircle, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { MessageList } from "./MessageList";
+import { MessageInput } from "./MessageInput";
+import { ChatStatus } from "./ChatStatus";
+import { useChat } from "@/hooks/useChat";
+import { MessageCircle, AlertCircle } from "lucide-react";
 
 interface ChatWindowProps {
   machineName: string;
@@ -19,7 +19,17 @@ interface ChatWindowProps {
   isAdminChat?: boolean;
 }
 
-export function ChatWindow({ machineName, branch, staffId, className = '', currentUserId, currentMachineName, currentBranch, currentLoginType, isAdminChat = false }: ChatWindowProps) {
+export function ChatWindow({
+  machineName,
+  branch,
+  staffId,
+  className = "",
+  currentUserId,
+  currentMachineName,
+  currentBranch,
+  currentLoginType,
+  isAdminChat = false,
+}: ChatWindowProps) {
   const [error, setError] = useState<string | null>(null);
   const [isMinimized, setIsMinimized] = useState(false);
 
@@ -82,7 +92,7 @@ export function ChatWindow({ machineName, branch, staffId, className = '', curre
   return (
     <div className={`bg-gray-900 flex flex-col h-full ${className}`}>
       {/* Header */}
-      <ChatStatus 
+      <ChatStatus
         isConnected={isConnected}
         machineName={machineName}
         branch={branch}

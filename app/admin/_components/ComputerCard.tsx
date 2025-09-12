@@ -113,18 +113,20 @@ const ComputerCard: React.FC<ComputerCardProps> = ({ computer, onClick }) => {
         {!isEmpty(userName) && isUseApp === true && (
           <div className="text-[9px] truncate">{userName.toUpperCase()}</div>
         )}
-        
+
         {/* Show "Chưa sử dụng" when userName is null but machine is active (ON status) */}
-        {isEmpty(userName) && isUseApp === true && Number(status) === EnumComputerStatus.ON.id && (
-          <>
-            <div className="text-[11px] truncate text-red-300 overflow-hidden display-webkit-box webkit-line-clamp-2 webkit-box-orient-vertical">
-              Chưa sử dụng
-            </div>
-            <div className="text-[9px] truncate text-orange-300 font-bold">
-              {userId}
-            </div>
-          </>
-        )}
+        {isEmpty(userName) &&
+          isUseApp === true &&
+          Number(status) === EnumComputerStatus.ON.id && (
+            <>
+              <div className="text-[11px] truncate text-red-300 overflow-hidden display-webkit-box webkit-line-clamp-2 webkit-box-orient-vertical">
+                Chưa sử dụng
+              </div>
+              <div className="text-[9px] truncate text-orange-300 font-bold">
+                {userId}
+              </div>
+            </>
+          )}
 
         {/* Show "Không sử dụng" in red when isUseApp is false */}
         {isUseApp === false && (
@@ -165,12 +167,14 @@ const ComputerCard: React.FC<ComputerCardProps> = ({ computer, onClick }) => {
               <Crown className="w-2 h-2 text-yellow-400 flex-shrink-0" />
               <span>Battle Pass:</span>
               {battlePass?.isUsed ? (
-                <span className={`text-[7px] font-bold px-1.5 py-0.5 rounded ${
-                  battlePass.isPremium 
-                    ? 'bg-orange-500 text-white' 
-                    : 'bg-gray-500 text-white'
-                }`}>
-                  {battlePass.isPremium ? 'Premium' : 'Free'}
+                <span
+                  className={`text-[7px] font-bold px-1.5 py-0.5 rounded ${
+                    battlePass.isPremium
+                      ? "bg-orange-500 text-white"
+                      : "bg-gray-500 text-white"
+                  }`}
+                >
+                  {battlePass.isPremium ? "Premium" : "Free"}
                 </span>
               ) : (
                 <div className="w-2 h-2 rounded-full bg-red-500 flex items-center justify-center">
@@ -204,30 +208,21 @@ const ComputerCard: React.FC<ComputerCardProps> = ({ computer, onClick }) => {
 
       {/* Device Status Icons - Show for all machines */}
       <div className="absolute bottom-2 right-2 flex flex-col gap-1">
-          <FaDesktop
-            className={getStatusColor(monitorStatus || "GOOD")}
-            size={10}
-          />
-          <FaKeyboard
-            className={getStatusColor(keyboardStatus || "GOOD")}
-            size={10}
-          />
-          <FaMouse
-            className={getStatusColor(mouseStatus || "GOOD")}
-            size={10}
-          />
-          <FaHeadphones
-            className={getStatusColor(headphoneStatus || "GOOD")}
-            size={10}
-          />
-          <FaChair
-            className={getStatusColor(chairStatus || "GOOD")}
-            size={10}
-          />
-          <FaWifi
-            className={getStatusColor(networkStatus || "GOOD")}
-            size={10}
-          />
+        <FaDesktop
+          className={getStatusColor(monitorStatus || "GOOD")}
+          size={10}
+        />
+        <FaKeyboard
+          className={getStatusColor(keyboardStatus || "GOOD")}
+          size={10}
+        />
+        <FaMouse className={getStatusColor(mouseStatus || "GOOD")} size={10} />
+        <FaHeadphones
+          className={getStatusColor(headphoneStatus || "GOOD")}
+          size={10}
+        />
+        <FaChair className={getStatusColor(chairStatus || "GOOD")} size={10} />
+        <FaWifi className={getStatusColor(networkStatus || "GOOD")} size={10} />
       </div>
     </div>
   );

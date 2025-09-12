@@ -38,22 +38,22 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
       // Check loginType to determine if this is admin or staff
       const loginTypeFromCookie = cookieStore.get("loginType")?.value;
-      const loginType = loginTypeFromCookie || 'username';
-      
-      console.log('Admin login - loginType from cookie:', loginTypeFromCookie);
-      console.log('Admin login - branch from cookie:', branchFromCookie);
-      console.log('Admin login - final loginType:', loginType);
+      const loginType = loginTypeFromCookie || "username";
+
+      console.log("Admin login - loginType from cookie:", loginTypeFromCookie);
+      console.log("Admin login - branch from cookie:", branchFromCookie);
+      console.log("Admin login - final loginType:", loginType);
       let userId, role;
-      
-      if (loginType === 'username') {
+
+      if (loginType === "username") {
         // Admin login
         userId = -99;
         role = "admin";
-      } else if (loginType === 'mac') {
+      } else if (loginType === "mac") {
         // Staff login - determine userId based on branch
-        if (branchFromCookie === 'GO_VAP') {
+        if (branchFromCookie === "GO_VAP") {
           userId = -98; // Staff GO_VAP
-        } else if (branchFromCookie === 'TAN_PHU') {
+        } else if (branchFromCookie === "TAN_PHU") {
           userId = -97; // Staff TAN_PHU
         } else {
           userId = -99; // Default to admin if branch not recognized

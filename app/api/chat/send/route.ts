@@ -14,12 +14,17 @@ export async function POST(req: NextRequest) {
     const branchFromCookie = cookieStore.get("branch")?.value;
 
     // Branch is optional for ALL chat - use 'all' as default
-    const branch = branchFromCookie || 'all';
+    const branch = branchFromCookie || "all";
 
     const { content, machineName, staffId } = await req.json();
 
     // Validate input data
-    const validation = validateChatMessage({ content, machineName, userId: null, staffId });
+    const validation = validateChatMessage({
+      content,
+      machineName,
+      userId: null,
+      staffId,
+    });
     if (!validation.isValid) {
       return NextResponse.json(
         {
@@ -27,7 +32,7 @@ export async function POST(req: NextRequest) {
           message: "Validation failed",
           data: { errors: validation.errors },
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -42,13 +47,14 @@ export async function POST(req: NextRequest) {
 
     const decoded = JSON.parse(userHeader);
     // Handle userId as integer (admin uses -99)
-    const userId = decoded.userId ? parseInt(decoded.userId.toString(), 10) : null;
-    
+    const userId = decoded.userId
+      ? parseInt(decoded.userId.toString(), 10)
+      : null;
 
     // Check rate limit
-    const rateLimitKey = `${userId || 'anonymous'}:${machineName}`;
+    const rateLimitKey = `${userId || "anonymous"}:${machineName}`;
     const rateLimit = await messageRateLimit.checkLimit(rateLimitKey);
-    
+
     if (!rateLimit.allowed) {
       return NextResponse.json(
         {
@@ -59,14 +65,14 @@ export async function POST(req: NextRequest) {
             resetTime: rateLimit.resetTime,
           },
         },
-        { status: 429 }
+        { status: 429 },
       );
     }
 
     // Save message to database using utility function
     const messageId = await saveChatMessage({
       content: sanitizedContent,
-      userId,
+      userId: userId || undefined,
       machineName,
       branch: branch,
       staffId,
@@ -82,13 +88,13 @@ export async function POST(req: NextRequest) {
           message: "Failed to create message",
           data: null,
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     // Publish message to global ALL chat channel
-    const branchChannel = 'chat:all';
-    
+    const branchChannel = "chat:all";
+
     const messageData = {
       id: message.id,
       content: message.content,
@@ -112,7 +118,7 @@ export async function POST(req: NextRequest) {
         message: "Message sent successfully",
         data: messageData,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     return NextResponse.json(
@@ -121,7 +127,7 @@ export async function POST(req: NextRequest) {
         message: "Internal server error",
         data: null,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

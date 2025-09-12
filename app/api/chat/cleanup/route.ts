@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
           message: "Branch cookie is required",
           data: null,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
           message: "Days old must be between 1 and 365",
           data: null,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
           daysOld,
         },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Error cleaning up messages:", error);
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
         message: "Internal server error",
         data: null,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

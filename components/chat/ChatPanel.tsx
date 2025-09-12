@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { ChatWindow } from './ChatWindow';
-import { useLocalStorageValue } from '@/hooks/useLocalStorageValue';
-import { MessageCircle } from 'lucide-react';
-import { getMachineInfoFromUserData } from '@/lib/machine-utils';
+import React, { useState, useEffect } from "react";
+import { ChatWindow } from "./ChatWindow";
+import { useLocalStorageValue } from "@/hooks/useLocalStorageValue";
+import { MessageCircle } from "lucide-react";
+import { getMachineInfoFromUserData } from "@/lib/machine-utils";
 
-const CURRENT_USER = 'currentUser';
+const CURRENT_USER = "currentUser";
 
 interface ChatPanelProps {
   isOpen: boolean;
@@ -14,14 +14,14 @@ interface ChatPanelProps {
   className?: string;
 }
 
-export function ChatPanel({ isOpen, onClose, className = '' }: ChatPanelProps) {
-  const [selectedMachine, setSelectedMachine] = useState<string>('');
+export function ChatPanel({ isOpen, onClose, className = "" }: ChatPanelProps) {
+  const [selectedMachine, setSelectedMachine] = useState<string>("");
   const userData = useLocalStorageValue(CURRENT_USER, null);
 
   useEffect(() => {
     // Get machine info from user data
     const machineInfo = getMachineInfoFromUserData(userData);
-    
+
     if (machineInfo.name) {
       setSelectedMachine(machineInfo.displayName);
     }
@@ -34,10 +34,9 @@ export function ChatPanel({ isOpen, onClose, className = '' }: ChatPanelProps) {
   return (
     <div
       className={`h-full bg-gray-900 border-l border-gray-700 shadow-lg flex flex-col ${
-        isOpen ? 'translate-x-0' : 'translate-x-full'
+        isOpen ? "translate-x-0" : "translate-x-full"
       } ${className}`}
     >
-
       {/* Chat Content */}
       <div className="flex-1 h-full">
         {selectedMachine ? (
@@ -45,7 +44,11 @@ export function ChatPanel({ isOpen, onClose, className = '' }: ChatPanelProps) {
             <ChatWindow
               machineName={selectedMachine}
               branch={(userData as any)?.branch}
-              staffId={(userData as any)?.userType === 'staff' ? (userData as any)?.userId : undefined}
+              staffId={
+                (userData as any)?.userType === "staff"
+                  ? (userData as any)?.userId
+                  : undefined
+              }
               currentUserId={(userData as any)?.userId}
               className="h-full border-0 rounded-none"
             />
