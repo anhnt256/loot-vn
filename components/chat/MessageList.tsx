@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { format } from "date-fns";
-import { vi } from "date-fns/locale";
+import dayjs from "@/lib/dayjs";
 import { ChatMessage } from "@/hooks/useChat";
 import { filterProfanity } from "@/lib/profanity-filter";
 
@@ -52,17 +51,9 @@ export function MessageList({
 
   const formatTime = (dateString: string) => {
     try {
-      // DB stores time in VN timezone (+7), so we need to parse it correctly
-      // If dateString doesn't have timezone info, treat it as VN time
-      let date: Date;
-      if (dateString.includes('T') || dateString.includes('Z') || dateString.includes('+')) {
-        // Already has timezone info
-        date = new Date(dateString);
-      } else {
-        // No timezone info, treat as VN time (+7)
-        date = new Date(dateString + '+07:00');
-      }
-      return format(date, "HH:mm", { locale: vi });
+      // Hiển thị chính xác giờ UTC từ BE trả về (không convert sang local timezone)
+      const date = dayjs.utc(dateString);
+      return date.format("HH:mm");
     } catch {
       return "--:--";
     }
@@ -70,32 +61,23 @@ export function MessageList({
 
   const formatDate = (dateString: string) => {
     try {
-      // DB stores time in VN timezone (+7), so we need to parse it correctly
-      let date: Date;
-      if (dateString.includes('T') || dateString.includes('Z') || dateString.includes('+')) {
-        // Already has timezone info
-        date = new Date(dateString);
-      } else {
-        // No timezone info, treat as VN time (+7)
-        date = new Date(dateString + '+07:00');
-      }
-      
-      const now = new Date();
-      const isToday = date.toDateString() === now.toDateString();
+      // Hiển thị chính xác ngày UTC từ BE trả về (không convert sang local timezone)
+      const date = dayjs.utc(dateString);
+      const now = dayjs.utc();
+      const isToday = date.format("YYYY-MM-DD") === now.format("YYYY-MM-DD");
 
       if (isToday) {
         return "Hôm nay";
       }
 
-      const yesterday = new Date(now);
-      yesterday.setDate(yesterday.getDate() - 1);
-      const isYesterday = date.toDateString() === yesterday.toDateString();
+      const yesterday = now.subtract(1, 'day');
+      const isYesterday = date.format("YYYY-MM-DD") === yesterday.format("YYYY-MM-DD");
 
       if (isYesterday) {
         return "Hôm qua";
       }
 
-      return format(date, "dd/MM/yyyy", { locale: vi });
+      return date.format("DD/MM/YYYY");
     } catch {
       return "";
     }
