@@ -52,7 +52,16 @@ export function MessageList({
 
   const formatTime = (dateString: string) => {
     try {
-      const date = new Date(dateString);
+      // DB stores time in VN timezone (+7), so we need to parse it correctly
+      // If dateString doesn't have timezone info, treat it as VN time
+      let date: Date;
+      if (dateString.includes('T') || dateString.includes('Z') || dateString.includes('+')) {
+        // Already has timezone info
+        date = new Date(dateString);
+      } else {
+        // No timezone info, treat as VN time (+7)
+        date = new Date(dateString + '+07:00');
+      }
       return format(date, "HH:mm", { locale: vi });
     } catch {
       return "--:--";
@@ -61,7 +70,16 @@ export function MessageList({
 
   const formatDate = (dateString: string) => {
     try {
-      const date = new Date(dateString);
+      // DB stores time in VN timezone (+7), so we need to parse it correctly
+      let date: Date;
+      if (dateString.includes('T') || dateString.includes('Z') || dateString.includes('+')) {
+        // Already has timezone info
+        date = new Date(dateString);
+      } else {
+        // No timezone info, treat as VN time (+7)
+        date = new Date(dateString + '+07:00');
+      }
+      
       const now = new Date();
       const isToday = date.toDateString() === now.toDateString();
 

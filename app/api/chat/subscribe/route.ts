@@ -11,13 +11,32 @@ export async function GET(req: NextRequest) {
       return new Response("Machine name is required", { status: 400 });
     }
 
+    // Get user info from headers (set by middleware)
+    const userHeader = req.headers.get("user");
+    let userInfo = null;
+    if (userHeader) {
+      try {
+        userInfo = JSON.parse(userHeader);
+      } catch (error) {
+        console.error("Error parsing user header:", error);
+      }
+    }
+
+    // Create unique user key with user info
+    const userId = userInfo?.userId || 'unknown';
+    const loginType = userInfo?.loginType || 'USER';
+    const branch = userInfo?.branch || 'unknown';
+    const userName = userInfo?.userName || 'unknown';
+    const role = userInfo?.role || 'user';
+
     // Create a readable stream for Server-Sent Events
     const stream = new ReadableStream({
       start(controller) {
         // For ALL chat, always use global channels
         const branchChannel = "chat:all";
         const onlineKey = "chat:online:all";
-        const userKey = `${machineName}:all`;
+        // Create unique key using role + userId + branch to distinguish admin/staff
+        const userKey = `${role}:${userId}:${branch}:all`;
 
         // Add user to online set and broadcast online count
         redisService
@@ -26,6 +45,9 @@ export async function GET(req: NextRequest) {
             try {
               // Get current online count and broadcast
               const onlineCount = await redisService.scard(onlineKey);
+              const onlineMembers = await redisService.smembers(onlineKey);
+
+              console.log(`[SSE] User ${userKey} connected. Online count: ${onlineCount}, Members:`, onlineMembers);
 
               const onlineData = `data: ${JSON.stringify({
                 type: "online_count",
@@ -80,12 +102,9 @@ export async function GET(req: NextRequest) {
 
             // Get updated online count and broadcast to remaining users
             const onlineCount = await redisService.scard(onlineKey);
+            const onlineMembers = await redisService.smembers(onlineKey);
 
-            const onlineData = `data: ${JSON.stringify({
-              type: "online_count",
-              count: onlineCount,
-              branch: "all",
-            })}\n\n`;
+            console.log(`[SSE] User ${userKey} disconnected. Online count: ${onlineCount}, Members:`, onlineMembers);
 
             // Broadcast to all users in the branch
             await redisService.publish(branchChannel, {
