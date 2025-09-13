@@ -37,6 +37,21 @@ export async function GET(req: NextRequest) {
         const onlineKey = "chat:online:all";
         // Create unique key using role + userId + branch to distinguish admin/staff
         const userKey = `${role}:${userId}:${branch}:all`;
+        
+        // Track if stream is closed to prevent enqueueing after close
+        let isStreamClosed = false;
+
+        // Helper function to safely enqueue data
+        const safeEnqueue = (data: string) => {
+          if (!isStreamClosed) {
+            try {
+              controller.enqueue(new TextEncoder().encode(data));
+            } catch (error) {
+              console.error("Error enqueueing message to SSE stream:", error);
+              isStreamClosed = true;
+            }
+          }
+        };
 
         // Add user to online set and broadcast online count
         redisService
@@ -54,7 +69,7 @@ export async function GET(req: NextRequest) {
                 count: onlineCount,
                 branch: "all",
               })}\n\n`;
-              controller.enqueue(new TextEncoder().encode(onlineData));
+              safeEnqueue(onlineData);
 
               // Publish to channel to notify other users
               await redisService.publish(branchChannel, {
@@ -75,7 +90,7 @@ export async function GET(req: NextRequest) {
             message: "Connected to ALL chat",
             branch: "all",
           })}\n\n`;
-          controller.enqueue(new TextEncoder().encode(initData));
+          safeEnqueue(initData);
         } catch (error) {
           console.error("Error sending initial SSE message:", error);
         }
@@ -83,12 +98,8 @@ export async function GET(req: NextRequest) {
         // Subscribe to branch group chat channel
         redisService
           .subscribe(branchChannel, (messageData) => {
-            try {
-              const data = `data: ${JSON.stringify(messageData)}\n\n`;
-              controller.enqueue(new TextEncoder().encode(data));
-            } catch (error) {
-              console.error("Error enqueueing message to SSE stream:", error);
-            }
+            const data = `data: ${JSON.stringify(messageData)}\n\n`;
+            safeEnqueue(data);
           })
           .catch((error) => {
             console.error("Error subscribing to branch channel:", error);
@@ -96,6 +107,8 @@ export async function GET(req: NextRequest) {
 
         // Handle client disconnect
         req.signal?.addEventListener("abort", async () => {
+          isStreamClosed = true;
+          
           // Remove user from online set and broadcast updated count
           try {
             await redisService.srem(onlineKey, userKey);
@@ -117,7 +130,14 @@ export async function GET(req: NextRequest) {
           }
 
           redisService.unsubscribe(branchChannel).catch(console.error);
-          controller.close();
+          
+          // Safely close controller
+          try {
+            controller.close();
+          } catch (error) {
+            // Controller might already be closed, ignore the error
+            console.log("SSE: Controller already closed or error during close:", error instanceof Error ? error.message : String(error));
+          }
         });
       },
     });
