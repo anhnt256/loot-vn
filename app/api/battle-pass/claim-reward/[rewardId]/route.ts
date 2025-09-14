@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentTimeVNDB } from "@/lib/timezone-utils";
+import { cookies } from "next/headers";
 
 export async function POST(
   request: Request,
@@ -16,6 +17,16 @@ export async function POST(
     const decoded = JSON.parse(userHeader);
     if (!decoded || !decoded.userId) {
       return NextResponse.json({ error: "Invalid user data" }, { status: 401 });
+    }
+
+    // Get branch from cookie - required for database operations
+    const cookieStore = await cookies();
+    const branch = cookieStore.get("branch")?.value;
+    if (!branch) {
+      return NextResponse.json(
+        { error: "Branch cookie is required" },
+        { status: 400 }
+      );
     }
 
     const rewardId = parseInt(params.rewardId);
@@ -68,7 +79,7 @@ export async function POST(
     // Get user progress
     const userProgressResult = await db.$queryRaw<any[]>`
       SELECT * FROM UserBattlePass 
-      WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id}
+      WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id} AND branch = ${branch}
       LIMIT 1
     `;
 
@@ -83,7 +94,7 @@ export async function POST(
     // Check if reward is already claimed
     const claimedRewardResult = await db.$queryRaw<any[]>`
       SELECT * FROM UserBattlePassReward 
-      WHERE userId = ${decoded.userId} AND rewardId = ${rewardId}
+      WHERE userId = ${decoded.userId} AND rewardId = ${rewardId} AND branch = ${branch}
       LIMIT 1
     `;
 
@@ -117,8 +128,8 @@ export async function POST(
     await db.$transaction(async (tx) => {
       // Create claimed reward record
       await tx.$executeRaw`
-        INSERT INTO UserBattlePassReward (userId, seasonId, rewardId, claimedAt)
-        VALUES (${decoded.userId}, ${currentSeason.id}, ${rewardId}, ${getCurrentTimeVNDB()})
+        INSERT INTO UserBattlePassReward (userId, seasonId, rewardId, branch, claimedAt)
+        VALUES (${decoded.userId}, ${currentSeason.id}, ${rewardId}, ${branch}, ${getCurrentTimeVNDB()})
       `;
 
       // Add stars to user and log to UserStarHistory
@@ -126,7 +137,7 @@ export async function POST(
         // Get current user stars
         const userResult = await tx.$queryRaw<any[]>`
           SELECT stars FROM User 
-          WHERE userId = ${decoded.userId} AND branch = ${decoded.branch || "GO_VAP"}
+          WHERE userId = ${decoded.userId} AND branch = ${branch}
           LIMIT 1
         `;
 
@@ -139,13 +150,13 @@ export async function POST(
           await tx.$executeRaw`
             UPDATE User 
             SET stars = ${newStars}, updatedAt = ${getCurrentTimeVNDB()}
-            WHERE userId = ${decoded.userId} AND branch = ${decoded.branch || "GO_VAP"}
+            WHERE userId = ${decoded.userId} AND branch = ${branch}
           `;
 
           // Log to UserStarHistory
           await tx.$executeRaw`
             INSERT INTO UserStarHistory (userId, oldStars, newStars, type, createdAt, branch)
-            VALUES (${decoded.userId}, ${oldStars}, ${newStars}, 'BATTLE_PASS', ${getCurrentTimeVNDB()}, ${decoded.branch || "GO_VAP"})
+            VALUES (${decoded.userId}, ${oldStars}, ${newStars}, 'BATTLE_PASS', ${getCurrentTimeVNDB()}, ${branch})
           `;
         }
       }

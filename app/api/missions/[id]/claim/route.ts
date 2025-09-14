@@ -37,7 +37,14 @@ export async function POST(
 
     const userId = parseInt(decoded.userId);
     const cookieStore = await cookies();
-    const branch = cookieStore.get("branch")?.value || "GO_VAP";
+    const branch = cookieStore.get("branch")?.value;
+    
+    if (!branch) {
+      return NextResponse.json(
+        { error: "Branch cookie is required" },
+        { status: 400 }
+      );
+    }
 
     // Get mission details
     const mission = await db.mission.findUnique({

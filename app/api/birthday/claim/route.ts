@@ -6,7 +6,7 @@ import { getCurrentTimeVNDB } from "@/lib/timezone-utils";
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
-    const branch = cookieStore.get("branch")?.value || "GO_VAP";
+    const branch = cookieStore.get("branch")?.value;
     const { userId, tierId } = await request.json();
 
     console.log("=== BIRTHDAY CLAIM DEBUG ===");
@@ -16,6 +16,14 @@ export async function POST(request: NextRequest) {
       console.log("Missing userId or tierId");
       return NextResponse.json(
         { success: false, error: "Missing userId or tierId" },
+        { status: 400 },
+      );
+    }
+
+    if (!branch) {
+      console.log("Missing branch cookie");
+      return NextResponse.json(
+        { success: false, error: "Branch cookie is required" },
         { status: 400 },
       );
     }
