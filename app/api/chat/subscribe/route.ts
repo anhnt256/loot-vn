@@ -23,11 +23,11 @@ export async function GET(req: NextRequest) {
     }
 
     // Create unique user key with user info
-    const userId = userInfo?.userId || 'unknown';
-    const loginType = userInfo?.loginType || 'USER';
-    const branch = userInfo?.branch || 'unknown';
-    const userName = userInfo?.userName || 'unknown';
-    const role = userInfo?.role || 'user';
+    const userId = userInfo?.userId || "unknown";
+    const loginType = userInfo?.loginType || "USER";
+    const branch = userInfo?.branch || "unknown";
+    const userName = userInfo?.userName || "unknown";
+    const role = userInfo?.role || "user";
 
     // Create a readable stream for Server-Sent Events
     const stream = new ReadableStream({
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
         const onlineKey = "chat:online:all";
         // Create unique key using role + userId + branch to distinguish admin/staff
         const userKey = `${role}:${userId}:${branch}:all`;
-        
+
         // Track if stream is closed to prevent enqueueing after close
         let isStreamClosed = false;
 
@@ -62,7 +62,10 @@ export async function GET(req: NextRequest) {
               const onlineCount = await redisService.scard(onlineKey);
               const onlineMembers = await redisService.smembers(onlineKey);
 
-              console.log(`[SSE] User ${userKey} connected. Online count: ${onlineCount}, Members:`, onlineMembers);
+              console.log(
+                `[SSE] User ${userKey} connected. Online count: ${onlineCount}, Members:`,
+                onlineMembers,
+              );
 
               const onlineData = `data: ${JSON.stringify({
                 type: "online_count",
@@ -108,7 +111,7 @@ export async function GET(req: NextRequest) {
         // Handle client disconnect
         req.signal?.addEventListener("abort", async () => {
           isStreamClosed = true;
-          
+
           // Remove user from online set and broadcast updated count
           try {
             await redisService.srem(onlineKey, userKey);
@@ -117,7 +120,10 @@ export async function GET(req: NextRequest) {
             const onlineCount = await redisService.scard(onlineKey);
             const onlineMembers = await redisService.smembers(onlineKey);
 
-            console.log(`[SSE] User ${userKey} disconnected. Online count: ${onlineCount}, Members:`, onlineMembers);
+            console.log(
+              `[SSE] User ${userKey} disconnected. Online count: ${onlineCount}, Members:`,
+              onlineMembers,
+            );
 
             // Broadcast to all users in the branch
             await redisService.publish(branchChannel, {
@@ -130,13 +136,16 @@ export async function GET(req: NextRequest) {
           }
 
           redisService.unsubscribe(branchChannel).catch(console.error);
-          
+
           // Safely close controller
           try {
             controller.close();
           } catch (error) {
             // Controller might already be closed, ignore the error
-            console.log("SSE: Controller already closed or error during close:", error instanceof Error ? error.message : String(error));
+            console.log(
+              "SSE: Controller already closed or error during close:",
+              error instanceof Error ? error.message : String(error),
+            );
           }
         });
       },

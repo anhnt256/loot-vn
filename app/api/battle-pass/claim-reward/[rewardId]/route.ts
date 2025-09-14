@@ -25,7 +25,7 @@ export async function POST(
     if (!branch) {
       return NextResponse.json(
         { error: "Branch cookie is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 

@@ -70,8 +70,9 @@ export function MessageList({
         return "Hôm nay";
       }
 
-      const yesterday = now.subtract(1, 'day');
-      const isYesterday = date.format("YYYY-MM-DD") === yesterday.format("YYYY-MM-DD");
+      const yesterday = now.subtract(1, "day");
+      const isYesterday =
+        date.format("YYYY-MM-DD") === yesterday.format("YYYY-MM-DD");
 
       if (isYesterday) {
         return "Hôm qua";

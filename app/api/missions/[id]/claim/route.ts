@@ -38,11 +38,11 @@ export async function POST(
     const userId = parseInt(decoded.userId);
     const cookieStore = await cookies();
     const branch = cookieStore.get("branch")?.value;
-    
+
     if (!branch) {
       return NextResponse.json(
         { error: "Branch cookie is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
