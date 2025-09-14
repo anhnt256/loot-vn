@@ -6,6 +6,7 @@ import Cookies from "js-cookie";
 import { useEffect, useState, createContext, useContext, useRef } from "react";
 import { usePolling } from "@/hooks/usePolling";
 import { useSoundNotification } from "@/hooks/useSoundNotification";
+import { getCurrentDateVNString } from "@/lib/timezone-utils";
 
 // Context để chia sẻ số lượt pending
 interface PendingCountContextType {
@@ -109,7 +110,7 @@ export function AdminSidebar() {
   const [isClient, setIsClient] = useState(false);
   const { pendingCount, setPendingCount } = usePendingCount();
   const previousPendingCount = useRef(0);
-  const { playNotification } = useSoundNotification();
+  const { playNotification, playSound } = useSoundNotification();
 
   // Set isClient to true after mount to prevent hydration mismatch
   useEffect(() => {
@@ -144,8 +145,8 @@ export function AdminSidebar() {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, [branch]);
 
-  // Tạo URL cố định để tránh re-render
-  const today = new Date().toISOString().split("T")[0];
+  // Tạo URL cố định để tránh re-render với timezone Vietnam
+  const today = getCurrentDateVNString();
   const statsUrl = `/api/reward-exchange/stats?branch=${branch}&startDate=${today}&endDate=${today}`;
 
   // Global polling cho stats - chỉ chạy khi KHÔNG ở trang reward-exchange
@@ -158,7 +159,6 @@ export function AdminSidebar() {
       interval: 30000, // 30 seconds - nhanh hơn để user nhận thấy ngay
       enabled: shouldPollStats, // Chỉ chạy khi ở trang admin NHƯNG KHÔNG phải reward-exchange
       onSuccess: (data) => {
-        console.log("AdminSidebar stats updated:", data);
         const newPendingCount = data.pending || 0;
         
         // Phát âm thanh khi có pending mới

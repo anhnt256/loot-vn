@@ -20,6 +20,10 @@ export function useSoundNotification(options: UseSoundNotificationOptions = {}) 
       // Phát âm thanh
       audio.play().catch((error) => {
         console.warn('Không thể phát âm thanh:', error);
+        // Thử phát lại sau 100ms
+        setTimeout(() => {
+          audio.play().catch(() => {});
+        }, 100);
       });
     } catch (error) {
       console.warn('Lỗi khi tạo audio:', error);
@@ -29,7 +33,6 @@ export function useSoundNotification(options: UseSoundNotificationOptions = {}) 
   const playNotification = useCallback((currentValue: number, previousValue: number) => {
     // Chỉ phát âm thanh khi giá trị tăng (có pending mới)
     if (currentValue > previousValue && currentValue > 0) {
-      console.log(`🔔 Có ${currentValue - previousValue} pending mới! Phát âm thanh thông báo`);
       playSound();
     }
   }, [playSound]);
