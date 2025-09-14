@@ -13,24 +13,6 @@ import { useLocalStorageValue } from "@/hooks/useLocalStorageValue";
 import Feedback from "@/components/Feedback";
 import { ChatPanel } from "@/components/chat/ChatPanel";
 
-// Hook auto logout sau 1 giờ không hoạt động
-function useAutoLogout(onLogout: () => void, timeout = 60 * 60 * 1000) {
-  const timer = useRef<NodeJS.Timeout>();
-
-  useEffect(() => {
-    const resetTimer = () => {
-      clearTimeout(timer.current);
-      timer.current = setTimeout(onLogout, timeout);
-    };
-    const events = ["mousemove", "keydown", "click", "touchstart"];
-    events.forEach((e) => window.addEventListener(e, resetTimer));
-    resetTimer();
-    return () => {
-      clearTimeout(timer.current);
-      events.forEach((e) => window.removeEventListener(e, resetTimer));
-    };
-  }, [onLogout, timeout]);
-}
 
 const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   const loginMutation = useLogout();
@@ -110,19 +92,6 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Tích hợp auto logout
-  useAutoLogout(
-    () => {
-      // Xóa thông tin user khỏi localStorage
-      clearUserData();
-
-      if (typeof window !== "undefined" && window.electron) {
-        // @ts-ignore
-        window.electron.send("close-app");
-      }
-    },
-    5 * 60 * 1000,
-  );
 
   // Chỉ gọi checkGatewayBonus sau khi user-calculator fetch xong và currentUser đã ổn định
   // useEffect(() => {

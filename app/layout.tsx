@@ -5,7 +5,6 @@ import "./globals.css";
 import "antd/dist/reset.css";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { siteConfig } from "@/config/site";
-import { AutoLogoutProvider } from "./_components/AutoLogoutProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -32,10 +31,8 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <QueryProvider>
-          <AutoLogoutProvider>
-            <Toaster />
-            {children}
-          </AutoLogoutProvider>
+          <Toaster />
+          {children}
         </QueryProvider>
       </body>
     </html>
