@@ -144,14 +144,13 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
     const user: any = await fnetDB.$queryRaw<any>(query);
 
-    const originalUserId = user[0]?.userId ?? null;
-    const userId = getDebugUserId(originalUserId);
+    let userId = user[0]?.userId ?? null;
+
 
     logDebugInfo("login", {
       userName,
       machineName,
       branchFromCookie,
-      originalUserId,
       userId,
     });
 
@@ -287,6 +286,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
           );
         }
 
+
         // Tạo user mới
         try {
           await db.$executeRaw`
@@ -386,12 +386,27 @@ export async function POST(req: Request, res: Response): Promise<any> {
         );
       }
     } else {
+      const currentUser = existingUser[0];
+      
       // Cập nhật thông tin user nếu cần
-      await db.$executeRaw`
-        UPDATE User 
-        SET userId = ${userId}, updatedAt = NOW()
-        WHERE id = ${existingUser[0].id}
-      `;
+      let updateFields = [];
+      let updateValues = [];
+      
+      // Always update userId and updatedAt
+      updateFields.push('userId = ?');
+      updateValues.push(userId);
+      updateFields.push('updatedAt = NOW()');
+      
+      // If userName is provided and current userName is empty, update userName
+      if (userName && userName.trim() && (!currentUser.userName || currentUser.userName.trim() === '')) {
+        updateFields.push('userName = ?');
+        updateValues.push(userName.trim());
+      }
+      
+      if (updateFields.length > 0) {
+        const updateQuery = `UPDATE User SET ${updateFields.join(', ')} WHERE id = ?`;
+        await db.$executeRawUnsafe(updateQuery, ...updateValues, currentUser.id);
+      }
 
       // Get the updated user
       const updatedUser = await db.$queryRaw<any[]>`
