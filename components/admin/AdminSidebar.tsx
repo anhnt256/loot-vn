@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Cookies from "js-cookie";
-import { useEffect, useState, createContext, useContext } from "react";
+import { useEffect, useState, createContext, useContext, useRef } from "react";
+import { usePolling } from "@/hooks/usePolling";
+import { useSoundNotification } from "@/hooks/useSoundNotification";
 
 // Context để chia sẻ số lượt pending
 interface PendingCountContextType {
@@ -106,6 +108,8 @@ export function AdminSidebar() {
   const [branch, setBranch] = useState("GO_VAP");
   const [isClient, setIsClient] = useState(false);
   const { pendingCount, setPendingCount } = usePendingCount();
+  const previousPendingCount = useRef(0);
+  const { playNotification } = useSoundNotification();
 
   // Set isClient to true after mount to prevent hydration mismatch
   useEffect(() => {
@@ -118,7 +122,11 @@ export function AdminSidebar() {
     const branchFromCookie = Cookies.get("branch");
 
     setLoginType(loginTypeFromCookie);
-    if (branchFromCookie) setBranch(branchFromCookie);
+    if (branchFromCookie) {
+      setBranch(branchFromCookie);
+      // Reset previous count khi branch thay đổi
+      previousPendingCount.current = 0;
+    }
   }, []);
 
   // Listen for branch cookie changes
@@ -127,6 +135,8 @@ export function AdminSidebar() {
       const branchFromCookie = Cookies.get("branch");
       if (branchFromCookie && branchFromCookie !== branch) {
         setBranch(branchFromCookie);
+        // Reset previous count khi branch thay đổi
+        previousPendingCount.current = 0;
       }
     };
 
@@ -134,31 +144,35 @@ export function AdminSidebar() {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, [branch]);
 
-  // Không cần polling riêng - sẽ nhận data từ RewardExchangePage
-  // Chỉ fetch một lần khi vào trang reward-exchange để có initial data
-  useEffect(() => {
-    const isRewardExchangePage = pathname === "/admin/reward-exchange";
-    if (isRewardExchangePage && branch) {
-      // Fetch một lần để có initial data
-      fetch(
-        `/api/reward-exchange/stats?branch=${branch}&startDate=${new Date().toISOString().split("T")[0]}&endDate=${new Date().toISOString().split("T")[0]}`,
-      )
-        .then((res) => res.json())
-        .then((data) => {
-          setPendingCount(data.pending || 0);
-        })
-        .catch((err) => console.error("Error fetching initial stats:", err));
-    }
-  }, [pathname, branch]);
+  // Tạo URL cố định để tránh re-render
+  const today = new Date().toISOString().split("T")[0];
+  const statsUrl = `/api/reward-exchange/stats?branch=${branch}&startDate=${today}&endDate=${today}`;
 
-  // Reset pending count khi rời khỏi trang reward-exchange
-  useEffect(() => {
-    const isRewardExchangePage = pathname === "/admin/reward-exchange";
-    if (!isRewardExchangePage && pendingCount > 0) {
-      // Reset pending count khi không ở trang reward-exchange và có pending count
-      setPendingCount(0);
-    }
-  }, [pathname, pendingCount]);
+  // Global polling cho stats - chỉ chạy khi KHÔNG ở trang reward-exchange
+  const isRewardExchangePage = pathname === "/admin/reward-exchange";
+  const shouldPollStats = !!branch && pathname.startsWith("/admin") && !isRewardExchangePage;
+  
+  const statsPolling = usePolling<{pending: number, approved: number, rejected: number, total: number}>(
+    statsUrl,
+    {
+      interval: 30000, // 30 seconds - nhanh hơn để user nhận thấy ngay
+      enabled: shouldPollStats, // Chỉ chạy khi ở trang admin NHƯNG KHÔNG phải reward-exchange
+      onSuccess: (data) => {
+        console.log("AdminSidebar stats updated:", data);
+        const newPendingCount = data.pending || 0;
+        
+        // Phát âm thanh khi có pending mới
+        playNotification(newPendingCount, previousPendingCount.current);
+        
+        // Cập nhật pending count
+        setPendingCount(newPendingCount);
+        previousPendingCount.current = newPendingCount;
+      },
+      onError: (error) => {
+        console.error("AdminSidebar polling error:", error);
+      },
+    },
+  );
 
   // Filter menu items based on admin role
   const filteredMenuItems = menuItems.filter((item) => {

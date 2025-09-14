@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -28,6 +28,7 @@ const { RangePicker } = DatePicker;
 import Cookies from "js-cookie";
 import { usePolling } from "@/hooks/usePolling";
 import { usePendingCount } from "@/components/admin/AdminSidebar";
+import { useSoundNotification } from "@/hooks/useSoundNotification";
 
 interface RewardExchange {
   id: number;
@@ -90,11 +91,17 @@ const RewardExchangePage = () => {
   const [isPollingEnabled, setIsPollingEnabled] = useState(true);
   const queryClient = useQueryClient();
   const { setPendingCount } = usePendingCount();
+  const previousPendingCount = useRef(0);
+  const { playNotification } = useSoundNotification();
 
   // Load branch from cookie on component mount
   useEffect(() => {
     const branch = Cookies.get("branch");
-    if (branch) setSelectedBranch(branch);
+    if (branch) {
+      setSelectedBranch(branch);
+      // Reset previous count khi branch thay đổi
+      previousPendingCount.current = 0;
+    }
   }, []);
 
   // Polling for pending rewards
@@ -104,6 +111,16 @@ const RewardExchangePage = () => {
       interval: 60000, // 60 seconds
       enabled: isPollingEnabled && activeTab === "pending",
       onSuccess: (data) => {
+        console.log("RewardExchange pending updated:", data);
+        const newPendingCount = data?.length || 0;
+        
+        // Phát âm thanh khi có pending mới
+        playNotification(newPendingCount, previousPendingCount.current);
+        
+        // Cập nhật pending count cho sidebar
+        setPendingCount(newPendingCount);
+        previousPendingCount.current = newPendingCount;
+        
         queryClient.setQueryData(
           ["reward-exchange-pending", selectedBranch],
           data,
@@ -115,29 +132,20 @@ const RewardExchangePage = () => {
     },
   );
 
-  // Polling for stats
-  const statsPolling = usePolling<StatsResponse>(
-    `/api/reward-exchange/stats?branch=${selectedBranch}&startDate=${selectedDateRange[0].format("YYYY-MM-DD")}&endDate=${selectedDateRange[1].format("YYYY-MM-DD")}`,
-    {
-      interval: 120000, // 120 seconds (2 minutes)
-      enabled: isPollingEnabled,
-      onSuccess: (data) => {
-        queryClient.setQueryData(
-          [
-            "reward-exchange-stats",
-            selectedBranch,
-            selectedDateRange[0].format("YYYY-MM-DD"),
-            selectedDateRange[1].format("YYYY-MM-DD"),
-          ],
-          data,
-        );
-        setPendingCount(data.pending || 0);
-      },
-      onError: (error) => {
-        console.error("Polling error for stats:", error);
-      },
-    },
-  );
+  // Sử dụng useQuery chỉ fetch một lần, không polling để tránh duplicate với AdminSidebar
+  const { data: stats, isLoading: statsLoading } = useQuery<StatsResponse>({
+    queryKey: [
+      "reward-exchange-stats",
+      selectedBranch,
+      selectedDateRange[0].format("YYYY-MM-DD"),
+      selectedDateRange[1].format("YYYY-MM-DD"),
+    ],
+    queryFn: () =>
+      fetcher(
+        `/api/reward-exchange/stats?branch=${selectedBranch}&startDate=${selectedDateRange[0].format("YYYY-MM-DD")}&endDate=${selectedDateRange[1].format("YYYY-MM-DD")}`,
+      ),
+    // Không có refetchInterval để tránh duplicate polling với AdminSidebar
+  });
 
   const { data: pendingRewards, isLoading: pendingLoading } = useQuery<
     RewardExchange[]
@@ -164,25 +172,17 @@ const RewardExchangePage = () => {
       enabled: activeTab === "history",
     });
 
-  // Use polling data directly instead of duplicate useQuery
-  const stats = statsPolling.data;
-  const statsLoading = statsPolling.isLoading;
-
-  // Cập nhật số lượt pending khi stats thay đổi
-  useEffect(() => {
-    if (stats) {
-      setPendingCount(stats.pending || 0);
-    }
-  }, [stats, setPendingCount]);
+  // Stats data đã được lấy từ useQuery ở trên
+  // Pending count được update từ pendingPolling ở trên
 
   // Manual refresh function
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ["reward-exchange-pending"] });
+    queryClient.invalidateQueries({ queryKey: ["reward-exchange-stats"] });
     if (activeTab === "history") {
       queryClient.invalidateQueries({ queryKey: ["reward-exchange-history"] });
     }
     pendingPolling.refetch();
-    statsPolling.refetch();
     toast.success("Đã cập nhật dữ liệu");
   };
 
