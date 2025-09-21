@@ -41,7 +41,7 @@ export const createGameAppointmentAction = createSafeAction(
         };
       }
 
-      const userId = parseInt(decoded.userId);
+      const userId = parseInt(decoded.userId.toString());
 
       // Parse dates
       const startTime = new Date(data.startTime);
@@ -72,7 +72,7 @@ export const createGameAppointmentAction = createSafeAction(
       const validation = await validateAppointmentParams({
         members: tierConfig.minMembers,
         hours,
-        revenue,
+        // revenue,
         startTime,
         endTime
       });
@@ -133,7 +133,7 @@ export const createGameAppointmentAction = createSafeAction(
         title: appointment.title,
         game: appointment.game,
         startTime: appointment.startTime,
-        tier: appointment.tier,
+        tier: tierConfig.tierName,
         promotion: tier
       });
 
@@ -148,11 +148,11 @@ export const createGameAppointmentAction = createSafeAction(
           endTime: appointment.endTime.toISOString(),
           minMembers: appointment.minMembers,
           maxMembers: appointment.maxMembers,
-          minCost: appointment.minCost,
+          minCost: Number(appointment.minCost),
           currentMembers: appointment.currentMembers,
           status: appointment.status,
           tier: tierConfig.tierName,
-          totalLockedAmount: appointment.totalLockedAmount,
+          totalLockedAmount: Number(appointment.totalLockedAmount),
           promotion: {
             promotion: tier.promotion,
             description: tier.description,

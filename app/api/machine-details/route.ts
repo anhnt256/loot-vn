@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     if (!token) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -21,14 +21,14 @@ export async function GET(request: NextRequest) {
     if (!decoded || !decoded.userId) {
       return NextResponse.json(
         { success: false, error: "Invalid token" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     if (!branch) {
       return NextResponse.json(
         { success: false, error: "Missing branch information" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -37,14 +37,13 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: machineDetails
+      data: machineDetails,
     });
-
   } catch (error) {
     console.error("Error in GET /api/machine-details:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -52,7 +51,7 @@ export async function GET(request: NextRequest) {
 async function getMachineDetails(branch: string) {
   try {
     const fnetDB = await getFnetDB();
-    
+
     // Raw query to join multiple tables from Fnet DB
     const query = `
       SELECT 
@@ -70,12 +69,12 @@ async function getMachineDetails(branch: string) {
     `;
 
     const result = await fnetDB.$queryRawUnsafe(query);
-    
+
     // Parse NetInfo JSON and extract macAddress, convert BigInt to Number
     const processedData = (result as any[]).map((row: any) => {
       let netInfo = null;
       let macAddress = null;
-      
+
       try {
         if (row.netInfo) {
           netInfo = JSON.parse(row.netInfo);
@@ -92,12 +91,11 @@ async function getMachineDetails(branch: string) {
         price: Number(row.price),
         netInfo: netInfo,
         machineGroupName: row.machineGroupName,
-        machineGroupId: Number(row.machineGroupId)
+        machineGroupId: Number(row.machineGroupId),
       };
     });
 
     return processedData;
-
   } catch (error) {
     console.error("Error in getMachineDetails:", error);
     throw error;

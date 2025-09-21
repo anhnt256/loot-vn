@@ -5,7 +5,7 @@ import { verifyJWT } from "@/lib/jwt";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     // Check authentication
@@ -15,7 +15,7 @@ export async function POST(
     if (!token) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -23,32 +23,31 @@ export async function POST(
     if (!decoded || !decoded.userId) {
       return NextResponse.json(
         { success: false, error: "Invalid token" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     // Add appointmentId from URL params
     const data = {
-      appointmentId: params.id
+      appointmentId: params.id,
     };
-    
+
     // Validate and leave appointment (action will get user info from cookies)
     const result = await leaveGameAppointmentAction(data);
-    
-    if (!result.success) {
+
+    if (result.error) {
       return NextResponse.json(
         { success: false, error: result.error },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     return NextResponse.json(result, { status: 200 });
-    
   } catch (error) {
     console.error("Error in POST /api/game-appointments/[id]/leave:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

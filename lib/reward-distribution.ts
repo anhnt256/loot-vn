@@ -1,6 +1,4 @@
-import { db } from './db';
-
-const prisma = db;
+import { db } from "./db";
 
 export interface RewardDistributionResult {
   success: boolean;
@@ -20,7 +18,7 @@ export interface AppointmentCompletionData {
   completedMembers: Array<{
     userId: number;
     lockedAmount: number;
-    status: 'COMPLETED' | 'NO_SHOW';
+    status: "COMPLETED" | "NO_SHOW";
   }>;
   tier?: string;
   promotion?: any;
@@ -31,157 +29,101 @@ export interface AppointmentCompletionData {
  * Distribute rewards for completed appointment
  */
 export async function distributeAppointmentRewards(
-  completionData: AppointmentCompletionData
+  completionData: AppointmentCompletionData,
 ): Promise<RewardDistributionResult> {
   try {
-    const { appointmentId, completedMembers, tier, promotion, totalLockedAmount } = completionData;
+    const {
+      appointmentId,
+      completedMembers,
+      tier,
+      promotion,
+      totalLockedAmount,
+    } = completionData;
 
     // Get appointment details
-    const appointment = await prisma.gameAppointment.findUnique({
-      where: { id: appointmentId },
-      include: { tierConfig: true }
-    });
+    const appointmentResult = await db.$queryRaw`
+      SELECT ga.*, gat.tierName, gat.questName, gat.minMembers, gat.maxMembers, 
+             gat.minHours, gat.lockedAmount, gat.tasks
+      FROM GameAppointment ga
+      LEFT JOIN GameAppointmentTier gat ON ga.tierId = gat.id
+      WHERE ga.id = ${appointmentId}
+    `;
 
+    const appointment = (appointmentResult as any[])[0];
     if (!appointment) {
       return {
         success: false,
         distributedRewards: [],
         totalRewardsDistributed: 0,
-        error: 'Appointment not found'
+        error: "Appointment not found",
       };
     }
 
     // Get tier configuration
-    const tierConfig = appointment.tierConfig;
-    if (!tierConfig || !tier) {
+    if (!appointment.tierName || !tier) {
       return {
         success: false,
         distributedRewards: [],
         totalRewardsDistributed: 0,
-        error: 'No tier configuration found'
+        error: "No tier configuration found",
       };
     }
 
-    const rewards = tierConfig.rewards as any;
+    const tasks = JSON.parse(appointment.tasks || "[]");
     const distributedRewards = [];
 
-    // Distribute base rewards to all completed members
-    for (const member of completedMembers.filter(m => m.status === 'COMPLETED')) {
-      // Distribute base rewards
-      if (rewards.baseRewards) {
-        for (const baseReward of rewards.baseRewards) {
-          const reward = await prisma.gameAppointmentReward.create({
-            data: {
-              appointmentId,
-              userId: member.userId,
-              branch: appointment.branch,
-              rewardType: baseReward.type,
-              rewardValue: baseReward.value,
-              quantity: baseReward.quantity,
-              status: 'DISTRIBUTED'
-            }
-          });
+    // Distribute rewards to all completed members
+    for (const member of completedMembers.filter(
+      (m) => m.status === "COMPLETED",
+    )) {
+      // Distribute task rewards
+      for (const task of tasks) {
+        await db.$executeRaw`
+          INSERT INTO GameAppointmentReward 
+          (id, appointmentId, userId, branch, taskId, taskName, rewardAmount, status, distributedAt, createdAt)
+          VALUES (${`reward_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`}, ${appointmentId}, ${member.userId}, ${appointment.branch}, ${task.taskId}, ${task.taskName}, ${task.rewardAmount}, 'DISTRIBUTED', NOW(), NOW())
+        `;
 
-          distributedRewards.push({
-            userId: member.userId,
-            rewardType: baseReward.type,
-            rewardValue: baseReward.value,
-            quantity: baseReward.quantity,
-            status: 'DISTRIBUTED'
-          });
-        }
-      }
-
-      // Distribute time-based rewards
-      if (rewards.timeBasedRewards) {
-        const hours = Math.ceil((appointment.endTime.getTime() - appointment.startTime.getTime()) / (1000 * 60 * 60));
-        
-        for (const timeReward of rewards.timeBasedRewards) {
-          if (hours >= timeReward.minHours) {
-            const reward = await prisma.gameAppointmentReward.create({
-              data: {
-                appointmentId,
-                userId: member.userId,
-                branch: appointment.branch,
-                rewardType: timeReward.type,
-                rewardValue: timeReward.value,
-                quantity: timeReward.quantity,
-                status: 'DISTRIBUTED'
-              }
-            });
-
-            distributedRewards.push({
-              userId: member.userId,
-              rewardType: timeReward.type,
-              rewardValue: timeReward.value,
-              quantity: timeReward.quantity,
-              status: 'DISTRIBUTED'
-            });
-          }
-        }
-      }
-
-      // Distribute member-count based rewards
-      if (rewards.memberCountRewards) {
-        const completedMemberCount = completedMembers.filter(m => m.status === 'COMPLETED').length;
-        
-        for (const memberReward of rewards.memberCountRewards) {
-          if (completedMemberCount >= memberReward.minMembers) {
-            const reward = await prisma.gameAppointmentReward.create({
-              data: {
-                appointmentId,
-                userId: member.userId,
-                branch: appointment.branch,
-                rewardType: memberReward.type,
-                rewardValue: memberReward.value,
-                quantity: memberReward.quantity,
-                status: 'DISTRIBUTED'
-              }
-            });
-
-            distributedRewards.push({
-              userId: member.userId,
-              rewardType: memberReward.type,
-              rewardValue: memberReward.value,
-              quantity: memberReward.quantity,
-              status: 'DISTRIBUTED'
-            });
-          }
-        }
+        distributedRewards.push({
+          userId: member.userId,
+          rewardType: task.taskId,
+          rewardValue: task.rewardAmount.toString(),
+          quantity: 1,
+          status: "DISTRIBUTED",
+        });
       }
     }
 
     // Handle no-show members (forfeit locked amount to Gateway fund)
-    const noShowMembers = completedMembers.filter(m => m.status === 'NO_SHOW');
+    const noShowMembers = completedMembers.filter(
+      (m) => m.status === "NO_SHOW",
+    );
     let forfeitedAmount = 0;
 
     for (const member of noShowMembers) {
       forfeitedAmount += member.lockedAmount;
-      
+
       // Update member status
-      await prisma.gameAppointmentMember.updateMany({
-        where: {
-          appointmentId,
-          userId: member.userId
-        },
-        data: {
-          status: 'NO_SHOW'
-        }
-      });
+      await db.$executeRaw`
+        UPDATE GameAppointmentMember 
+        SET status = 'NO_SHOW' 
+        WHERE appointmentId = ${appointmentId} AND userId = ${member.userId}
+      `;
     }
 
     // Update appointment status
-    await prisma.gameAppointment.update({
-      where: { id: appointmentId },
-      data: {
-        status: 'COMPLETED'
-      }
-    });
+    await db.$executeRaw`
+      UPDATE GameAppointment 
+      SET status = 'COMPLETED' 
+      WHERE id = ${appointmentId}
+    `;
 
     // Log forfeited amount to Gateway fund
     if (forfeitedAmount > 0) {
-      console.log(`💰 Forfeited ${forfeitedAmount.toLocaleString()} VNĐ to Gateway fund from no-show members`);
-      
+      console.log(
+        `💰 Forfeited ${forfeitedAmount.toLocaleString()} VNĐ to Gateway fund from no-show members`,
+      );
+
       // You could create a Gateway fund transaction record here
       // await prisma.gatewayFundTransaction.create({
       //   data: {
@@ -196,16 +138,15 @@ export async function distributeAppointmentRewards(
     return {
       success: true,
       distributedRewards,
-      totalRewardsDistributed: distributedRewards.length
+      totalRewardsDistributed: distributedRewards.length,
     };
-
   } catch (error) {
-    console.error('Error distributing rewards:', error);
+    console.error("Error distributing rewards:", error);
     return {
       success: false,
       distributedRewards: [],
       totalRewardsDistributed: 0,
-      error: 'Failed to distribute rewards'
+      error: "Failed to distribute rewards",
     };
   }
 }
@@ -215,7 +156,7 @@ export async function distributeAppointmentRewards(
  */
 export async function calculateExpectedRewards(
   appointmentId: string,
-  memberCount: number
+  memberCount: number,
 ): Promise<{
   baseRewards: Array<{
     type: string;
@@ -237,33 +178,44 @@ export async function calculateExpectedRewards(
   totalExpectedRewards: number;
 }> {
   try {
-    const appointment = await prisma.gameAppointment.findUnique({
-      where: { id: appointmentId },
-      include: { tierConfig: true }
-    });
+    const appointmentResult = await db.$queryRaw`
+      SELECT ga.*, gat.tasks
+      FROM GameAppointment ga
+      LEFT JOIN GameAppointmentTier gat ON ga.tierId = gat.id
+      WHERE ga.id = ${appointmentId}
+    `;
 
-    if (!appointment || !appointment.tierConfig) {
-      throw new Error('Appointment or tier configuration not found');
+    const appointment = (appointmentResult as any[])[0];
+    if (!appointment || !appointment.tasks) {
+      throw new Error("Appointment or tier configuration not found");
     }
 
-    const rewards = appointment.tierConfig.rewards as any;
-    const hours = Math.ceil((appointment.endTime.getTime() - appointment.startTime.getTime()) / (1000 * 60 * 60));
+    const tasks = JSON.parse(appointment.tasks || "[]");
+    const hours = Math.ceil(
+      (new Date(appointment.endTime).getTime() -
+        new Date(appointment.startTime).getTime()) /
+        (1000 * 60 * 60),
+    );
 
-    const baseRewards = rewards.baseRewards || [];
-    const timeBasedRewards = (rewards.timeBasedRewards || []).filter((reward: any) => hours >= reward.minHours);
-    const memberCountRewards = (rewards.memberCountRewards || []).filter((reward: any) => memberCount >= reward.minMembers);
+    const baseRewards = tasks.map((task: any) => ({
+      type: task.taskId,
+      value: task.rewardAmount.toString(),
+      quantity: 1,
+    }));
 
-    const totalExpectedRewards = baseRewards.length + timeBasedRewards.length + memberCountRewards.length;
+    const timeBasedRewards: any[] = [];
+    const memberCountRewards: any[] = [];
+
+    const totalExpectedRewards = baseRewards.length;
 
     return {
       baseRewards,
       timeBasedRewards,
       memberCountRewards,
-      totalExpectedRewards
+      totalExpectedRewards,
     };
-
   } catch (error) {
-    console.error('Error calculating expected rewards:', error);
+    console.error("Error calculating expected rewards:", error);
     throw error;
   }
 }
@@ -275,7 +227,7 @@ export async function getUserRewardHistory(
   userId: number,
   branch: string,
   limit: number = 20,
-  offset: number = 0
+  offset: number = 0,
 ): Promise<{
   rewards: Array<{
     id: string;
@@ -294,53 +246,46 @@ export async function getUserRewardHistory(
   totalCount: number;
 }> {
   try {
-    const [rewards, totalCount] = await Promise.all([
-      prisma.gameAppointmentReward.findMany({
-        where: {
-          userId,
-          branch
-        },
-        include: {
-          appointment: {
-            select: {
-              title: true,
-              game: true,
-              tier: true
-            }
-          }
-        },
-        orderBy: { createdAt: 'desc' },
-        take: limit,
-        skip: offset
-      }),
-      prisma.gameAppointmentReward.count({
-        where: {
-          userId,
-          branch
-        }
-      })
+    const [rewardsResult, totalCountResult] = await Promise.all([
+      db.$queryRaw`
+        SELECT gar.*, ga.title, ga.game, ga.tier
+        FROM GameAppointmentReward gar
+        LEFT JOIN GameAppointment ga ON gar.appointmentId = ga.id
+        WHERE gar.userId = ${userId} AND gar.branch = ${branch}
+        ORDER BY gar.createdAt DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `,
+      db.$queryRaw`
+        SELECT COUNT(*) as count
+        FROM GameAppointmentReward
+        WHERE userId = ${userId} AND branch = ${branch}
+      `,
     ]);
 
+    const rewards = rewardsResult as any[];
+    const totalCount = (totalCountResult as any[])[0].count;
+
     return {
-      rewards: rewards.map(reward => ({
+      rewards: rewards.map((reward) => ({
         id: reward.id,
         appointmentId: reward.appointmentId,
-        rewardType: reward.rewardType,
-        rewardValue: reward.rewardValue,
-        quantity: reward.quantity,
+        rewardType: reward.taskId,
+        rewardValue: reward.rewardAmount.toString(),
+        quantity: 1,
         status: reward.status,
-        distributedAt: reward.distributedAt?.toISOString() || null,
+        distributedAt: reward.distributedAt
+          ? new Date(reward.distributedAt).toISOString()
+          : null,
         appointment: {
-          title: reward.appointment.title,
-          game: reward.appointment.game,
-          tier: reward.appointment.tier || 'Unknown'
-        }
+          title: reward.title,
+          game: reward.game,
+          tier: reward.tier || "Unknown",
+        },
       })),
-      totalCount
+      totalCount,
     };
-
   } catch (error) {
-    console.error('Error getting user reward history:', error);
+    console.error("Error getting user reward history:", error);
     throw error;
   }
 }
@@ -353,75 +298,83 @@ export async function completeAppointment(
   completionData: {
     completedMembers: Array<{
       userId: number;
-      status: 'COMPLETED' | 'NO_SHOW';
+      status: "COMPLETED" | "NO_SHOW";
     }>;
-  }
+  },
 ): Promise<{
   success: boolean;
   rewardDistribution?: RewardDistributionResult;
   error?: string;
 }> {
   try {
-    const appointment = await prisma.gameAppointment.findUnique({
-      where: { id: appointmentId },
-      include: {
-        members: {
-          where: { status: 'JOINED' }
-        },
-        tierConfig: true
-      }
-    });
+    const appointmentResult = await db.$queryRaw`
+      SELECT ga.*, gat.tierName, gat.tasks
+      FROM GameAppointment ga
+      LEFT JOIN GameAppointmentTier gat ON ga.tierId = gat.id
+      WHERE ga.id = ${appointmentId}
+    `;
 
+    const appointment = (appointmentResult as any[])[0];
     if (!appointment) {
       return {
         success: false,
-        error: 'Appointment not found'
+        error: "Appointment not found",
       };
     }
 
-    if (appointment.status !== 'ACTIVE') {
+    if (appointment.status !== "ACTIVE") {
       return {
         success: false,
-        error: 'Appointment is not active'
+        error: "Appointment is not active",
       };
     }
+
+    // Get members data
+    const membersResult = await db.$queryRaw`
+      SELECT userId, lockedAmount
+      FROM GameAppointmentMember
+      WHERE appointmentId = ${appointmentId} AND status = 'JOINED'
+    `;
+
+    const members = membersResult as any[];
 
     // Prepare completion data
     const completionDataWithAmounts: AppointmentCompletionData = {
       appointmentId,
-      completedMembers: completionData.completedMembers.map(member => {
-        const memberData = appointment.members.find(m => m.userId === member.userId);
+      completedMembers: completionData.completedMembers.map((member) => {
+        const memberData = members.find((m) => m.userId === member.userId);
         return {
           userId: member.userId,
           lockedAmount: memberData?.lockedAmount || 0,
-          status: member.status
+          status: member.status,
         };
       }),
-      tier: appointment.tier,
-      promotion: appointment.tierConfig?.rewards,
-      totalLockedAmount: appointment.totalLockedAmount
+      tier: appointment.tierName,
+      promotion: appointment.tasks,
+      totalLockedAmount: appointment.totalLockedAmount,
     };
 
     // Distribute rewards
-    const rewardDistribution = await distributeAppointmentRewards(completionDataWithAmounts);
+    const rewardDistribution = await distributeAppointmentRewards(
+      completionDataWithAmounts,
+    );
 
     if (!rewardDistribution.success) {
       return {
         success: false,
-        error: rewardDistribution.error
+        error: rewardDistribution.error,
       };
     }
 
     return {
       success: true,
-      rewardDistribution
+      rewardDistribution,
     };
-
   } catch (error) {
-    console.error('Error completing appointment:', error);
+    console.error("Error completing appointment:", error);
     return {
       success: false,
-      error: 'Failed to complete appointment'
+      error: "Failed to complete appointment",
     };
   }
 }
@@ -430,7 +383,7 @@ export async function completeAppointment(
  * Get appointment reward summary
  */
 export async function getAppointmentRewardSummary(
-  appointmentId: string
+  appointmentId: string,
 ): Promise<{
   appointment: {
     id: string;
@@ -455,53 +408,70 @@ export async function getAppointmentRewardSummary(
   forfeitedAmount: number;
 }> {
   try {
-    const appointment = await prisma.gameAppointment.findUnique({
-      where: { id: appointmentId },
-      include: {
-        members: true,
-        rewards: true
-      }
-    });
+    const appointmentResult = await db.$queryRaw`
+      SELECT ga.*, gat.tierName
+      FROM GameAppointment ga
+      LEFT JOIN GameAppointmentTier gat ON ga.tierId = gat.id
+      WHERE ga.id = ${appointmentId}
+    `;
 
+    const appointment = (appointmentResult as any[])[0];
     if (!appointment) {
-      throw new Error('Appointment not found');
+      throw new Error("Appointment not found");
     }
 
-    const members = appointment.members.map(member => ({
+    const [membersResult, rewardsResult] = await Promise.all([
+      db.$queryRaw`
+        SELECT userId, lockedAmount, status
+        FROM GameAppointmentMember
+        WHERE appointmentId = ${appointmentId}
+      `,
+      db.$queryRaw`
+        SELECT userId, taskId, rewardAmount, status
+        FROM GameAppointmentReward
+        WHERE appointmentId = ${appointmentId}
+      `,
+    ]);
+
+    const members = membersResult as any[];
+    const rewards = rewardsResult as any[];
+
+    const membersWithRewards = members.map((member) => ({
       userId: member.userId,
       lockedAmount: member.lockedAmount,
       status: member.status,
-      rewards: appointment.rewards
-        .filter(reward => reward.userId === member.userId)
-        .map(reward => ({
-          rewardType: reward.rewardType,
-          rewardValue: reward.rewardValue,
-          quantity: reward.quantity,
-          status: reward.status
-        }))
+      rewards: rewards
+        .filter((reward) => reward.userId === member.userId)
+        .map((reward) => ({
+          rewardType: reward.taskId,
+          rewardValue: reward.rewardAmount.toString(),
+          quantity: 1,
+          status: reward.status,
+        })),
     }));
 
-    const totalRewardsDistributed = appointment.rewards.filter(r => r.status === 'DISTRIBUTED').length;
-    const forfeitedAmount = appointment.members
-      .filter(m => m.status === 'NO_SHOW')
-      .reduce((sum, m) => sum + m.lockedAmount, 0);
+    const totalRewardsDistributed = rewards.filter(
+      (r) => r.status === "DISTRIBUTED",
+    ).length;
+    const forfeitedAmount = members
+      .filter((m) => m.status === "NO_SHOW")
+      .reduce((sum, m) => sum + Number(m.lockedAmount), 0);
 
     return {
       appointment: {
         id: appointment.id,
         title: appointment.title,
         game: appointment.game,
-        tier: appointment.tier || 'Unknown',
+        tier: appointment.tierName || "Unknown",
         status: appointment.status,
-        totalLockedAmount: appointment.totalLockedAmount
+        totalLockedAmount: Number(appointment.totalLockedAmount),
       },
-      members,
+      members: membersWithRewards,
       totalRewardsDistributed,
-      forfeitedAmount
+      forfeitedAmount,
     };
-
   } catch (error) {
-    console.error('Error getting appointment reward summary:', error);
+    console.error("Error getting appointment reward summary:", error);
     throw error;
   }
 }

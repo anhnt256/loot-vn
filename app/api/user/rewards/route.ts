@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getUserRewardHistory } from '@/lib/reward-distribution';
+import { getUserRewardHistory } from "@/lib/reward-distribution";
 import { cookies } from "next/headers";
 import { verifyJWT } from "@/lib/jwt";
 
@@ -13,14 +13,14 @@ export async function GET(request: NextRequest) {
     if (!token) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     if (!branch) {
       return NextResponse.json(
         { success: false, error: "Branch cookie is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -28,30 +28,29 @@ export async function GET(request: NextRequest) {
     if (!decoded || !decoded.userId) {
       return NextResponse.json(
         { success: false, error: "Invalid token" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
-    const userId = parseInt(decoded.userId);
+    const userId = parseInt(decoded.userId.toString());
     const { searchParams } = new URL(request.url);
-    
+
     // Get query parameters
     const limit = parseInt(searchParams.get("limit") || "20");
     const offset = parseInt(searchParams.get("offset") || "0");
-    
+
     // Get user reward history
     const result = await getUserRewardHistory(userId, branch, limit, offset);
-    
+
     return NextResponse.json({
       success: true,
-      data: result
+      data: result,
     });
-    
   } catch (error) {
     console.error("Error in GET /api/user/rewards:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

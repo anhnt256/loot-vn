@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getManualActivationOptions } from '@/lib/auto-tier-downgrade';
+import { getManualActivationOptions } from "@/lib/auto-tier-downgrade";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     // Get user info from headers (set by middleware)
@@ -12,7 +12,7 @@ export async function GET(
     if (!userHeader) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -20,7 +20,7 @@ export async function GET(
     if (!decoded || !decoded.userId) {
       return NextResponse.json(
         { success: false, error: "Invalid user data" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -29,7 +29,7 @@ export async function GET(
     if (userId !== -99) {
       return NextResponse.json(
         { success: false, error: "Admin access required" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -38,21 +38,23 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      data: options
+      data: options,
     });
-    
   } catch (error) {
-    console.error("Error in GET /api/admin/game-appointments/[id]/activate-tier:", error);
+    console.error(
+      "Error in GET /api/admin/game-appointments/[id]/activate-tier:",
+      error,
+    );
     return NextResponse.json(
       { success: false, error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     // Get user info from headers (set by middleware)
@@ -60,7 +62,7 @@ export async function POST(
     if (!userHeader) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -68,7 +70,7 @@ export async function POST(
     if (!decoded || !decoded.userId) {
       return NextResponse.json(
         { success: false, error: "Invalid user data" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -77,7 +79,7 @@ export async function POST(
     if (userId !== -99) {
       return NextResponse.json(
         { success: false, error: "Admin access required" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -87,32 +89,32 @@ export async function POST(
     if (!tierName) {
       return NextResponse.json(
         { success: false, error: "Tier name is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Check if appointment exists
     const appointment = await db.gameAppointment.findUnique({
       where: { id: params.id },
-      include: { tier: true }
+      include: { tier: true },
     });
 
     if (!appointment) {
       return NextResponse.json(
         { success: false, error: "Appointment not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     // Check if tier exists and is active
-    const tier = await db.gameAppointmentTier.findUnique({
-      where: { tierName }
+    const tier = await db.gameAppointmentTier.findFirst({
+      where: { tierName, isActive: true },
     });
 
     if (!tier || !tier.isActive) {
       return NextResponse.json(
         { success: false, error: "Tier not found or inactive" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -120,32 +122,36 @@ export async function POST(
     const updatedAppointment = await db.gameAppointment.update({
       where: { id: params.id },
       data: {
-        tierId: tier.id
+        tierId: tier.id,
       },
-      include: { tier: true }
+      include: { tier: true },
     });
 
     return NextResponse.json({
       success: true,
       data: {
         appointmentId: updatedAppointment.id,
-        tier: updatedAppointment.tier ? {
-          tierName: updatedAppointment.tier.tierName,
-          questName: updatedAppointment.tier.questName,
-          minMembers: updatedAppointment.tier.minMembers,
-          maxMembers: updatedAppointment.tier.maxMembers,
-          minHours: updatedAppointment.tier.minHours,
-          lockedAmount: updatedAppointment.tier.lockedAmount,
-          tasks: updatedAppointment.tier.tasks
-        } : null
-      }
+        tier: updatedAppointment.tier
+          ? {
+              tierName: updatedAppointment.tier.tierName,
+              questName: updatedAppointment.tier.questName,
+              minMembers: updatedAppointment.tier.minMembers,
+              maxMembers: updatedAppointment.tier.maxMembers,
+              minHours: updatedAppointment.tier.minHours,
+              lockedAmount: updatedAppointment.tier.lockedAmount,
+              tasks: updatedAppointment.tier.tasks,
+            }
+          : null,
+      },
     });
-    
   } catch (error) {
-    console.error("Error in POST /api/admin/game-appointments/[id]/activate-tier:", error);
+    console.error(
+      "Error in POST /api/admin/game-appointments/[id]/activate-tier:",
+      error,
+    );
     return NextResponse.json(
       { success: false, error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

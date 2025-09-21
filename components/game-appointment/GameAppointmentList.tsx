@@ -1,26 +1,38 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CreateGameAppointmentModal } from "./CreateGameAppointmentModal";
 import { GameAppointmentDetailModal } from "./GameAppointmentDetailModal";
 import { JoinGameAppointmentSummaryModal } from "./JoinGameAppointmentSummaryModal";
-import { 
-  Gamepad2, 
-  Calendar, 
-  Clock, 
-  Users, 
-  DollarSign, 
-  MapPin, 
+import {
+  Gamepad2,
+  Calendar,
+  Clock,
+  Users,
+  DollarSign,
+  MapPin,
   Search,
   Filter,
   Loader2,
   Crown,
-  Gift
+  Gift,
 } from "lucide-react";
 
 interface GameAppointment {
@@ -37,15 +49,17 @@ interface GameAppointment {
   minCost: number;
   currentMembers: number;
   status: string;
-  tier?: {
-    tierName: string;
-    questName: string;
-    minMembers: number;
-    maxMembers?: number;
-    minHours: number;
-    lockedAmount: number;
-    tasks: any[];
-  } | string;
+  tier?:
+    | {
+        tierName: string;
+        questName: string;
+        minMembers: number;
+        maxMembers?: number;
+        minHours: number;
+        lockedAmount: number;
+        tasks: any[];
+      }
+    | string;
   totalLockedAmount: number;
   createdAt: string;
   members: Array<{
@@ -66,8 +80,11 @@ interface GameAppointmentListProps {
   initialAppointments?: GameAppointment[];
 }
 
-export function GameAppointmentList({ initialAppointments = [] }: GameAppointmentListProps) {
-  const [appointments, setAppointments] = useState<GameAppointment[]>(initialAppointments);
+export function GameAppointmentList({
+  initialAppointments = [],
+}: GameAppointmentListProps) {
+  const [appointments, setAppointments] =
+    useState<GameAppointment[]>(initialAppointments);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -75,10 +92,14 @@ export function GameAppointmentList({ initialAppointments = [] }: GameAppointmen
   const [tierFilter, setTierFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<
+    string | null
+  >(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
-  const [joinAppointmentId, setJoinAppointmentId] = useState<string | null>(null);
+  const [joinAppointmentId, setJoinAppointmentId] = useState<string | null>(
+    null,
+  );
   const [totalPages, setTotalPages] = useState(1);
 
   const fetchAppointments = async (page = 1) => {
@@ -86,23 +107,23 @@ export function GameAppointmentList({ initialAppointments = [] }: GameAppointmen
     try {
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: "10"
+        limit: "10",
       });
 
       if (searchTerm) params.append("game", searchTerm);
       if (statusFilter !== "all") params.append("status", statusFilter);
       if (tierFilter !== "all") {
-      // Handle tier filter - convert tier names to tierName values
-      const tierNameMap: { [key: string]: string } = {
-        "tier_3p_3h": "tier_tam_ho",
-        "tier_3p_5h": "tier_tam_ho", 
-        "tier_5p_3h": "tier_ngu_long",
-        "tier_5p_5h": "tier_ngu_long",
-        "tier_allnight": "tier_allnight"
-      };
-      const tierName = tierNameMap[tierFilter] || tierFilter;
-      params.append("tier", tierName);
-    }
+        // Handle tier filter - convert tier names to tierName values
+        const tierNameMap: { [key: string]: string } = {
+          tier_3p_3h: "tier_tam_ho",
+          tier_3p_5h: "tier_tam_ho",
+          tier_5p_3h: "tier_ngu_long",
+          tier_5p_5h: "tier_ngu_long",
+          tier_allnight: "tier_allnight",
+        };
+        const tierName = tierNameMap[tierFilter] || tierFilter;
+        params.append("tier", tierName);
+      }
 
       const response = await fetch(`/api/game-appointments?${params}`);
       const result = await response.json();
@@ -158,31 +179,51 @@ export function GameAppointmentList({ initialAppointments = [] }: GameAppointmen
       ACTIVE: { label: "Hoạt động", variant: "default" as const },
       COMPLETED: { label: "Hoàn thành", variant: "secondary" as const },
       CANCELLED: { label: "Đã hủy", variant: "destructive" as const },
-      EXPIRED: { label: "Hết hạn", variant: "outline" as const }
+      EXPIRED: { label: "Hết hạn", variant: "outline" as const },
     };
 
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.ACTIVE;
+    const config =
+      statusConfig[status as keyof typeof statusConfig] || statusConfig.ACTIVE;
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  const getTierBadge = (tier?: { tierName: string; questName: string; minMembers: number; maxMembers?: number; minHours: number; lockedAmount: number; tasks: any[] } | string) => {
+  const getTierBadge = (
+    tier?:
+      | {
+          tierName: string;
+          questName: string;
+          minMembers: number;
+          maxMembers?: number;
+          minHours: number;
+          lockedAmount: number;
+          tasks: any[];
+        }
+      | string,
+  ) => {
     if (!tier) return <Badge variant="outline">Chưa kích hoạt</Badge>;
 
     // Handle tier object
-    if (typeof tier === 'object') {
-      return <Badge className="bg-purple-100 text-purple-800">{tier.questName}</Badge>;
+    if (typeof tier === "object") {
+      return (
+        <Badge className="bg-purple-100 text-purple-800">
+          {tier.questName}
+        </Badge>
+      );
     }
 
     // Handle tier string (legacy)
     const tierConfig = {
-      "tier_3p_3h": { label: "Bronze", color: "bg-amber-100 text-amber-800" },
-      "tier_3p_5h": { label: "Silver", color: "bg-gray-100 text-gray-800" },
-      "tier_5p_3h": { label: "Silver", color: "bg-gray-100 text-gray-800" },
-      "tier_5p_5h": { label: "Gold", color: "bg-yellow-100 text-yellow-800" },
-      "tier_allnight": { label: "Diamond", color: "bg-blue-100 text-blue-800" }
+      tier_3p_3h: { label: "Bronze", color: "bg-amber-100 text-amber-800" },
+      tier_3p_5h: { label: "Silver", color: "bg-gray-100 text-gray-800" },
+      tier_5p_3h: { label: "Silver", color: "bg-gray-100 text-gray-800" },
+      tier_5p_5h: { label: "Gold", color: "bg-yellow-100 text-yellow-800" },
+      tier_allnight: { label: "Diamond", color: "bg-blue-100 text-blue-800" },
     };
 
-    const config = tierConfig[tier as keyof typeof tierConfig] || { label: tier, color: "bg-gray-100 text-gray-800" };
+    const config = tierConfig[tier as keyof typeof tierConfig] || {
+      label: tier,
+      color: "bg-gray-100 text-gray-800",
+    };
     return <Badge className={config.color}>{config.label}</Badge>;
   };
 
@@ -194,14 +235,16 @@ export function GameAppointmentList({ initialAppointments = [] }: GameAppointmen
       month: "short",
       day: "numeric",
       hour: "2-digit",
-      minute: "2-digit"
+      minute: "2-digit",
     });
   };
 
   const formatDuration = (startTime: string, endTime: string) => {
     const start = new Date(startTime);
     const end = new Date(endTime);
-    const hours = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60));
+    const hours = Math.ceil(
+      (end.getTime() - start.getTime()) / (1000 * 60 * 60),
+    );
     return `${hours} giờ`;
   };
 
@@ -213,10 +256,14 @@ export function GameAppointmentList({ initialAppointments = [] }: GameAppointmen
           <div className="flex-shrink-0 mb-4">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-white mb-1">Hẹn Chơi Game</h1>
-                <p className="text-gray-400 text-sm">Tham gia hẹn chơi cùng bạn bè và nhận phần thưởng</p>
+                <h1 className="text-2xl font-bold text-white mb-1">
+                  Hẹn Chơi Game
+                </h1>
+                <p className="text-gray-400 text-sm">
+                  Tham gia hẹn chơi cùng bạn bè và nhận phần thưởng
+                </p>
               </div>
-              <Button 
+              <Button
                 onClick={() => setIsCreateModalOpen(true)}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
@@ -241,17 +288,27 @@ export function GameAppointmentList({ initialAppointments = [] }: GameAppointmen
                     />
                   </div>
                 </div>
-                
+
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-[160px] bg-gray-700 border-gray-600 text-white">
                     <SelectValue placeholder="Trạng thái" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-700 border-gray-600">
-                    <SelectItem value="all" className="text-white">Tất cả trạng thái</SelectItem>
-                    <SelectItem value="ACTIVE" className="text-white">Hoạt động</SelectItem>
-                    <SelectItem value="COMPLETED" className="text-white">Hoàn thành</SelectItem>
-                    <SelectItem value="CANCELLED" className="text-white">Đã hủy</SelectItem>
-                    <SelectItem value="EXPIRED" className="text-white">Hết hạn</SelectItem>
+                    <SelectItem value="all" className="text-white">
+                      Tất cả trạng thái
+                    </SelectItem>
+                    <SelectItem value="ACTIVE" className="text-white">
+                      Hoạt động
+                    </SelectItem>
+                    <SelectItem value="COMPLETED" className="text-white">
+                      Hoàn thành
+                    </SelectItem>
+                    <SelectItem value="CANCELLED" className="text-white">
+                      Đã hủy
+                    </SelectItem>
+                    <SelectItem value="EXPIRED" className="text-white">
+                      Hết hạn
+                    </SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -260,12 +317,24 @@ export function GameAppointmentList({ initialAppointments = [] }: GameAppointmen
                     <SelectValue placeholder="Tier" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-700 border-gray-600">
-                    <SelectItem value="all" className="text-white">Tất cả tier</SelectItem>
-                    <SelectItem value="tier_3p_3h" className="text-white">Bronze</SelectItem>
-                    <SelectItem value="tier_3p_5h" className="text-white">Silver (3p-5h)</SelectItem>
-                    <SelectItem value="tier_5p_3h" className="text-white">Silver (5p-3h)</SelectItem>
-                    <SelectItem value="tier_5p_5h" className="text-white">Gold</SelectItem>
-                    <SelectItem value="tier_allnight" className="text-white">Diamond</SelectItem>
+                    <SelectItem value="all" className="text-white">
+                      Tất cả tier
+                    </SelectItem>
+                    <SelectItem value="tier_3p_3h" className="text-white">
+                      Bronze
+                    </SelectItem>
+                    <SelectItem value="tier_3p_5h" className="text-white">
+                      Silver (3p-5h)
+                    </SelectItem>
+                    <SelectItem value="tier_5p_3h" className="text-white">
+                      Silver (5p-3h)
+                    </SelectItem>
+                    <SelectItem value="tier_5p_5h" className="text-white">
+                      Gold
+                    </SelectItem>
+                    <SelectItem value="tier_allnight" className="text-white">
+                      Diamond
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -281,13 +350,20 @@ export function GameAppointmentList({ initialAppointments = [] }: GameAppointmen
             ) : appointments.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full">
                 <Gamepad2 className="h-16 w-16 text-gray-400 mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">Không có hẹn chơi nào</h3>
-                <p className="text-gray-400 text-center">Hãy tạo hẹn chơi đầu tiên của bạn!</p>
+                <h3 className="text-xl font-semibold text-white mb-2">
+                  Không có hẹn chơi nào
+                </h3>
+                <p className="text-gray-400 text-center">
+                  Hãy tạo hẹn chơi đầu tiên của bạn!
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-2">
                 {appointments.map((appointment) => (
-                  <div key={appointment.id} className="bg-gray-800/50 rounded-lg p-4 border border-gray-700 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                  <div
+                    key={appointment.id}
+                    className="bg-gray-800/50 rounded-lg p-4 border border-gray-700 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                  >
                     {/* Header */}
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
@@ -319,17 +395,25 @@ export function GameAppointmentList({ initialAppointments = [] }: GameAppointmen
                         <Calendar className="h-4 w-4 text-blue-400" />
                         <span>{formatDateTime(appointment.startTime)}</span>
                       </div>
-                      
+
                       <div className="flex items-center gap-2 text-gray-300">
                         <Clock className="h-4 w-4 text-green-400" />
-                        <span>{formatDuration(appointment.startTime, appointment.endTime)}</span>
+                        <span>
+                          {formatDuration(
+                            appointment.startTime,
+                            appointment.endTime,
+                          )}
+                        </span>
                       </div>
-                      
+
                       <div className="flex items-center gap-2 text-gray-300">
                         <Users className="h-4 w-4 text-purple-400" />
-                        <span>{appointment.currentMembers}/{appointment.maxMembers} thành viên</span>
+                        <span>
+                          {appointment.currentMembers}/{appointment.maxMembers}{" "}
+                          thành viên
+                        </span>
                       </div>
-                      
+
                       <div className="flex items-center gap-2 text-gray-300">
                         <DollarSign className="h-4 w-4 text-yellow-400" />
                         <span>{appointment.minCost.toLocaleString()} VNĐ</span>
@@ -353,23 +437,26 @@ export function GameAppointmentList({ initialAppointments = [] }: GameAppointmen
 
                     {/* Action buttons */}
                     <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => handleViewDetail(appointment.id)}
                         className="flex-1 bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
                       >
                         Xem chi tiết
                       </Button>
-                      {appointment.status === "ACTIVE" && appointment.currentMembers < appointment.maxMembers && (
-                        <Button 
-                          size="sm"
-                          onClick={() => handleJoinAppointment(appointment.id)}
-                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                        >
-                          Tham gia
-                        </Button>
-                      )}
+                      {appointment.status === "ACTIVE" &&
+                        appointment.currentMembers < appointment.maxMembers && (
+                          <Button
+                            size="sm"
+                            onClick={() =>
+                              handleJoinAppointment(appointment.id)
+                            }
+                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                          >
+                            Tham gia
+                          </Button>
+                        )}
                     </div>
                   </div>
                 ))}
@@ -407,7 +494,7 @@ export function GameAppointmentList({ initialAppointments = [] }: GameAppointmen
           )}
         </div>
       </div>
-      
+
       {/* Create Appointment Modal */}
       <CreateGameAppointmentModal
         isOpen={isCreateModalOpen}

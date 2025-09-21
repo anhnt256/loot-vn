@@ -149,7 +149,7 @@ const formatDate = (dateString: string | null | undefined) => {
   if (!dateString || dateString === "Invalid Date") {
     return "-";
   }
-  
+
   try {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
@@ -718,9 +718,7 @@ const AdminDashboard = () => {
               {
                 key: "0",
                 label: (
-                  <span className="text-base font-semibold">
-                    Thông tin máy
-                  </span>
+                  <span className="text-base font-semibold">Thông tin máy</span>
                 ),
                 children: (
                   <div className="py-6 px-6 bg-[#23272f] rounded-lg border border-[#374151]">
@@ -736,18 +734,34 @@ const AdminDashboard = () => {
                             <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/20 border border-blue-500/30 rounded-lg p-4">
                               <div className="flex items-center gap-2 mb-3">
                                 <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
-                                <div className="text-blue-400 font-semibold">CPU</div>
+                                <div className="text-blue-400 font-semibold">
+                                  CPU
+                                </div>
                               </div>
                               <div className="space-y-2">
                                 <div className="font-bold text-white text-sm">
-                                  {currentComputer.machineDetails.netInfo.Cpu || "Unknown CPU"}
+                                  {currentComputer.machineDetails.netInfo.Cpu ||
+                                    "Unknown CPU"}
                                 </div>
                                 <div className="text-xs text-gray-300">
-                                  Load: <span className="text-green-400 font-semibold">{currentComputer.machineDetails.netInfo.cpu_load || "0"}%</span>
+                                  Load:{" "}
+                                  <span className="text-green-400 font-semibold">
+                                    {currentComputer.machineDetails.netInfo
+                                      .cpu_load || "0"}
+                                    %
+                                  </span>
                                 </div>
-                                {currentComputer.machineDetails.netInfo.cpu_temp && (
+                                {currentComputer.machineDetails.netInfo
+                                  .cpu_temp && (
                                   <div className="text-xs text-gray-300">
-                                    Nhiệt độ: <span className="text-blue-400 font-semibold">{currentComputer.machineDetails.netInfo.cpu_temp}°C</span>
+                                    Nhiệt độ:{" "}
+                                    <span className="text-blue-400 font-semibold">
+                                      {
+                                        currentComputer.machineDetails.netInfo
+                                          .cpu_temp
+                                      }
+                                      °C
+                                    </span>
                                   </div>
                                 )}
                               </div>
@@ -757,18 +771,34 @@ const AdminDashboard = () => {
                             <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 border border-purple-500/30 rounded-lg p-4">
                               <div className="flex items-center gap-2 mb-3">
                                 <div className="w-3 h-3 bg-purple-400 rounded-full"></div>
-                                <div className="text-purple-400 font-semibold">GPU</div>
+                                <div className="text-purple-400 font-semibold">
+                                  GPU
+                                </div>
                               </div>
                               <div className="space-y-2">
                                 <div className="font-bold text-white text-sm">
-                                  {currentComputer.machineDetails.netInfo.Gpu || "Unknown GPU"}
+                                  {currentComputer.machineDetails.netInfo.Gpu ||
+                                    "Unknown GPU"}
                                 </div>
                                 <div className="text-xs text-gray-300">
-                                  Load: <span className="text-green-400 font-semibold">{currentComputer.machineDetails.netInfo.gpu_load || "0"}%</span>
+                                  Load:{" "}
+                                  <span className="text-green-400 font-semibold">
+                                    {currentComputer.machineDetails.netInfo
+                                      .gpu_load || "0"}
+                                    %
+                                  </span>
                                 </div>
-                                {currentComputer.machineDetails.netInfo.gpu_temp && (
+                                {currentComputer.machineDetails.netInfo
+                                  .gpu_temp && (
                                   <div className="text-xs text-gray-300">
-                                    Nhiệt độ: <span className="text-blue-400 font-semibold">{currentComputer.machineDetails.netInfo.gpu_temp}°C</span>
+                                    Nhiệt độ:{" "}
+                                    <span className="text-blue-400 font-semibold">
+                                      {
+                                        currentComputer.machineDetails.netInfo
+                                          .gpu_temp
+                                      }
+                                      °C
+                                    </span>
                                   </div>
                                 )}
                               </div>
@@ -778,23 +808,49 @@ const AdminDashboard = () => {
                             <div className="bg-gradient-to-br from-pink-900/30 to-pink-800/20 border border-pink-500/30 rounded-lg p-4">
                               <div className="flex items-center gap-2 mb-3">
                                 <div className="w-3 h-3 bg-pink-400 rounded-full"></div>
-                                <div className="text-pink-400 font-semibold">RAM</div>
+                                <div className="text-pink-400 font-semibold">
+                                  RAM
+                                </div>
                               </div>
                               <div className="space-y-2">
                                 <div className="font-bold text-white text-sm">
-                                  {currentComputer.machineDetails.netInfo.Memory || "Unknown RAM"}
+                                  {currentComputer.machineDetails.netInfo
+                                    .Memory || "Unknown RAM"}
                                 </div>
                                 <div className="text-xs text-gray-300">
-                                  Load: <span className="text-pink-400 font-semibold">{currentComputer.machineDetails.netInfo.ram_load || "0"}%</span>
+                                  Load:{" "}
+                                  <span className="text-pink-400 font-semibold">
+                                    {currentComputer.machineDetails.netInfo
+                                      .ram_load || "0"}
+                                    %
+                                  </span>
                                 </div>
-                                {currentComputer.machineDetails.netInfo.ram_used && currentComputer.machineDetails.netInfo.ram_available && (
+                                {currentComputer.machineDetails.netInfo
+                                  .ram_used &&
+                                  currentComputer.machineDetails.netInfo
+                                    .ram_available && (
+                                    <div className="text-xs text-gray-300">
+                                      Đã dùng:{" "}
+                                      <span className="text-yellow-400 font-semibold">
+                                        {
+                                          currentComputer.machineDetails.netInfo
+                                            .ram_used
+                                        }
+                                        GB
+                                      </span>
+                                    </div>
+                                  )}
+                                {currentComputer.machineDetails.netInfo
+                                  .ram_available && (
                                   <div className="text-xs text-gray-300">
-                                    Đã dùng: <span className="text-yellow-400 font-semibold">{currentComputer.machineDetails.netInfo.ram_used}GB</span>
-                                  </div>
-                                )}
-                                {currentComputer.machineDetails.netInfo.ram_available && (
-                                  <div className="text-xs text-gray-300">
-                                    Còn lại: <span className="text-green-400 font-semibold">{currentComputer.machineDetails.netInfo.ram_available}GB</span>
+                                    Còn lại:{" "}
+                                    <span className="text-green-400 font-semibold">
+                                      {
+                                        currentComputer.machineDetails.netInfo
+                                          .ram_available
+                                      }
+                                      GB
+                                    </span>
                                   </div>
                                 )}
                               </div>
@@ -804,11 +860,14 @@ const AdminDashboard = () => {
                             <div className="bg-gradient-to-br from-green-900/30 to-green-800/20 border border-green-500/30 rounded-lg p-4">
                               <div className="flex items-center gap-2 mb-3">
                                 <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                                <div className="text-green-400 font-semibold">Mainboard</div>
+                                <div className="text-green-400 font-semibold">
+                                  Mainboard
+                                </div>
                               </div>
                               <div className="space-y-2">
                                 <div className="font-bold text-white text-sm">
-                                  {currentComputer.machineDetails.netInfo.Motherboard || "Unknown Motherboard"}
+                                  {currentComputer.machineDetails.netInfo
+                                    .Motherboard || "Unknown Motherboard"}
                                 </div>
                               </div>
                             </div>
@@ -817,15 +876,26 @@ const AdminDashboard = () => {
                             <div className="bg-gradient-to-br from-yellow-900/30 to-yellow-800/20 border border-yellow-500/30 rounded-lg p-4">
                               <div className="flex items-center gap-2 mb-3">
                                 <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                                <div className="text-yellow-400 font-semibold">Storage</div>
+                                <div className="text-yellow-400 font-semibold">
+                                  Storage
+                                </div>
                               </div>
                               <div className="space-y-2">
                                 <div className="font-bold text-white text-sm">
-                                  {currentComputer.machineDetails.netInfo.Storage || "Unknown Storage"}
+                                  {currentComputer.machineDetails.netInfo
+                                    .Storage || "Unknown Storage"}
                                 </div>
-                                {currentComputer.machineDetails.netInfo.disk_load && (
+                                {currentComputer.machineDetails.netInfo
+                                  .disk_load && (
                                   <div className="text-xs text-gray-300">
-                                    Load: <span className="text-yellow-400 font-semibold">{currentComputer.machineDetails.netInfo.disk_load}%</span>
+                                    Load:{" "}
+                                    <span className="text-yellow-400 font-semibold">
+                                      {
+                                        currentComputer.machineDetails.netInfo
+                                          .disk_load
+                                      }
+                                      %
+                                    </span>
                                   </div>
                                 )}
                               </div>
@@ -835,22 +905,40 @@ const AdminDashboard = () => {
                             <div className="bg-gradient-to-br from-cyan-900/30 to-cyan-800/20 border border-cyan-500/30 rounded-lg p-4">
                               <div className="flex items-center gap-2 mb-3">
                                 <div className="w-3 h-3 bg-cyan-400 rounded-full"></div>
-                                <div className="text-cyan-400 font-semibold">Network</div>
+                                <div className="text-cyan-400 font-semibold">
+                                  Network
+                                </div>
                               </div>
                               <div className="space-y-2">
                                 <div className="font-bold text-white text-sm">
-                                  {currentComputer.machineDetails.netInfo.Network || "Unknown Network"}
+                                  {currentComputer.machineDetails.netInfo
+                                    .Network || "Unknown Network"}
                                 </div>
-                                {currentComputer.machineDetails.netInfo.net_download && currentComputer.machineDetails.netInfo.net_upload && (
-                                  <>
-                                    <div className="text-xs text-gray-300">
-                                      Download: <span className="text-green-400 font-semibold">{currentComputer.machineDetails.netInfo.net_download}</span>
-                                    </div>
-                                    <div className="text-xs text-gray-300">
-                                      Upload: <span className="text-blue-400 font-semibold">{currentComputer.machineDetails.netInfo.net_upload}</span>
-                                    </div>
-                                  </>
-                                )}
+                                {currentComputer.machineDetails.netInfo
+                                  .net_download &&
+                                  currentComputer.machineDetails.netInfo
+                                    .net_upload && (
+                                    <>
+                                      <div className="text-xs text-gray-300">
+                                        Download:{" "}
+                                        <span className="text-green-400 font-semibold">
+                                          {
+                                            currentComputer.machineDetails
+                                              .netInfo.net_download
+                                          }
+                                        </span>
+                                      </div>
+                                      <div className="text-xs text-gray-300">
+                                        Upload:{" "}
+                                        <span className="text-blue-400 font-semibold">
+                                          {
+                                            currentComputer.machineDetails
+                                              .netInfo.net_upload
+                                          }
+                                        </span>
+                                      </div>
+                                    </>
+                                  )}
                               </div>
                             </div>
                           </div>
@@ -870,14 +958,14 @@ const AdminDashboard = () => {
                       <div className="grid grid-cols-2 gap-2">
                         <div className="text-gray-400">Nhóm máy:</div>
                         <div className="font-bold text-white">
-                          {currentComputer.machineDetails?.machineGroupName || "Default"}
+                          {currentComputer.machineDetails?.machineGroupName ||
+                            "Default"}
                         </div>
                         <div className="text-gray-400">Giá/giờ:</div>
                         <div className="font-bold text-green-400">
-                          {currentComputer.machineDetails?.pricePerHour ? 
-                            `${Number(currentComputer.machineDetails.pricePerHour).toLocaleString()} VNĐ` : 
-                            "Chưa có giá"
-                          }
+                          {currentComputer.machineDetails?.pricePerHour
+                            ? `${Number(currentComputer.machineDetails.pricePerHour).toLocaleString()} VNĐ`
+                            : "Chưa có giá"}
                         </div>
                       </div>
                     </div>

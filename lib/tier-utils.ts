@@ -1,4 +1,4 @@
-import { db } from '@/lib/db';
+import { db } from "@/lib/db";
 
 export interface TierInfo {
   tierName: string;
@@ -21,20 +21,20 @@ export async function getAvailableTiers(): Promise<TierInfo[]> {
   try {
     const tiers = await db.gameAppointmentTier.findMany({
       where: { isActive: true },
-      orderBy: { minMembers: 'asc' }
+      orderBy: { minMembers: "asc" },
     });
 
-    return tiers.map(tier => ({
+    return tiers.map((tier) => ({
       tierName: tier.tierName,
       questName: tier.questName,
       minMembers: tier.minMembers,
-      maxMembers: tier.maxMembers,
+      maxMembers: tier.maxMembers === null ? undefined : tier.maxMembers,
       minHours: tier.minHours,
       lockedAmount: tier.lockedAmount,
-      tasks: tier.tasks as any
+      tasks: tier.tasks as any,
     }));
   } catch (error) {
-    console.error('Error fetching tiers:', error);
+    console.error("Error fetching tiers:", error);
     return [];
   }
 }
@@ -42,13 +42,15 @@ export async function getAvailableTiers(): Promise<TierInfo[]> {
 export function getTierForConditions(
   tiers: TierInfo[],
   members: number,
-  hours: number
+  hours: number,
 ): TierInfo | null {
-  return tiers.find(tier => {
-    const meetsMinMembers = members >= tier.minMembers;
-    const meetsMaxMembers = !tier.maxMembers || members <= tier.maxMembers;
-    const meetsMinHours = hours >= tier.minHours;
-    
-    return meetsMinMembers && meetsMaxMembers && meetsMinHours;
-  }) || null;
+  return (
+    tiers.find((tier) => {
+      const meetsMinMembers = members >= tier.minMembers;
+      const meetsMaxMembers = !tier.maxMembers || members <= tier.maxMembers;
+      const meetsMinHours = hours >= tier.minHours;
+
+      return meetsMinMembers && meetsMaxMembers && meetsMinHours;
+    }) || null
+  );
 }

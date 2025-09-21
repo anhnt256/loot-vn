@@ -41,7 +41,7 @@ export const completeGameAppointmentAction = createSafeAction(
         };
       }
 
-      const userId = parseInt(decoded.userId);
+      const userId = parseInt(decoded.userId.toString());
 
       // Check if appointment exists and user has permission
       const appointment = await db.gameAppointment.findUnique({
@@ -104,9 +104,9 @@ export const completeGameAppointmentAction = createSafeAction(
       await notifyAppointmentCompleted(data.appointmentId, {
         title: appointment.title,
         game: appointment.game,
-        tier: appointment.tier,
-        promotion: appointment.tierConfig?.rewards,
-        totalLockedAmount: appointment.totalLockedAmount
+        tier: 'Unknown',
+        promotion: undefined,
+        totalLockedAmount: Number(appointment.totalLockedAmount)
       });
 
       // Calculate forfeited amount
@@ -114,7 +114,7 @@ export const completeGameAppointmentAction = createSafeAction(
         .filter(m => m.status === 'NO_SHOW')
         .reduce((sum, member) => {
           const memberData = appointment.members.find(m => m.userId === member.userId);
-          return sum + (memberData?.lockedAmount || 0);
+          return sum + Number(memberData?.lockedAmount || 0);
         }, 0);
 
       return {

@@ -10,10 +10,10 @@ interface CreateGameAppointmentModalProps {
   onSuccess?: () => void;
 }
 
-export function CreateGameAppointmentModal({ 
-  isOpen, 
-  onClose, 
-  onSuccess 
+export function CreateGameAppointmentModal({
+  isOpen,
+  onClose,
+  onSuccess,
 }: CreateGameAppointmentModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -28,14 +28,9 @@ export function CreateGameAppointmentModal({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Tạo Hẹn Chơi Mới"
-      size="xl"
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title="Tạo Hẹn Chơi Mới" size="xl">
       <div className="p-6">
-        <CreateGameAppointmentForm 
+        <CreateGameAppointmentForm
           onSuccess={handleSuccess}
           onError={handleError}
           isSubmitting={isSubmitting}

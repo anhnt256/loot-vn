@@ -5,7 +5,7 @@ import { verifyJWT } from "@/lib/jwt";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     // Check authentication
@@ -15,7 +15,7 @@ export async function GET(
     if (!token) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -23,7 +23,7 @@ export async function GET(
     if (!decoded || !decoded.userId) {
       return NextResponse.json(
         { success: false, error: "Invalid token" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -34,12 +34,15 @@ export async function GET(
       where: { id: appointmentId },
       include: {
         members: true,
-        tier: true
-      }
+        tier: true,
+      },
     });
 
     if (!appointment) {
-      return NextResponse.json({ success: false, error: "Appointment not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Appointment not found" },
+        { status: 404 },
+      );
     }
 
     // Format the response
@@ -60,23 +63,28 @@ export async function GET(
       tier: appointment.tier?.tierName || null,
       totalLockedAmount: Number(appointment.totalLockedAmount),
       createdAt: appointment.createdAt.toISOString(),
-      members: appointment.members.map(member => ({
+      members: appointment.members.map((member) => ({
         id: member.id,
         userId: member.userId,
         status: member.status,
-        joinedAt: member.joinedAt.toISOString()
+        joinedAt: member.joinedAt.toISOString(),
       })),
-      promotion: appointment.tier ? {
-        promotion: appointment.tier.promotion,
-        description: appointment.tier.description,
-        businessLogic: appointment.tier.businessLogic,
-        minNetProfit: Number(appointment.tier.minNetProfit)
-      } : null
+      promotion: appointment.tier
+        ? {
+            promotion: "Task-based rewards",
+            description: `Quest ${appointment.tier.questName}`,
+            businessLogic: "Reward distribution based on task completion",
+            minNetProfit: 0,
+          }
+        : null,
     };
 
     return NextResponse.json({ success: true, data: formattedAppointment });
   } catch (error) {
     console.error("Error fetching appointment:", error);
-    return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

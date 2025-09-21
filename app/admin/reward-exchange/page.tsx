@@ -113,14 +113,14 @@ const RewardExchangePage = () => {
       onSuccess: (data) => {
         console.log("RewardExchange pending updated:", data);
         const newPendingCount = data?.length || 0;
-        
+
         // Phát âm thanh khi có pending mới
         playNotification(newPendingCount, previousPendingCount.current);
-        
+
         // Cập nhật pending count cho sidebar
         setPendingCount(newPendingCount);
         previousPendingCount.current = newPendingCount;
-        
+
         queryClient.setQueryData(
           ["reward-exchange-pending", selectedBranch],
           data,

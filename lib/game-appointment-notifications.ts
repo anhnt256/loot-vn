@@ -1,7 +1,13 @@
-import { db } from '@/lib/db';
+import { db } from "@/lib/db";
 
 export interface NotificationData {
-  type: 'APPOINTMENT_CREATED' | 'APPOINTMENT_JOINED' | 'APPOINTMENT_LEFT' | 'TIER_CHANGED' | 'APPOINTMENT_COMPLETED' | 'APPOINTMENT_CANCELLED';
+  type:
+    | "APPOINTMENT_CREATED"
+    | "APPOINTMENT_JOINED"
+    | "APPOINTMENT_LEFT"
+    | "TIER_CHANGED"
+    | "APPOINTMENT_COMPLETED"
+    | "APPOINTMENT_CANCELLED";
   appointmentId: string;
   userId?: number;
   title: string;
@@ -28,7 +34,7 @@ export interface TierChangeNotification {
  */
 export async function sendNotificationToUser(
   userId: number,
-  notification: NotificationData
+  notification: NotificationData,
 ): Promise<void> {
   try {
     // Store notification in database (you might have a notifications table)
@@ -37,7 +43,7 @@ export async function sendNotificationToUser(
       title: notification.title,
       message: notification.message,
       appointmentId: notification.appointmentId,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
     // Here you would integrate with your notification system:
@@ -60,9 +66,8 @@ export async function sendNotificationToUser(
     //     createdAt: new Date()
     //   }
     // });
-
   } catch (error) {
-    console.error('Error sending notification to user:', error);
+    console.error("Error sending notification to user:", error);
   }
 }
 
@@ -71,20 +76,20 @@ export async function sendNotificationToUser(
  */
 export async function sendNotificationToAppointmentMembers(
   appointmentId: string,
-  notification: Omit<NotificationData, 'userId'>
+  notification: Omit<NotificationData, "userId">,
 ): Promise<void> {
   try {
     const appointment = await db.gameAppointment.findUnique({
       where: { id: appointmentId },
       include: {
         members: {
-          where: { status: 'JOINED' }
-        }
-      }
+          where: { status: "JOINED" },
+        },
+      },
     });
 
     if (!appointment) {
-      console.error('Appointment not found for notification:', appointmentId);
+      console.error("Appointment not found for notification:", appointmentId);
       return;
     }
 
@@ -92,14 +97,15 @@ export async function sendNotificationToAppointmentMembers(
     for (const member of appointment.members) {
       await sendNotificationToUser(member.userId, {
         ...notification,
-        userId: member.userId
+        userId: member.userId,
       });
     }
 
-    console.log(`📢 Notification sent to ${appointment.members.length} members of appointment ${appointmentId}`);
-
+    console.log(
+      `📢 Notification sent to ${appointment.members.length} members of appointment ${appointmentId}`,
+    );
   } catch (error) {
-    console.error('Error sending notification to appointment members:', error);
+    console.error("Error sending notification to appointment members:", error);
   }
 }
 
@@ -115,21 +121,21 @@ export async function notifyAppointmentCreated(
     startTime: Date;
     tier?: string;
     promotion?: any;
-  }
+  },
 ): Promise<void> {
   const notification: NotificationData = {
-    type: 'APPOINTMENT_CREATED',
+    type: "APPOINTMENT_CREATED",
     appointmentId,
     userId: creatorId,
-    title: 'Hẹn chơi đã được tạo thành công!',
+    title: "Hẹn chơi đã được tạo thành công!",
     message: `Hẹn chơi "${appointmentData.title}" cho game ${appointmentData.game} đã được tạo thành công.`,
     data: {
       appointmentTitle: appointmentData.title,
       game: appointmentData.game,
       startTime: appointmentData.startTime,
       tier: appointmentData.tier,
-      promotion: appointmentData.promotion
-    }
+      promotion: appointmentData.promotion,
+    },
   };
 
   await sendNotificationToUser(creatorId, notification);
@@ -147,39 +153,39 @@ export async function notifyUserJoined(
     currentMembers: number;
     maxMembers: number;
     tier?: string;
-  }
+  },
 ): Promise<void> {
   // Notify the user who joined
   const userNotification: NotificationData = {
-    type: 'APPOINTMENT_JOINED',
+    type: "APPOINTMENT_JOINED",
     appointmentId,
     userId,
-    title: 'Tham gia hẹn chơi thành công!',
+    title: "Tham gia hẹn chơi thành công!",
     message: `Bạn đã tham gia hẹn chơi "${appointmentData.title}" cho game ${appointmentData.game}.`,
     data: {
       appointmentTitle: appointmentData.title,
       game: appointmentData.game,
       currentMembers: appointmentData.currentMembers,
       maxMembers: appointmentData.maxMembers,
-      tier: appointmentData.tier
-    }
+      tier: appointmentData.tier,
+    },
   };
 
   await sendNotificationToUser(userId, userNotification);
 
   // Notify other members about new member
   const memberNotification: NotificationData = {
-    type: 'APPOINTMENT_JOINED',
+    type: "APPOINTMENT_JOINED",
     appointmentId,
-    title: 'Có thành viên mới tham gia!',
+    title: "Có thành viên mới tham gia!",
     message: `Có thành viên mới tham gia hẹn chơi "${appointmentData.title}". Hiện tại có ${appointmentData.currentMembers}/${appointmentData.maxMembers} thành viên.`,
     data: {
       appointmentTitle: appointmentData.title,
       game: appointmentData.game,
       currentMembers: appointmentData.currentMembers,
       maxMembers: appointmentData.maxMembers,
-      newMemberId: userId
-    }
+      newMemberId: userId,
+    },
   };
 
   await sendNotificationToAppointmentMembers(appointmentId, memberNotification);
@@ -197,39 +203,39 @@ export async function notifyUserLeft(
     currentMembers: number;
     maxMembers: number;
     tier?: string;
-  }
+  },
 ): Promise<void> {
   // Notify the user who left
   const userNotification: NotificationData = {
-    type: 'APPOINTMENT_LEFT',
+    type: "APPOINTMENT_LEFT",
     appointmentId,
     userId,
-    title: 'Rời hẹn chơi thành công!',
+    title: "Rời hẹn chơi thành công!",
     message: `Bạn đã rời hẹn chơi "${appointmentData.title}" cho game ${appointmentData.game}.`,
     data: {
       appointmentTitle: appointmentData.title,
       game: appointmentData.game,
       currentMembers: appointmentData.currentMembers,
       maxMembers: appointmentData.maxMembers,
-      tier: appointmentData.tier
-    }
+      tier: appointmentData.tier,
+    },
   };
 
   await sendNotificationToUser(userId, userNotification);
 
   // Notify other members about member leaving
   const memberNotification: NotificationData = {
-    type: 'APPOINTMENT_LEFT',
+    type: "APPOINTMENT_LEFT",
     appointmentId,
-    title: 'Có thành viên rời hẹn chơi!',
+    title: "Có thành viên rời hẹn chơi!",
     message: `Có thành viên rời hẹn chơi "${appointmentData.title}". Hiện tại còn ${appointmentData.currentMembers}/${appointmentData.maxMembers} thành viên.`,
     data: {
       appointmentTitle: appointmentData.title,
       game: appointmentData.game,
       currentMembers: appointmentData.currentMembers,
       maxMembers: appointmentData.maxMembers,
-      leftMemberId: userId
-    }
+      leftMemberId: userId,
+    },
   };
 
   await sendNotificationToAppointmentMembers(appointmentId, memberNotification);
@@ -240,19 +246,22 @@ export async function notifyUserLeft(
  */
 export async function notifyTierChanged(
   appointmentId: string,
-  tierChange: TierChangeNotification
+  tierChange: TierChangeNotification,
 ): Promise<void> {
   const appointment = await db.gameAppointment.findUnique({
     where: { id: appointmentId },
     include: {
       members: {
-        where: { status: 'JOINED' }
-      }
-    }
+        where: { status: "JOINED" },
+      },
+    },
   });
 
   if (!appointment) {
-    console.error('Appointment not found for tier change notification:', appointmentId);
+    console.error(
+      "Appointment not found for tier change notification:",
+      appointmentId,
+    );
     return;
   }
 
@@ -261,20 +270,20 @@ export async function notifyTierChanged(
 
   if (tierChange.newTier && tierChange.promotion) {
     // Tier upgraded or changed
-    title = 'Tier hẹn chơi đã thay đổi!';
-    message = `Tier của hẹn chơi "${appointment.title}" đã thay đổi từ ${tierChange.oldTier || 'Chưa kích hoạt'} sang ${tierChange.newTier}. Bạn được hưởng promotion: ${tierChange.promotion.promotion}`;
+    title = "Tier hẹn chơi đã thay đổi!";
+    message = `Tier của hẹn chơi "${appointment.title}" đã thay đổi từ ${tierChange.oldTier || "Chưa kích hoạt"} sang ${tierChange.newTier}. Bạn được hưởng promotion: ${tierChange.promotion.promotion}`;
   } else if (!tierChange.newTier) {
     // Tier downgraded to none
-    title = 'Tier hẹn chơi đã bị hủy!';
+    title = "Tier hẹn chơi đã bị hủy!";
     message = `Tier của hẹn chơi "${appointment.title}" đã bị hủy do không đủ điều kiện. Cần admin kích hoạt thủ công.`;
   } else {
     // Tier downgraded
-    title = 'Tier hẹn chơi đã giảm!';
+    title = "Tier hẹn chơi đã giảm!";
     message = `Tier của hẹn chơi "${appointment.title}" đã giảm từ ${tierChange.oldTier} xuống ${tierChange.newTier}.`;
   }
 
   const notification: NotificationData = {
-    type: 'TIER_CHANGED',
+    type: "TIER_CHANGED",
     appointmentId,
     title,
     message,
@@ -284,8 +293,8 @@ export async function notifyTierChanged(
       newTier: tierChange.newTier,
       promotion: tierChange.promotion,
       memberCount: tierChange.memberCount,
-      reason: tierChange.reason
-    }
+      reason: tierChange.reason,
+    },
   };
 
   await sendNotificationToAppointmentMembers(appointmentId, notification);
@@ -302,20 +311,20 @@ export async function notifyAppointmentCompleted(
     tier?: string;
     promotion?: any;
     totalLockedAmount: number;
-  }
+  },
 ): Promise<void> {
   const notification: NotificationData = {
-    type: 'APPOINTMENT_COMPLETED',
+    type: "APPOINTMENT_COMPLETED",
     appointmentId,
-    title: 'Hẹn chơi đã hoàn thành!',
+    title: "Hẹn chơi đã hoàn thành!",
     message: `Hẹn chơi "${appointmentData.title}" cho game ${appointmentData.game} đã hoàn thành thành công. Số tiền lock đã được hoàn trả.`,
     data: {
       appointmentTitle: appointmentData.title,
       game: appointmentData.game,
       tier: appointmentData.tier,
       promotion: appointmentData.promotion,
-      totalLockedAmount: appointmentData.totalLockedAmount
-    }
+      totalLockedAmount: appointmentData.totalLockedAmount,
+    },
   };
 
   await sendNotificationToAppointmentMembers(appointmentId, notification);
@@ -330,18 +339,18 @@ export async function notifyAppointmentCancelled(
     title: string;
     game: string;
     reason?: string;
-  }
+  },
 ): Promise<void> {
   const notification: NotificationData = {
-    type: 'APPOINTMENT_CANCELLED',
+    type: "APPOINTMENT_CANCELLED",
     appointmentId,
-    title: 'Hẹn chơi đã bị hủy!',
-    message: `Hẹn chơi "${appointmentData.title}" cho game ${appointmentData.game} đã bị hủy. ${appointmentData.reason ? `Lý do: ${appointmentData.reason}` : ''}`,
+    title: "Hẹn chơi đã bị hủy!",
+    message: `Hẹn chơi "${appointmentData.title}" cho game ${appointmentData.game} đã bị hủy. ${appointmentData.reason ? `Lý do: ${appointmentData.reason}` : ""}`,
     data: {
       appointmentTitle: appointmentData.title,
       game: appointmentData.game,
-      reason: appointmentData.reason
-    }
+      reason: appointmentData.reason,
+    },
   };
 
   await sendNotificationToAppointmentMembers(appointmentId, notification);
@@ -359,48 +368,48 @@ export async function sendAppointmentReminders(): Promise<void> {
     // Find appointments starting in 1 hour
     const appointmentsStartingSoon = await db.gameAppointment.findMany({
       where: {
-        status: 'ACTIVE',
+        status: "ACTIVE",
         startTime: {
           gte: now,
-          lte: oneHourFromNow
-        }
+          lte: oneHourFromNow,
+        },
       },
       include: {
         members: {
-          where: { status: 'JOINED' }
-        }
-      }
+          where: { status: "JOINED" },
+        },
+      },
     });
 
     // Find appointments starting in 2 hours
     const appointmentsStartingLater = await db.gameAppointment.findMany({
       where: {
-        status: 'ACTIVE',
+        status: "ACTIVE",
         startTime: {
           gte: oneHourFromNow,
-          lte: twoHoursFromNow
-        }
+          lte: twoHoursFromNow,
+        },
       },
       include: {
         members: {
-          where: { status: 'JOINED' }
-        }
-      }
+          where: { status: "JOINED" },
+        },
+      },
     });
 
     // Send 1-hour reminders
     for (const appointment of appointmentsStartingSoon) {
       const notification: NotificationData = {
-        type: 'APPOINTMENT_CREATED', // Reuse type for reminder
+        type: "APPOINTMENT_CREATED", // Reuse type for reminder
         appointmentId: appointment.id,
-        title: 'Nhắc nhở: Hẹn chơi sắp bắt đầu!',
+        title: "Nhắc nhở: Hẹn chơi sắp bắt đầu!",
         message: `Hẹn chơi "${appointment.title}" sẽ bắt đầu trong 1 giờ nữa. Hãy chuẩn bị sẵn sàng!`,
         data: {
           appointmentTitle: appointment.title,
           game: appointment.game,
           startTime: appointment.startTime,
-          reminderType: '1_HOUR'
-        }
+          reminderType: "1_HOUR",
+        },
       };
 
       await sendNotificationToAppointmentMembers(appointment.id, notification);
@@ -409,25 +418,26 @@ export async function sendAppointmentReminders(): Promise<void> {
     // Send 2-hour reminders
     for (const appointment of appointmentsStartingLater) {
       const notification: NotificationData = {
-        type: 'APPOINTMENT_CREATED', // Reuse type for reminder
+        type: "APPOINTMENT_CREATED", // Reuse type for reminder
         appointmentId: appointment.id,
-        title: 'Nhắc nhở: Hẹn chơi sắp bắt đầu!',
+        title: "Nhắc nhở: Hẹn chơi sắp bắt đầu!",
         message: `Hẹn chơi "${appointment.title}" sẽ bắt đầu trong 2 giờ nữa.`,
         data: {
           appointmentTitle: appointment.title,
           game: appointment.game,
           startTime: appointment.startTime,
-          reminderType: '2_HOURS'
-        }
+          reminderType: "2_HOURS",
+        },
       };
 
       await sendNotificationToAppointmentMembers(appointment.id, notification);
     }
 
-    console.log(`📅 Sent reminders for ${appointmentsStartingSoon.length} appointments starting in 1 hour and ${appointmentsStartingLater.length} appointments starting in 2 hours`);
-
+    console.log(
+      `📅 Sent reminders for ${appointmentsStartingSoon.length} appointments starting in 1 hour and ${appointmentsStartingLater.length} appointments starting in 2 hours`,
+    );
   } catch (error) {
-    console.error('Error sending appointment reminders:', error);
+    console.error("Error sending appointment reminders:", error);
   }
 }
 
@@ -437,7 +447,7 @@ export async function sendAppointmentReminders(): Promise<void> {
 export async function getUserNotifications(
   userId: number,
   limit: number = 20,
-  offset: number = 0
+  offset: number = 0,
 ): Promise<NotificationData[]> {
   try {
     // This would query your notifications table
@@ -451,7 +461,7 @@ export async function getUserNotifications(
     //   take: limit,
     //   skip: offset
     // });
-    // 
+    //
     // return notifications.map(notification => ({
     //   type: notification.type as any,
     //   appointmentId: notification.appointmentId,
@@ -460,9 +470,8 @@ export async function getUserNotifications(
     //   message: notification.message,
     //   data: notification.data
     // }));
-
   } catch (error) {
-    console.error('Error getting user notifications:', error);
+    console.error("Error getting user notifications:", error);
     return [];
   }
 }

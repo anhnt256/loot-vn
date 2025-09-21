@@ -13,7 +13,6 @@ import { useLocalStorageValue } from "@/hooks/useLocalStorageValue";
 import Feedback from "@/components/Feedback";
 import { ChatPanel } from "@/components/chat/ChatPanel";
 
-
 const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   const loginMutation = useLogout();
   const pathname = usePathname();
@@ -91,7 +90,6 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
       toast.error(message);
     }
   };
-
 
   // Chỉ gọi checkGatewayBonus sau khi user-calculator fetch xong và currentUser đã ổn định
   // useEffect(() => {

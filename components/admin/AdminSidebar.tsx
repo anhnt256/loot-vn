@@ -157,28 +157,31 @@ export function AdminSidebar() {
 
   // Global polling cho stats - chỉ chạy khi KHÔNG ở trang reward-exchange
   const isRewardExchangePage = pathname === "/admin/reward-exchange";
-  const shouldPollStats = !!branch && pathname?.startsWith("/admin") && !isRewardExchangePage;
-  
-  const statsPolling = usePolling<{pending: number, approved: number, rejected: number, total: number}>(
-    statsUrl,
-    {
-      interval: 30000, // 30 seconds - nhanh hơn để user nhận thấy ngay
-      enabled: shouldPollStats, // Chỉ chạy khi ở trang admin NHƯNG KHÔNG phải reward-exchange
-      onSuccess: (data) => {
-        const newPendingCount = data.pending || 0;
-        
-        // Phát âm thanh khi có pending mới
-        playNotification(newPendingCount, previousPendingCount.current);
-        
-        // Cập nhật pending count
-        setPendingCount(newPendingCount);
-        previousPendingCount.current = newPendingCount;
-      },
-      onError: (error) => {
-        console.error("AdminSidebar polling error:", error);
-      },
+  const shouldPollStats =
+    !!branch && pathname?.startsWith("/admin") && !isRewardExchangePage;
+
+  const statsPolling = usePolling<{
+    pending: number;
+    approved: number;
+    rejected: number;
+    total: number;
+  }>(statsUrl, {
+    interval: 30000, // 30 seconds - nhanh hơn để user nhận thấy ngay
+    enabled: shouldPollStats, // Chỉ chạy khi ở trang admin NHƯNG KHÔNG phải reward-exchange
+    onSuccess: (data) => {
+      const newPendingCount = data.pending || 0;
+
+      // Phát âm thanh khi có pending mới
+      playNotification(newPendingCount, previousPendingCount.current);
+
+      // Cập nhật pending count
+      setPendingCount(newPendingCount);
+      previousPendingCount.current = newPendingCount;
     },
-  );
+    onError: (error) => {
+      console.error("AdminSidebar polling error:", error);
+    },
+  });
 
   // Filter menu items based on admin role
   const filteredMenuItems = menuItems.filter((item) => {

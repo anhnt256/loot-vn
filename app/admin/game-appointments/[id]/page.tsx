@@ -6,6 +6,8 @@ interface GameAppointmentAdminPageProps {
   };
 }
 
-export default function GameAppointmentAdminPage({ params }: GameAppointmentAdminPageProps) {
+export default function GameAppointmentAdminPage({
+  params,
+}: GameAppointmentAdminPageProps) {
   return <GameAppointmentAdmin appointmentId={params.id} />;
 }

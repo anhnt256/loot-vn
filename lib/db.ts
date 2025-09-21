@@ -19,21 +19,25 @@ declare global {
 export const db = globalThis.prisma || new PrismaClient();
 
 // Singleton instances for Fnet databases
-const fnetGV = globalThis.fnetGVPrisma || new FnetGVPrismaClient({
-  datasources: {
-    db: {
-      url: process.env.FNET_GV_DATABASE_URL,
+const fnetGV =
+  globalThis.fnetGVPrisma ||
+  new FnetGVPrismaClient({
+    datasources: {
+      db: {
+        url: process.env.FNET_GV_DATABASE_URL,
+      },
     },
-  },
-});
+  });
 
-const fnetTP = globalThis.fnetTPPrisma || new FnetTPPrismaClient({
-  datasources: {
-    db: {
-      url: process.env.FNET_TP_DATABASE_URL,
+const fnetTP =
+  globalThis.fnetTPPrisma ||
+  new FnetTPPrismaClient({
+    datasources: {
+      db: {
+        url: process.env.FNET_TP_DATABASE_URL,
+      },
     },
-  },
-});
+  });
 
 if (process.env.NODE_ENV !== "production") {
   globalThis.prisma = db;
@@ -93,7 +97,6 @@ export async function disconnectAll() {
     await fnetGV.$disconnect();
     await fnetTP.$disconnect();
   } catch (error) {
-    console.error('Error disconnecting databases:', error);
+    console.error("Error disconnecting databases:", error);
   }
 }
-

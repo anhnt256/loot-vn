@@ -7,7 +7,9 @@ import { MachineDetail } from "@/lib/machine-utils";
 
 export function MachineSelectorTest() {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedMachine, setSelectedMachine] = useState<MachineDetail | null>(null);
+  const [selectedMachine, setSelectedMachine] = useState<MachineDetail | null>(
+    null,
+  );
 
   const handleSelectMachine = (machine: MachineDetail) => {
     setSelectedMachine(machine);
@@ -17,10 +19,8 @@ export function MachineSelectorTest() {
   return (
     <div className="p-4">
       <h2 className="text-xl font-bold mb-4">Test Machine Selector</h2>
-      
-      <Button onClick={() => setIsOpen(true)}>
-        Open Machine Selector
-      </Button>
+
+      <Button onClick={() => setIsOpen(true)}>Open Machine Selector</Button>
 
       {selectedMachine && (
         <div className="mt-4 p-4 bg-gray-100 rounded">

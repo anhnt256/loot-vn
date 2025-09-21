@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     if (!token) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -21,41 +21,46 @@ export async function GET(request: NextRequest) {
     if (!decoded || !decoded.userId) {
       return NextResponse.json(
         { success: false, error: "Invalid token" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     if (!branch) {
       return NextResponse.json(
         { success: false, error: "Missing branch information" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const { searchParams } = new URL(request.url);
-    const machineGroupId = searchParams.get('machineGroupId');
+    const machineGroupId = searchParams.get("machineGroupId");
 
     // Query machine details by group from Fnet DB
-    const machineDetails = await getMachineDetailsByGroup(branch, machineGroupId);
+    const machineDetails = await getMachineDetailsByGroup(
+      branch,
+      machineGroupId,
+    );
 
     return NextResponse.json({
       success: true,
-      data: machineDetails
+      data: machineDetails,
     });
-
   } catch (error) {
     console.error("Error in GET /api/machine-details/by-group:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
-async function getMachineDetailsByGroup(branch: string, machineGroupId?: string | null) {
+async function getMachineDetailsByGroup(
+  branch: string,
+  machineGroupId?: string | null,
+) {
   try {
     const fnetDB = await getFnetDB();
-    
+
     let query = `
       SELECT 
         u.UserName as machineName,
@@ -82,12 +87,12 @@ async function getMachineDetailsByGroup(branch: string, machineGroupId?: string 
     query += ` ORDER BY mg.MachineGroupId, u.UserName`;
 
     const result = await fnetDB.$queryRawUnsafe(query, ...params);
-    
+
     // Parse NetInfo JSON and extract macAddress, convert BigInt to Number
     const processedData = (result as any[]).map((row: any) => {
       let netInfo = null;
       let macAddress = null;
-      
+
       try {
         if (row.netInfo) {
           netInfo = JSON.parse(row.netInfo);
@@ -106,12 +111,11 @@ async function getMachineDetailsByGroup(branch: string, machineGroupId?: string 
         machineGroupName: row.machineGroupName,
         machineGroupId: Number(row.machineGroupId),
         priceDefault: Number(row.priceDefault),
-        description: row.description
+        description: row.description,
       };
     });
 
     return processedData;
-
   } catch (error) {
     console.error("Error in getMachineDetailsByGroup:", error);
     throw error;

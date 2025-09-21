@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getUserNotifications } from '@/lib/game-appointment-notifications';
+import { getUserNotifications } from "@/lib/game-appointment-notifications";
 import { cookies } from "next/headers";
 import { verifyJWT } from "@/lib/jwt";
 
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     if (!token) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -20,20 +20,20 @@ export async function GET(request: NextRequest) {
     if (!decoded || !decoded.userId) {
       return NextResponse.json(
         { success: false, error: "Invalid token" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
-    const userId = parseInt(decoded.userId);
+    const userId = parseInt(decoded.userId.toString());
     const { searchParams } = new URL(request.url);
-    
+
     // Get query parameters
     const limit = parseInt(searchParams.get("limit") || "20");
     const offset = parseInt(searchParams.get("offset") || "0");
-    
+
     // Get user notifications
     const notifications = await getUserNotifications(userId, limit, offset);
-    
+
     return NextResponse.json({
       success: true,
       data: {
@@ -41,16 +41,15 @@ export async function GET(request: NextRequest) {
         pagination: {
           limit,
           offset,
-          hasMore: notifications.length === limit
-        }
-      }
+          hasMore: notifications.length === limit,
+        },
+      },
     });
-    
   } catch (error) {
     console.error("Error in GET /api/notifications:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

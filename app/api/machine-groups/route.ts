@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     if (!token) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -21,14 +21,14 @@ export async function GET(request: NextRequest) {
     if (!decoded || !decoded.userId) {
       return NextResponse.json(
         { success: false, error: "Invalid token" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     if (!branch) {
       return NextResponse.json(
         { success: false, error: "Missing branch information" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -37,14 +37,13 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: machineGroups
+      data: machineGroups,
     });
-
   } catch (error) {
     console.error("Error in GET /api/machine-groups:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -52,7 +51,7 @@ export async function GET(request: NextRequest) {
 async function getMachineGroups() {
   try {
     const fnetDB = await getFnetDB();
-    
+
     const query = `
       SELECT 
         mg.MachineGroupId,
@@ -69,7 +68,7 @@ async function getMachineGroups() {
     `;
 
     const result = await fnetDB.$queryRawUnsafe(query);
-    
+
     // Convert BigInt to string to avoid serialization error
     const processedResult = (result as any[]).map((row: any) => ({
       MachineGroupId: Number(row.MachineGroupId),
@@ -77,11 +76,10 @@ async function getMachineGroups() {
       PriceDefault: Number(row.PriceDefault),
       Active: Number(row.Active),
       Description: row.Description,
-      machineCount: Number(row.machineCount)
+      machineCount: Number(row.machineCount),
     }));
-    
-    return processedResult;
 
+    return processedResult;
   } catch (error) {
     console.error("Error in getMachineGroups:", error);
     throw error;

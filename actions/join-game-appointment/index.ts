@@ -42,17 +42,17 @@ export const joinGameAppointmentAction = createSafeAction(
         };
       }
 
-      const userId = parseInt(decoded.userId);
+      const userId = parseInt(decoded.userId.toString());
 
       // Check if appointment exists and is active
-      const appointment = await db.gameAppointment.findUnique({
-        where: { id: data.appointmentId },
-        include: { 
-          members: true,
-          tierConfig: true
-        }
-      });
+      const appointmentResult = await db.$queryRaw`
+        SELECT ga.*, gat.tierName, gat.tasks
+        FROM GameAppointment ga
+        LEFT JOIN GameAppointmentTier gat ON ga.tierId = gat.id
+        WHERE ga.id = ${data.appointmentId}
+      `;
 
+      const appointment = (appointmentResult as any[])[0];
       if (!appointment) {
         return {
           success: false,
@@ -68,8 +68,12 @@ export const joinGameAppointmentAction = createSafeAction(
       }
 
       // Check if user is already a member
-      const existingMember = appointment.members.find(member => member.userId === userId);
-      if (existingMember) {
+      const existingMemberResult = await db.$queryRaw`
+        SELECT userId FROM GameAppointmentMember 
+        WHERE appointmentId = ${data.appointmentId} AND userId = ${userId}
+      `;
+
+      if ((existingMemberResult as any[]).length > 0) {
         return {
           success: false,
           error: "Bạn đã tham gia hẹn chơi này rồi"
@@ -85,51 +89,55 @@ export const joinGameAppointmentAction = createSafeAction(
       }
 
       // Calculate hours
-      const hours = Math.ceil((appointment.endTime.getTime() - appointment.startTime.getTime()) / (1000 * 60 * 60));
+      const hours = Math.ceil((new Date(appointment.endTime).getTime() - new Date(appointment.startTime).getTime()) / (1000 * 60 * 60));
       
-      // Calculate locked amount
-      const lockedAmount = calculateLockedAmount(
-        data.computerCount,
-        data.pricePerHour,
-        hours
-      );
+      // Calculate locked amount based on tier
+      // For now, use a simple calculation until tier is determined
+      const lockedAmount = data.computerCount * data.pricePerHour * hours;
 
 
       // Use transaction to ensure data consistency
-      const result = await db.$transaction(async (tx) => {
-        // Add user as member
-        const member = await tx.gameAppointmentMember.create({
-          data: {
-            appointmentId: data.appointmentId,
-            userId,
-            branch,
-            lockedAmount,
-            status: "JOINED",
-            machineName: data.machineName,
-            machineGroupId: data.machineGroupId
-          }
-        });
+      const memberId = `member_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Add user as member
+      await db.$executeRaw`
+        INSERT INTO GameAppointmentMember 
+        (id, appointmentId, userId, branch, lockedAmount, status, machineName, machineGroupId, joinedAt)
+        VALUES (${memberId}, ${data.appointmentId}, ${userId}, ${branch}, ${lockedAmount}, 'JOINED', ${data.machineName}, ${data.machineGroupId}, NOW())
+      `;
 
-        // Update appointment member count and total locked amount
-        await tx.gameAppointment.update({
-          where: { id: data.appointmentId },
-          data: {
-            currentMembers: appointment.currentMembers + 1,
-            totalLockedAmount: appointment.totalLockedAmount + lockedAmount
-          }
-        });
+      // Update appointment member count and total locked amount
+      await db.$executeRaw`
+        UPDATE GameAppointment 
+        SET currentMembers = currentMembers + 1, 
+            totalLockedAmount = totalLockedAmount + ${lockedAmount}
+        WHERE id = ${data.appointmentId}
+      `;
 
-        return member;
-      });
+      const result = {
+        id: memberId,
+        appointmentId: data.appointmentId,
+        userId,
+        branch,
+        lockedAmount,
+        status: "JOINED",
+        machineName: data.machineName,
+        machineGroupId: data.machineGroupId,
+        joinedAt: new Date()
+      };
 
       // Auto downgrade tier after member count change
       const tierChangeResult = await autoDowngradeTier(data.appointmentId);
 
       // Get updated appointment with tier info
-      const updatedAppointment = await db.gameAppointment.findUnique({
-        where: { id: data.appointmentId },
-        include: { tierConfig: true }
-      });
+      const updatedAppointmentResult = await db.$queryRaw`
+        SELECT ga.*, gat.tierName, gat.tasks
+        FROM GameAppointment ga
+        LEFT JOIN GameAppointmentTier gat ON ga.tierId = gat.id
+        WHERE ga.id = ${data.appointmentId}
+      `;
+
+      const updatedAppointment = (updatedAppointmentResult as any[])[0];
 
       // Send notifications
       await notifyUserJoined(data.appointmentId, userId, {
@@ -144,9 +152,9 @@ export const joinGameAppointmentAction = createSafeAction(
       if (tierChangeResult.success && tierChangeResult.oldTier !== tierChangeResult.newTier) {
         await notifyTierChanged(data.appointmentId, {
           appointmentId: data.appointmentId,
-          oldTier: tierChangeResult.oldTier,
-          newTier: tierChangeResult.newTier,
-          promotion: tierChangeResult.promotion,
+          oldTier: tierChangeResult.oldTier || null,
+          newTier: tierChangeResult.newTier || null,
+          promotion: undefined,
           memberCount: appointment.currentMembers + 1,
           reason: 'Member count changed'
         });
@@ -155,13 +163,13 @@ export const joinGameAppointmentAction = createSafeAction(
       let promotion = undefined;
       let tierChange = undefined;
 
-      if (updatedAppointment?.tierConfig) {
-        const rewards = updatedAppointment.tierConfig.rewards as any;
+      if (updatedAppointment?.tasks) {
+        const tasks = JSON.parse(updatedAppointment.tasks || '[]');
         promotion = {
-          promotion: rewards.promotion,
-          description: rewards.description,
-          businessLogic: rewards.businessLogic,
-          minNetProfit: rewards.minNetProfit
+          promotion: 'Task-based rewards',
+          description: 'Complete tasks to earn rewards',
+          businessLogic: 'Reward distribution based on task completion',
+          minNetProfit: tasks.reduce((sum: number, task: any) => sum + task.rewardAmount, 0)
         };
       }
 

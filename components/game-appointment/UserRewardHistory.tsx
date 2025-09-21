@@ -1,18 +1,24 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  Gift, 
-  Calendar, 
-  Gamepad2, 
+// import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Gift,
+  Calendar,
+  Gamepad2,
   Crown,
   Loader2,
   Trophy,
-  Clock
+  Clock,
 } from "lucide-react";
 
 interface RewardHistoryItem {
@@ -44,21 +50,23 @@ export function UserRewardHistory({ userId }: UserRewardHistoryProps) {
   const fetchRewards = async (page = 0) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/user/rewards?limit=20&offset=${page * 20}`);
+      const response = await fetch(
+        `/api/user/rewards?limit=20&offset=${page * 20}`,
+      );
       const result = await response.json();
 
       if (result.success) {
         if (page === 0) {
           setRewards(result.data.rewards);
         } else {
-          setRewards(prev => [...prev, ...result.data.rewards]);
+          setRewards((prev) => [...prev, ...result.data.rewards]);
         }
         setTotalCount(result.data.totalCount);
         setHasMore(result.data.rewards.length === 20);
         setCurrentPage(page);
       }
     } catch (error) {
-      console.error('Error fetching rewards:', error);
+      console.error("Error fetching rewards:", error);
     } finally {
       setIsLoading(false);
     }
@@ -76,15 +84,15 @@ export function UserRewardHistory({ userId }: UserRewardHistoryProps) {
 
   const getRewardIcon = (rewardType: string) => {
     switch (rewardType) {
-      case 'DRINK':
+      case "DRINK":
         return <Gift className="h-4 w-4 text-blue-600" />;
-      case 'FOOD':
+      case "FOOD":
         return <Gift className="h-4 w-4 text-green-600" />;
-      case 'VOUCHER':
+      case "VOUCHER":
         return <Gift className="h-4 w-4 text-purple-600" />;
-      case 'POINTS':
+      case "POINTS":
         return <Trophy className="h-4 w-4 text-yellow-600" />;
-      case 'COMBO':
+      case "COMBO":
         return <Gift className="h-4 w-4 text-orange-600" />;
       default:
         return <Gift className="h-4 w-4 text-gray-600" />;
@@ -93,40 +101,46 @@ export function UserRewardHistory({ userId }: UserRewardHistoryProps) {
 
   const getRewardBadge = (rewardType: string) => {
     const typeConfig = {
-      'DRINK': { label: 'Đồ uống', variant: 'default' as const },
-      'FOOD': { label: 'Đồ ăn', variant: 'secondary' as const },
-      'VOUCHER': { label: 'Voucher', variant: 'destructive' as const },
-      'POINTS': { label: 'Điểm', variant: 'outline' as const },
-      'COMBO': { label: 'Combo', variant: 'default' as const }
+      DRINK: { label: "Đồ uống", variant: "default" as const },
+      FOOD: { label: "Đồ ăn", variant: "secondary" as const },
+      VOUCHER: { label: "Voucher", variant: "destructive" as const },
+      POINTS: { label: "Điểm", variant: "outline" as const },
+      COMBO: { label: "Combo", variant: "default" as const },
     };
 
-    const config = typeConfig[rewardType as keyof typeof typeConfig] || typeConfig.DRINK;
+    const config =
+      typeConfig[rewardType as keyof typeof typeConfig] || typeConfig.DRINK;
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      'DISTRIBUTED': { label: 'Đã nhận', variant: 'default' as const },
-      'PENDING': { label: 'Chờ xử lý', variant: 'secondary' as const },
-      'EXPIRED': { label: 'Hết hạn', variant: 'destructive' as const }
+      DISTRIBUTED: { label: "Đã nhận", variant: "default" as const },
+      PENDING: { label: "Chờ xử lý", variant: "secondary" as const },
+      EXPIRED: { label: "Hết hạn", variant: "destructive" as const },
     };
 
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.PENDING;
+    const config =
+      statusConfig[status as keyof typeof statusConfig] || statusConfig.PENDING;
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
   const getTierBadge = (tier: string) => {
-    if (!tier || tier === 'Unknown') return <Badge variant="outline">Unknown</Badge>;
+    if (!tier || tier === "Unknown")
+      return <Badge variant="outline">Unknown</Badge>;
 
     const tierConfig = {
-      "tier_3p_3h": { label: "Bronze", color: "bg-amber-100 text-amber-800" },
-      "tier_3p_5h": { label: "Silver", color: "bg-gray-100 text-gray-800" },
-      "tier_5p_3h": { label: "Silver", color: "bg-gray-100 text-gray-800" },
-      "tier_5p_5h": { label: "Gold", color: "bg-yellow-100 text-yellow-800" },
-      "tier_allnight": { label: "Diamond", color: "bg-blue-100 text-blue-800" }
+      tier_3p_3h: { label: "Bronze", color: "bg-amber-100 text-amber-800" },
+      tier_3p_5h: { label: "Silver", color: "bg-gray-100 text-gray-800" },
+      tier_5p_3h: { label: "Silver", color: "bg-gray-100 text-gray-800" },
+      tier_5p_5h: { label: "Gold", color: "bg-yellow-100 text-yellow-800" },
+      tier_allnight: { label: "Diamond", color: "bg-blue-100 text-blue-800" },
     };
 
-    const config = tierConfig[tier as keyof typeof tierConfig] || { label: tier, color: "bg-gray-100 text-gray-800" };
+    const config = tierConfig[tier as keyof typeof tierConfig] || {
+      label: tier,
+      color: "bg-gray-100 text-gray-800",
+    };
     return <Badge className={config.color}>{config.label}</Badge>;
   };
 
@@ -137,7 +151,7 @@ export function UserRewardHistory({ userId }: UserRewardHistoryProps) {
       month: "short",
       day: "numeric",
       hour: "2-digit",
-      minute: "2-digit"
+      minute: "2-digit",
     });
   };
 
@@ -169,10 +183,12 @@ export function UserRewardHistory({ userId }: UserRewardHistoryProps) {
           <div className="text-center py-8">
             <Gift className="mx-auto h-12 w-12 text-muted-foreground" />
             <h3 className="mt-4 text-lg font-semibold">Chưa có phần thưởng</h3>
-            <p className="text-muted-foreground">Tham gia hẹn chơi để nhận phần thưởng hấp dẫn!</p>
+            <p className="text-muted-foreground">
+              Tham gia hẹn chơi để nhận phần thưởng hấp dẫn!
+            </p>
           </div>
         ) : (
-          <ScrollArea className="h-[500px]">
+          <div className="h-[500px] overflow-y-auto">
             <div className="space-y-4">
               {rewards.map((reward) => (
                 <div
@@ -183,33 +199,37 @@ export function UserRewardHistory({ userId }: UserRewardHistoryProps) {
                     <div className="flex-shrink-0 mt-1">
                       {getRewardIcon(reward.rewardType)}
                     </div>
-                    
+
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2">
-                        <h4 className="font-medium text-sm">{reward.rewardValue}</h4>
+                        <h4 className="font-medium text-sm">
+                          {reward.rewardValue}
+                        </h4>
                         {getRewardBadge(reward.rewardType)}
                         {getStatusBadge(reward.status)}
                         {reward.quantity > 1 && (
                           <Badge variant="outline">x{reward.quantity}</Badge>
                         )}
                       </div>
-                      
+
                       <div className="space-y-1 text-sm text-muted-foreground">
                         <div className="flex items-center gap-2">
                           <Gamepad2 className="h-3 w-3" />
                           <span>{reward.appointment.game}</span>
                           {getTierBadge(reward.appointment.tier)}
                         </div>
-                        
+
                         <div className="flex items-center gap-2">
                           <Calendar className="h-3 w-3" />
                           <span>{reward.appointment.title}</span>
                         </div>
-                        
+
                         {reward.distributedAt && (
                           <div className="flex items-center gap-2">
                             <Clock className="h-3 w-3" />
-                            <span>Nhận lúc: {formatDateTime(reward.distributedAt)}</span>
+                            <span>
+                              Nhận lúc: {formatDateTime(reward.distributedAt)}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -218,11 +238,11 @@ export function UserRewardHistory({ userId }: UserRewardHistoryProps) {
                 </div>
               ))}
             </div>
-            
+
             {hasMore && (
               <div className="flex justify-center mt-4">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={loadMore}
                   disabled={isLoading}
                 >
@@ -232,12 +252,12 @@ export function UserRewardHistory({ userId }: UserRewardHistoryProps) {
                       Đang tải...
                     </>
                   ) : (
-                    'Tải thêm'
+                    "Tải thêm"
                   )}
                 </Button>
               </div>
             )}
-          </ScrollArea>
+          </div>
         )}
       </CardContent>
     </Card>

@@ -1,4 +1,4 @@
-import { db } from '@/lib/db';
+import { db } from "@/lib/db";
 
 export interface TierCalculationParams {
   members: number;
@@ -25,42 +25,45 @@ export interface TierResult {
 /**
  * Calculate the appropriate tier for a game appointment based on members and hours
  */
-export async function calculateTier(params: TierCalculationParams): Promise<TierResult | null> {
+export async function calculateTier(
+  params: TierCalculationParams,
+): Promise<TierResult | null> {
   const { members, hours } = params;
-  
+
   try {
     // Get all active tiers ordered by priority (highest members first)
     const tiers = await db.gameAppointmentTier.findMany({
       where: { isActive: true },
-      orderBy: { minMembers: 'desc' }
+      orderBy: { minMembers: "desc" },
     });
-    
+
     // Find the first tier that meets all requirements
-    const eligibleTier = tiers.find(tier => {
+    const eligibleTier = tiers.find((tier) => {
       const meetsMinMembers = members >= tier.minMembers;
       const meetsMaxMembers = !tier.maxMembers || members <= tier.maxMembers;
       const meetsMinHours = hours >= tier.minHours;
-      
+
       return meetsMinMembers && meetsMaxMembers && meetsMinHours;
     });
-    
+
     if (!eligibleTier) {
       return null;
     }
-    
+
     const tasks = eligibleTier.tasks as any;
-    
+
     return {
       tierName: eligibleTier.tierName,
       questName: eligibleTier.questName,
       minMembers: eligibleTier.minMembers,
-      maxMembers: eligibleTier.maxMembers,
+      maxMembers:
+        eligibleTier.maxMembers === null ? undefined : eligibleTier.maxMembers,
       minHours: eligibleTier.minHours,
       lockedAmount: eligibleTier.lockedAmount,
-      tasks: tasks
+      tasks: tasks,
     };
   } catch (error) {
-    console.error('Error calculating tier:', error);
+    console.error("Error calculating tier:", error);
     return null;
   }
 }
@@ -83,7 +86,9 @@ export function calculateTotalRewards(tier: TierResult): number {
 /**
  * Check if appointment can be auto-activated or needs manual activation
  */
-export async function canAutoActivate(params: TierCalculationParams): Promise<boolean> {
+export async function canAutoActivate(
+  params: TierCalculationParams,
+): Promise<boolean> {
   const tier = await calculateTier(params);
   return tier !== null;
 }
@@ -91,37 +96,39 @@ export async function canAutoActivate(params: TierCalculationParams): Promise<bo
 /**
  * Get tier downgrade options when requirements are not met
  */
-export async function getTierDowngradeOptions(params: TierCalculationParams): Promise<TierResult[]> {
+export async function getTierDowngradeOptions(
+  params: TierCalculationParams,
+): Promise<TierResult[]> {
   const { members, hours } = params;
-  
+
   try {
     const tiers = await db.gameAppointmentTier.findMany({
       where: { isActive: true },
-      orderBy: { minMembers: 'desc' }
+      orderBy: { minMembers: "desc" },
     });
-    
-    const eligibleTiers = tiers.filter(tier => {
+
+    const eligibleTiers = tiers.filter((tier) => {
       const meetsMinMembers = members >= tier.minMembers;
       const meetsMaxMembers = !tier.maxMembers || members <= tier.maxMembers;
       const meetsMinHours = hours >= tier.minHours;
-      
+
       return meetsMinMembers && meetsMaxMembers && meetsMinHours;
     });
-    
-    return eligibleTiers.map(tier => {
+
+    return eligibleTiers.map((tier) => {
       const tasks = tier.tasks as any;
       return {
         tierName: tier.tierName,
         questName: tier.questName,
         minMembers: tier.minMembers,
-        maxMembers: tier.maxMembers,
+        maxMembers: tier.maxMembers === null ? undefined : tier.maxMembers,
         minHours: tier.minHours,
         lockedAmount: tier.lockedAmount,
-        tasks: tasks
+        tasks: tasks,
       };
     });
   } catch (error) {
-    console.error('Error getting tier downgrade options:', error);
+    console.error("Error getting tier downgrade options:", error);
     return [];
   }
 }
@@ -144,33 +151,35 @@ export async function validateAppointmentParams(params: {
   endTime: Date;
 }): Promise<{ isValid: boolean; errors: string[] }> {
   const errors: string[] = [];
-  
+
   // Basic validations
   if (params.members < 1) {
-    errors.push('Số lượng thành viên phải ít nhất là 1');
+    errors.push("Số lượng thành viên phải ít nhất là 1");
   }
-  
+
   if (params.hours < 1) {
-    errors.push('Thời gian chơi phải ít nhất là 1 giờ');
+    errors.push("Thời gian chơi phải ít nhất là 1 giờ");
   }
-  
+
   if (params.startTime >= params.endTime) {
-    errors.push('Thời gian bắt đầu phải trước thời gian kết thúc');
+    errors.push("Thời gian bắt đầu phải trước thời gian kết thúc");
   }
-  
+
   // Check if any tier is available
   const tier = await calculateTier({
     members: params.members,
-    hours: params.hours
+    hours: params.hours,
   });
-  
+
   if (!tier) {
-    errors.push('Không có tier nào phù hợp với điều kiện này. Cần admin kích hoạt thủ công.');
+    errors.push(
+      "Không có tier nào phù hợp với điều kiện này. Cần admin kích hoạt thủ công.",
+    );
   }
-  
+
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 }
 
@@ -193,13 +202,16 @@ export async function getTierStatistics(): Promise<{
   try {
     const tiers = await db.gameAppointmentTier.findMany({
       where: { isActive: true },
-      orderBy: { minMembers: 'asc' }
+      orderBy: { minMembers: "asc" },
     });
-    
-    const tierDistribution = tiers.map(tier => {
+
+    const tierDistribution = tiers.map((tier) => {
       const tasks = tier.tasks as any;
-      const totalRewards = tasks.reduce((sum: number, task: any) => sum + task.rewardAmount, 0);
-      
+      const totalRewards = tasks.reduce(
+        (sum: number, task: any) => sum + task.rewardAmount,
+        0,
+      );
+
       return {
         tierName: tier.tierName,
         questName: tier.questName,
@@ -207,21 +219,24 @@ export async function getTierStatistics(): Promise<{
         maxMembers: tier.maxMembers,
         minHours: tier.minHours,
         lockedAmount: tier.lockedAmount,
-        totalRewards
+        totalRewards,
       };
     });
-    
+
     return {
       totalTiers: tiers.length,
-      activeTiers: tiers.filter(tier => tier.isActive).length,
-      tierDistribution
+      activeTiers: tiers.filter((tier) => tier.isActive).length,
+      tierDistribution: tierDistribution.map((tier) => ({
+        ...tier,
+        maxMembers: tier.maxMembers === null ? undefined : tier.maxMembers,
+      })),
     };
   } catch (error) {
-    console.error('Error getting tier statistics:', error);
+    console.error("Error getting tier statistics:", error);
     return {
       totalTiers: 0,
       activeTiers: 0,
-      tierDistribution: []
+      tierDistribution: [],
     };
   }
 }

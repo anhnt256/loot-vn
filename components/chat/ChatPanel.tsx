@@ -21,13 +21,14 @@ export function ChatPanel({ isOpen, onClose, className = "" }: ChatPanelProps) {
     // Get machine name from user data
     if (userData) {
       const user = userData as any;
-      const machineName = user.machineName || 
-                         user.userName || 
-                         user.username || 
-                         user.pcName || 
-                         user.pc_name ||
-                         '';
-      
+      const machineName =
+        user.machineName ||
+        user.userName ||
+        user.username ||
+        user.pcName ||
+        user.pc_name ||
+        "";
+
       if (machineName) {
         setSelectedMachine(`Máy ${machineName}`);
       }

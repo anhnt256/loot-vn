@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -11,12 +11,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { 
-  Gamepad2, 
-  Calendar, 
-  Clock, 
-  Users, 
-  DollarSign, 
+import {
+  Gamepad2,
+  Calendar,
+  Clock,
+  Users,
+  DollarSign,
   MapPin,
   Crown,
   Gift,
@@ -24,7 +24,7 @@ import {
   AlertCircle,
   CheckCircle,
   Monitor,
-  Settings
+  Settings,
 } from "lucide-react";
 import { MachineSelector } from "./MachineSelector";
 import { MachineDetail } from "@/lib/machine-utils";
@@ -43,15 +43,17 @@ interface GameAppointment {
   minCost: number;
   currentMembers: number;
   status: string;
-  tier?: {
-    tierName: string;
-    questName: string;
-    minMembers: number;
-    maxMembers?: number;
-    minHours: number;
-    lockedAmount: number;
-    tasks: any[];
-  } | string;
+  tier?:
+    | {
+        tierName: string;
+        questName: string;
+        minMembers: number;
+        maxMembers?: number;
+        minHours: number;
+        lockedAmount: number;
+        tasks: any[];
+      }
+    | string;
   totalLockedAmount: number;
   createdAt: string;
   members: Array<{
@@ -75,14 +77,16 @@ interface JoinGameAppointmentSummaryModalProps {
   onJoinSuccess: () => void;
 }
 
-export function JoinGameAppointmentSummaryModal({ 
-  appointmentId, 
-  isOpen, 
-  onClose, 
-  onJoinSuccess 
+export function JoinGameAppointmentSummaryModal({
+  appointmentId,
+  isOpen,
+  onClose,
+  onJoinSuccess,
 }: JoinGameAppointmentSummaryModalProps) {
   const [appointment, setAppointment] = useState<GameAppointment | null>(null);
-  const [selectedMachine, setSelectedMachine] = useState<MachineDetail | null>(null);
+  const [selectedMachine, setSelectedMachine] = useState<MachineDetail | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [isMachineSelectorOpen, setIsMachineSelectorOpen] = useState(false);
@@ -91,7 +95,7 @@ export function JoinGameAppointmentSummaryModal({
 
   const fetchAppointment = async () => {
     if (!appointmentId) return;
-    
+
     setIsLoading(true);
     try {
       const response = await fetch(`/api/game-appointments/${appointmentId}`);
@@ -120,31 +124,38 @@ export function JoinGameAppointmentSummaryModal({
 
   const handleJoin = async () => {
     if (!appointmentId || !selectedMachine) return;
-    
+
     setIsJoining(true);
     setError(null);
     setSuccess(null);
 
     try {
-      const response = await fetch(`/api/game-appointments/${appointmentId}/join`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          computerCount: 1,
-          pricePerHour: selectedMachine.price,
-          machineName: selectedMachine.machineName,
-          machineGroupId: selectedMachine.machineGroupId
-        })
-      });
+      const response = await fetch(
+        `/api/game-appointments/${appointmentId}/join`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            computerCount: 1,
+            pricePerHour: selectedMachine.price,
+            machineName: selectedMachine.machineName,
+            machineGroupId: selectedMachine.machineGroupId,
+          }),
+        },
+      );
 
       const result = await response.json();
 
       if (result.success) {
         setSuccess("Tham gia hẹn chơi thành công!");
         if (result.data.tierChange) {
-          setSuccess(prev => prev + ` Tier đã thay đổi từ ${result.data.tierChange.oldTier} sang ${result.data.tierChange.newTier}`);
+          setSuccess(
+            (prev) =>
+              prev +
+              ` Tier đã thay đổi từ ${result.data.tierChange.oldTier} sang ${result.data.tierChange.newTier}`,
+          );
         }
-        
+
         // Close modal after 2 seconds and refresh data
         setTimeout(() => {
           onJoinSuccess();
@@ -165,29 +176,49 @@ export function JoinGameAppointmentSummaryModal({
       ACTIVE: { label: "Hoạt động", variant: "default" as const },
       COMPLETED: { label: "Hoàn thành", variant: "secondary" as const },
       CANCELLED: { label: "Đã hủy", variant: "destructive" as const },
-      EXPIRED: { label: "Hết hạn", variant: "outline" as const }
+      EXPIRED: { label: "Hết hạn", variant: "outline" as const },
     };
 
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.ACTIVE;
+    const config =
+      statusConfig[status as keyof typeof statusConfig] || statusConfig.ACTIVE;
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  const getTierBadge = (tier?: { tierName: string; questName: string; minMembers: number; maxMembers?: number; minHours: number; lockedAmount: number; tasks: any[] } | string) => {
+  const getTierBadge = (
+    tier?:
+      | {
+          tierName: string;
+          questName: string;
+          minMembers: number;
+          maxMembers?: number;
+          minHours: number;
+          lockedAmount: number;
+          tasks: any[];
+        }
+      | string,
+  ) => {
     if (!tier) return <Badge variant="outline">Chưa kích hoạt</Badge>;
 
-    if (typeof tier === 'object') {
-      return <Badge className="bg-purple-100 text-purple-800">{tier.questName}</Badge>;
+    if (typeof tier === "object") {
+      return (
+        <Badge className="bg-purple-100 text-purple-800">
+          {tier.questName}
+        </Badge>
+      );
     }
 
     const tierConfig = {
-      "tier_3p_3h": { label: "Bronze", color: "bg-amber-100 text-amber-800" },
-      "tier_3p_5h": { label: "Silver", color: "bg-gray-100 text-gray-800" },
-      "tier_5p_3h": { label: "Silver", color: "bg-gray-100 text-gray-800" },
-      "tier_5p_5h": { label: "Gold", color: "bg-yellow-100 text-yellow-800" },
-      "tier_allnight": { label: "Diamond", color: "bg-blue-100 text-blue-800" }
+      tier_3p_3h: { label: "Bronze", color: "bg-amber-100 text-amber-800" },
+      tier_3p_5h: { label: "Silver", color: "bg-gray-100 text-gray-800" },
+      tier_5p_3h: { label: "Silver", color: "bg-gray-100 text-gray-800" },
+      tier_5p_5h: { label: "Gold", color: "bg-yellow-100 text-yellow-800" },
+      tier_allnight: { label: "Diamond", color: "bg-blue-100 text-blue-800" },
     };
 
-    const config = tierConfig[tier as keyof typeof tierConfig] || { label: tier, color: "bg-gray-100 text-gray-800" };
+    const config = tierConfig[tier as keyof typeof tierConfig] || {
+      label: tier,
+      color: "bg-gray-100 text-gray-800",
+    };
     return <Badge className={config.color}>{config.label}</Badge>;
   };
 
@@ -199,20 +230,26 @@ export function JoinGameAppointmentSummaryModal({
       month: "short",
       day: "numeric",
       hour: "2-digit",
-      minute: "2-digit"
+      minute: "2-digit",
     });
   };
 
   const formatDuration = (startTime: string, endTime: string) => {
     const start = new Date(startTime);
     const end = new Date(endTime);
-    const hours = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60));
+    const hours = Math.ceil(
+      (end.getTime() - start.getTime()) / (1000 * 60 * 60),
+    );
     return `${hours} giờ`;
   };
 
   const calculateTotalCost = () => {
     if (!selectedMachine || !appointment) return 0;
-    const hours = Math.ceil((new Date(appointment.endTime).getTime() - new Date(appointment.startTime).getTime()) / (1000 * 60 * 60));
+    const hours = Math.ceil(
+      (new Date(appointment.endTime).getTime() -
+        new Date(appointment.startTime).getTime()) /
+        (1000 * 60 * 60),
+    );
     return selectedMachine.price * hours;
   };
 
@@ -277,17 +314,22 @@ export function JoinGameAppointmentSummaryModal({
                   <Calendar className="h-4 w-4 text-blue-400" />
                   <span>{formatDateTime(appointment.startTime)}</span>
                 </div>
-                
+
                 <div className="flex items-center gap-2 text-gray-300">
                   <Clock className="h-4 w-4 text-green-400" />
-                  <span>{formatDuration(appointment.startTime, appointment.endTime)}</span>
+                  <span>
+                    {formatDuration(appointment.startTime, appointment.endTime)}
+                  </span>
                 </div>
-                
+
                 <div className="flex items-center gap-2 text-gray-300">
                   <Users className="h-4 w-4 text-purple-400" />
-                  <span>{appointment.currentMembers}/{appointment.maxMembers} thành viên</span>
+                  <span>
+                    {appointment.currentMembers}/{appointment.maxMembers} thành
+                    viên
+                  </span>
                 </div>
-                
+
                 <div className="flex items-center gap-2 text-gray-300">
                   <DollarSign className="h-4 w-4 text-yellow-400" />
                   <span>{appointment.minCost.toLocaleString()} VNĐ</span>
@@ -312,24 +354,32 @@ export function JoinGameAppointmentSummaryModal({
 
             {/* Machine Selection */}
             <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-              <h4 className="text-lg font-semibold text-white mb-4">Chọn máy chơi</h4>
-              
+              <h4 className="text-lg font-semibold text-white mb-4">
+                Chọn máy chơi
+              </h4>
+
               {selectedMachine ? (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between p-3 bg-blue-900/20 border border-blue-700 rounded">
                     <div className="flex items-center gap-3">
                       <Monitor className="h-5 w-5 text-blue-400" />
                       <div>
-                        <div className="font-semibold text-white">{selectedMachine.machineName}</div>
-                        <div className="text-sm text-gray-400">{selectedMachine.machineGroupName}</div>
+                        <div className="font-semibold text-white">
+                          {selectedMachine.machineName}
+                        </div>
+                        <div className="text-sm text-gray-400">
+                          {selectedMachine.machineGroupName}
+                        </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold text-white">{selectedMachine.price.toLocaleString()} VNĐ/giờ</div>
+                      <div className="font-semibold text-white">
+                        {selectedMachine.price.toLocaleString()} VNĐ/giờ
+                      </div>
                       <div className="text-sm text-gray-400">Giá mỗi giờ</div>
                     </div>
                   </div>
-                  
+
                   <Button
                     variant="outline"
                     onClick={() => setIsMachineSelectorOpen(true)}
@@ -353,7 +403,9 @@ export function JoinGameAppointmentSummaryModal({
             {/* Cost Summary */}
             {selectedMachine && (
               <div className="bg-blue-900/20 rounded-lg p-4 border border-blue-700">
-                <h4 className="text-lg font-semibold text-blue-300 mb-3">Tổng chi phí</h4>
+                <h4 className="text-lg font-semibold text-blue-300 mb-3">
+                  Tổng chi phí
+                </h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between text-gray-300">
                     <span>Máy:</span>
@@ -365,7 +417,12 @@ export function JoinGameAppointmentSummaryModal({
                   </div>
                   <div className="flex justify-between text-gray-300">
                     <span>Thời gian:</span>
-                    <span>{formatDuration(appointment.startTime, appointment.endTime)}</span>
+                    <span>
+                      {formatDuration(
+                        appointment.startTime,
+                        appointment.endTime,
+                      )}
+                    </span>
                   </div>
                   <div className="border-t border-gray-600 pt-2 mt-2">
                     <div className="flex justify-between text-lg font-semibold text-white">
@@ -373,7 +430,8 @@ export function JoinGameAppointmentSummaryModal({
                       <span>{calculateTotalCost().toLocaleString()} VNĐ</span>
                     </div>
                     <div className="text-xs text-gray-400 mt-1">
-                      Số tiền này sẽ được lock từ tài khoản chính và hoàn lại khi đến chơi đúng hẹn
+                      Số tiền này sẽ được lock từ tài khoản chính và hoàn lại
+                      khi đến chơi đúng hẹn
                     </div>
                   </div>
                 </div>
@@ -407,7 +465,12 @@ export function JoinGameAppointmentSummaryModal({
             </Button>
             <Button
               onClick={handleJoin}
-              disabled={isJoining || !selectedMachine || appointment.status !== "ACTIVE" || appointment.currentMembers >= appointment.maxMembers}
+              disabled={
+                isJoining ||
+                !selectedMachine ||
+                appointment.status !== "ACTIVE" ||
+                appointment.currentMembers >= appointment.maxMembers
+              }
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               {isJoining ? (
@@ -428,7 +491,11 @@ export function JoinGameAppointmentSummaryModal({
         isOpen={isMachineSelectorOpen}
         onClose={() => setIsMachineSelectorOpen(false)}
         onSelectMachine={setSelectedMachine}
-        appointmentDuration={Math.ceil((new Date(appointment?.endTime || 0).getTime() - new Date(appointment?.startTime || 0).getTime()) / (1000 * 60 * 60))}
+        appointmentDuration={Math.ceil(
+          (new Date(appointment?.endTime || 0).getTime() -
+            new Date(appointment?.startTime || 0).getTime()) /
+            (1000 * 60 * 60),
+        )}
       />
     </>
   );

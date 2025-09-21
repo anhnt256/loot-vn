@@ -1,19 +1,25 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
+// import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  CheckCircle, 
-  XCircle, 
-  Users, 
+import {
+  CheckCircle,
+  XCircle,
+  Users,
   Gift,
   Loader2,
   AlertCircle,
-  Trophy
+  Trophy,
 } from "lucide-react";
 
 interface Member {
@@ -29,9 +35,14 @@ interface CompleteAppointmentFormProps {
   onComplete: (result: any) => void;
 }
 
-export function CompleteAppointmentForm({ appointmentId, onComplete }: CompleteAppointmentFormProps) {
+export function CompleteAppointmentForm({
+  appointmentId,
+  onComplete,
+}: CompleteAppointmentFormProps) {
   const [members, setMembers] = useState<Member[]>([]);
-  const [memberStatuses, setMemberStatuses] = useState<Record<number, 'COMPLETED' | 'NO_SHOW'>>({});
+  const [memberStatuses, setMemberStatuses] = useState<
+    Record<number, "COMPLETED" | "NO_SHOW">
+  >({});
   const [isLoading, setIsLoading] = useState(true);
   const [isCompleting, setIsCompleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,9 +56,9 @@ export function CompleteAppointmentForm({ appointmentId, onComplete }: CompleteA
       if (result.success) {
         setMembers(result.data.members);
         // Initialize all members as completed
-        const initialStatuses: Record<number, 'COMPLETED' | 'NO_SHOW'> = {};
+        const initialStatuses: Record<number, "COMPLETED" | "NO_SHOW"> = {};
         result.data.members.forEach((member: Member) => {
-          initialStatuses[member.userId] = 'COMPLETED';
+          initialStatuses[member.userId] = "COMPLETED";
         });
         setMemberStatuses(initialStatuses);
       } else {
@@ -64,10 +75,13 @@ export function CompleteAppointmentForm({ appointmentId, onComplete }: CompleteA
     fetchMembers();
   }, [appointmentId]);
 
-  const handleStatusChange = (userId: number, status: 'COMPLETED' | 'NO_SHOW') => {
-    setMemberStatuses(prev => ({
+  const handleStatusChange = (
+    userId: number,
+    status: "COMPLETED" | "NO_SHOW",
+  ) => {
+    setMemberStatuses((prev) => ({
       ...prev,
-      [userId]: status
+      [userId]: status,
     }));
   };
 
@@ -76,16 +90,21 @@ export function CompleteAppointmentForm({ appointmentId, onComplete }: CompleteA
     setError(null);
 
     try {
-      const completedMembers = Object.entries(memberStatuses).map(([userId, status]) => ({
-        userId: parseInt(userId),
-        status
-      }));
+      const completedMembers = Object.entries(memberStatuses).map(
+        ([userId, status]) => ({
+          userId: parseInt(userId),
+          status,
+        }),
+      );
 
-      const response = await fetch(`/api/game-appointments/${appointmentId}/complete`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ completedMembers })
-      });
+      const response = await fetch(
+        `/api/game-appointments/${appointmentId}/complete`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ completedMembers }),
+        },
+      );
 
       const result = await response.json();
 
@@ -101,11 +120,18 @@ export function CompleteAppointmentForm({ appointmentId, onComplete }: CompleteA
     }
   };
 
-  const completedCount = Object.values(memberStatuses).filter(status => status === 'COMPLETED').length;
-  const noShowCount = Object.values(memberStatuses).filter(status => status === 'NO_SHOW').length;
-  const totalLockedAmount = members.reduce((sum, member) => sum + member.lockedAmount, 0);
+  const completedCount = Object.values(memberStatuses).filter(
+    (status) => status === "COMPLETED",
+  ).length;
+  const noShowCount = Object.values(memberStatuses).filter(
+    (status) => status === "NO_SHOW",
+  ).length;
+  const totalLockedAmount = members.reduce(
+    (sum, member) => sum + member.lockedAmount,
+    0,
+  );
   const forfeitedAmount = members
-    .filter(member => memberStatuses[member.userId] === 'NO_SHOW')
+    .filter((member) => memberStatuses[member.userId] === "NO_SHOW")
     .reduce((sum, member) => sum + member.lockedAmount, 0);
 
   if (isLoading) {
@@ -135,7 +161,9 @@ export function CompleteAppointmentForm({ appointmentId, onComplete }: CompleteA
         {/* Summary */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">{completedCount}</div>
+            <div className="text-2xl font-bold text-green-600">
+              {completedCount}
+            </div>
             <div className="text-sm text-muted-foreground">Hoàn thành</div>
           </div>
           <div className="text-center">
@@ -143,7 +171,9 @@ export function CompleteAppointmentForm({ appointmentId, onComplete }: CompleteA
             <div className="text-sm text-muted-foreground">Không tham gia</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">{totalLockedAmount.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-blue-600">
+              {totalLockedAmount.toLocaleString()}
+            </div>
             <div className="text-sm text-muted-foreground">Tổng lock (VNĐ)</div>
           </div>
         </div>
@@ -152,7 +182,10 @@ export function CompleteAppointmentForm({ appointmentId, onComplete }: CompleteA
         <div className="space-y-3">
           <h3 className="font-semibold">Thành viên ({members.length})</h3>
           {members.map((member) => (
-            <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg">
+            <div
+              key={member.id}
+              className="flex items-center justify-between p-3 border rounded-lg"
+            >
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
                   <Users className="h-4 w-4" />
@@ -164,20 +197,28 @@ export function CompleteAppointmentForm({ appointmentId, onComplete }: CompleteA
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex gap-2">
                 <Button
-                  variant={memberStatuses[member.userId] === 'COMPLETED' ? 'default' : 'outline'}
+                  variant={
+                    memberStatuses[member.userId] === "COMPLETED"
+                      ? "default"
+                      : "outline"
+                  }
                   size="sm"
-                  onClick={() => handleStatusChange(member.userId, 'COMPLETED')}
+                  onClick={() => handleStatusChange(member.userId, "COMPLETED")}
                 >
                   <CheckCircle className="mr-1 h-3 w-3" />
                   Hoàn thành
                 </Button>
                 <Button
-                  variant={memberStatuses[member.userId] === 'NO_SHOW' ? 'destructive' : 'outline'}
+                  variant={
+                    memberStatuses[member.userId] === "NO_SHOW"
+                      ? "destructive"
+                      : "outline"
+                  }
                   size="sm"
-                  onClick={() => handleStatusChange(member.userId, 'NO_SHOW')}
+                  onClick={() => handleStatusChange(member.userId, "NO_SHOW")}
                 >
                   <XCircle className="mr-1 h-3 w-3" />
                   Không tham gia
@@ -192,7 +233,8 @@ export function CompleteAppointmentForm({ appointmentId, onComplete }: CompleteA
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              <strong>{forfeitedAmount.toLocaleString()} VNĐ</strong> sẽ bị chuyển vào quỹ Gateway từ các thành viên không tham gia.
+              <strong>{forfeitedAmount.toLocaleString()} VNĐ</strong> sẽ bị
+              chuyển vào quỹ Gateway từ các thành viên không tham gia.
             </AlertDescription>
           </Alert>
         )}
@@ -206,8 +248,8 @@ export function CompleteAppointmentForm({ appointmentId, onComplete }: CompleteA
         )}
 
         {/* Complete Button */}
-        <Button 
-          onClick={handleComplete} 
+        <Button
+          onClick={handleComplete}
           disabled={isCompleting}
           className="w-full"
         >

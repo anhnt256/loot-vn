@@ -36,18 +36,18 @@ function convertBigIntToString(obj: any): any {
 // Hàm xử lý date an toàn
 function safeDateToString(dateValue: any): string | null {
   if (!dateValue) return null;
-  
+
   try {
     // Nếu đã là string ISO, trả về luôn
-    if (typeof dateValue === 'string' && dateValue.includes('T')) {
+    if (typeof dateValue === "string" && dateValue.includes("T")) {
       return dateValue;
     }
-    
+
     const date = new Date(dateValue);
     if (isNaN(date.getTime())) {
       return null;
     }
-    
+
     return date.toISOString();
   } catch (error) {
     console.error("Error converting date:", error);
@@ -236,7 +236,9 @@ export async function GET() {
         : 0,
       computers: Array.isArray(computers) ? computers.length : 0,
       checkInItems: Array.isArray(checkInItems) ? checkInItems.length : 0,
-      machineDetails: Array.isArray(machineDetailsRaw) ? machineDetailsRaw.length : 0,
+      machineDetails: Array.isArray(machineDetailsRaw)
+        ? machineDetailsRaw.length
+        : 0,
     });
 
     // Nếu không có computer data, trả về lỗi
@@ -303,15 +305,17 @@ export async function GET() {
           // Parse NetInfo nếu có
           let netInfoData = null;
           try {
-            netInfoData = machineDetail.NetInfo ? JSON.parse(machineDetail.NetInfo) : null;
+            netInfoData = machineDetail.NetInfo
+              ? JSON.parse(machineDetail.NetInfo)
+              : null;
           } catch (error) {
             console.error("Error parsing NetInfo in machineDetails:", error);
             netInfoData = null;
           }
-          
+
           machineDetailsMap.set(machineDetail.machineName, {
             ...machineDetail,
-            netInfo: netInfoData
+            netInfo: netInfoData,
           });
         }
       });
@@ -327,12 +331,7 @@ export async function GET() {
               (status: { MachineName: string }) => status.MachineName === name,
             )
           : null;
-      const { 
-        UserId, 
-        Status, 
-        UserType,
-        NetInfo
-      } = computerStatusData || {};
+      const { UserId, Status, UserType, NetInfo } = computerStatusData || {};
 
       // Lấy user info từ map
       const userInfo = UserId ? userInfoMap.get(parseInt(UserId, 10)) : null;
@@ -378,7 +377,7 @@ export async function GET() {
         machineDetails: {
           netInfo: machineDetail.netInfo || netInfoData, // Ưu tiên từ map, fallback từ computerStatusData
           machineGroupName: machineDetail.MachineGroupName || "Default",
-          pricePerHour: machineDetail.Price || machineDetail.PriceDefault || 0
+          pricePerHour: machineDetail.Price || machineDetail.PriceDefault || 0,
         },
         devices: devices
           .filter((device: any) => device && device.id)
@@ -396,15 +395,23 @@ export async function GET() {
               deviceIdToHistories[device.id]?.REPORT
                 ? {
                     ...deviceIdToHistories[device.id].REPORT,
-                    createdAt: safeDateToString(deviceIdToHistories[device.id].REPORT.createdAt),
-                    updatedAt: safeDateToString(deviceIdToHistories[device.id].REPORT.updatedAt),
+                    createdAt: safeDateToString(
+                      deviceIdToHistories[device.id].REPORT.createdAt,
+                    ),
+                    updatedAt: safeDateToString(
+                      deviceIdToHistories[device.id].REPORT.updatedAt,
+                    ),
                   }
                 : null,
               deviceIdToHistories[device.id]?.REPAIR
                 ? {
                     ...deviceIdToHistories[device.id].REPAIR,
-                    createdAt: safeDateToString(deviceIdToHistories[device.id].REPAIR.createdAt),
-                    updatedAt: safeDateToString(deviceIdToHistories[device.id].REPAIR.updatedAt),
+                    createdAt: safeDateToString(
+                      deviceIdToHistories[device.id].REPAIR.createdAt,
+                    ),
+                    updatedAt: safeDateToString(
+                      deviceIdToHistories[device.id].REPAIR.updatedAt,
+                    ),
                   }
                 : null,
             ],

@@ -6,6 +6,8 @@ interface GameAppointmentDetailPageProps {
   };
 }
 
-export default function GameAppointmentDetailPage({ params }: GameAppointmentDetailPageProps) {
+export default function GameAppointmentDetailPage({
+  params,
+}: GameAppointmentDetailPageProps) {
   return <GameAppointmentDetail appointmentId={params.id} />;
 }

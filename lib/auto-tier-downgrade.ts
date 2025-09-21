@@ -1,5 +1,8 @@
-import { db } from '@/lib/db';
-import { calculateTier, getTierDowngradeOptions } from './game-appointment-utils';
+import { db } from "@/lib/db";
+import {
+  calculateTier,
+  getTierDowngradeOptions,
+} from "./game-appointment-utils";
 
 export interface TierChangeResult {
   success: boolean;
@@ -31,51 +34,59 @@ export interface TierChangeResult {
  * - User leaves an appointment
  * - Appointment is updated
  */
-export async function autoDowngradeTier(appointmentId: string): Promise<TierChangeResult> {
+export async function autoDowngradeTier(
+  appointmentId: string,
+): Promise<TierChangeResult> {
   try {
     // Get current appointment with members
-    const appointment = await db.gameAppointment.findUnique({
-      where: { id: appointmentId },
-      include: {
-        members: {
-          where: { status: 'joined' }
-        },
-        tier: true
-      }
-    });
+    const appointmentResult = await db.$queryRaw`
+      SELECT ga.*, gat.tierName, gat.tasks
+      FROM GameAppointment ga
+      LEFT JOIN GameAppointmentTier gat ON ga.tierId = gat.id
+      WHERE ga.id = ${appointmentId}
+    `;
 
+    const appointment = (appointmentResult as any[])[0];
     if (!appointment) {
       return {
         success: false,
-        error: 'Appointment not found'
+        error: "Appointment not found",
       };
     }
 
-    const currentTier = appointment.tier?.tierName;
-    const currentMembers = appointment.members.length;
-    const hours = Math.ceil((appointment.endTime.getTime() - appointment.startTime.getTime()) / (1000 * 60 * 60));
+    // Get current members count
+    const membersResult = await db.$queryRaw`
+      SELECT COUNT(*) as count FROM GameAppointmentMember 
+      WHERE appointmentId = ${appointmentId} AND status = 'JOINED'
+    `;
+
+    const currentTier = appointment.tierName;
+    const currentMembers = (membersResult as any[])[0].count;
+    const hours = Math.ceil(
+      (new Date(appointment.endTime).getTime() -
+        new Date(appointment.startTime).getTime()) /
+        (1000 * 60 * 60),
+    );
 
     // Calculate new tier based on current conditions
     const newTier = await calculateTier({
       members: currentMembers,
-      hours
+      hours,
     });
 
     // If no tier is available, set to null (needs manual activation)
     if (!newTier) {
-      await db.gameAppointment.update({
-        where: { id: appointmentId },
-        data: {
-          tierId: null,
-          status: 'active' // Keep active, admin can manually activate
-        }
-      });
+      await db.$executeRaw`
+        UPDATE GameAppointment 
+        SET tierId = NULL, status = 'ACTIVE'
+        WHERE id = ${appointmentId}
+      `;
 
       return {
         success: true,
         oldTier: currentTier,
-        newTier: null,
-        error: 'No tier available. Requires manual activation by admin.'
+        newTier: undefined,
+        error: "No tier available. Requires manual activation by admin.",
       };
     }
 
@@ -85,48 +96,48 @@ export async function autoDowngradeTier(appointmentId: string): Promise<TierChan
         success: true,
         oldTier: currentTier,
         newTier: newTier.tierName,
-        quest: newTier
+        quest: newTier,
       };
     }
 
     // Find the tier in database to get the ID
-    const tierInDb = await db.gameAppointmentTier.findUnique({
-      where: { tierName: newTier.tierName }
-    });
+    const tierInDbResult = await db.$queryRaw`
+      SELECT id FROM GameAppointmentTier 
+      WHERE tierName = ${newTier.tierName}
+    `;
 
+    const tierInDb = (tierInDbResult as any[])[0];
     if (!tierInDb) {
       return {
         success: false,
-        error: 'Tier not found in database'
+        error: "Tier not found in database",
       };
     }
 
     // Tier has changed, update appointment
-    await db.gameAppointment.update({
-      where: { id: appointmentId },
-      data: {
-        tierId: tierInDb.id
-      }
-    });
+    await db.$executeRaw`
+      UPDATE GameAppointment 
+      SET tierId = ${tierInDb.id}
+      WHERE id = ${appointmentId}
+    `;
 
     // Log tier change for audit
     await logTierChange(appointmentId, currentTier, newTier.tierName, {
       members: currentMembers,
-      hours
+      hours,
     });
 
     return {
       success: true,
       oldTier: currentTier,
       newTier: newTier.tierName,
-      quest: newTier
+      quest: newTier,
     };
-
   } catch (error) {
-    console.error('Error in auto tier downgrade:', error);
+    console.error("Error in auto tier downgrade:", error);
     return {
       success: false,
-      error: 'Failed to auto downgrade tier'
+      error: "Failed to auto downgrade tier",
     };
   }
 }
@@ -134,7 +145,9 @@ export async function autoDowngradeTier(appointmentId: string): Promise<TierChan
 /**
  * Check if appointment needs manual activation
  */
-export async function checkManualActivationNeeded(appointmentId: string): Promise<{
+export async function checkManualActivationNeeded(
+  appointmentId: string,
+): Promise<{
   needsManualActivation: boolean;
   reason?: string;
   currentConditions: {
@@ -147,24 +160,28 @@ export async function checkManualActivationNeeded(appointmentId: string): Promis
       where: { id: appointmentId },
       include: {
         members: {
-          where: { status: 'joined' }
-        }
-      }
+          where: { status: "joined" },
+        },
+      },
     });
 
     if (!appointment) {
       return {
         needsManualActivation: false,
-        reason: 'Appointment not found'
+        reason: "Appointment not found",
+        currentConditions: { members: 0, hours: 0 },
       };
     }
 
     const currentMembers = appointment.members.length;
-    const hours = Math.ceil((appointment.endTime.getTime() - appointment.startTime.getTime()) / (1000 * 60 * 60));
+    const hours = Math.ceil(
+      (appointment.endTime.getTime() - appointment.startTime.getTime()) /
+        (1000 * 60 * 60),
+    );
 
     const tier = await calculateTier({
       members: currentMembers,
-      hours
+      hours,
     });
 
     const currentConditions = { members: currentMembers, hours };
@@ -173,20 +190,20 @@ export async function checkManualActivationNeeded(appointmentId: string): Promis
       return {
         needsManualActivation: true,
         reason: `Current conditions (${currentMembers} members, ${hours} hours) do not meet any tier requirements`,
-        currentConditions
+        currentConditions,
       };
     }
 
     return {
       needsManualActivation: false,
-      currentConditions
+      currentConditions,
     };
-
   } catch (error) {
-    console.error('Error checking manual activation:', error);
+    console.error("Error checking manual activation:", error);
     return {
       needsManualActivation: false,
-      reason: 'Error checking conditions'
+      reason: "Error checking conditions",
+      currentConditions: { members: 0, hours: 0 },
     };
   }
 }
@@ -194,7 +211,9 @@ export async function checkManualActivationNeeded(appointmentId: string): Promis
 /**
  * Get available tier options for manual activation
  */
-export async function getManualActivationOptions(appointmentId: string): Promise<{
+export async function getManualActivationOptions(
+  appointmentId: string,
+): Promise<{
   currentConditions: {
     members: number;
     hours: number;
@@ -221,43 +240,48 @@ export async function getManualActivationOptions(appointmentId: string): Promise
       where: { id: appointmentId },
       include: {
         members: {
-          where: { status: 'joined' }
-        }
-      }
+          where: { status: "joined" },
+        },
+      },
     });
 
     if (!appointment) {
-      throw new Error('Appointment not found');
+      throw new Error("Appointment not found");
     }
 
     const currentMembers = appointment.members.length;
-    const hours = Math.ceil((appointment.endTime.getTime() - appointment.startTime.getTime()) / (1000 * 60 * 60));
+    const hours = Math.ceil(
+      (appointment.endTime.getTime() - appointment.startTime.getTime()) /
+        (1000 * 60 * 60),
+    );
 
     const currentConditions = { members: currentMembers, hours };
 
     // Get all available tiers
     const allTiers = await db.gameAppointmentTier.findMany({
       where: { isActive: true },
-      orderBy: { minMembers: 'asc' }
+      orderBy: { minMembers: "asc" },
     });
 
-    const availableTiers = allTiers.map(tier => ({
+    const availableTiers = allTiers.map((tier) => ({
       tierName: tier.tierName,
       questName: tier.questName,
       minMembers: tier.minMembers,
       maxMembers: tier.maxMembers,
       minHours: tier.minHours,
       lockedAmount: tier.lockedAmount,
-      tasks: tier.tasks as any
+      tasks: tier.tasks as any,
     }));
 
     return {
       currentConditions,
-      availableTiers
+      availableTiers: availableTiers.map((tier) => ({
+        ...tier,
+        maxMembers: tier.maxMembers === null ? undefined : tier.maxMembers,
+      })),
     };
-
   } catch (error) {
-    console.error('Error getting manual activation options:', error);
+    console.error("Error getting manual activation options:", error);
     throw error;
   }
 }
@@ -269,7 +293,7 @@ async function logTierChange(
   appointmentId: string,
   oldTier: string | null,
   newTier: string | null,
-  conditions: { members: number; hours: number }
+  conditions: { members: number; hours: number },
 ): Promise<void> {
   try {
     // This could be stored in a separate audit table
@@ -277,7 +301,7 @@ async function logTierChange(
       oldTier,
       newTier,
       conditions,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
     // You could also store this in a database table for audit purposes
@@ -292,7 +316,7 @@ async function logTierChange(
     //   }
     // });
   } catch (error) {
-    console.error('Error logging tier change:', error);
+    console.error("Error logging tier change:", error);
   }
 }
 
@@ -314,8 +338,8 @@ export async function batchUpdateAppointmentTiers(): Promise<{
 }> {
   try {
     const activeAppointments = await db.gameAppointment.findMany({
-      where: { status: 'active' },
-      select: { id: true }
+      where: { status: "active" },
+      select: { id: true },
     });
 
     const results = [];
@@ -330,7 +354,7 @@ export async function batchUpdateAppointmentTiers(): Promise<{
           success: result.success,
           oldTier: result.oldTier,
           newTier: result.newTier,
-          error: result.error
+          error: result.error,
         });
 
         if (result.success && result.oldTier !== result.newTier) {
@@ -341,7 +365,7 @@ export async function batchUpdateAppointmentTiers(): Promise<{
         results.push({
           appointmentId: appointment.id,
           success: false,
-          error: 'Processing error'
+          error: "Processing error",
         });
       }
     }
@@ -350,11 +374,10 @@ export async function batchUpdateAppointmentTiers(): Promise<{
       processed: activeAppointments.length,
       updated,
       errors,
-      results
+      results,
     };
-
   } catch (error) {
-    console.error('Error in batch update:', error);
+    console.error("Error in batch update:", error);
     throw error;
   }
 }

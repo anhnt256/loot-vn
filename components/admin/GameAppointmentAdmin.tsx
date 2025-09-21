@@ -1,22 +1,34 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  Settings, 
-  Users, 
-  DollarSign, 
+import {
+  Settings,
+  Users,
+  DollarSign,
   Crown,
   Gift,
   Loader2,
   AlertCircle,
   CheckCircle,
   RefreshCw,
-  Zap
+  Zap,
 } from "lucide-react";
 
 interface GameAppointment {
@@ -78,7 +90,9 @@ interface GameAppointmentAdminProps {
   appointmentId: string;
 }
 
-export function GameAppointmentAdmin({ appointmentId }: GameAppointmentAdminProps) {
+export function GameAppointmentAdmin({
+  appointmentId,
+}: GameAppointmentAdminProps) {
   const [appointment, setAppointment] = useState<GameAppointment | null>(null);
   const [tierOptions, setTierOptions] = useState<TierOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -108,7 +122,9 @@ export function GameAppointmentAdmin({ appointmentId }: GameAppointmentAdminProp
 
   const fetchTierOptions = async () => {
     try {
-      const response = await fetch(`/api/admin/game-appointments/${appointmentId}/activate-tier`);
+      const response = await fetch(
+        `/api/admin/game-appointments/${appointmentId}/activate-tier`,
+      );
       const result = await response.json();
 
       if (result.success) {
@@ -135,11 +151,14 @@ export function GameAppointmentAdmin({ appointmentId }: GameAppointmentAdminProp
     setSuccess(null);
 
     try {
-      const response = await fetch(`/api/admin/game-appointments/${appointmentId}/activate-tier`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tierName: selectedTier })
-      });
+      const response = await fetch(
+        `/api/admin/game-appointments/${appointmentId}/activate-tier`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tierName: selectedTier }),
+        },
+      );
 
       const result = await response.json();
 
@@ -162,14 +181,19 @@ export function GameAppointmentAdmin({ appointmentId }: GameAppointmentAdminProp
     setSuccess(null);
 
     try {
-      const response = await fetch('/api/admin/game-appointments/batch-update-tiers', {
-        method: 'POST'
-      });
+      const response = await fetch(
+        "/api/admin/game-appointments/batch-update-tiers",
+        {
+          method: "POST",
+        },
+      );
 
       const result = await response.json();
 
       if (result.success) {
-        setSuccess(`Đã cập nhật ${result.data.updated} appointments thành công!`);
+        setSuccess(
+          `Đã cập nhật ${result.data.updated} appointments thành công!`,
+        );
         fetchAppointment(); // Refresh data
       } else {
         setError(result.error || "Không thể cập nhật batch");
@@ -186,24 +210,28 @@ export function GameAppointmentAdmin({ appointmentId }: GameAppointmentAdminProp
       ACTIVE: { label: "Hoạt động", variant: "default" as const },
       COMPLETED: { label: "Hoàn thành", variant: "secondary" as const },
       CANCELLED: { label: "Đã hủy", variant: "destructive" as const },
-      EXPIRED: { label: "Hết hạn", variant: "outline" as const }
+      EXPIRED: { label: "Hết hạn", variant: "outline" as const },
     };
 
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.ACTIVE;
+    const config =
+      statusConfig[status as keyof typeof statusConfig] || statusConfig.ACTIVE;
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  const getTierBadge = (tier?: GameAppointment['tier']) => {
+  const getTierBadge = (tier?: GameAppointment["tier"]) => {
     if (!tier) return <Badge variant="outline">Chưa kích hoạt</Badge>;
 
     const tierConfig = {
-      "tier_tam_ho": { label: "Tam Hổ", color: "bg-orange-100 text-orange-800" },
-      "tier_ngu_long": { label: "Ngũ Long", color: "bg-purple-100 text-purple-800" }
+      tier_tam_ho: { label: "Tam Hổ", color: "bg-orange-100 text-orange-800" },
+      tier_ngu_long: {
+        label: "Ngũ Long",
+        color: "bg-purple-100 text-purple-800",
+      },
     };
 
-    const config = tierConfig[tier.tierName as keyof typeof tierConfig] || { 
-      label: tier.questName, 
-      color: "bg-gray-100 text-gray-800" 
+    const config = tierConfig[tier.tierName as keyof typeof tierConfig] || {
+      label: tier.questName,
+      color: "bg-gray-100 text-gray-800",
     };
     return <Badge className={config.color}>{config.label}</Badge>;
   };
@@ -216,7 +244,7 @@ export function GameAppointmentAdmin({ appointmentId }: GameAppointmentAdminProp
       month: "short",
       day: "numeric",
       hour: "2-digit",
-      minute: "2-digit"
+      minute: "2-digit",
     });
   };
 
@@ -245,7 +273,9 @@ export function GameAppointmentAdmin({ appointmentId }: GameAppointmentAdminProp
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Quản lý hẹn chơi</h1>
-          <p className="text-muted-foreground">Admin panel - {appointment.title}</p>
+          <p className="text-muted-foreground">
+            Admin panel - {appointment.title}
+          </p>
         </div>
         <div className="flex gap-2">
           {getStatusBadge(appointment.status)}
@@ -257,7 +287,9 @@ export function GameAppointmentAdmin({ appointmentId }: GameAppointmentAdminProp
       {success && (
         <Alert className="border-green-200 bg-green-50">
           <CheckCircle className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-800">{success}</AlertDescription>
+          <AlertDescription className="text-green-800">
+            {success}
+          </AlertDescription>
         </Alert>
       )}
 
@@ -281,28 +313,48 @@ export function GameAppointmentAdmin({ appointmentId }: GameAppointmentAdminProp
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Game</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Game
+                  </p>
                   <p className="text-lg">{appointment.game}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Thể loại</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Thể loại
+                  </p>
                   <p className="text-lg">{appointment.gameType}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Thời gian</p>
-                  <p className="text-lg">{formatDateTime(appointment.startTime)}</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Thời gian
+                  </p>
+                  <p className="text-lg">
+                    {formatDateTime(appointment.startTime)}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Thành viên</p>
-                  <p className="text-lg">{appointment.currentMembers}/{appointment.maxMembers}</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Thành viên
+                  </p>
+                  <p className="text-lg">
+                    {appointment.currentMembers}/{appointment.maxMembers}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Chi phí</p>
-                  <p className="text-lg">{appointment.minCost.toLocaleString()} VNĐ</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Chi phí
+                  </p>
+                  <p className="text-lg">
+                    {appointment.minCost.toLocaleString()} VNĐ
+                  </p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Tổng lock</p>
-                  <p className="text-lg">{appointment.totalLockedAmount.toLocaleString()} VNĐ</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Tổng lock
+                  </p>
+                  <p className="text-lg">
+                    {appointment.totalLockedAmount.toLocaleString()} VNĐ
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -320,34 +372,54 @@ export function GameAppointmentAdmin({ appointmentId }: GameAppointmentAdminProp
               <CardContent>
                 <div className="space-y-4">
                   <div className="p-3 bg-blue-100 rounded-lg">
-                    <p className="text-sm font-medium text-blue-800">Cam kết bắt buộc</p>
-                    <p className="text-lg font-bold text-blue-900">
-                      Khóa {appointment.tier.lockedAmount.toLocaleString()} VNĐ từ mỗi thành viên
+                    <p className="text-sm font-medium text-blue-800">
+                      Cam kết bắt buộc
                     </p>
-                    <p className="text-sm text-blue-700">Chơi tối thiểu {appointment.tier.minHours} giờ để được hoàn tiền</p>
+                    <p className="text-lg font-bold text-blue-900">
+                      Khóa {appointment.tier.lockedAmount.toLocaleString()} VNĐ
+                      từ mỗi thành viên
+                    </p>
+                    <p className="text-sm text-blue-700">
+                      Chơi tối thiểu {appointment.tier.minHours} giờ để được
+                      hoàn tiền
+                    </p>
                   </div>
-                  
+
                   <div>
-                    <p className="font-semibold text-blue-800 mb-3">Nhiệm vụ:</p>
+                    <p className="font-semibold text-blue-800 mb-3">
+                      Nhiệm vụ:
+                    </p>
                     <div className="space-y-2">
                       {appointment.tier.tasks.map((task, index) => (
-                        <div key={task.taskId} className="p-3 bg-white rounded-lg border border-blue-200">
+                        <div
+                          key={task.taskId}
+                          className="p-3 bg-white rounded-lg border border-blue-200"
+                        >
                           <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium text-blue-800">{task.taskName}</span>
+                            <span className="font-medium text-blue-800">
+                              {task.taskName}
+                            </span>
                             <Badge variant="outline" className="text-blue-600">
                               {task.rewardAmount.toLocaleString()} VNĐ
                             </Badge>
                           </div>
-                          <p className="text-sm text-blue-700">{task.challenge}</p>
+                          <p className="text-sm text-blue-700">
+                            {task.challenge}
+                          </p>
                         </div>
                       ))}
                     </div>
                   </div>
-                  
+
                   <div className="p-3 bg-blue-100 rounded-lg">
-                    <p className="text-sm font-medium text-blue-800">Tổng phần thưởng có thể nhận</p>
+                    <p className="text-sm font-medium text-blue-800">
+                      Tổng phần thưởng có thể nhận
+                    </p>
                     <p className="text-lg font-bold text-blue-900">
-                      {appointment.tier.tasks.reduce((sum, task) => sum + task.rewardAmount, 0).toLocaleString()} VNĐ
+                      {appointment.tier.tasks
+                        .reduce((sum, task) => sum + task.rewardAmount, 0)
+                        .toLocaleString()}{" "}
+                      VNĐ
                     </p>
                   </div>
                 </div>
@@ -371,9 +443,11 @@ export function GameAppointmentAdmin({ appointmentId }: GameAppointmentAdminProp
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium">Chọn tier</label>
+                <label htmlFor="tier-select" className="text-sm font-medium">
+                  Chọn tier
+                </label>
                 <Select value={selectedTier} onValueChange={setSelectedTier}>
-                  <SelectTrigger>
+                  <SelectTrigger id="tier-select">
                     <SelectValue placeholder="Chọn tier để kích hoạt" />
                   </SelectTrigger>
                   <SelectContent>
@@ -382,7 +456,8 @@ export function GameAppointmentAdmin({ appointmentId }: GameAppointmentAdminProp
                         <div className="flex flex-col">
                           <span className="font-medium">{tier.questName}</span>
                           <span className="text-xs text-muted-foreground">
-                            {tier.minMembers}-{tier.maxMembers || '∞'} người, {tier.minHours}+ giờ
+                            {tier.minMembers}-{tier.maxMembers || "∞"} người,{" "}
+                            {tier.minHours}+ giờ
                           </span>
                           <span className="text-xs text-muted-foreground">
                             Khóa {tier.lockedAmount.toLocaleString()} VNĐ/người
@@ -393,9 +468,9 @@ export function GameAppointmentAdmin({ appointmentId }: GameAppointmentAdminProp
                   </SelectContent>
                 </Select>
               </div>
-              
-              <Button 
-                onClick={handleManualActivation} 
+
+              <Button
+                onClick={handleManualActivation}
                 disabled={isActivating || !selectedTier}
                 className="w-full"
               >
@@ -426,8 +501,8 @@ export function GameAppointmentAdmin({ appointmentId }: GameAppointmentAdminProp
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button 
-                onClick={handleBatchUpdate} 
+              <Button
+                onClick={handleBatchUpdate}
                 disabled={isBatchUpdating}
                 className="w-full"
               >
@@ -460,14 +535,23 @@ export function GameAppointmentAdmin({ appointmentId }: GameAppointmentAdminProp
                       <Badge variant="outline">{tier.tierName}</Badge>
                     </div>
                     <div className="text-xs text-muted-foreground mb-2">
-                      <p>Yêu cầu: {tier.minMembers}-{tier.maxMembers || '∞'} người, {tier.minHours}+ giờ</p>
-                      <p>Khóa: {tier.lockedAmount.toLocaleString()} VNĐ/người</p>
+                      <p>
+                        Yêu cầu: {tier.minMembers}-{tier.maxMembers || "∞"}{" "}
+                        người, {tier.minHours}+ giờ
+                      </p>
+                      <p>
+                        Khóa: {tier.lockedAmount.toLocaleString()} VNĐ/người
+                      </p>
                     </div>
                     <div className="space-y-1">
                       <p className="text-sm font-medium">Nhiệm vụ:</p>
                       {tier.tasks.map((task) => (
-                        <div key={task.taskId} className="text-xs text-muted-foreground">
-                          • {task.taskName}: {task.rewardAmount.toLocaleString()} VNĐ
+                        <div
+                          key={task.taskId}
+                          className="text-xs text-muted-foreground"
+                        >
+                          • {task.taskName}:{" "}
+                          {task.rewardAmount.toLocaleString()} VNĐ
                         </div>
                       ))}
                     </div>
