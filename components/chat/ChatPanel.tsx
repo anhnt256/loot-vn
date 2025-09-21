@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { ChatWindow } from "./ChatWindow";
 import { useLocalStorageValue } from "@/hooks/useLocalStorageValue";
 import { MessageCircle } from "lucide-react";
-import { getMachineInfoFromUserData } from "@/lib/machine-utils";
 
 const CURRENT_USER = "currentUser";
 
@@ -19,11 +18,19 @@ export function ChatPanel({ isOpen, onClose, className = "" }: ChatPanelProps) {
   const userData = useLocalStorageValue(CURRENT_USER, null);
 
   useEffect(() => {
-    // Get machine info from user data
-    const machineInfo = getMachineInfoFromUserData(userData);
-
-    if (machineInfo.name) {
-      setSelectedMachine(machineInfo.displayName);
+    // Get machine name from user data
+    if (userData) {
+      const user = userData as any;
+      const machineName = user.machineName || 
+                         user.userName || 
+                         user.username || 
+                         user.pcName || 
+                         user.pc_name ||
+                         '';
+      
+      if (machineName) {
+        setSelectedMachine(`Máy ${machineName}`);
+      }
     }
   }, [userData]);
 

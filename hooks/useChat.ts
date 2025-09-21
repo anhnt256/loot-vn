@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSSE } from './useSSE';
-import { parseMachineDisplayName } from '@/lib/machine-utils';
 
 export interface ChatMessage {
   id: number;
@@ -27,9 +26,8 @@ export function useChat({ machineName, onError }: UseChatOptions) {
   const [onlineCount, setOnlineCount] = useState<number>(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Parse machine name to get actual machine name for API calls
-  const parsedMachine = parseMachineDisplayName(machineName);
-  const actualMachineName = parsedMachine.name || machineName;
+  // Use machine name directly for API calls
+  const actualMachineName = machineName;
 
   // SSE URL for real-time updates (group chat - no machineName needed)
   const sseUrl = `/api/chat/subscribe?machineName=${encodeURIComponent(actualMachineName)}`;

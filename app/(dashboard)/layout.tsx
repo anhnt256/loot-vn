@@ -224,6 +224,15 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
           >
             Trò chơi
           </Link>
+          {/* <Link
+            className={cn(
+              "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
+              pathname === "/game-appointments" ? "bg-gray-700" : "transparent",
+            )}
+            href="/game-appointments"
+          >
+            Hẹn chơi
+          </Link> */}
           {STORE_DISABLED ? (
             <div className="block py-2.5 px-4 rounded text-gray-500 cursor-not-allowed">
               Đổi thưởng (Tạm khóa)

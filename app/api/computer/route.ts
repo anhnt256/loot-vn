@@ -33,6 +33,28 @@ function convertBigIntToString(obj: any): any {
   return obj;
 }
 
+// Hàm xử lý date an toàn
+function safeDateToString(dateValue: any): string | null {
+  if (!dateValue) return null;
+  
+  try {
+    // Nếu đã là string ISO, trả về luôn
+    if (typeof dateValue === 'string' && dateValue.includes('T')) {
+      return dateValue;
+    }
+    
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) {
+      return null;
+    }
+    
+    return date.toISOString();
+  } catch (error) {
+    console.error("Error converting date:", error);
+    return null;
+  }
+}
+
 // Hàm tạo timeout promise
 function createTimeoutPromise<T>(
   promise: Promise<T>,
@@ -87,7 +109,7 @@ export async function GET() {
 
     // Sử dụng Promise.allSettled để xử lý từng query độc lập
     const queryResults = await Promise.allSettled([
-      // 1. Computer status query với timeout
+      // 1. Computer status query với timeout và machine details
       executeQueryWithTimeout(async () => {
         return await fnetDB.$queryRaw<any[]>(fnetPrisma.sql`
         SELECT 
@@ -96,9 +118,16 @@ export async function GET() {
           s.EnterTime,
           s.Status,
           s.UserId,
-          u.UserType
+          u.UserType,
+          cs.NetInfo,
+          mg.MachineGroupName,
+          mg.PriceDefault,
+          pm.Price
         FROM systemlogtb s
         LEFT JOIN usertb u ON s.UserId = u.UserId
+        LEFT JOIN clientsystb cs ON s.MachineName = cs.PCName
+        LEFT JOIN machinegrouptb mg ON u.MachineGroupId = mg.MachineGroupId
+        LEFT JOIN pricemachinetb pm ON mg.MachineGroupId = pm.MachineGroupId AND pm.PriceId = 1
         INNER JOIN (
           SELECT MachineName, MAX(SystemLogId) AS MaxSystemLogId
           FROM systemlogtb
@@ -167,6 +196,24 @@ export async function GET() {
         SELECT * FROM CheckInItem
       `;
       }, 3000),
+
+      // 5. Machine details từ fnet DB cho tất cả máy tính
+      executeQueryWithTimeout(async () => {
+        return await fnetDB.$queryRaw<any[]>(fnetPrisma.sql`
+        SELECT 
+          cs.PCName as machineName,
+          cs.NetInfo,
+          mg.MachineGroupName,
+          mg.PriceDefault,
+          pm.Price
+        FROM clientsystb cs
+        LEFT JOIN usertb u ON cs.PCName = u.UserName
+        LEFT JOIN machinegrouptb mg ON u.MachineGroupId = mg.MachineGroupId
+        LEFT JOIN pricemachinetb pm ON mg.MachineGroupId = pm.MachineGroupId AND pm.PriceId = 1
+        WHERE cs.PCName IS NOT NULL
+        ORDER BY cs.PCName ASC;
+      `);
+      }, 5000),
     ]);
 
     // Xử lý kết quả từng query
@@ -178,6 +225,8 @@ export async function GET() {
       queryResults[2].status === "fulfilled" ? queryResults[2].value : [];
     const checkInItems =
       queryResults[3].status === "fulfilled" ? queryResults[3].value : [];
+    const machineDetailsRaw =
+      queryResults[4].status === "fulfilled" ? queryResults[4].value : [];
 
     // Log kết quả từng query để debug
     console.log("Query results:", {
@@ -187,6 +236,7 @@ export async function GET() {
         : 0,
       computers: Array.isArray(computers) ? computers.length : 0,
       checkInItems: Array.isArray(checkInItems) ? checkInItems.length : 0,
+      machineDetails: Array.isArray(machineDetailsRaw) ? machineDetailsRaw.length : 0,
     });
 
     // Nếu không có computer data, trả về lỗi
@@ -245,6 +295,28 @@ export async function GET() {
       userInfoMap.set(userInfo.userId, userInfo);
     });
 
+    // Tạo map để lookup nhanh machine details
+    const machineDetailsMap = new Map();
+    if (Array.isArray(machineDetailsRaw)) {
+      machineDetailsRaw.forEach((machineDetail: any) => {
+        if (machineDetail.machineName) {
+          // Parse NetInfo nếu có
+          let netInfoData = null;
+          try {
+            netInfoData = machineDetail.NetInfo ? JSON.parse(machineDetail.NetInfo) : null;
+          } catch (error) {
+            console.error("Error parsing NetInfo in machineDetails:", error);
+            netInfoData = null;
+          }
+          
+          machineDetailsMap.set(machineDetail.machineName, {
+            ...machineDetail,
+            netInfo: netInfoData
+          });
+        }
+      });
+    }
+
     const results = [];
 
     for (const computer of computers as any[]) {
@@ -255,13 +327,30 @@ export async function GET() {
               (status: { MachineName: string }) => status.MachineName === name,
             )
           : null;
-      const { UserId, Status, UserType } = computerStatusData || {};
+      const { 
+        UserId, 
+        Status, 
+        UserType,
+        NetInfo
+      } = computerStatusData || {};
 
       // Lấy user info từ map
       const userInfo = UserId ? userInfoMap.get(parseInt(UserId, 10)) : null;
 
+      // Lấy machine details từ map
+      const machineDetail = machineDetailsMap.get(name) || {};
+
       // Parse devices JSON
       const devices = computer.devices ? JSON.parse(computer.devices) : [];
+
+      // Parse NetInfo JSON để lấy thông tin chi tiết
+      let netInfoData = null;
+      try {
+        netInfoData = NetInfo ? JSON.parse(NetInfo) : null;
+      } catch (error) {
+        console.error("Error parsing NetInfo:", error);
+        netInfoData = null;
+      }
 
       results.push({
         id: computer.id,
@@ -285,6 +374,12 @@ export async function GET() {
           isPremium: false,
           data: null,
         },
+        // Machine details từ fnet DB NetInfo
+        machineDetails: {
+          netInfo: machineDetail.netInfo || netInfoData, // Ưu tiên từ map, fallback từ computerStatusData
+          machineGroupName: machineDetail.MachineGroupName || "Default",
+          pricePerHour: machineDetail.Price || machineDetail.PriceDefault || 0
+        },
         devices: devices
           .filter((device: any) => device && device.id)
           .map((device: any) => ({
@@ -301,15 +396,15 @@ export async function GET() {
               deviceIdToHistories[device.id]?.REPORT
                 ? {
                     ...deviceIdToHistories[device.id].REPORT,
-                    createdAt: deviceIdToHistories[device.id].REPORT.createdAt,
-                    updatedAt: deviceIdToHistories[device.id].REPORT.updatedAt,
+                    createdAt: safeDateToString(deviceIdToHistories[device.id].REPORT.createdAt),
+                    updatedAt: safeDateToString(deviceIdToHistories[device.id].REPORT.updatedAt),
                   }
                 : null,
               deviceIdToHistories[device.id]?.REPAIR
                 ? {
                     ...deviceIdToHistories[device.id].REPAIR,
-                    createdAt: deviceIdToHistories[device.id].REPAIR.createdAt,
-                    updatedAt: deviceIdToHistories[device.id].REPAIR.updatedAt,
+                    createdAt: safeDateToString(deviceIdToHistories[device.id].REPAIR.createdAt),
+                    updatedAt: safeDateToString(deviceIdToHistories[device.id].REPAIR.updatedAt),
                   }
                 : null,
             ],

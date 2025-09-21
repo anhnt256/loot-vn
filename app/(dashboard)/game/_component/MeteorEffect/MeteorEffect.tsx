@@ -103,7 +103,7 @@ const MeteorEffect: React.FC<MeteorEffectProps> = ({
 
   return (
     <div
-      className={`fixed inset-0 ${
+      className={`fixed inset-0 z-[9998] ${
         show ? "opacity-100" : "opacity-0"
       } transition-opacity duration-300`}
     >
@@ -120,10 +120,10 @@ const MeteorEffect: React.FC<MeteorEffectProps> = ({
         </video>
         {showSkipButton && (
           <button
-            className="absolute top-8 right-8 bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-600"
+            className="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-lg hover:bg-gray-600 font-semibold text-lg shadow-lg border-2 border-gray-600 transition-all duration-200 hover:scale-105 z-[9999]"
             onClick={skip}
           >
-            Skip <i className="transform rotate-90 inline-block ml-1">^</i>
+            Skip <i className="transform rotate-90 inline-block ml-2">^</i>
           </button>
         )}
       </div>

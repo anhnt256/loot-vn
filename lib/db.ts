@@ -12,9 +12,34 @@ import { cookies } from "next/headers";
 
 declare global {
   var prisma: PrismaClient | undefined;
+  var fnetGVPrisma: FnetGVPrismaClient | undefined;
+  var fnetTPPrisma: FnetTPPrismaClient | undefined;
 }
 
 export const db = globalThis.prisma || new PrismaClient();
+
+// Singleton instances for Fnet databases
+const fnetGV = globalThis.fnetGVPrisma || new FnetGVPrismaClient({
+  datasources: {
+    db: {
+      url: process.env.FNET_GV_DATABASE_URL,
+    },
+  },
+});
+
+const fnetTP = globalThis.fnetTPPrisma || new FnetTPPrismaClient({
+  datasources: {
+    db: {
+      url: process.env.FNET_TP_DATABASE_URL,
+    },
+  },
+});
+
+if (process.env.NODE_ENV !== "production") {
+  globalThis.prisma = db;
+  globalThis.fnetGVPrisma = fnetGV;
+  globalThis.fnetTPPrisma = fnetTP;
+}
 
 // Create a factory function that gets called for each request
 export async function getFnetDB() {
@@ -28,9 +53,6 @@ export async function getFnetDB() {
   if (!branchFromCookie) {
     throw new Error("Branch cookie is required but not found");
   }
-
-  const fnetGV = new FnetGVPrismaClient();
-  const fnetTP = new FnetTPPrismaClient();
 
   switch (branchFromCookie) {
     case BRANCH.GOVAP:
@@ -64,6 +86,14 @@ export async function getFnetPrisma() {
   }
 }
 
-if (process.env.NODE_ENV !== "production") {
-  globalThis.prisma = db;
+// Function to disconnect all databases (useful for cleanup)
+export async function disconnectAll() {
+  try {
+    await db.$disconnect();
+    await fnetGV.$disconnect();
+    await fnetTP.$disconnect();
+  } catch (error) {
+    console.error('Error disconnecting databases:', error);
+  }
 }
+

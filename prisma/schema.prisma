@@ -1,7 +1,7 @@
 generator client {
   provider      = "prisma-client-js"
   output        = "./generated/prisma-client"
-binaryTargets = ["native", "debian-openssl-3.0.x"]
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -224,34 +224,34 @@ model Computer {
 }
 
 model Staff {
-  id                   Int             @id @default(autoincrement())
-  userName             String          @unique
-  password             String
-  isDeleted            Boolean         @default(false)
-  isAdmin              Boolean         @default(false)
-  createdAt            DateTime        @default(now())
-  updatedAt            DateTime
-  branch               String          @default("GO_VAP")
-  address              String?         @db.Text
-  dateOfBirth          DateTime?
-  email                String?         @db.VarChar(255)
-  fullName             String          @db.VarChar(255)
-  gender               Staff_gender    @default(OTHER)
-  hireDate             DateTime?
-  idCard               String?         @db.VarChar(20)
-  idCardExpiryDate     DateTime?
-  idCardIssueDate      DateTime?
-  note                 String?         @db.Text
-  phone                String?         @db.VarChar(15)
-  resignDate           DateTime?
-  staffType            Staff_staffType @default(STAFF)
-  needCheckMacAddress  Boolean         @default(true)
-  counterStaffReports  Report[]        @relation("CounterStaff")
-  kitchenStaffReports  Report[]        @relation("KitchenStaff")
-  securityStaffReports Report[]        @relation("SecurityStaff")
-  morningHandoverReports HandoverReport[] @relation("MorningStaff")
+  id                       Int              @id @default(autoincrement())
+  userName                 String           @unique
+  password                 String
+  isDeleted                Boolean          @default(false)
+  isAdmin                  Boolean          @default(false)
+  createdAt                DateTime         @default(now())
+  updatedAt                DateTime
+  branch                   String           @default("GO_VAP")
+  address                  String?          @db.Text
+  dateOfBirth              DateTime?
+  email                    String?          @db.VarChar(255)
+  fullName                 String           @db.VarChar(255)
+  gender                   Staff_gender     @default(OTHER)
+  hireDate                 DateTime?
+  idCard                   String?          @db.VarChar(20)
+  idCardExpiryDate         DateTime?
+  idCardIssueDate          DateTime?
+  note                     String?          @db.Text
+  phone                    String?          @db.VarChar(15)
+  resignDate               DateTime?
+  staffType                Staff_staffType  @default(STAFF)
+  needCheckMacAddress      Boolean          @default(true)
+  counterStaffReports      Report[]         @relation("CounterStaff")
+  kitchenStaffReports      Report[]         @relation("KitchenStaff")
+  securityStaffReports     Report[]         @relation("SecurityStaff")
+  morningHandoverReports   HandoverReport[] @relation("MorningStaff")
   afternoonHandoverReports HandoverReport[] @relation("AfternoonStaff")
-  eveningHandoverReports HandoverReport[] @relation("EveningStaff")
+  eveningHandoverReports   HandoverReport[] @relation("EveningStaff")
 }
 
 model GiftRound {
@@ -358,7 +358,6 @@ model UserBattlePass {
   branch     String
   season     BattlePassSeason @relation(fields: [seasonId], references: [id])
 
-  @@unique([userId, seasonId])
   @@index([userId])
   @@index([seasonId])
   @@map("UserBattlePass")
@@ -372,7 +371,6 @@ model UserBattlePassReward {
   branch    String   @default("GO_VAP")
   claimedAt DateTime @default(now())
 
-  @@unique([userId, rewardId])
   @@index([seasonId])
   @@index([userId])
   @@index([branch])
@@ -520,28 +518,28 @@ model Report {
 }
 
 model HandoverReport {
-  id               Int                @id @default(autoincrement())
-  date             DateTime
-  reportType       HandoverReportType
-  branch           String             @default("GO_VAP")
-  note             String?
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
-  afternoonStaffId Int?
-  eveningStaffId   Int?
-  morningStaffId   Int?
+  id                       Int                @id @default(autoincrement())
+  date                     DateTime
+  reportType               HandoverReportType
+  branch                   String             @default("GO_VAP")
+  note                     String?
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
+  afternoonStaffId         Int?
+  eveningStaffId           Int?
+  morningStaffId           Int?
   // Tracking report submission count per shift
-  morningSubmissionCount   Int @default(0)
-  afternoonSubmissionCount Int @default(0)
-  eveningSubmissionCount   Int @default(0)
+  morningSubmissionCount   Int                @default(0)
+  afternoonSubmissionCount Int                @default(0)
+  eveningSubmissionCount   Int                @default(0)
   // Tracking completion status per shift
-  isMorningComplete   Boolean @default(false)
-  isAfternoonComplete Boolean @default(false)
-  isEveningComplete   Boolean @default(false)
-  materials        HandoverMaterial[]
-  morningStaff     Staff?             @relation("MorningStaff", fields: [morningStaffId], references: [id])
-  afternoonStaff   Staff?             @relation("AfternoonStaff", fields: [afternoonStaffId], references: [id])
-  eveningStaff     Staff?             @relation("EveningStaff", fields: [eveningStaffId], references: [id])
+  isMorningComplete        Boolean            @default(false)
+  isAfternoonComplete      Boolean            @default(false)
+  isEveningComplete        Boolean            @default(false)
+  materials                HandoverMaterial[]
+  morningStaff             Staff?             @relation("MorningStaff", fields: [morningStaffId], references: [id])
+  afternoonStaff           Staff?             @relation("AfternoonStaff", fields: [afternoonStaffId], references: [id])
+  eveningStaff             Staff?             @relation("EveningStaff", fields: [eveningStaffId], references: [id])
 
   @@index([date, reportType], map: "HandoverReport_date_shift_reportType_idx")
 }
@@ -706,15 +704,15 @@ enum FeedbackType {
 }
 
 model FnetHistory {
-  id           Int      @id @default(autoincrement())
-  userId       Int
-  branch       String
-  oldMoney     Float
-  newMoney     Float
-  targetId     Int?     // ID tham chiếu đến table reward (UserRewardMap.id)
-  type         String?  // Enum: REWARD, BATTLE_PASS, etc.
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  branch    String
+  oldMoney  Float
+  newMoney  Float
+  targetId  Int? // ID tham chiếu đến table reward (UserRewardMap.id)
+  type      String? // Enum: REWARD, BATTLE_PASS, etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([branch])
@@ -731,16 +729,102 @@ enum FeedbackStatus {
 }
 
 model PromotionReward {
-  id          Int      @id @default(autoincrement())
-  name        String
-  value       Int
-  starsValue  Int
-  branch      String
-  quantity    Int
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         Int      @id @default(autoincrement())
+  name       String
+  value      Int
+  starsValue Int
+  branch     String
+  quantity   Int
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([branch])
   @@index([isActive])
+}
+
+model GameAppointmentTier {
+  id           Int               @id @default(autoincrement())
+  tierName     String            @db.VarChar(100)
+  questName    String            @db.VarChar(100) // "Tam Hổ", "Ngũ Long"
+  minMembers   Int
+  maxMembers   Int?
+  minHours     Int
+  lockedAmount Int // Số tiền khóa từ mỗi thành viên (30.000 VNĐ)
+  tasks        Json // Array of tasks với challenge và reward
+  isActive     Boolean           @default(true)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  appointments GameAppointment[]
+
+  @@index([isActive])
+  @@map("GameAppointmentTier")
+}
+
+model GameAppointment {
+  id                String                  @id @default(cuid())
+  creatorId         Int
+  branch            String                  @db.VarChar(50)
+  title             String                  @db.VarChar(255)
+  description       String?                 @db.Text
+  game              String                  @db.VarChar(100)
+  gameType          String                  @db.VarChar(50) // casual, ranked, competitive
+  rankLevel         String?                 @db.VarChar(50)
+  startTime         DateTime
+  endTime           DateTime
+  minMembers        Int                     @default(1)
+  maxMembers        Int
+  minCost           Decimal                 @db.Decimal(10, 2)
+  currentMembers    Int                     @default(0)
+  status            String                  @default("active") @db.VarChar(20) // active, completed, cancelled, expired
+  tierId            Int?
+  totalLockedAmount Decimal                 @default(0) @db.Decimal(10, 2)
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  tier              GameAppointmentTier?    @relation(fields: [tierId], references: [id])
+  members           GameAppointmentMember[]
+  rewards           GameAppointmentReward[]
+
+  @@index([creatorId])
+  @@index([branch])
+  @@index([status])
+  @@index([startTime])
+  @@map("GameAppointment")
+}
+
+model GameAppointmentMember {
+  id            String          @id @default(cuid())
+  appointmentId String
+  userId        Int
+  branch        String          @db.VarChar(50)
+  lockedAmount  Decimal         @db.Decimal(10, 2)
+  status        String          @default("joined") @db.VarChar(20) // joined, completed, left, no_show
+  machineName   String?         @db.VarChar(100) // Tên máy đã chọn
+  machineGroupId Int?           // ID nhóm máy đã chọn
+  joinedAt      DateTime        @default(now())
+  completedAt   DateTime?
+  appointment   GameAppointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([appointmentId])
+  @@map("GameAppointmentMember")
+}
+
+model GameAppointmentReward {
+  id            String          @id @default(cuid())
+  appointmentId String
+  userId        Int
+  branch        String          @db.VarChar(50)
+  taskId        String          @db.VarChar(50) // "quench_thirst", "snack", "recharge_energy"
+  taskName      String          @db.VarChar(100) // "Giải Khát", "Ăn Vặt", "Nạp Năng Lượng"
+  rewardAmount  Int // Số tiền thưởng (3.000, 5.000, 7.000 VNĐ)
+  status        String          @default("pending") @db.VarChar(20) // pending, distributed, expired
+  distributedAt DateTime?
+  createdAt     DateTime        @default(now())
+  appointment   GameAppointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([appointmentId])
+  @@index([status])
+  @@map("GameAppointmentReward")
 }

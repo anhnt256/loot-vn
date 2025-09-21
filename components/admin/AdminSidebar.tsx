@@ -91,6 +91,12 @@ const menuItems = [
     icon: "💬",
     adminOnly: true,
   },
+  {
+    title: "Quản lý hẹn chơi",
+    href: "/admin/game-appointments",
+    icon: "🎮",
+    adminOnly: true,
+  },
   // {
   //   title: "Lịch sử giao dịch",
   //   href: "/admin/transactions",
@@ -151,7 +157,7 @@ export function AdminSidebar() {
 
   // Global polling cho stats - chỉ chạy khi KHÔNG ở trang reward-exchange
   const isRewardExchangePage = pathname === "/admin/reward-exchange";
-  const shouldPollStats = !!branch && pathname.startsWith("/admin") && !isRewardExchangePage;
+  const shouldPollStats = !!branch && pathname?.startsWith("/admin") && !isRewardExchangePage;
   
   const statsPolling = usePolling<{pending: number, approved: number, rejected: number, total: number}>(
     statsUrl,

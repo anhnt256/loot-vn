@@ -89,6 +89,28 @@ interface Computer {
       exp: number;
     } | null;
   };
+  machineDetails?: {
+    netInfo?: {
+      Cpu?: string;
+      Gpu?: string;
+      Memory?: string;
+      Motherboard?: string;
+      Storage?: string;
+      Network?: string;
+      cpu_load?: string;
+      gpu_load?: string;
+      ram_load?: string;
+      cpu_temp?: string;
+      gpu_temp?: string;
+      ram_used?: string;
+      ram_available?: string;
+      disk_load?: string;
+      net_download?: string;
+      net_upload?: string;
+    };
+    machineGroupName?: string;
+    pricePerHour?: number;
+  };
 }
 
 interface DeviceStatusOption {
@@ -120,6 +142,22 @@ const getStatusText = (status: string) => {
       return "Hỏng";
     default:
       return status;
+  }
+};
+
+const formatDate = (dateString: string | null | undefined) => {
+  if (!dateString || dateString === "Invalid Date") {
+    return "-";
+  }
+  
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return "-";
+    }
+    return date.toLocaleString();
+  } catch (error) {
+    return "-";
   }
 };
 
@@ -673,10 +711,179 @@ const AdminDashboard = () => {
       >
         {currentComputer && (
           <Tabs
-            defaultActiveKey="1"
+            defaultActiveKey="0"
             className="text-gray-200 custom-admin-tabs"
             tabBarGutter={32}
             items={[
+              {
+                key: "0",
+                label: (
+                  <span className="text-base font-semibold">
+                    Thông tin máy
+                  </span>
+                ),
+                children: (
+                  <div className="py-6 px-6 bg-[#23272f] rounded-lg border border-[#374151]">
+                    {/* Machine Hardware Information Section */}
+                    <div className="flex flex-col gap-4 pb-4 border-b border-gray-700">
+                      <div className="flex flex-col gap-2">
+                        <div className="text-lg font-bold text-white">
+                          Thông tin phần cứng
+                        </div>
+                        {currentComputer.machineDetails?.netInfo ? (
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {/* CPU Card */}
+                            <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/20 border border-blue-500/30 rounded-lg p-4">
+                              <div className="flex items-center gap-2 mb-3">
+                                <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
+                                <div className="text-blue-400 font-semibold">CPU</div>
+                              </div>
+                              <div className="space-y-2">
+                                <div className="font-bold text-white text-sm">
+                                  {currentComputer.machineDetails.netInfo.Cpu || "Unknown CPU"}
+                                </div>
+                                <div className="text-xs text-gray-300">
+                                  Load: <span className="text-green-400 font-semibold">{currentComputer.machineDetails.netInfo.cpu_load || "0"}%</span>
+                                </div>
+                                {currentComputer.machineDetails.netInfo.cpu_temp && (
+                                  <div className="text-xs text-gray-300">
+                                    Nhiệt độ: <span className="text-blue-400 font-semibold">{currentComputer.machineDetails.netInfo.cpu_temp}°C</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* GPU Card */}
+                            <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 border border-purple-500/30 rounded-lg p-4">
+                              <div className="flex items-center gap-2 mb-3">
+                                <div className="w-3 h-3 bg-purple-400 rounded-full"></div>
+                                <div className="text-purple-400 font-semibold">GPU</div>
+                              </div>
+                              <div className="space-y-2">
+                                <div className="font-bold text-white text-sm">
+                                  {currentComputer.machineDetails.netInfo.Gpu || "Unknown GPU"}
+                                </div>
+                                <div className="text-xs text-gray-300">
+                                  Load: <span className="text-green-400 font-semibold">{currentComputer.machineDetails.netInfo.gpu_load || "0"}%</span>
+                                </div>
+                                {currentComputer.machineDetails.netInfo.gpu_temp && (
+                                  <div className="text-xs text-gray-300">
+                                    Nhiệt độ: <span className="text-blue-400 font-semibold">{currentComputer.machineDetails.netInfo.gpu_temp}°C</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* RAM Card */}
+                            <div className="bg-gradient-to-br from-pink-900/30 to-pink-800/20 border border-pink-500/30 rounded-lg p-4">
+                              <div className="flex items-center gap-2 mb-3">
+                                <div className="w-3 h-3 bg-pink-400 rounded-full"></div>
+                                <div className="text-pink-400 font-semibold">RAM</div>
+                              </div>
+                              <div className="space-y-2">
+                                <div className="font-bold text-white text-sm">
+                                  {currentComputer.machineDetails.netInfo.Memory || "Unknown RAM"}
+                                </div>
+                                <div className="text-xs text-gray-300">
+                                  Load: <span className="text-pink-400 font-semibold">{currentComputer.machineDetails.netInfo.ram_load || "0"}%</span>
+                                </div>
+                                {currentComputer.machineDetails.netInfo.ram_used && currentComputer.machineDetails.netInfo.ram_available && (
+                                  <div className="text-xs text-gray-300">
+                                    Đã dùng: <span className="text-yellow-400 font-semibold">{currentComputer.machineDetails.netInfo.ram_used}GB</span>
+                                  </div>
+                                )}
+                                {currentComputer.machineDetails.netInfo.ram_available && (
+                                  <div className="text-xs text-gray-300">
+                                    Còn lại: <span className="text-green-400 font-semibold">{currentComputer.machineDetails.netInfo.ram_available}GB</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Motherboard Card */}
+                            <div className="bg-gradient-to-br from-green-900/30 to-green-800/20 border border-green-500/30 rounded-lg p-4">
+                              <div className="flex items-center gap-2 mb-3">
+                                <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                                <div className="text-green-400 font-semibold">Mainboard</div>
+                              </div>
+                              <div className="space-y-2">
+                                <div className="font-bold text-white text-sm">
+                                  {currentComputer.machineDetails.netInfo.Motherboard || "Unknown Motherboard"}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Storage Card */}
+                            <div className="bg-gradient-to-br from-yellow-900/30 to-yellow-800/20 border border-yellow-500/30 rounded-lg p-4">
+                              <div className="flex items-center gap-2 mb-3">
+                                <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                                <div className="text-yellow-400 font-semibold">Storage</div>
+                              </div>
+                              <div className="space-y-2">
+                                <div className="font-bold text-white text-sm">
+                                  {currentComputer.machineDetails.netInfo.Storage || "Unknown Storage"}
+                                </div>
+                                {currentComputer.machineDetails.netInfo.disk_load && (
+                                  <div className="text-xs text-gray-300">
+                                    Load: <span className="text-yellow-400 font-semibold">{currentComputer.machineDetails.netInfo.disk_load}%</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Network Card */}
+                            <div className="bg-gradient-to-br from-cyan-900/30 to-cyan-800/20 border border-cyan-500/30 rounded-lg p-4">
+                              <div className="flex items-center gap-2 mb-3">
+                                <div className="w-3 h-3 bg-cyan-400 rounded-full"></div>
+                                <div className="text-cyan-400 font-semibold">Network</div>
+                              </div>
+                              <div className="space-y-2">
+                                <div className="font-bold text-white text-sm">
+                                  {currentComputer.machineDetails.netInfo.Network || "Unknown Network"}
+                                </div>
+                                {currentComputer.machineDetails.netInfo.net_download && currentComputer.machineDetails.netInfo.net_upload && (
+                                  <>
+                                    <div className="text-xs text-gray-300">
+                                      Download: <span className="text-green-400 font-semibold">{currentComputer.machineDetails.netInfo.net_download}</span>
+                                    </div>
+                                    <div className="text-xs text-gray-300">
+                                      Upload: <span className="text-blue-400 font-semibold">{currentComputer.machineDetails.netInfo.net_upload}</span>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-gray-400 text-center py-8">
+                            Không có thông tin phần cứng
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Machine Group and Pricing Information */}
+                    <div className="flex flex-col gap-2 mt-4 py-4">
+                      <div className="text-lg font-bold text-white">
+                        Thông tin nhóm máy
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="text-gray-400">Nhóm máy:</div>
+                        <div className="font-bold text-white">
+                          {currentComputer.machineDetails?.machineGroupName || "Default"}
+                        </div>
+                        <div className="text-gray-400">Giá/giờ:</div>
+                        <div className="font-bold text-green-400">
+                          {currentComputer.machineDetails?.pricePerHour ? 
+                            `${Number(currentComputer.machineDetails.pricePerHour).toLocaleString()} VNĐ` : 
+                            "Chưa có giá"
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ),
+              },
               {
                 key: "1",
                 label: (
@@ -1218,11 +1425,7 @@ const AdminDashboard = () => {
                                 <>
                                   <div>
                                     <b>Thời gian:</b>{" "}
-                                    {latestReport.createdAt
-                                      ? new Date(
-                                          latestReport.createdAt,
-                                        ).toLocaleString()
-                                      : "-"}
+                                    {formatDate(latestReport.createdAt)}
                                   </div>
                                   {renderDeviceStatus(latestReport)}
                                 </>
@@ -1245,11 +1448,7 @@ const AdminDashboard = () => {
                                 <>
                                   <div>
                                     <b>Thời gian:</b>{" "}
-                                    {latestRepair.createdAt
-                                      ? new Date(
-                                          latestRepair.createdAt,
-                                        ).toLocaleString()
-                                      : "-"}
+                                    {formatDate(latestRepair.createdAt)}
                                   </div>
                                   {renderDeviceStatus(latestRepair)}
                                 </>

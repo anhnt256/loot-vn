@@ -158,13 +158,14 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         console.log(`[DEBUG] Searching for all available GiftRounds - userId: ${userId}, branch: ${branch}`);
         const giftRounds = await tx.$queryRaw`
           SELECT * FROM GiftRound 
-          WHERE userId = ${userId} AND branch = ${branch} AND isUsed = false
+          WHERE userId = ${userId} AND branch = ${branch} AND expiredAt >= NOW()
           ORDER BY createdAt ASC
         `;
         console.log(`[DEBUG] GiftRounds query result:`, giftRounds);
         
         const availableGiftRounds = (giftRounds as any[]).filter(gr => {
           const available = gr.amount - gr.usedAmount;
+          console.log(`[DEBUG] GiftRound ${gr.id}: amount=${gr.amount}, usedAmount=${gr.usedAmount}, available=${available}`);
           return available > 0;
         });
         
@@ -273,7 +274,12 @@ const handler = async (data: InputType): Promise<ReturnType> => {
           // Update GiftRound hiện tại
           const newUsedAmount = currentGiftRound.usedAmount + rollsToUse;
           const isUsed = newUsedAmount >= currentGiftRound.amount;
-          console.log(`[DEBUG] Updating GiftRound ${currentGiftRound.id} in Gift transaction - new usedAmount: ${newUsedAmount}, isUsed: ${isUsed}`);
+          console.log(`[DEBUG] Updating GiftRound ${currentGiftRound.id} in Gift transaction:`);
+          console.log(`[DEBUG] - Current usedAmount: ${currentGiftRound.usedAmount}`);
+          console.log(`[DEBUG] - Rolls to use: ${rollsToUse}`);
+          console.log(`[DEBUG] - New usedAmount: ${newUsedAmount}`);
+          console.log(`[DEBUG] - Is used: ${isUsed}`);
+          console.log(`[DEBUG] - Current amount: ${currentGiftRound.amount}`);
           try {
             await tx.$executeRaw`
               UPDATE GiftRound 
@@ -283,6 +289,12 @@ const handler = async (data: InputType): Promise<ReturnType> => {
               WHERE id = ${currentGiftRound.id}
             `;
             console.log(`[DEBUG] GiftRound ${currentGiftRound.id} updated successfully in Gift transaction`);
+            
+            // Verify the update
+            const verifyUpdate = await tx.$queryRaw`
+              SELECT id, usedAmount, isUsed FROM GiftRound WHERE id = ${currentGiftRound.id}
+            `;
+            console.log(`[DEBUG] Verification after update:`, verifyUpdate);
           } catch (error) {
             console.error(`[ERROR] Failed to update GiftRound ${currentGiftRound.id} in Gift transaction:`, error);
             throw error;

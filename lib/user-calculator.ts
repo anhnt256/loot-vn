@@ -221,21 +221,23 @@ export async function calculateActiveUsersInfo(
           -- Claims data
           COALESCE(SUM(CASE WHEN ush.type = 'CHECK_IN' THEN ush.newStars - ush.oldStars ELSE 0 END), 0) AS totalClaimed,
           -- Gift rounds data
-          COALESCE(SUM(CASE WHEN gr.expiredAt >= NOW() AND gr.isUsed = false THEN gr.amount - gr.usedAmount ELSE 0 END), 0) AS totalGiftRounds
+          COALESCE(SUM(CASE WHEN gr.expiredAt >= NOW() THEN gr.amount - gr.usedAmount ELSE 0 END), 0) AS totalGiftRounds
         FROM User u
         LEFT JOIN UserStarHistory ush ON u.userId = ush.userId 
           AND u.branch = ush.branch 
           AND ush.type = 'CHECK_IN' 
           AND ush.createdAt >= '${startOfDayVN}'
         LEFT JOIN GiftRound gr ON u.userId = gr.userId 
-          AND gr.expiredAt >= NOW() 
-          AND gr.isUsed = false
+          AND u.branch = gr.branch
+          AND gr.expiredAt >= NOW()
         WHERE u.userId IN (${userIdsStr})
           AND u.branch = '${branch}'
         GROUP BY u.id, u.userId, u.userName, u.stars, u.magicStone, u.isUseApp, u.note, u.createdAt, u.updatedAt, u.branch
         `;
 
+        console.log(`[DEBUG] User calculator query:`, queryString);
         const result = await db.$queryRawUnsafe(queryString);
+        console.log(`[DEBUG] User calculator result:`, result);
         return result;
       })(),
 
