@@ -13,9 +13,11 @@ interface StaffData {
   security: Staff[];
 }
 
-const STAFF_STORAGE_KEY = 'gateway_staff_data';
-const STAFF_FETCH_TIMESTAMP_KEY = 'gateway_staff_fetch_time';
 const STAFF_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+// Helper functions to get branch-specific cache keys
+const getStaffStorageKey = (branch: string) => `gateway_staff_data_${branch}`;
+const getStaffTimestampKey = (branch: string) => `gateway_staff_fetch_time_${branch}`;
 
 export const useStaff = () => {
   const [staff, setStaff] = useState<StaffData>({
@@ -25,12 +27,22 @@ export const useStaff = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentBranch, setCurrentBranch] = useState<string | null>(null);
 
-  // Check if cached data is still valid
-  const isCacheValid = useCallback(() => {
-    if (typeof window === 'undefined') return false;
+  // Get current branch from cookie
+  const getCurrentBranch = useCallback(() => {
+    if (typeof window === 'undefined') return null;
     
-    const fetchTime = localStorage.getItem(STAFF_FETCH_TIMESTAMP_KEY);
+    const cookies = document.cookie.split(';');
+    const branchCookie = cookies.find(cookie => cookie.trim().startsWith('branch='));
+    return branchCookie ? branchCookie.split('=')[1] : null;
+  }, []);
+
+  // Check if cached data is still valid for current branch
+  const isCacheValid = useCallback((branch: string) => {
+    if (typeof window === 'undefined' || !branch) return false;
+    
+    const fetchTime = localStorage.getItem(getStaffTimestampKey(branch));
     if (!fetchTime) return false;
     
     const now = Date.now();
@@ -38,12 +50,12 @@ export const useStaff = () => {
     return (now - cachedTime) < STAFF_CACHE_DURATION;
   }, []);
 
-  // Load staff data from localStorage
-  const loadFromCache = useCallback(() => {
-    if (typeof window === 'undefined') return null;
+  // Load staff data from localStorage for specific branch
+  const loadFromCache = useCallback((branch: string) => {
+    if (typeof window === 'undefined' || !branch) return null;
     
     try {
-      const cachedData = localStorage.getItem(STAFF_STORAGE_KEY);
+      const cachedData = localStorage.getItem(getStaffStorageKey(branch));
       if (cachedData) {
         return JSON.parse(cachedData);
       }
@@ -53,37 +65,40 @@ export const useStaff = () => {
     return null;
   }, []);
 
-  // Save staff data to localStorage
-  const saveToCache = useCallback((data: StaffData) => {
-    if (typeof window === 'undefined') return;
+  // Save staff data to localStorage for specific branch
+  const saveToCache = useCallback((data: StaffData, branch: string) => {
+    if (typeof window === 'undefined' || !branch) return;
     
     try {
-      localStorage.setItem(STAFF_STORAGE_KEY, JSON.stringify(data));
-      localStorage.setItem(STAFF_FETCH_TIMESTAMP_KEY, Date.now().toString());
+      localStorage.setItem(getStaffStorageKey(branch), JSON.stringify(data));
+      localStorage.setItem(getStaffTimestampKey(branch), Date.now().toString());
     } catch (error) {
       console.error('Error saving staff to cache:', error);
     }
   }, []);
 
   // Fetch staff data from API
-  const fetchStaffFromAPI = useCallback(async (): Promise<StaffData | null> => {
+  const fetchStaffFromAPI = useCallback(async (branch: string): Promise<StaffData | null> => {
     try {
-      // console.log('useStaff: Fetching staff from API...');
       setLoading(true);
       setError(null);
       
       const response = await fetch('/api/staff');
-      // console.log('useStaff: API response status:', response.status);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       const result = await response.json();
-      // console.log('useStaff: API response data:', result);
+      
+      // Verify the response is for the correct branch
+      if (result.branch && result.branch !== branch) {
+        console.warn('useStaff: Branch mismatch! Expected:', branch, 'Got:', result.branch);
+        // Don't use data from wrong branch
+        return null;
+      }
       
       const staffList: Staff[] = result?.data ?? [];
-      // console.log('useStaff: Staff list:', staffList);
       
       // For now, all staff are treated the same way
       // You can modify this logic based on your actual staff roles
@@ -93,9 +108,8 @@ export const useStaff = () => {
         security: staffList,
       };
       
-      // Save to cache
-      saveToCache(staffData);
-      // console.log('useStaff: Staff data saved to cache');
+      // Save to cache for this branch
+      saveToCache(staffData, branch);
       
       return staffData;
     } catch (err) {
@@ -110,46 +124,60 @@ export const useStaff = () => {
 
   // Initialize staff data
   const initializeStaff = useCallback(async () => {
-    // console.log('useStaff: Initializing staff data...');
+    const branch = getCurrentBranch();
+    if (!branch) {
+      setError('No branch found in cookie');
+      return;
+    }
     
-    // First try to load from cache
-    const cachedData = loadFromCache();
-    // console.log('useStaff: Cached data:', cachedData);
+    // Update current branch state
+    setCurrentBranch(branch);
     
-    if (cachedData && isCacheValid()) {
-      // console.log('useStaff: Using cached data');
+    // First try to load from cache for this branch
+    const cachedData = loadFromCache(branch);
+    
+    if (cachedData && isCacheValid(branch)) {
       setStaff(cachedData);
       return;
     }
     
     // If cache is invalid or doesn't exist, fetch from API
-    // console.log('useStaff: Cache invalid or not found, fetching from API...');
-    const apiData = await fetchStaffFromAPI();
+    const apiData = await fetchStaffFromAPI(branch);
     if (apiData) {
-      // console.log('useStaff: API data received:', apiData);
       setStaff(apiData);
     }
-  }, [loadFromCache, isCacheValid, fetchStaffFromAPI]);
+  }, [getCurrentBranch, loadFromCache, isCacheValid, fetchStaffFromAPI]);
 
   // Force refresh staff data (useful for admin operations)
   const refreshStaff = useCallback(async () => {
-    const apiData = await fetchStaffFromAPI();
+    const branch = getCurrentBranch();
+    if (!branch) {
+      return;
+    }
+    
+    const apiData = await fetchStaffFromAPI(branch);
     if (apiData) {
       setStaff(apiData);
     }
-  }, [fetchStaffFromAPI]);
+  }, [getCurrentBranch, fetchStaffFromAPI]);
 
   // Clear cache (useful for logout)
   const clearStaffCache = useCallback(() => {
     if (typeof window === 'undefined') return;
     
-    localStorage.removeItem(STAFF_STORAGE_KEY);
-    localStorage.removeItem(STAFF_FETCH_TIMESTAMP_KEY);
+    // Clear cache for all branches
+    const branches = ['GO_VAP', 'TAN_PHU'];
+    branches.forEach(branch => {
+      localStorage.removeItem(getStaffStorageKey(branch));
+      localStorage.removeItem(getStaffTimestampKey(branch));
+    });
+    
     setStaff({
       cashiers: [],
       kitchen: [],
       security: [],
     });
+    setCurrentBranch(null);
   }, []);
 
   // Get staff by ID
@@ -177,6 +205,7 @@ export const useStaff = () => {
     staff,
     loading,
     error,
+    currentBranch,
     initializeStaff,
     refreshStaff,
     clearStaffCache,

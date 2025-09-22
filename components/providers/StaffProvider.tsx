@@ -11,6 +11,7 @@ interface StaffContextType {
   };
   loading: boolean;
   error: string | null;
+  currentBranch: string | null;
   initializeStaff: () => Promise<void>;
   refreshStaff: () => Promise<void>;
   clearStaffCache: () => void;
@@ -26,7 +27,7 @@ export const StaffProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const staffHook = useStaff();
 
-  // Initialize staff data when provider mounts
+  // Initialize staff data when provider mounts or branch changes
   useEffect(() => {
     const hasStaff =
       staffHook.staff.cashiers.length > 0 ||
@@ -43,6 +44,26 @@ export const StaffProvider: React.FC<{ children: React.ReactNode }> = ({
     staffHook.loading,
     staffHook.initializeStaff,
   ]);
+
+  // Monitor branch changes and reinitialize if needed
+  useEffect(() => {
+    const checkBranchChange = () => {
+      const cookies = document.cookie.split(';');
+      const branchCookie = cookies.find(cookie => cookie.trim().startsWith('branch='));
+      const currentBranch = branchCookie ? branchCookie.split('=')[1] : null;
+      
+      if (currentBranch && currentBranch !== staffHook.currentBranch) {
+        // Clear current staff data and reinitialize
+        staffHook.clearStaffCache();
+        staffHook.initializeStaff();
+      }
+    };
+
+    // Check for branch changes every 1 second
+    const interval = setInterval(checkBranchChange, 1000);
+    
+    return () => clearInterval(interval);
+  }, [staffHook.currentBranch, staffHook.clearStaffCache, staffHook.initializeStaff]);
 
   return (
     <StaffContext.Provider value={staffHook}>{children}</StaffContext.Provider>
