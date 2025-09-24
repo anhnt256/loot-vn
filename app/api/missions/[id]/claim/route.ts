@@ -231,6 +231,7 @@ export async function POST(
         SELECT * FROM UserBattlePass 
         WHERE userId = ${userId} 
           AND seasonId = ${season.id}
+          AND branch = ${branch}
       `);
 
       if (!userProgress || userProgress.length === 0) {
@@ -242,6 +243,7 @@ export async function POST(
           SELECT * FROM UserBattlePass 
           WHERE userId = ${userId} 
             AND seasonId = ${season.id}
+            AND branch = ${branch}
         `);
       }
 
