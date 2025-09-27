@@ -13,6 +13,9 @@ services:
     depends_on:
       - redis
     restart: always
+    # === SỬA: Gán vào mạng chung ===
+    networks:
+      - nginx-proxy-manager_default # Dùng tên mạng chính xác
 
   redis:
     image: redis:latest
@@ -25,6 +28,14 @@ services:
     env_file:
       - .env
     restart: always
+    # === SỬA: Gán vào mạng chung ===
+    networks:
+      - nginx-proxy-manager_default # Dùng tên mạng chính xác
 
 volumes:
   redis_data:
+
+# === SỬA: Định nghĩa mạng ngoại vi (External Network) ===
+networks:
+  nginx-proxy-manager_default:
+    external: true # Đảm bảo Docker biết mạng này đã tồn tại và được tạo bởi NPM
