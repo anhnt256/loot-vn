@@ -18,11 +18,8 @@ export async function POST(
     }
 
     const decoded = await verifyJWT(token);
-    if (!decoded || !decoded.role || decoded.role !== "admin") {
-      return NextResponse.json(
-        { error: "Admin access required" },
-        { status: 403 },
-      );
+    if (!decoded || !decoded.userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const adminUserId = decoded.userId;

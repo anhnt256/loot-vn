@@ -6,23 +6,15 @@ import { getBranchFromCookie } from "@/lib/server-utils";
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value;
-
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const decoded = await verifyJWT(token);
-    if (!decoded || !decoded.role || decoded.role !== "admin") {
+    // Get branch from cookie
+    const branch = await getBranchFromCookie();
+    
+    if (!branch) {
       return NextResponse.json(
-        { error: "Admin access required" },
-        { status: 403 },
+        { error: "Branch cookie is required" },
+        { status: 400 },
       );
     }
-
-    // Get branch from cookie instead of query params
-    const branch = await getBranchFromCookie();
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");

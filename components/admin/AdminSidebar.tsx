@@ -241,6 +241,7 @@ export function AdminSidebar() {
     const allowedMenus = [
       "/admin", // Dashboard
       "/admin/reward-exchange", // Quản lý đổi thưởng
+      "/admin/battle-pass-orders", // Đơn hàng Premium BP
       "/admin/handover-reports", // Báo cáo bàn giao
       "/admin/reports", // Báo cáo kết ca
       "/admin/work-schedule", // Lịch làm việc
