@@ -26,6 +26,12 @@ interface BattlePassProgressProps {
   rewards: BattlePassReward[];
   claimedRewards: number[];
   isPremium: boolean;
+  hasPendingOrder?: boolean;
+  pendingOrder?: {
+    id: number;
+    createdAt: string;
+    price: number;
+  };
   seasonName?: string;
   seasonEndDate?: string;
   userStars?: number;
@@ -46,6 +52,8 @@ export function BattlePassProgress({
   rewards,
   claimedRewards,
   isPremium,
+  hasPendingOrder,
+  pendingOrder,
   seasonName,
   seasonEndDate,
   userStars,
@@ -139,6 +147,15 @@ export function BattlePassProgress({
   const isSeasonEnded = seasonEndDate
     ? new Date() >= new Date(seasonEndDate)
     : false;
+
+  // Debug Premium button visibility
+  console.log("[BattlePass Debug]", {
+    isPremium,
+    isSeasonEnded,
+    seasonEndDate,
+    now: new Date().toISOString(),
+    showButton: !isPremium && !isSeasonEnded,
+  });
 
   const handleClaimReward = (rewardId: number) => {
     onClaimReward(rewardId);
@@ -312,12 +329,33 @@ export function BattlePassProgress({
               })()}
 
               {!isPremium && !isSeasonEnded && (
-                <Button
-                  onClick={onPurchasePremium}
-                  className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-black font-bold px-6 py-3"
-                >
-                  🌟 Nâng Cấp Premium
-                </Button>
+                <>
+                  {hasPendingOrder ? (
+                    <div className="bg-yellow-900/30 border-2 border-yellow-500/50 rounded-lg px-6 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="animate-pulse">
+                          <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                        </div>
+                        <div>
+                          <div className="text-yellow-400 font-bold text-sm">
+                            ⏳ Đang chờ xét duyệt
+                          </div>
+                          <div className="text-gray-400 text-xs mt-1">
+                            Đơn hàng #{pendingOrder?.id} -{" "}
+                            {pendingOrder?.price.toLocaleString()}đ
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      onClick={onPurchasePremium}
+                      className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-black font-bold px-6 py-3"
+                    >
+                      🌟 Nâng Cấp Premium
+                    </Button>
+                  )}
+                </>
               )}
 
               {isSeasonEnded && (
@@ -564,12 +602,34 @@ export function BattlePassProgress({
                   {/* Action Button Centered */}
                   <div className="flex justify-center mt-8">
                     {selectedReward.type === "premium" && !isPremium ? (
-                      <Button
-                        onClick={onPurchasePremium}
-                        className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-8 py-3 text-lg"
-                      >
-                        Nâng Cấp Premium
-                      </Button>
+                      <>
+                        {hasPendingOrder ? (
+                          <div className="bg-yellow-900/30 border-2 border-yellow-500/50 rounded-lg px-8 py-4 text-center">
+                            <div className="flex items-center gap-3 justify-center mb-2">
+                              <div className="animate-pulse">
+                                <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                              </div>
+                              <div className="text-yellow-400 font-bold">
+                                ⏳ Đang chờ xét duyệt
+                              </div>
+                            </div>
+                            <div className="text-gray-400 text-sm">
+                              Đơn hàng #{pendingOrder?.id} -{" "}
+                              {pendingOrder?.price.toLocaleString()}đ
+                            </div>
+                            <div className="text-gray-500 text-xs mt-2">
+                              Vui lòng chờ admin duyệt để mở khóa Premium
+                            </div>
+                          </div>
+                        ) : (
+                          <Button
+                            onClick={onPurchasePremium}
+                            className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-8 py-3 text-lg"
+                          >
+                            Nâng Cấp Premium
+                          </Button>
+                        )}
+                      </>
                     ) : (
                       <Button
                         onClick={() => handleClaimReward(selectedReward.id)}

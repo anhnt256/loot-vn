@@ -118,53 +118,15 @@ export async function GET() {
 
         return NextResponse.json(transformedSeason);
       } else {
-        // If seasons exist but none are active, return the most recent one or an error
-        const latestSeason = await db.$queryRaw<any[]>`
-          SELECT 
-            bs.*,
-            bpr.id as reward_id,
-            bpr.level as reward_level,
-            bpr.name as reward_name,
-            bpr.description as reward_description,
-            bpr.type as reward_type,
-            bpr.rewardType as reward_rewardType,
-            bpr.rewardValue as reward_rewardValue,
-            bpr.isBonus as reward_isBonus
-          FROM BattlePassSeason bs
-          LEFT JOIN BattlePassReward bpr ON bs.id = bpr.seasonId
-          ORDER BY bs.createdAt DESC
-          LIMIT 1
-        `;
-
-        if (latestSeason.length > 0) {
-          // Transform to match expected format
-          const transformedSeason = {
-            ...latestSeason[0],
-            rewards: latestSeason
-              .filter((row) => row.reward_id)
-              .map((row) => ({
-                id: row.reward_id,
-                level: row.reward_level,
-                name: row.reward_name,
-                description: row.reward_description,
-                type: row.reward_type,
-                rewardType: row.reward_rewardType,
-                rewardValue: row.reward_rewardValue,
-                isBonus: row.reward_isBonus,
-              })),
-          };
-
-          return NextResponse.json(transformedSeason);
-        } else {
-          return NextResponse.json(
-            { error: "No battle pass season found" },
-            { status: 404 },
-          );
-        }
+        // If seasons exist but none are active, return error - no current season
+        return NextResponse.json(
+          { error: "No active battle pass season at this time" },
+          { status: 404 },
+        );
       }
     }
 
-    // Get rewards for current season
+    // Get rewards for current season with EventReward info
     const seasonWithRewards = await db.$queryRaw<any[]>`
       SELECT 
         bs.*,
@@ -173,30 +135,119 @@ export async function GET() {
         bpr.name as reward_name,
         bpr.description as reward_description,
         bpr.type as reward_type,
-        bpr.rewardType as reward_rewardType,
-        bpr.rewardValue as reward_rewardValue,
-        bpr.isBonus as reward_isBonus
+        bpr.eventRewardId as reward_eventRewardId,
+        bpr.rewardType as reward_fallbackRewardType,
+        bpr.rewardValue as reward_fallbackRewardValue,
+        er.rewardType as reward_eventRewardType,
+        er.rewardConfig as reward_eventRewardConfig,
+        bpr.isBonus as reward_isBonus,
+        bpp.id as premium_package_id,
+        bpp.basePrice as premium_package_basePrice,
+        bpp.maxQuantity as premium_package_maxQuantity
       FROM BattlePassSeason bs
       LEFT JOIN BattlePassReward bpr ON bs.id = bpr.seasonId
+      LEFT JOIN EventReward er ON bpr.eventRewardId = er.id
+      LEFT JOIN BattlePassPremiumPackage bpp ON bs.id = bpp.seasonId
       WHERE bs.id = ${currentSeason[0].id}
       ORDER BY bpr.level ASC
     `;
 
     // Transform to match expected format
-    const transformedCurrentSeason = {
-      ...seasonWithRewards[0],
-      rewards: seasonWithRewards
-        .filter((row) => row.reward_id)
-        .map((row) => ({
+    const rewards = seasonWithRewards
+      .filter((row) => row.reward_id)
+      .map((row) => {
+        // Ưu tiên dùng EventReward nếu có eventRewardId
+        let rewardType = row.reward_fallbackRewardType;
+        let rewardValue = row.reward_fallbackRewardValue;
+
+        if (row.reward_eventRewardId && row.reward_eventRewardType) {
+          rewardType = row.reward_eventRewardType;
+
+          // Parse rewardConfig để lấy value
+          try {
+            const config = JSON.parse(row.reward_eventRewardConfig || "{}");
+
+            // Với TOPUP_BONUS_PERCENTAGE, lấy maxDiscountAmount là giá trị thực
+            if (row.reward_eventRewardType === "TOPUP_BONUS_PERCENTAGE") {
+              rewardValue =
+                config.maxDiscountAmount ||
+                config.value ||
+                row.reward_fallbackRewardValue;
+            } else {
+              rewardValue =
+                config.value || config.amount || row.reward_fallbackRewardValue;
+            }
+          } catch (e) {
+            rewardValue = row.reward_fallbackRewardValue;
+          }
+        }
+
+        return {
           id: row.reward_id,
           level: row.reward_level,
           name: row.reward_name,
           description: row.reward_description,
           type: row.reward_type,
-          rewardType: row.reward_rewardType,
-          rewardValue: row.reward_rewardValue,
+          eventRewardId: row.reward_eventRewardId,
+          rewardType: rewardType,
+          rewardValue: rewardValue,
           isBonus: row.reward_isBonus,
-        })),
+        };
+      });
+
+    // Tính tổng giá trị các loại rewards
+    const premiumRewards = rewards.filter((r) => r.type === "premium");
+    const mainAccountTopup = premiumRewards
+      .filter((r) => r.rewardType === "MAIN_ACCOUNT_TOPUP")
+      .reduce((sum, r) => sum + (Number(r.rewardValue) || 0), 0);
+    const totalValue = premiumRewards.reduce(
+      (sum, r) => sum + (Number(r.rewardValue) || 0),
+      0,
+    );
+    const otherRewardsValue = totalValue - mainAccountTopup;
+
+    // Lấy thông tin premium package
+    const premiumPackageId = seasonWithRewards[0]?.premium_package_id;
+    const premiumPackagePrice = seasonWithRewards[0]?.premium_package_basePrice;
+    const premiumPackageMaxQty =
+      seasonWithRewards[0]?.premium_package_maxQuantity;
+
+    // Đếm số đơn đã approved
+    let soldCount = 0;
+    let remaining = null;
+    if (premiumPackageId) {
+      const soldCountResult = await db.$queryRaw<any[]>`
+        SELECT COUNT(*) as count 
+        FROM BattlePassPremiumOrder 
+        WHERE packageId = ${premiumPackageId} 
+          AND status = 'APPROVED'
+      `;
+      soldCount = Number(soldCountResult[0].count);
+      if (premiumPackageMaxQty) {
+        remaining = Number(premiumPackageMaxQty) - soldCount;
+      }
+    }
+
+    const transformedCurrentSeason = {
+      ...seasonWithRewards[0],
+      rewards: rewards,
+      rewardsSummary: {
+        totalPremiumRewards: premiumRewards.length,
+        totalValue: totalValue,
+        mainAccountTopup: mainAccountTopup,
+        otherRewardsValue: otherRewardsValue,
+      },
+      premiumPackage: premiumPackageId
+        ? {
+            id: Number(premiumPackageId),
+            basePrice: Number(premiumPackagePrice),
+            maxQuantity: premiumPackageMaxQty
+              ? Number(premiumPackageMaxQty)
+              : null,
+            sold: soldCount,
+            remaining: remaining,
+          }
+        : null,
     };
 
     return NextResponse.json(transformedCurrentSeason);

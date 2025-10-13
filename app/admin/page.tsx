@@ -16,6 +16,7 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import _, { isEmpty } from "lodash";
 import { EnumComputerStatus } from "@/constants/enum";
 import { usePolling } from "@/hooks/usePolling";
+import { useBranch } from "@/components/providers/BranchProvider";
 import Cookies from "js-cookie";
 import {
   FaDesktop,
@@ -173,10 +174,7 @@ const AdminDashboard = () => {
   >();
   const [computers, setComputers] = useState<Computer[]>([]);
   const [countdown, setCountdown] = useState(COUNT_DOWN_TIME);
-  const [selectedBranch, setSelectedBranch] = useState("GO_VAP");
-  const [loginType, setLoginType] = useState(
-    Cookies.get("loginType") || "username",
-  );
+  const { branch: selectedBranch, loginType } = useBranch();
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportForm] = Form.useForm();
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -230,11 +228,6 @@ const AdminDashboard = () => {
     },
   ];
 
-  useEffect(() => {
-    const branch = Cookies.get("branch");
-    if (branch) setSelectedBranch(branch);
-  }, []);
-
   // Memoize the polling options
   const pollingOptions = useMemo(
     () => ({
@@ -252,13 +245,6 @@ const AdminDashboard = () => {
   ); // Empty dependency array since these functions don't depend on any props/state
 
   const { data, refetch } = usePolling<any[]>(`/api/computer`, pollingOptions);
-
-  const handleBranchChange = async (value: string) => {
-    setSelectedBranch(value);
-    Cookies.set("branch", value, { path: "/" });
-    setCountdown(COUNT_DOWN_TIME); // Reset countdown
-    await refetch(); // Immediately fetch new data for the selected branch
-  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -599,31 +585,6 @@ const AdminDashboard = () => {
       <div className="shadow-lg rounded-lg w-full overflow-auto max-h-[89vh] relative">
         <div className="w-full bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-lg">
           <div className="flex justify-between items-center gap-4 mt-4 text-sm mb-4">
-            <Select
-              value={selectedBranch}
-              onChange={handleBranchChange}
-              className="w-40 dark custom-branch-select"
-              disabled={loginType === "mac"}
-              options={[
-                { value: "GO_VAP", label: "Gò Vấp" },
-                { value: "TAN_PHU", label: "Tân Phú" },
-              ]}
-              style={{
-                backgroundColor: "#23272f",
-                borderColor: "#374151",
-                color: loginType === "mac" ? "#bfbfbf" : "#fff",
-                fontWeight: 600,
-              }}
-              dropdownStyle={{
-                backgroundColor: "#23272f",
-                color: "#fff",
-                border: "1px solid #374151",
-                borderRadius: 8,
-                padding: 0,
-              }}
-              popupClassName="custom-branch-dropdown"
-              optionLabelProp="label"
-            />
             <Button
               className="ml-2 bg-green-600 hover:bg-green-700 text-white"
               onClick={() => setShowCheckLoginModal(true)}

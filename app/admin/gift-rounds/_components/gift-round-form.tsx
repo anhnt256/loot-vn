@@ -5,7 +5,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { AutoComplete } from "antd";
 import debounce from "lodash/debounce";
-import Cookies from "js-cookie";
+import { useBranch } from "@/components/providers/BranchProvider";
 
 const giftRoundSchema = z.object({
   userId: z.number().min(1, "Vui lòng chọn người dùng"),
@@ -40,7 +40,7 @@ export function GiftRoundForm({
 }: GiftRoundFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [options, setOptions] = useState<UserOption[]>([]);
-  const currentBranch = Cookies.get("branch") || "GO_VAP";
+  const { branch: currentBranch } = useBranch();
 
   const {
     register,

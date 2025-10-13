@@ -3,6 +3,7 @@ import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
 import { cookies } from "next/headers";
 import { getCurrentTimeVNISO, getCurrentTimeVNDB } from "@/lib/timezone-utils";
 import { calculateActiveUsersInfo } from "@/lib/user-calculator";
+import { updateFnetMoney } from "@/lib/fnet-money-utils";
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,11 +48,17 @@ export async function POST(request: NextRequest) {
         urm.createdAt,
         urm.updatedAt,
         urm.note,
+        urm.type,
         pr.name as rewardName,
         pr.value as rewardValue,
-        pr.starsValue as rewardStars
+        pr.starsValue as rewardStars,
+        pc.code as eventPromotionCode,
+        pc.eventId as eventId,
+        pc.rewardType as eventRewardType,
+        pc.rewardValue as eventRewardValue
       FROM UserRewardMap urm
-      LEFT JOIN PromotionReward pr ON urm.promotionCodeId = pr.id
+      LEFT JOIN PromotionReward pr ON urm.promotionCodeId = pr.id AND urm.type = 'STARS'
+      LEFT JOIN PromotionCode pc ON urm.promotionCodeId = pc.id AND urm.type = 'EVENT'
       WHERE urm.id = ${rewardMapId}
         AND urm.branch = ${branch}
         AND urm.status = 'INITIAL'
@@ -91,7 +98,8 @@ export async function POST(request: NextRequest) {
       `;
 
       if (action === "APPROVE") {
-        // Không cần update PromotionReward vì đã giảm quantity khi tạo request
+        const currentTime = getCurrentTimeVNDB();
+        const rewardType = rewardMap[0].type;
 
         // Mark reward map as used
         await tx.$executeRaw`
@@ -100,49 +108,63 @@ export async function POST(request: NextRequest) {
           WHERE id = ${rewardMapId}
         `;
 
-        await tx.$executeRaw`
-          INSERT INTO UserStarHistory (userId, type, oldStars, newStars, targetId, createdAt, branch)
-          VALUES (
-            ${user[0].userId},
-            'REWARD',
-            ${user[0].stars + (rewardMap[0].rewardStars || 0)},
-            ${user[0].stars},
-            ${rewardMapId},
-            ${getCurrentTimeVNDB()},
-            ${branch}
-          )
-        `;
+        // Xử lý theo type
+        if (rewardType === "EVENT") {
+          console.log("[APPROVE EVENT] Processing event reward:", rewardMap[0]);
 
-        // Update money in fnet database
-        if (rewardMap[0].rewardValue && user[0].userId) {
-          const fnetDB = await getFnetDB();
-
-          // Kiểm tra user có bao nhiêu tài khoản
-          const fnetUserCount = await fnetDB.$queryRaw<any[]>`
-            SELECT COUNT(*) as count FROM usertb 
-            WHERE UserId = ${user[0].userId}
-          `;
-
-          if (fnetUserCount[0].count > 1) {
-            throw new Error(
-              `User ${user[0].userId} has multiple accounts (${fnetUserCount[0].count}). Cannot process reward exchange.`,
+          // 1. Update PromotionCode status thành đã sử dụng
+          if (rewardMap[0].promotionCodeId) {
+            await tx.$executeRaw`
+              UPDATE PromotionCode 
+              SET isUsed = true, updatedAt = NOW()
+              WHERE id = ${rewardMap[0].promotionCodeId}
+            `;
+            console.log(
+              "[APPROVE EVENT] Updated PromotionCode:",
+              rewardMap[0].promotionCodeId,
             );
           }
 
-          if (fnetUserCount[0].count === 0) {
-            throw new Error(
-              `User ${user[0].userId} not found in fnet database.`,
-            );
+          // 2. Insert vào EventRewardUsed
+          if (rewardMap[0].rewardId && rewardMap[0].eventId) {
+            await tx.$executeRaw`
+              INSERT INTO EventRewardUsed (eventRewardId, userId, branch, usedAt)
+              VALUES (
+                ${rewardMap[0].rewardId},
+                ${user[0].userId},
+                ${branch},
+                NOW()
+              )
+            `;
+            console.log("[APPROVE EVENT] Inserted EventRewardUsed");
           }
 
-          // Lấy thông tin tài khoản duy nhất
-          const fnetUser = await fnetDB.$queryRaw<any[]>`
-            SELECT UserId, RemainMoney FROM usertb 
-            WHERE UserId = ${user[0].userId}
-            LIMIT 1
-          `;
+          // 3. Xử lý FREE_HOURS - update Fnet money
+          if (
+            rewardMap[0].eventRewardType === "FREE_HOURS" &&
+            rewardMap[0].eventRewardValue &&
+            user[0].userId
+          ) {
+            const fnetDB = await getFnetDB();
 
-          if (fnetUser.length > 0) {
+            // Kiểm tra user có bao nhiêu tài khoản
+            const fnetUserCount = await fnetDB.$queryRaw<any[]>`
+              SELECT COUNT(*) as count FROM usertb 
+              WHERE UserId = ${user[0].userId}
+            `;
+
+            if (fnetUserCount[0].count > 1) {
+              throw new Error(
+                `User ${user[0].userId} has multiple accounts (${fnetUserCount[0].count}). Cannot process reward exchange.`,
+              );
+            }
+
+            if (fnetUserCount[0].count === 0) {
+              throw new Error(
+                `User ${user[0].userId} not found in fnet database.`,
+              );
+            }
+
             // Kiểm tra xem user có đang sử dụng máy không (từ systemlogtb - giống user-calculator)
             const activeSession = await fnetDB.$queryRaw<any[]>`
               SELECT s.UserId, s.MachineName, s.EnterDate, s.EnterTime, s.status
@@ -172,67 +194,137 @@ export async function POST(request: NextRequest) {
               );
             }
 
-            const oldMoney = fnetUser[0].RemainMoney;
-            const newMoney =
-              Number(oldMoney) + Number(rewardMap[0].rewardValue);
-
             console.log(
-              `Processing reward for user ${user[0].userId}: ${oldMoney} + ${rewardMap[0].rewardValue} = ${newMoney}`,
+              `[APPROVE EVENT] Processing FREE_HOURS for user ${user[0].userId}: amount ${rewardMap[0].eventRewardValue}`,
             );
 
-            // Lưu lịch sử thay đổi số dư TRƯỚC khi update (trong transaction chính)
-            await tx.$executeRaw`
-              INSERT INTO FnetHistory (userId, branch, oldMoney, newMoney, targetId, type, createdAt, updatedAt)
-              VALUES (${user[0].userId}, ${branch}, ${oldMoney}, ${newMoney}, ${rewardMapId}, 'REWARD', ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
+            // Use updateFnetMoney utility function (saveHistory = false vì đã lưu khi user request)
+            await updateFnetMoney({
+              userId: user[0].userId,
+              branch: branch,
+              walletType: "SUB",
+              amount: Number(rewardMap[0].eventRewardValue),
+              targetId: rewardMapId,
+              transactionType: "REWARD",
+              saveHistory: false,
+            });
+
+            console.log(
+              `[APPROVE EVENT] Successfully updated fnet money for user ${user[0].userId}`,
+            );
+          }
+        } else if (rewardType === "STARS") {
+          // Xử lý STARS reward (logic cũ)
+          console.log("[APPROVE STARS] Processing stars reward:", rewardMap[0]);
+
+          // Insert UserStarHistory
+          await tx.$executeRaw`
+            INSERT INTO UserStarHistory (userId, type, oldStars, newStars, targetId, createdAt, branch)
+            VALUES (
+              ${user[0].userId},
+              'REWARD',
+              ${user[0].stars + (rewardMap[0].rewardStars || 0)},
+              ${user[0].stars},
+              ${rewardMapId},
+              ${getCurrentTimeVNDB()},
+              ${branch}
+            )
+          `;
+
+          // Update money in fnet database
+          if (rewardMap[0].rewardValue && user[0].userId) {
+            const fnetDB = await getFnetDB();
+
+            // Kiểm tra user có bao nhiêu tài khoản
+            const fnetUserCount = await fnetDB.$queryRaw<any[]>`
+              SELECT COUNT(*) as count FROM usertb 
+              WHERE UserId = ${user[0].userId}
             `;
 
-            console.log(
-              `FnetHistory saved for user ${user[0].userId}: ${oldMoney} -> ${newMoney}`,
-            );
-
-            const today = new Date();
-            today.setFullYear(today.getFullYear() - 20);
-            const todayFormatted =
-              today.toISOString().split("T")[0] + "T00:00:00.000Z";
-
-            const expiryDate = new Date();
-            expiryDate.setFullYear(expiryDate.getFullYear() + 10);
-            const expiryDateFormatted =
-              expiryDate.toISOString().split("T")[0] + "T00:00:00.000Z";
-
-            // Update user SAU khi đã lưu lịch sử
-            try {
-              await fnetDB.$executeRaw`
-                UPDATE usertb 
-                SET RemainMoney = ${newMoney},
-                    Birthdate = ${todayFormatted},
-                    ExpiryDate = ${expiryDateFormatted}
-                WHERE UserId = ${user[0].userId}
-              `;
-
-              console.log(
-                `Updated user ${user[0].userId} money: ${oldMoney} -> ${newMoney}`,
-              );
-            } catch (error) {
-              console.error(
-                `Error updating fnet usertb for user ${user[0].userId}:`,
-                error,
-              );
+            if (fnetUserCount[0].count > 1) {
               throw new Error(
-                `Failed to update fnet user money: ${error instanceof Error ? error.message : String(error)}`,
+                `User ${user[0].userId} has multiple accounts (${fnetUserCount[0].count}). Cannot process reward exchange.`,
               );
             }
+
+            if (fnetUserCount[0].count === 0) {
+              throw new Error(
+                `User ${user[0].userId} not found in fnet database.`,
+              );
+            }
+
+            console.log(
+              `[APPROVE STARS] Processing reward for user ${user[0].userId}: amount ${rewardMap[0].rewardValue}`,
+            );
+
+            // Use updateFnetMoney utility function (saveHistory = false vì đã lưu khi user request)
+            await updateFnetMoney({
+              userId: user[0].userId,
+              branch: branch,
+              walletType: "SUB",
+              amount: Number(rewardMap[0].rewardValue),
+              targetId: rewardMapId,
+              transactionType: "REWARD",
+              saveHistory: false,
+            });
+
+            console.log(
+              `[APPROVE STARS] Successfully updated fnet money for user ${user[0].userId}`,
+            );
           }
         }
       } else if (action === "REJECT") {
-        // Hoàn trả số sao cho user khi từ chối
-        if (rewardMap[0].rewardStars) {
-          await tx.$executeRaw`
-            UPDATE User 
-            SET stars = ${Number(user[0].stars) + Number(rewardMap[0].rewardStars)},
-                updatedAt = ${getCurrentTimeVNDB()}
-            WHERE id = ${user[0].id}
-          `;
+        const rewardType = rewardMap[0].type;
+
+        if (rewardType === "EVENT") {
+          // Xử lý REJECT cho EVENT - revert rewardsReceived
+          console.log("[REJECT EVENT] Processing event reward:", rewardMap[0]);
+          console.log("[REJECT EVENT] eventId:", rewardMap[0].eventId);
+          console.log(
+            "[REJECT EVENT] promotionCodeId:",
+            rewardMap[0].promotionCodeId,
+          );
+          console.log("[REJECT EVENT] userId:", user[0].userId);
+          console.log("[REJECT EVENT] branch:", branch);
+
+          if (rewardMap[0].promotionCodeId) {
+            // KHÔNG xóa khỏi rewardsReceived - đó là lịch sử claim
+            // Revert PromotionCode về isUsed = false để user có thể redeem lại
+            // Logic hiển thị sẽ dựa vào UserRewardMap.status
+
+            console.log(
+              "[REJECT EVENT] Keeping rewardsReceived intact - it is claim history",
+            );
+            console.log(
+              "[REJECT EVENT] Reverting PromotionCode isUsed to false:",
+              rewardMap[0].promotionCodeId,
+            );
+
+            // Revert PromotionCode về isUsed = false
+            await tx.$executeRaw`
+              UPDATE PromotionCode 
+              SET isUsed = false 
+              WHERE id = ${rewardMap[0].promotionCodeId}
+            `;
+
+            console.log(
+              "[REJECT EVENT] PromotionCode reverted to isUsed = false",
+            );
+          }
+        } else if (rewardType === "STARS") {
+          // Hoàn trả số sao cho user khi từ chối STARS reward
+          if (rewardMap[0].rewardStars) {
+            await tx.$executeRaw`
+              UPDATE User 
+              SET stars = ${Number(user[0].stars) + Number(rewardMap[0].rewardStars)},
+                  updatedAt = ${getCurrentTimeVNDB()}
+              WHERE id = ${user[0].id}
+            `;
+            console.log(
+              "[REJECT STARS] Refunded stars to user:",
+              rewardMap[0].rewardStars,
+            );
+          }
         }
       }
     });

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { X, Send, User, Clock } from "lucide-react";
-import { Table, Input, Button, Select, message } from "antd";
+import { Table, Input, Button, message, Select } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
   SHIFT_ENUM,
@@ -272,7 +272,7 @@ export default function SendReportDrawer({
   // Call API get-report-data when init and set into materialData state
   useEffect(() => {
     if (isOpen && selectedReportType && !hasInitializedRef.current) {
-      const fetchReportData = async () => {
+      const fetchInitialReportData = async () => {
         setLoading(true);
         try {
           const params = new URLSearchParams();
@@ -328,7 +328,7 @@ export default function SendReportDrawer({
         }
       };
 
-      fetchReportData();
+      fetchInitialReportData();
     }
   }, [isOpen, selectedReportType, selectedDateState]);
 
@@ -338,6 +338,54 @@ export default function SendReportDrawer({
       hasInitializedRef.current = false;
     }
   }, [isOpen]);
+
+  // Helper function to fetch report data
+  const fetchReportData = async () => {
+    if (
+      !isOpen ||
+      !selectedReportType ||
+      !selectedShift ||
+      !hasInitializedRef.current
+    ) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.append(
+        "date",
+        selectedDateState || new Date().toISOString().split("T")[0],
+      );
+      params.append("reportType", selectedReportType);
+
+      const response = await fetch(
+        `/api/handover-reports/get-report-data?${params.toString()}`,
+      );
+      const result = await response.json();
+
+      if (result.success) {
+        const { isInitialData, submissionTracking } = result.data;
+        setSubmissionTracking(submissionTracking);
+
+        const mappedMaterials = mapMaterialData(
+          isInitialData,
+          result.data.materials,
+          submissionTracking,
+          selectedShift,
+        );
+        setMaterialData(mappedMaterials);
+      } else {
+        console.error("Failed to fetch report data:", result.error);
+        setMaterialData([]);
+      }
+    } catch (error) {
+      console.error("Error fetching report data:", error);
+      setMaterialData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Update material data when selectedShift changes (only for manual changes)
   useEffect(() => {
@@ -349,47 +397,21 @@ export default function SendReportDrawer({
       submissionTracking &&
       !isAutoSettingShiftRef.current
     ) {
-      const fetchReportData = async () => {
-        setLoading(true);
-        try {
-          const params = new URLSearchParams();
-          params.append(
-            "date",
-            selectedDateState || new Date().toISOString().split("T")[0],
-          );
-          params.append("reportType", selectedReportType);
-
-          const response = await fetch(
-            `/api/handover-reports/get-report-data?${params.toString()}`,
-          );
-          const result = await response.json();
-
-          if (result.success) {
-            const { isInitialData, submissionTracking } = result.data;
-            setSubmissionTracking(submissionTracking);
-
-            const mappedMaterials = mapMaterialData(
-              isInitialData,
-              result.data.materials,
-              submissionTracking,
-              selectedShift,
-            );
-            setMaterialData(mappedMaterials);
-          } else {
-            console.error("Failed to fetch report data:", result.error);
-            setMaterialData([]);
-          }
-        } catch (error) {
-          console.error("Error fetching report data:", error);
-          setMaterialData([]);
-        } finally {
-          setLoading(false);
-        }
-      };
-
       fetchReportData();
     }
   }, [selectedShift]);
+
+  // Update material data when selectedReportType changes
+  useEffect(() => {
+    if (
+      isOpen &&
+      selectedReportType &&
+      selectedShift &&
+      hasInitializedRef.current
+    ) {
+      fetchReportData();
+    }
+  }, [selectedReportType]);
 
   // Helper function to get submission count for current shift
   const getSubmissionCount = (

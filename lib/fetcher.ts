@@ -1,2 +1,5 @@
-export const fetcher = (url: string) =>
-  fetch(url, { credentials: "include" }).then((res) => res.json());
+export const fetcher = (url: string, options?: RequestInit) =>
+  fetch(url, {
+    credentials: "include",
+    ...options,
+  }).then((res) => res.json());

@@ -59,32 +59,60 @@ export async function POST(request: Request) {
       );
     }
 
-    // Find user progress
-    // console.log("Finding user progress...");
-    const existingProgress = await db.$queryRaw<any[]>`
+    // Find or create user progress
+    // Check exist trước để tránh duplicate
+    let userProgressResult = await db.$queryRaw<any[]>`
       SELECT * FROM UserBattlePass 
       WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id} AND branch = ${branch}
       LIMIT 1
     `;
 
-    let userProgress = existingProgress[0];
-    // console.log("Existing user progress:", userProgress);
+    let userProgress = userProgressResult[0];
+
+    // Chỉ tạo mới nếu chưa có
+    if (!userProgress) {
+      const now = getCurrentTimeVNDB();
+
+      try {
+        await db.$executeRawUnsafe(
+          `
+          INSERT INTO UserBattlePass (userId, seasonId, level, experience, isPremium, totalSpent, branch, createdAt, updatedAt)
+          VALUES (?, ?, 0, 0, false, 0, ?, ?, ?)
+        `,
+          decoded.userId,
+          currentSeason.id,
+          branch,
+          now,
+          now,
+        );
+
+        // Lấy lại sau khi insert
+        userProgressResult = await db.$queryRaw<any[]>`
+          SELECT * FROM UserBattlePass 
+          WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id} AND branch = ${branch}
+          LIMIT 1
+        `;
+        userProgress = userProgressResult[0];
+      } catch (error: any) {
+        // Nếu bị duplicate key error (race condition), lấy lại record
+        if (error.code === "ER_DUP_ENTRY" || error.code === "23000") {
+          userProgressResult = await db.$queryRaw<any[]>`
+            SELECT * FROM UserBattlePass 
+            WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id} AND branch = ${branch}
+            LIMIT 1
+          `;
+          userProgress = userProgressResult[0];
+        } else {
+          throw error;
+        }
+      }
+    }
 
     if (!userProgress) {
-      // console.log("Creating new user progress...");
-      // Create new user progress with default values
-      await db.$executeRaw`
-        INSERT INTO UserBattlePass (userId, seasonId, level, experience, isPremium, totalSpent, branch, createdAt, updatedAt)
-        VALUES (${decoded.userId}, ${currentSeason.id}, 0, 0, false, 0, ${branch}, ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
-      `;
-
-      const newProgress = await db.$queryRaw<any[]>`
-        SELECT * FROM UserBattlePass 
-        WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id} AND branch = ${branch}
-        LIMIT 1
-      `;
-      userProgress = newProgress[0];
-      // console.log("Created user progress:", userProgress);
+      return NextResponse.json(
+        { error: "Failed to create or retrieve user progress" },
+        { status: 500 },
+      );
     }
 
     const response = {

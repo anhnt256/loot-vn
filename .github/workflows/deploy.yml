@@ -49,12 +49,10 @@ jobs:
             REDIS_HOST=${{ secrets.REDIS_HOST }}
             REDIS_PORT=${{ secrets.REDIS_PORT }}
             REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+            NEXT_PUBLIC_CALENDAR_GV=${{ secrets.NEXT_PUBLIC_CALENDAR_GV }}
+            NEXT_PUBLIC_CALENDAR_TP=${{ secrets.NEXT_PUBLIC_CALENDAR_TP }}
             NODE_ENV=production
             EOF
-
-            # Debug: in nội dung .env
-            echo "=== .env content on VPS ==="
-            cat .env
 
             # Build + run docker compose
             docker compose up -d --build

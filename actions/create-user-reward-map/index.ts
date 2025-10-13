@@ -227,21 +227,30 @@ const handler = async (data: InputType): Promise<any> => {
       
       console.log("userRewardMap created:", createUserRewardMap);
       
-      // Lấy số dư Fnet hiện tại từ database Fnet
+      // Lấy số dư Fnet hiện tại từ database Fnet (wallettb)
       const fnetDB = await getFnetDB();
-      const fnetUser = await fnetDB.$queryRaw<any[]>`
-        SELECT RemainMoney FROM usertb 
-        WHERE UserId = ${user.userId}
+      const walletResult = await fnetDB.$queryRaw<any[]>`
+        SELECT main, sub FROM wallettb 
+        WHERE userid = ${user.userId}
         LIMIT 1
       `;
       
-      const currentFnetMoney = fnetUser.length > 0 ? fnetUser[0].RemainMoney : 0;
-      const newFnetMoney = currentFnetMoney + promotionReward.value;
+      if (walletResult.length === 0) {
+        throw new Error(`Wallet not found for userId: ${user.userId}`);
+      }
       
-      // Lưu FnetHistory khi tạo request (newMoney = oldMoney + reward.value)
+      const oldMain = Number(walletResult[0].main) || 0;
+      const oldSub = Number(walletResult[0].sub) || 0;
+      const newSub = oldSub + promotionReward.value;
+      const newMain = oldMain; // Main không đổi
+      
+      console.log(`[createUserRewardMap] Wallet snapshot - oldMain: ${oldMain}, newMain: ${newMain}, oldSub: ${oldSub}, newSub: ${newSub}`);
+      
+      // Lưu FnetHistory khi tạo request (chỉ lưu 1 lần, khi approve sẽ không lưu lại)
+      // Lưu snapshot đầy đủ của cả main và sub
       await tx.$executeRaw`
-        INSERT INTO FnetHistory (userId, branch, oldMoney, newMoney, targetId, type, createdAt, updatedAt)
-        VALUES (${user.userId}, ${branch}, ${currentFnetMoney}, ${newFnetMoney}, ${userRewardMapId}, 'REWARD', ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
+        INSERT INTO FnetHistory (userId, branch, oldSubMoney, newSubMoney, oldMainMoney, newMainMoney, moneyType, targetId, type, createdAt, updatedAt)
+        VALUES (${user.userId}, ${branch}, ${oldSub}, ${newSub}, ${oldMain}, ${newMain}, 'SUB', ${userRewardMapId}, 'REWARD', ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
       `;
       
       // Update số sao trong table User

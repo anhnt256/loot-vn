@@ -58,15 +58,23 @@ export async function GET(request: Request) {
         urm.createdAt,
         urm.updatedAt,
         urm.note,
+        urm.type,
         pr.name as rewardName,
         pr.value as rewardValue,
         pr.starsValue as rewardStars,
+        er.name as eventRewardName,
+        pc.name as eventPromotionCodeName,
+        pc.code as eventPromotionCodeCode,
+        pc.rewardType as eventPromotionCodeType,
+        pc.rewardValue as eventPromotionCodeValue,
         u.userId as userUserId,
         u.userName,
         u.stars as userStars,
         u.branch as userBranch
       FROM UserRewardMap urm
-      LEFT JOIN PromotionReward pr ON urm.promotionCodeId = pr.id
+      LEFT JOIN PromotionReward pr ON urm.promotionCodeId = pr.id AND urm.type = 'STARS'
+      LEFT JOIN EventReward er ON urm.rewardId = er.id AND urm.type = 'EVENT'
+      LEFT JOIN PromotionCode pc ON urm.promotionCodeId = pc.id AND urm.type = 'EVENT'
       ${userJoin}
       WHERE urm.status = 'INITIAL'
         AND urm.branch = '${branch}'
@@ -74,35 +82,92 @@ export async function GET(request: Request) {
       ORDER BY urm.createdAt DESC
     `);
 
-    // Get Fnet money for each user
+    // Get Fnet money for each user (from wallettb to get main and sub)
     const fnetDB = await getFnetDB();
     const userIds = [
       ...new Set(pendingRewards.map((r) => r.userUserId).filter(Boolean)),
     ];
 
-    let fnetUsers = [];
+    let fnetWallets = [];
     if (userIds.length > 0) {
-      fnetUsers = await fnetDB.$queryRaw<any[]>`
-        SELECT UserId, RemainMoney 
-        FROM usertb 
-        WHERE UserId IN (${userIds.join(",")})
+      fnetWallets = await fnetDB.$queryRaw<any[]>`
+        SELECT userid, main, sub 
+        FROM wallettb 
+        WHERE userid IN (${userIds.join(",")})
       `;
     }
 
     // Create a map for quick lookup
     const fnetMoneyMap = new Map();
-    fnetUsers.forEach((user) => {
-      fnetMoneyMap.set(user.UserId, user.RemainMoney);
+    fnetWallets.forEach((wallet) => {
+      const main = Number(wallet.main) || 0;
+      const sub = Number(wallet.sub) || 0;
+      const userId = Number(wallet.userid); // Convert to number for consistent key
+
+      console.log(
+        `[PENDING] Wallet for userId ${userId}: main=${main}, sub=${sub}`,
+      );
+
+      fnetMoneyMap.set(userId, {
+        main,
+        sub,
+        total: main + sub,
+      });
     });
+
+    console.log(`[PENDING] Total wallets loaded: ${fnetWallets.length}`);
+
+    // Get FnetHistory for pending rewards (to show before/after for MAIN_ACCOUNT_TOPUP)
+    const rewardIds = pendingRewards.map((r) => Number(r.id)).filter(Boolean);
+    let fnetHistories = [];
+    if (rewardIds.length > 0) {
+      fnetHistories = await db.$queryRaw<any[]>`
+        SELECT targetId, oldMainMoney, newMainMoney, oldSubMoney, newSubMoney
+        FROM FnetHistory
+        WHERE targetId IN (${rewardIds.join(",")})
+      `;
+    }
+
+    // Create a map for FnetHistory lookup by targetId (UserRewardMap.id)
+    const fnetHistoryMap = new Map();
+    fnetHistories.forEach((record) => {
+      const targetId = Number(record.targetId);
+      fnetHistoryMap.set(targetId, {
+        oldMain: Number(record.oldMainMoney) || 0,
+        newMain: Number(record.newMainMoney) || 0,
+        oldSub: Number(record.oldSubMoney) || 0,
+        newSub: Number(record.newSubMoney) || 0,
+      });
+    });
+
+    console.log(
+      `[PENDING] Total FnetHistory records loaded: ${fnetHistories.length}`,
+    );
 
     // Transform data to simplified format
     const rewardsWithUser = pendingRewards.map((reward) => {
       // Số sao hiện tại = số sao trong DB (đã trừ rồi khi tạo request)
       const currentStars = reward.userStars;
       // Số sao sau đổi = số sao hiện tại - rewardValue (sẽ trừ thêm khi approve)
-      const afterExchangeStars = currentStars - reward.rewardStars;
+      const afterExchangeStars = currentStars - (reward.rewardStars || 0);
 
-      return {
+      const userId = Number(reward.userUserId); // Convert to number
+      const walletInfo = fnetMoneyMap.get(userId) || {
+        main: 0,
+        sub: 0,
+        total: 0,
+      };
+      const rewardId = Number(reward.id);
+      const historyInfo = fnetHistoryMap.get(rewardId);
+
+      console.log(
+        `[PENDING] Reward ${rewardId} for userId ${userId}: walletInfo=`,
+        walletInfo,
+        "historyInfo=",
+        historyInfo,
+      );
+
+      const baseData = {
         id: reward.id,
         promotionCodeId: reward.promotionCodeId,
         duration: reward.duration,
@@ -112,21 +177,49 @@ export async function GET(request: Request) {
         createdAt: reward.createdAt,
         updatedAt: reward.updatedAt,
         note: reward.note,
-        reward: {
-          id: reward.rewardId,
-          name: reward.rewardName,
-          value: reward.rewardValue,
-          stars: reward.rewardStars,
-        },
+        type: reward.type,
         user: {
           userId: reward.userUserId,
           userName: reward.userName,
-          stars: currentStars, // Hiển thị số sao hiện tại (đã cộng thêm rewardValue)
-          afterExchangeStars: afterExchangeStars, // Thêm số sao sau đổi
+          stars: currentStars,
+          afterExchangeStars: afterExchangeStars,
           branch: reward.userBranch,
-          fnetMoney: fnetMoneyMap.get(reward.userUserId) || 0,
+          fnetMoney: walletInfo.total, // Backward compatibility
+          // Nếu có FnetHistory thì dùng oldMain/oldSub, không thì dùng wallet hiện tại
+          fnetMain: historyInfo ? historyInfo.oldMain : walletInfo.main,
+          fnetSub: historyInfo ? historyInfo.oldSub : walletInfo.sub,
+          // Nếu có FnetHistory thì dùng newMain/newSub để hiển thị "Sau đổi"
+          fnetMainAfter: historyInfo ? historyInfo.newMain : undefined,
+          fnetSubAfter: historyInfo ? historyInfo.newSub : undefined,
         },
       };
+
+      // Thêm thông tin reward dựa trên type
+      if (reward.type === "EVENT") {
+        return {
+          ...baseData,
+          reward: {
+            id: reward.rewardId,
+            name:
+              reward.eventPromotionCodeName ||
+              reward.eventRewardName ||
+              "Phần thưởng Event",
+            type: reward.eventPromotionCodeType,
+            code: reward.eventPromotionCodeCode,
+            value: reward.eventPromotionCodeValue || null,
+          },
+        };
+      } else {
+        return {
+          ...baseData,
+          reward: {
+            id: reward.rewardId,
+            name: reward.rewardName,
+            value: reward.rewardValue,
+            stars: reward.rewardStars,
+          },
+        };
+      }
     });
 
     return NextResponse.json(rewardsWithUser);

@@ -8,6 +8,7 @@ import {
 } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { StaffProvider } from "@/components/providers/StaffProvider";
+import { BranchProvider } from "@/components/providers/BranchProvider";
 import { AdminChatProvider, AdminChatButton } from "@/components/admin";
 
 export const metadata: Metadata = {
@@ -21,29 +22,31 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <PendingCountProvider>
-      <StaffProvider>
-        <AdminChatProvider>
-          <div className="flex h-screen bg-gray-900">
-            <Toaster richColors position="top-right" />
-            {/* Sidebar */}
-            <AdminSidebar />
+    <BranchProvider>
+      <PendingCountProvider>
+        <StaffProvider>
+          <AdminChatProvider>
+            <div className="flex h-screen bg-gray-900">
+              <Toaster richColors position="top-right" />
+              {/* Sidebar */}
+              <AdminSidebar />
 
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col overflow-hidden">
-              <AdminHeader />
+              {/* Main Content */}
+              <div className="flex-1 flex flex-col overflow-hidden">
+                <AdminHeader />
 
-              {/* Main Content Area */}
-              <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-900 p-6">
-                {children}
-              </main>
+                {/* Main Content Area */}
+                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-900 p-6">
+                  {children}
+                </main>
+              </div>
+
+              {/* Admin Chat Button */}
+              <AdminChatButton />
             </div>
-
-            {/* Admin Chat Button */}
-            <AdminChatButton />
-          </div>
-        </AdminChatProvider>
-      </StaffProvider>
-    </PendingCountProvider>
+          </AdminChatProvider>
+        </StaffProvider>
+      </PendingCountProvider>
+    </BranchProvider>
   );
 }

@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import Cookies from "js-cookie";
 import { useStaffContext } from "@/components/providers/StaffProvider";
+import { useBranch } from "@/components/providers/BranchProvider";
 
 interface Report {
   id: number;
@@ -35,13 +36,7 @@ export default function AdminReportsPage() {
   const [loading, setLoading] = useState(true);
   const [filterDate, setFilterDate] = useState("");
   const [filterShift, setFilterShift] = useState("");
-  const [selectedBranch, setSelectedBranch] = useState(() => {
-    // Get branch from cookie or default to GO_VAP
-    if (typeof window !== "undefined") {
-      return Cookies.get("branch") || "GO_VAP";
-    }
-    return "GO_VAP";
-  });
+  const { branch: selectedBranch } = useBranch();
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -272,14 +267,6 @@ export default function AdminReportsPage() {
       setCollapsedDays(new Set(allDates));
     }
   }, [reports]);
-
-  // Load branch from cookie on mount
-  useEffect(() => {
-    const branchFromCookie = Cookies.get("branch");
-    if (branchFromCookie && branchFromCookie !== selectedBranch) {
-      setSelectedBranch(branchFromCookie);
-    }
-  }, []);
 
   // Reset page when filters change
   useEffect(() => {
@@ -572,13 +559,6 @@ export default function AdminReportsPage() {
     }));
   };
 
-  const handleBranchChange = (newBranch: string) => {
-    setSelectedBranch(newBranch);
-    Cookies.set("branch", newBranch, { path: "/" });
-    // Refresh data with new branch
-    fetchReports();
-  };
-
   return (
     <div className="p-4 sm:p-6 lg:p-8 bg-gray-900 text-gray-100 min-h-screen">
       <div className="flex justify-between items-center mb-6">
@@ -593,23 +573,6 @@ export default function AdminReportsPage() {
 
       {/* Vùng filter */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6 p-4 bg-gray-800 rounded-lg">
-        <div className="flex-1">
-          <label
-            htmlFor="branch-filter"
-            className="block text-sm font-medium mb-1"
-          >
-            Chi nhánh
-          </label>
-          <select
-            id="branch-filter"
-            value={selectedBranch}
-            onChange={(e) => handleBranchChange(e.target.value)}
-            className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="GO_VAP">Gò Vấp</option>
-            <option value="TAN_PHU">Tân Phú</option>
-          </select>
-        </div>
         <div className="flex-1">
           <label
             htmlFor="date-filter"

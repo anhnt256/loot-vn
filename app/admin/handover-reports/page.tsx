@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Calendar, Search, Download, Package, Send } from "lucide-react";
-import Cookies from "js-cookie";
 import {
   SHIFT_ENUM,
   REPORT_TYPE_ENUM,
@@ -13,6 +12,7 @@ import {
 } from "@/constants/handover-reports.constants";
 import MaterialManagementDrawer from "./_components/material-management-drawer";
 import SendReportDrawer from "./_components/send-report-drawer";
+import { useBranch } from "@/components/providers/BranchProvider";
 
 interface MaterialReport {
   id: number;
@@ -84,15 +84,12 @@ export default function HandoverReportsPage() {
     const reportTypes = Object.values(REPORT_TYPE_ENUM);
     return reportTypes.length > 0 ? reportTypes[0] : "";
   });
-  const [selectedBranch, setSelectedBranch] = useState("GO_VAP");
   const [reports, setReports] = useState<HandoverReport[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [isMaterialDrawerOpen, setIsMaterialDrawerOpen] = useState(false);
   const [isSendReportDrawerOpen, setIsSendReportDrawerOpen] = useState(false);
-  const [loginType, setLoginType] = useState(
-    Cookies.get("loginType") || "username",
-  );
+  const { branch: selectedBranch } = useBranch();
   const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchReports = async () => {
@@ -125,13 +122,6 @@ export default function HandoverReportsPage() {
   };
 
   useEffect(() => {
-    const branch = Cookies.get("branch");
-    if (branch) {
-      setSelectedBranch(branch);
-    }
-  }, []);
-
-  useEffect(() => {
     if (selectedBranch) {
       // Clear previous timeout to prevent multiple calls
       if (fetchTimeoutRef.current) {
@@ -151,11 +141,6 @@ export default function HandoverReportsPage() {
       }
     };
   }, [selectedBranch, selectedDate, selectedReportType]);
-
-  const handleBranchChange = (value: string) => {
-    setSelectedBranch(value);
-    Cookies.set("branch", value, { path: "/" });
-  };
 
   const handleSearch = () => {
     if (selectedBranch && selectedDate && selectedReportType) {
@@ -310,26 +295,7 @@ export default function HandoverReportsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Branch */}
-          <select
-            value={selectedBranch}
-            onChange={(e) => handleBranchChange(e.target.value)}
-            required
-            disabled={loginType === "mac"}
-            className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              loginType === "mac"
-                ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                : ""
-            }`}
-          >
-            {branches.map((branch) => (
-              <option key={branch} value={branch}>
-                {BRANCH_LABELS[branch]}
-              </option>
-            ))}
-          </select>
-
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Date */}
           <div className="relative">
             <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />

@@ -77,3 +77,39 @@ export const getCurrentDayOfWeekVN = () => {
   const nowVN = dayjs().utcOffset(7);
   return nowVN.format("dddd");
 };
+
+// ===== USER VALIDATION FUNCTIONS =====
+
+// Kiểm tra user có phải là user mới không (tài khoản được tạo chưa quá 14 ngày)
+export const isNewUser = (createdAt: string | Date): boolean => {
+  // Original logic (commented out for debugging)
+  const nowVN = dayjs().utcOffset(7);
+  const userCreatedAtVN = dayjs(createdAt).utcOffset(7);
+
+  // Tính số ngày từ khi tạo tài khoản đến hiện tại
+  const daysSinceCreation = nowVN.diff(userCreatedAtVN, "day");
+
+  // User được coi là mới nếu chưa đủ 14 ngày
+  return daysSinceCreation < 14;
+};
+
+// Lấy số ngày từ khi user được tạo
+export const getDaysSinceUserCreation = (createdAt: string | Date): number => {
+  const nowVN = dayjs().utcOffset(7);
+  const userCreatedAtVN = dayjs(createdAt).utcOffset(7);
+
+  return nowVN.diff(userCreatedAtVN, "day");
+};
+
+// Kiểm tra user có phải là user mới với custom số ngày
+export const isNewUserWithCustomDays = (
+  createdAt: string | Date,
+  daysThreshold: number,
+): boolean => {
+  const nowVN = dayjs().utcOffset(7);
+  const userCreatedAtVN = dayjs(createdAt).utcOffset(7);
+
+  const daysSinceCreation = nowVN.diff(userCreatedAtVN, "day");
+
+  return daysSinceCreation < daysThreshold;
+};

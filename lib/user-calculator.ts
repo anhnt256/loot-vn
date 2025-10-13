@@ -267,9 +267,28 @@ export async function calculateActiveUsersInfo(
         return result;
       })(),
 
-      // 4. UserBattlePass data
+      // 4. UserBattlePass data - chỉ lấy data của season đang active
       (async () => {
         const userIdsStr = finalListUsers.join(",");
+        
+        // Lấy current active season trước
+        const currentSeasonQuery = `
+          SELECT id FROM BattlePassSeason 
+          WHERE isActive = true
+            AND startDate <= DATE(NOW())
+            AND endDate >= DATE(NOW())
+          LIMIT 1
+        `;
+        const currentSeasonResult = await db.$queryRawUnsafe(currentSeasonQuery);
+        
+        // Nếu không có season active, return empty array
+        if (!currentSeasonResult || (currentSeasonResult as any[]).length === 0) {
+          return [];
+        }
+        
+        const currentSeasonId = (currentSeasonResult as any[])[0].id;
+        
+        // Lấy UserBattlePass của season hiện tại
         const queryString = `
         SELECT 
           userId,
@@ -279,6 +298,7 @@ export async function calculateActiveUsersInfo(
         FROM UserBattlePass
         WHERE userId IN (${userIdsStr})
           AND branch = '${branch}'
+          AND seasonId = ${currentSeasonId}
         `;
 
         const result = await db.$queryRawUnsafe(queryString);

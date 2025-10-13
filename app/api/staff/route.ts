@@ -3,12 +3,12 @@ import { db } from "@/lib/db";
 import { getBranchFromCookie } from "@/lib/server-utils";
 
 // Valid branches
-const VALID_BRANCHES = ['GO_VAP', 'TAN_PHU'];
+const VALID_BRANCHES = ["GO_VAP", "TAN_PHU"];
 
 export async function GET(request: NextRequest) {
   try {
     const branch = await getBranchFromCookie();
-    
+
     // Validate branch
     if (!branch || !VALID_BRANCHES.includes(branch)) {
       console.error("Invalid or missing branch:", branch);

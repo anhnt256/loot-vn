@@ -10,9 +10,121 @@ import {
 } from "@/lib/rate-limit";
 import { getDebugUserId, logDebugInfo } from "@/lib/debug-utils";
 import { calculateActiveUsersInfo } from "@/lib/user-calculator";
+import { isNewUser } from "@/lib/timezone-utils";
 
 const expirationDuration = 1;
 const expirationDate = dayjs().add(expirationDuration, "day").format();
+
+/**
+ * Check xem user có phải user cũ quay trở lại không
+ * Logic: Lấy 2 NGÀY khác nhau gần nhất từ systemlogtb
+ * - Nếu 2 ngày cách nhau >= 30 ngày -> user cũ quay trở lại
+ * - Nếu < 30 ngày -> user thường xuyên
+ */
+async function checkIsReturnedUser(
+  userId: number,
+  fnetDB: any,
+): Promise<{ isReturned: boolean; daysSinceLastSession: number | null }> {
+  try {
+    // Lấy 2 NGÀY DISTINCT gần nhất (status = 3 là đã logout/hoàn thành)
+    const recentDates = (await fnetDB.$queryRawUnsafe(`
+      SELECT 
+        EnterDate,
+        COUNT(*) as sessionsOnThisDay
+      FROM systemlogtb
+      WHERE UserId = ${userId}
+        AND status = 3
+      GROUP BY EnterDate
+      ORDER BY EnterDate DESC
+      LIMIT 2
+    `)) as any[];
+
+    if (recentDates.length < 2) {
+      // Chưa đủ 2 ngày khác nhau để so sánh
+      return { isReturned: false, daysSinceLastSession: null };
+    }
+
+    const latestDate = new Date(recentDates[0].EnterDate);
+    const previousDate = new Date(recentDates[1].EnterDate);
+    const daysDiff = Math.floor(
+      (latestDate.getTime() - previousDate.getTime()) / (1000 * 60 * 60 * 24),
+    );
+
+    console.log(
+      `User ${userId} - Latest login date: ${recentDates[0].EnterDate}, Previous login date: ${recentDates[1].EnterDate}, Days diff: ${daysDiff}`,
+    );
+
+    return {
+      isReturned: daysDiff >= 30,
+      daysSinceLastSession: daysDiff,
+    };
+  } catch (error) {
+    console.error("Error checking returned user:", error);
+    return { isReturned: false, daysSinceLastSession: null };
+  }
+}
+
+// Helper function để lấy thông tin RecordDate và LastLoginDate từ fnet DB
+async function getUserCreationInfo(
+  userId: number,
+  branch: string,
+): Promise<{
+  isNewUser: boolean;
+  recordDate: string | null;
+  isReturnedUser: boolean;
+  lastLoginDate: string | null;
+}> {
+  try {
+    const fnetDB = await getFnetDB();
+
+    // Query để lấy RecordDate và LastLoginDate từ usertb table trong fnet DB
+    const userRecord = await fnetDB.$queryRaw<any[]>`
+      SELECT RecordDate, LastLoginDate 
+      FROM fnet.usertb 
+      WHERE UserId = ${userId}
+      LIMIT 1
+    `;
+
+    if (!userRecord || userRecord.length === 0) {
+      console.log(`User ${userId} not found in fnet.usertb`);
+      return {
+        isNewUser: false,
+        recordDate: null,
+        isReturnedUser: false,
+        lastLoginDate: null,
+      };
+    }
+
+    const recordDate = userRecord[0].RecordDate;
+    const lastLoginDate = userRecord[0].LastLoginDate;
+    const isNew = isNewUser(recordDate);
+
+    // Check if user is a returned user - dùng logic 2 ngày distinct từ systemlogtb
+    const returnedUserInfo = await checkIsReturnedUser(userId, fnetDB);
+
+    const daysSinceCreation = dayjs().diff(dayjs(recordDate), "day");
+    console.log(
+      `User ${userId} - RecordDate: ${recordDate}, Days since creation: ${daysSinceCreation}, isNewUser: ${isNew}, isReturnedUser: ${returnedUserInfo.isReturned}`,
+    );
+
+    return {
+      isNewUser: isNew, // Sử dụng giá trị thực từ isNewUser function
+      recordDate: recordDate ? dayjs(recordDate).format("YYYY-MM-DD") : null,
+      isReturnedUser: returnedUserInfo.isReturned,
+      lastLoginDate: lastLoginDate
+        ? dayjs(lastLoginDate).format("YYYY-MM-DD")
+        : null,
+    };
+  } catch (error) {
+    console.error("Error getting user creation info:", error);
+    return {
+      isNewUser: false,
+      recordDate: null,
+      isReturnedUser: false,
+      lastLoginDate: null,
+    };
+  }
+}
 
 export async function POST(req: Request, res: Response): Promise<any> {
   const cookieStore = await cookies();
@@ -340,6 +452,12 @@ export async function POST(req: Request, res: Response): Promise<any> {
             );
           }
 
+          // Lấy thông tin user mới từ fnet DB
+          const userCreationInfo = await getUserCreationInfo(
+            Number(userId),
+            branchFromCookie || "",
+          );
+
           // Trả về thông tin user mới tạo
           const token = await signJWT({
             userId: String(userUpdated.userId ?? ""),
@@ -348,6 +466,10 @@ export async function POST(req: Request, res: Response): Promise<any> {
             statusCode: 200,
             message: "Login Success",
             ...userCalculatorData, // Trả về trực tiếp userCalculatorData
+            isNewUser: userCreationInfo.isNewUser,
+            recordDate: userCreationInfo.recordDate,
+            isReturnedUser: userCreationInfo.isReturnedUser,
+            lastLoginDate: userCreationInfo.lastLoginDate,
           };
           const response = NextResponse.json(responseData);
 
@@ -450,11 +572,21 @@ export async function POST(req: Request, res: Response): Promise<any> {
       );
     }
 
+    // Lấy thông tin user mới từ fnet DB
+    const userCreationInfo = await getUserCreationInfo(
+      Number(userId),
+      branchFromCookie || "",
+    );
+
     const token = await signJWT({ userId: String(userUpdated?.userId ?? "") });
     const responseData = {
       statusCode: 200,
       message: "Login Success",
       ...userCalculatorData, // Trả về trực tiếp userCalculatorData
+      isNewUser: userCreationInfo.isNewUser,
+      recordDate: userCreationInfo.recordDate,
+      isReturnedUser: userCreationInfo.isReturnedUser,
+      lastLoginDate: userCreationInfo.lastLoginDate,
     };
     const response = NextResponse.json(responseData);
 

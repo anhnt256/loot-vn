@@ -94,22 +94,22 @@ model GameResult {
 }
 
 model User {
-  id            Int                      @id @default(autoincrement())
-  userName      String?                  @db.VarChar(45)
-  userId        Int
-  rankId        Int
-  stars         Int
-  createdAt     DateTime                 @default(now())
-  updatedAt     DateTime                 @updatedAt
-  magicStone    Int                      @default(0)
-  branch        String
-  totalPayment  Float?                   @db.Float
-  note          String?                  @default("") @db.VarChar(1000)
-  isUseApp      Boolean                  @default(true)
-  UserRewardMap UserRewardMap[]
-  GameResults   GameResult[]
-  premiumOrders BattlePassPremiumOrder[]
-  feedbacks     Feedback[]
+  id                Int                @id @default(autoincrement())
+  userName          String?            @db.VarChar(45)
+  userId            Int
+  rankId            Int
+  stars             Int
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  magicStone        Int                @default(0)
+  branch            String
+  totalPayment      Float?             @db.Float
+  note              String?            @default("") @db.VarChar(1000)
+  isUseApp          Boolean            @default(true)
+  UserRewardMap     UserRewardMap[]
+  GameResults       GameResult[]
+  feedbacks         Feedback[]
+  eventParticipants EventParticipant[]
 }
 
 model Mission {
@@ -152,6 +152,7 @@ model UserRewardMap {
   branch          String?              @default("GO_VAP")
   note            String?              @db.Text
   status          UserRewardMapStatus? @default(INITIAL)
+  type            UserRewardMap_type   @default(STARS)
   promotionCode   PromotionCode?       @relation(fields: [promotionCodeId], references: [id])
   user            User?                @relation(fields: [userId], references: [id])
   reward          Reward?              @relation(fields: [rewardId], references: [id])
@@ -174,15 +175,21 @@ model Reward {
 }
 
 model PromotionCode {
-  id            Int             @id @default(autoincrement())
-  name          String?         @db.VarChar(45)
-  code          String?         @db.VarChar(45)
-  value         Int?
-  branch        String?         @db.VarChar(45)
-  isUsed        Boolean?        @default(false)
-  createdAt     DateTime?       @default(now())
-  updatedAt     DateTime?       @updatedAt
-  UserRewardMap UserRewardMap[]
+  id                 Int               @id @default(autoincrement())
+  name               String?           @db.VarChar(45)
+  code               String?           @db.VarChar(45)
+  value              Int?
+  branch             String?           @db.VarChar(45)
+  isUsed             Boolean?          @default(false)
+  createdAt          DateTime?         @default(now())
+  updatedAt          DateTime?         @updatedAt
+  eventId            String?
+  expirationDate     DateTime?
+  promotionSettingId Int?
+  rewardType         String?
+  rewardValue        Int?
+  UserRewardMap      UserRewardMap[]
+  promotionSetting   PromotionSetting? @relation(fields: [promotionSettingId], references: [id])
 }
 
 model UserStarHistory {
@@ -309,37 +316,37 @@ model DeviceHistory {
 }
 
 model BattlePassSeason {
-  id              Int                        @id @default(autoincrement())
-  name            String
-  description     String?
-  startDate       DateTime
-  endDate         DateTime
-  isActive        Boolean                    @default(false)
-  maxLevel        Int                        @default(100)
-  createdAt       DateTime                   @default(now())
-  updatedAt       DateTime                   @updatedAt
-  rewards         BattlePassReward[]
-  userBattlePass  UserBattlePass[]
-  premiumPackages BattlePassPremiumPackage[]
+  id             Int                @id @default(autoincrement())
+  name           String
+  description    String?
+  startDate      DateTime
+  endDate        DateTime
+  isActive       Boolean            @default(false)
+  maxLevel       Int                @default(100)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  rewards        BattlePassReward[]
+  userBattlePass UserBattlePass[]
 
   @@map("BattlePassSeason")
 }
 
 model BattlePassReward {
-  id          Int              @id @default(autoincrement())
-  seasonId    Int
-  level       Int
-  name        String
-  description String?
-  type        String
-  rewardType  String
-  rewardValue Int?
-  imageUrl    String?
-  isBonus     Boolean          @default(false)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  experience  Int              @default(0)
-  season      BattlePassSeason @relation(fields: [seasonId], references: [id])
+  id            Int              @id @default(autoincrement())
+  seasonId      Int
+  level         Int
+  name          String
+  description   String?
+  type          String
+  rewardType    String
+  rewardValue   Int?
+  imageUrl      String?
+  isBonus       Boolean          @default(false)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  experience    Int              @default(0)
+  eventRewardId Int?
+  season        BattlePassSeason @relation(fields: [seasonId], references: [id])
 
   @@index([seasonId])
   @@map("BattlePassReward")
@@ -368,8 +375,8 @@ model UserBattlePassReward {
   userId    Int
   seasonId  Int
   rewardId  Int
-  branch    String   @default("GO_VAP")
   claimedAt DateTime @default(now())
+  branch    String   @default("GO_VAP")
 
   @@index([seasonId])
   @@index([userId])
@@ -377,54 +384,54 @@ model UserBattlePassReward {
 }
 
 model BattlePassPremiumPackage {
-  id          Int                      @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   seasonId    Int
   name        String
   basePrice   Int
   description String?
   benefits    String?
   maxQuantity Int?
-  sold        Int                      @default(0)
-  createdAt   DateTime                 @default(now())
-  updatedAt   DateTime                 @updatedAt
-  season      BattlePassSeason         @relation(fields: [seasonId], references: [id])
-  promotions  PromotionSetting[]       @relation("PackagePromotions")
-  orders      BattlePassPremiumOrder[]
+  sold        Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("BattlePassPremiumPackage")
 }
 
 model PromotionSetting {
-  id            Int                       @id @default(autoincrement())
-  name          String
-  type          PromotionType
-  targetId      Int?
-  discountType  DiscountType
-  discountValue Float
-  startDate     DateTime
-  endDate       DateTime
-  maxQuantity   Int?
-  used          Int                       @default(0)
-  isActive      Boolean                   @default(true)
-  rule          Json?
-  createdAt     DateTime                  @default(now())
-  updatedAt     DateTime                  @updatedAt
-  package       BattlePassPremiumPackage? @relation("PackagePromotions", fields: [targetId], references: [id])
-  orders        BattlePassPremiumOrder[]
+  id             Int             @id @default(autoincrement())
+  name           String
+  type           PromotionType
+  targetId       Int?
+  discountType   DiscountType
+  discountValue  Float
+  startDate      DateTime
+  endDate        DateTime
+  maxQuantity    Int?
+  used           Int             @default(0)
+  isActive       Boolean         @default(true)
+  rule           String?         @db.LongText
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  eventId        String?
+  promotionCodes PromotionCode[]
+
+  @@map("PromotionSetting")
 }
 
 model BattlePassPremiumOrder {
-  id          Int                      @id @default(autoincrement())
-  userId      Int
-  packageId   Int
-  promotionId Int?
-  price       Int
-  status      OrderStatus              @default(PENDING)
-  createdAt   DateTime                 @default(now())
-  approvedAt  DateTime?
-  approvedBy  Int?
-  note        String?
-  user        User                     @relation(fields: [userId], references: [id])
-  package     BattlePassPremiumPackage @relation(fields: [packageId], references: [id])
-  promotion   PromotionSetting?        @relation(fields: [promotionId], references: [id])
+  id         Int         @id @default(autoincrement())
+  userId     Int
+  packageId  Int
+  price      Int
+  status     OrderStatus @default(PENDING)
+  createdAt  DateTime    @default(now())
+  approvedAt DateTime?
+  approvedBy Int?
+  note       String?
+  branch     String      @db.VarChar(45)
+
+  @@map("BattlePassPremiumOrder")
 }
 
 model ChatMessage {
@@ -504,7 +511,7 @@ model Report {
   date            DateTime
   shift           Shift
   branch          String
-  fileUrl         Json
+  fileUrl         String         @db.LongText
   note            String?
   counterStaffId  Int
   kitchenStaffId  Int
@@ -528,14 +535,12 @@ model HandoverReport {
   afternoonStaffId         Int?
   eveningStaffId           Int?
   morningStaffId           Int?
-  // Tracking report submission count per shift
-  morningSubmissionCount   Int                @default(0)
   afternoonSubmissionCount Int                @default(0)
   eveningSubmissionCount   Int                @default(0)
-  // Tracking completion status per shift
-  isMorningComplete        Boolean            @default(false)
   isAfternoonComplete      Boolean            @default(false)
   isEveningComplete        Boolean            @default(false)
+  isMorningComplete        Boolean            @default(false)
+  morningSubmissionCount   Int                @default(0)
   materials                HandoverMaterial[]
   morningStaff             Staff?             @relation("MorningStaff", fields: [morningStaffId], references: [id])
   afternoonStaff           Staff?             @relation("AfternoonStaff", fields: [afternoonStaffId], references: [id])
@@ -584,14 +589,13 @@ model Material {
 model Feedback {
   id          Int            @id @default(autoincrement())
   userId      Int?
-  computerId  Int?
   type        FeedbackType
   title       String         @db.VarChar(255)
   description String         @db.Text
-  priority    String         @db.VarChar(20) // high, medium, low
-  category    String?        @db.VarChar(50) // space, food, machines, staff, cleanliness
+  priority    String         @db.VarChar(20)
+  category    String?        @db.VarChar(50)
   rating      Int?           @default(0)
-  image       String?        @db.Text // Base64 encoded image
+  image       String?        @db.Text
   note        String?        @db.Text
   isAnonymous Boolean        @default(false)
   status      FeedbackStatus @default(SUBMITTED)
@@ -600,6 +604,7 @@ model Feedback {
   branch      String         @default("GO_VAP")
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
+  computerId  Int?
   user        User?          @relation(fields: [userId], references: [id])
   computer    Computer?      @relation(fields: [computerId], references: [id])
 
@@ -610,6 +615,231 @@ model Feedback {
   @@index([createdAt])
   @@index([category])
   @@index([priority])
+}
+
+model FnetHistory {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  branch       String
+  oldSubMoney  Float
+  newSubMoney  Float
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  targetId     Int?
+  type         String?
+  moneyType    String?  @default("SUB")
+  oldMainMoney Float?
+  newMainMoney Float?
+
+  @@index([userId])
+  @@index([branch])
+  @@index([targetId])
+  @@index([type])
+  @@index([createdAt])
+  @@index([moneyType])
+}
+
+model PromotionReward {
+  id         Int      @id @default(autoincrement())
+  name       String
+  value      Int
+  branch     String
+  quantity   Int
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  starsValue Int
+
+  @@index([branch])
+  @@index([isActive])
+}
+
+model GameAppointmentTier {
+  id           Int               @id @default(autoincrement())
+  tierName     String            @db.VarChar(100)
+  minMembers   Int
+  minHours     Int
+  isActive     Boolean           @default(true)
+  createdAt    DateTime          @default(now())
+  lockedAmount Int
+  maxMembers   Int?
+  questName    String            @db.VarChar(100)
+  tasks        String            @db.LongText
+  updatedAt    DateTime          @updatedAt
+  appointments GameAppointment[]
+
+  @@index([isActive])
+  @@map("GameAppointmentTier")
+}
+
+model GameAppointment {
+  id                String                  @id @default(cuid())
+  creatorId         Int
+  branch            String                  @db.VarChar(50)
+  title             String                  @db.VarChar(255)
+  description       String?                 @db.Text
+  game              String                  @db.VarChar(100)
+  gameType          String                  @db.VarChar(50)
+  rankLevel         String?                 @db.VarChar(50)
+  startTime         DateTime
+  endTime           DateTime
+  minMembers        Int                     @default(1)
+  maxMembers        Int
+  minCost           Decimal                 @db.Decimal(10, 2)
+  currentMembers    Int                     @default(0)
+  status            String                  @default("active") @db.VarChar(20)
+  totalLockedAmount Decimal                 @default(0.00) @db.Decimal(10, 2)
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  tierId            Int?
+  tier              GameAppointmentTier?    @relation(fields: [tierId], references: [id])
+  members           GameAppointmentMember[]
+  rewards           GameAppointmentReward[]
+
+  @@index([creatorId])
+  @@index([branch])
+  @@index([status])
+  @@index([startTime])
+  @@map("GameAppointment")
+}
+
+model GameAppointmentMember {
+  id             String          @id @default(cuid())
+  appointmentId  String
+  userId         Int
+  branch         String          @db.VarChar(50)
+  lockedAmount   Decimal         @db.Decimal(10, 2)
+  status         String          @default("joined") @db.VarChar(20)
+  joinedAt       DateTime        @default(now())
+  completedAt    DateTime?
+  machineGroupId Int?
+  machineName    String?         @db.VarChar(100)
+  appointment    GameAppointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([appointmentId])
+  @@map("GameAppointmentMember")
+}
+
+model GameAppointmentReward {
+  id            String          @id @default(cuid())
+  appointmentId String
+  userId        Int
+  branch        String          @db.VarChar(50)
+  status        String          @default("pending") @db.VarChar(20)
+  distributedAt DateTime?
+  createdAt     DateTime        @default(now())
+  rewardAmount  Int
+  taskId        String          @db.VarChar(50)
+  taskName      String          @db.VarChar(100)
+  appointment   GameAppointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([appointmentId])
+  @@index([status])
+  @@map("GameAppointmentReward")
+}
+
+model Event {
+  id                      String             @id @default(cuid())
+  name                    String
+  description             String?            @db.Text
+  type                    EventType
+  status                  EventStatus
+  startDate               DateTime
+  endDate                 DateTime
+  registrationStart       DateTime?
+  registrationEnd         DateTime?
+  targetAudience          String?            @db.LongText
+  conditions              String?            @db.LongText
+  rules                   String?            @db.LongText
+  budget                  Int?
+  expectedParticipants    Int?
+  totalParticipants       Int                @default(0)
+  totalCodesGenerated     Int                @default(0)
+  totalCodesUsed          Int                @default(0)
+  totalRewardsDistributed Int                @default(0)
+  createdBy               Int?
+  approvedBy              Int?
+  approvedAt              DateTime?
+  branch                  String             @default("GO_VAP")
+  isActive                Boolean            @default(true)
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+  generateCodesAhead      Boolean            @default(false)
+  participants            EventParticipant[]
+  rewards                 EventReward[]
+  reports                 EventReport[]
+
+  @@index([status])
+  @@index([type])
+  @@index([branch])
+  @@index([startDate])
+  @@index([endDate])
+  @@map("Event")
+}
+
+model EventParticipant {
+  id                Int               @id @default(autoincrement())
+  eventId           String
+  userId            Int
+  branch            String
+  status            ParticipantStatus @default(REGISTERED)
+  registeredAt      DateTime          @default(now())
+  participatedAt    DateTime?
+  completedAt       DateTime?
+  participationData String?           @db.LongText
+  rewardsReceived   String?           @db.LongText
+  totalSpent        Int               @default(0)
+  event             Event             @relation(fields: [eventId], references: [id])
+  user              User?             @relation(fields: [userId], references: [id])
+
+  @@unique([eventId, userId, branch])
+  @@index([eventId])
+  @@index([userId])
+  @@index([status])
+  @@map("EventParticipant")
+}
+
+model EventReward {
+  id           Int        @id @default(autoincrement())
+  eventId      String
+  name         String
+  description  String?    @db.Text
+  rewardType   RewardType
+  rewardConfig String     @db.LongText
+  conditions   String?    @db.LongText
+  eligibility  String?    @db.LongText
+  maxQuantity  Int?
+  used         Int        @default(0)
+  maxPerUser   Int?
+  maxPerDay    Int?
+  validFrom    DateTime?
+  validTo      DateTime?
+  priority     Int        @default(1)
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  event        Event      @relation(fields: [eventId], references: [id])
+
+  @@index([eventId])
+  @@index([rewardType])
+  @@index([isActive])
+  @@map("EventReward")
+}
+
+model EventReport {
+  id         Int      @id @default(autoincrement())
+  eventId    String
+  reportType String
+  reportDate DateTime
+  data       String   @db.LongText
+  createdAt  DateTime @default(now())
+  event      Event    @relation(fields: [eventId], references: [id])
+
+  @@index([eventId])
+  @@index([reportDate])
+  @@map("EventReport")
 }
 
 enum BirthdayTransactionType {
@@ -703,24 +933,6 @@ enum FeedbackType {
   GENERAL
 }
 
-model FnetHistory {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  branch    String
-  oldMoney  Float
-  newMoney  Float
-  targetId  Int? // ID tham chiếu đến table reward (UserRewardMap.id)
-  type      String? // Enum: REWARD, BATTLE_PASS, etc.
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-  @@index([branch])
-  @@index([targetId])
-  @@index([type])
-  @@index([createdAt])
-}
-
 enum FeedbackStatus {
   SUBMITTED
   RECEIVED
@@ -728,103 +940,49 @@ enum FeedbackStatus {
   COMPLETED
 }
 
-model PromotionReward {
-  id         Int      @id @default(autoincrement())
-  name       String
-  value      Int
-  starsValue Int
-  branch     String
-  quantity   Int
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@index([branch])
-  @@index([isActive])
+enum EventType {
+  NEW_USER_WELCOME
+  BIRTHDAY_EVENT
+  HOLIDAY_EVENT
+  SEASONAL_EVENT
+  BATTLE_PASS_EVENT
+  LUCKY_WHEEL_EVENT
+  GAME_TOURNAMENT
+  REFERRAL_PROGRAM
+  LOYALTY_PROGRAM
+  PROMOTIONAL_CAMPAIGN
 }
 
-model GameAppointmentTier {
-  id           Int               @id @default(autoincrement())
-  tierName     String            @db.VarChar(100)
-  questName    String            @db.VarChar(100) // "Tam Hổ", "Ngũ Long"
-  minMembers   Int
-  maxMembers   Int?
-  minHours     Int
-  lockedAmount Int // Số tiền khóa từ mỗi thành viên (30.000 VNĐ)
-  tasks        Json // Array of tasks với challenge và reward
-  isActive     Boolean           @default(true)
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
-  appointments GameAppointment[]
-
-  @@index([isActive])
-  @@map("GameAppointmentTier")
+enum EventStatus {
+  DRAFT
+  PENDING_APPROVAL
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
 }
 
-model GameAppointment {
-  id                String                  @id @default(cuid())
-  creatorId         Int
-  branch            String                  @db.VarChar(50)
-  title             String                  @db.VarChar(255)
-  description       String?                 @db.Text
-  game              String                  @db.VarChar(100)
-  gameType          String                  @db.VarChar(50) // casual, ranked, competitive
-  rankLevel         String?                 @db.VarChar(50)
-  startTime         DateTime
-  endTime           DateTime
-  minMembers        Int                     @default(1)
-  maxMembers        Int
-  minCost           Decimal                 @db.Decimal(10, 2)
-  currentMembers    Int                     @default(0)
-  status            String                  @default("active") @db.VarChar(20) // active, completed, cancelled, expired
-  tierId            Int?
-  totalLockedAmount Decimal                 @default(0) @db.Decimal(10, 2)
-  createdAt         DateTime                @default(now())
-  updatedAt         DateTime                @updatedAt
-  tier              GameAppointmentTier?    @relation(fields: [tierId], references: [id])
-  members           GameAppointmentMember[]
-  rewards           GameAppointmentReward[]
-
-  @@index([creatorId])
-  @@index([branch])
-  @@index([status])
-  @@index([startTime])
-  @@map("GameAppointment")
+enum ParticipantStatus {
+  REGISTERED
+  PARTICIPATING
+  COMPLETED
+  DISQUALIFIED
+  WITHDRAWN
 }
 
-model GameAppointmentMember {
-  id            String          @id @default(cuid())
-  appointmentId String
-  userId        Int
-  branch        String          @db.VarChar(50)
-  lockedAmount  Decimal         @db.Decimal(10, 2)
-  status        String          @default("joined") @db.VarChar(20) // joined, completed, left, no_show
-  machineName   String?         @db.VarChar(100) // Tên máy đã chọn
-  machineGroupId Int?           // ID nhóm máy đã chọn
-  joinedAt      DateTime        @default(now())
-  completedAt   DateTime?
-  appointment   GameAppointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([appointmentId])
-  @@map("GameAppointmentMember")
+enum RewardType {
+  PERCENTAGE_DISCOUNT
+  FIXED_DISCOUNT
+  FREE_ITEM
+  BONUS_ITEM
+  CASH_BACK
+  MULTIPLIER
+  CONDITIONAL_REWARD
+  MAIN_ACCOUNT_TOPUP
+  TOPUP_BONUS_PERCENTAGE
 }
 
-model GameAppointmentReward {
-  id            String          @id @default(cuid())
-  appointmentId String
-  userId        Int
-  branch        String          @db.VarChar(50)
-  taskId        String          @db.VarChar(50) // "quench_thirst", "snack", "recharge_energy"
-  taskName      String          @db.VarChar(100) // "Giải Khát", "Ăn Vặt", "Nạp Năng Lượng"
-  rewardAmount  Int // Số tiền thưởng (3.000, 5.000, 7.000 VNĐ)
-  status        String          @default("pending") @db.VarChar(20) // pending, distributed, expired
-  distributedAt DateTime?
-  createdAt     DateTime        @default(now())
-  appointment   GameAppointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([appointmentId])
-  @@index([status])
-  @@map("GameAppointmentReward")
+enum UserRewardMap_type {
+  STARS
+  EVENT
 }

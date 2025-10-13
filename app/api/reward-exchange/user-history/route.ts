@@ -51,10 +51,18 @@ export async function GET(request: Request) {
           pr.id as promotionCode_id,
           pr.name as promotionCode_name,
           pr.value as promotionCode_value,
-          pr.starsValue as promotionCode_starsValue
+          pr.starsValue as promotionCode_starsValue,
+          er.id as eventReward_id,
+          er.name as eventReward_name,
+          er.rewardConfig as eventReward_config,
+          pc.code as eventPromotionCode_code,
+          pc.name as eventPromotionCode_name,
+          pc.rewardType as eventPromotionCode_type
         FROM UserRewardMap urm
-        LEFT JOIN Reward r ON urm.rewardId = r.id
-        LEFT JOIN PromotionReward pr ON urm.promotionCodeId = pr.id
+        LEFT JOIN Reward r ON urm.rewardId = r.id AND urm.type = 'STARS'
+        LEFT JOIN PromotionReward pr ON urm.promotionCodeId = pr.id AND urm.type = 'STARS'
+        LEFT JOIN EventReward er ON urm.rewardId = er.id AND urm.type = 'EVENT'
+        LEFT JOIN PromotionCode pc ON urm.promotionCodeId = pc.id AND urm.type = 'EVENT'
         WHERE urm.userId = ${user[0].userId}
           AND urm.branch = ${branch}
           AND urm.createdAt >= ${FIX_DATA_DATE}

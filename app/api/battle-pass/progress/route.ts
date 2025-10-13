@@ -45,35 +45,89 @@ export async function GET(request: Request) {
     }
 
     // Tìm hoặc tạo user battle pass progress
-    const existingProgress = await db.$queryRaw<any[]>`
+    // Check exist trước để tránh duplicate
+    let userProgressResult = await db.$queryRaw<any[]>`
       SELECT * FROM UserBattlePass 
       WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id} AND branch = ${branch}
       LIMIT 1
     `;
 
-    let userProgress = existingProgress[0];
+    let userProgress = userProgressResult[0];
 
-    // Nếu chưa có progress, tạo mới với level được tính toán
+    // Chỉ tạo mới nếu chưa có
     if (!userProgress) {
-      // Tính toán level dựa trên experience (mặc định 0)
       const experience = 0;
       const calculatedLevel = calculateLevel(
         experience,
         currentSeason.maxLevel,
       );
+      const now = getCurrentTimeVNDB();
 
-      await db.$executeRaw`
-        INSERT INTO UserBattlePass (userId, seasonId, level, experience, isPremium, totalSpent, branch, createdAt, updatedAt)
-        VALUES (${decoded.userId}, ${currentSeason.id}, ${calculatedLevel}, ${experience}, false, 0, ${branch}, ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
-      `;
+      // Sử dụng transaction để đảm bảo atomic
+      try {
+        await db.$executeRawUnsafe(
+          `
+          INSERT INTO UserBattlePass (userId, seasonId, level, experience, isPremium, totalSpent, branch, createdAt, updatedAt)
+          VALUES (?, ?, ?, ?, false, 0, ?, ?, ?)
+        `,
+          decoded.userId,
+          currentSeason.id,
+          calculatedLevel,
+          experience,
+          branch,
+          now,
+          now,
+        );
 
-      const newProgress = await db.$queryRaw<any[]>`
-        SELECT * FROM UserBattlePass 
-        WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id} AND branch = ${branch}
-        LIMIT 1
-      `;
-      userProgress = newProgress[0];
+        // Lấy lại sau khi insert
+        userProgressResult = await db.$queryRaw<any[]>`
+          SELECT * FROM UserBattlePass 
+          WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id} AND branch = ${branch}
+          LIMIT 1
+        `;
+        userProgress = userProgressResult[0];
+      } catch (error: any) {
+        // Nếu bị duplicate key error (race condition), lấy lại record
+        if (error.code === "ER_DUP_ENTRY" || error.code === "23000") {
+          userProgressResult = await db.$queryRaw<any[]>`
+            SELECT * FROM UserBattlePass 
+            WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id} AND branch = ${branch}
+            LIMIT 1
+          `;
+          userProgress = userProgressResult[0];
+        } else {
+          throw error;
+        }
+      }
     }
+
+    if (!userProgress) {
+      return NextResponse.json(
+        { error: "Failed to create or retrieve user progress" },
+        { status: 500 },
+      );
+    }
+
+    // Check if user has pending premium order
+    const pendingOrderResult = await db.$queryRaw<any[]>`
+      SELECT o.id, o.createdAt, o.price
+      FROM BattlePassPremiumOrder o
+      INNER JOIN BattlePassPremiumPackage p ON o.packageId = p.id
+      WHERE o.userId = ${decoded.userId}
+        AND o.branch = ${branch}
+        AND p.seasonId = ${currentSeason.id}
+        AND o.status = 'PENDING'
+      LIMIT 1
+    `;
+
+    const hasPendingOrder = pendingOrderResult.length > 0;
+    const pendingOrder = hasPendingOrder
+      ? {
+          id: Number(pendingOrderResult[0].id),
+          createdAt: pendingOrderResult[0].createdAt,
+          price: Number(pendingOrderResult[0].price),
+        }
+      : null;
 
     // Lấy danh sách rewards đã claim
     const claimedRewards = await db.$queryRaw<any[]>`
@@ -100,6 +154,8 @@ export async function GET(request: Request) {
     return NextResponse.json({
       seasonId: currentSeason.id,
       isPremium: userProgress.isPremium,
+      hasPendingOrder,
+      pendingOrder,
       level: userProgress.level,
       experience: userProgress.experience,
       totalSpent: userProgress.totalSpent,

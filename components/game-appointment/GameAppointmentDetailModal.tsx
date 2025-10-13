@@ -277,10 +277,18 @@ export function GameAppointmentDetailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Chi tiết hẹn chơi</span>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="flex items-center justify-between text-lg">
+            <div className="flex items-center gap-3">
+              <span>{appointment?.title || "Chi tiết hẹn chơi"}</span>
+              {appointment && (
+                <div className="flex gap-1.5">
+                  {getStatusBadge(appointment.status)}
+                  {getTierBadge(appointment.tier)}
+                </div>
+              )}
+            </div>
             <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="h-4 w-4" />
             </Button>
@@ -299,211 +307,129 @@ export function GameAppointmentDetailModal({
             </AlertDescription>
           </Alert>
         ) : (
-          <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold">{appointment.title}</h1>
-                <p className="text-muted-foreground">Chi tiết hẹn chơi game</p>
-              </div>
-              <div className="flex gap-2">
-                {getStatusBadge(appointment.status)}
-                {getTierBadge(appointment.tier)}
-              </div>
-            </div>
+          <div className="overflow-y-auto flex-1 -mr-2 pr-2">
+            <div className="space-y-3">
+              {/* Success/Error Messages */}
+              {success && (
+                <Alert className="border-green-200 bg-green-50 py-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-green-800 text-sm">
+                    {success}
+                  </AlertDescription>
+                </Alert>
+              )}
 
-            {/* Success/Error Messages */}
-            {success && (
-              <Alert className="border-green-200 bg-green-50">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-800">
-                  {success}
-                </AlertDescription>
-              </Alert>
-            )}
+              {error && (
+                <Alert variant="destructive" className="py-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="text-sm">
+                    {error}
+                  </AlertDescription>
+                </Alert>
+              )}
 
-            {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Main Information */}
-              <div className="lg:col-span-2 space-y-6">
-                {/* Basic Info */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Gamepad2 className="h-5 w-5" />
-                      Thông tin cơ bản
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Game
-                        </p>
-                        <p className="text-lg">{appointment.game}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Thể loại
-                        </p>
-                        <p className="text-lg">
-                          {appointment.gameType === "CASUAL" &&
-                            "Casual - Chơi vui"}
-                          {appointment.gameType === "RANKED" &&
-                            "Ranked - Cày rank"}
-                          {appointment.gameType === "COMPETITIVE" &&
-                            "Competitive - Thi đấu"}
-                        </p>
-                      </div>
-                      {appointment.rankLevel && (
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">
-                            Mức rank
-                          </p>
-                          <p className="text-lg flex items-center gap-1">
-                            <Crown className="h-4 w-4" />
-                            {appointment.rankLevel}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    {appointment.description && (
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Mô tả
-                        </p>
-                        <p className="text-sm">{appointment.description}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Time Information */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Calendar className="h-5 w-5" />
-                      Thời gian
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Bắt đầu
-                        </p>
-                        <p className="text-lg">
-                          {formatDateTime(appointment.startTime)}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Kết thúc
-                        </p>
-                        <p className="text-lg">
-                          {formatDateTime(appointment.endTime)}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Thời lượng
-                        </p>
-                        <p className="text-lg flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          {formatDuration(
-                            appointment.startTime,
-                            appointment.endTime,
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Members */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Users className="h-5 w-5" />
-                      Thành viên ({appointment.currentMembers}/
-                      {appointment.maxMembers})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {appointment.members.map((member) => (
-                        <div
-                          key={member.id}
-                          className="flex items-center justify-between p-2 border rounded"
-                        >
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                              <Users className="h-4 w-4" />
-                            </div>
-                            <div>
-                              <p className="font-medium">
-                                User #{member.userId}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                Tham gia:{" "}
-                                {new Date(member.joinedAt).toLocaleString(
-                                  "vi-VN",
-                                )}
-                              </p>
-                            </div>
-                          </div>
-                          <Badge
-                            variant={
-                              member.status === "JOINED"
-                                ? "default"
-                                : "secondary"
-                            }
-                          >
-                            {member.status === "JOINED"
-                              ? "Đã tham gia"
-                              : member.status}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Sidebar */}
-              <div className="space-y-6">
-                {/* Promotion */}
-                {appointment.promotion && (
-                  <Card className="border-green-200 bg-green-50">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-green-800">
-                        <Gift className="h-5 w-5" />
-                        Phần thưởng
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+                {/* Left Column */}
+                <div className="lg:col-span-8 space-y-3">
+                  {/* Basic Info */}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="flex items-center gap-2 text-sm">
+                        <Gamepad2 className="h-4 w-4" />
+                        Thông tin cơ bản
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
+                    <CardContent className="space-y-2 pb-3">
+                      <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-sm">
                         <div>
-                          <p className="font-semibold text-green-800">
-                            {appointment.promotion.promotion}
+                          <p className="text-xs text-muted-foreground">Game</p>
+                          <p className="font-medium">{appointment.game}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            Thể loại
                           </p>
-                          <p className="text-sm text-green-700">
-                            {appointment.promotion.description}
+                          <p className="font-medium">
+                            {appointment.gameType === "CASUAL" &&
+                              "Casual - Chơi vui"}
+                            {appointment.gameType === "RANKED" &&
+                              "Ranked - Cày rank"}
+                            {appointment.gameType === "COMPETITIVE" &&
+                              "Competitive - Thi đấu"}
                           </p>
                         </div>
-                        <div className="p-3 bg-green-100 rounded-lg">
-                          <p className="text-sm font-medium text-green-800">
-                            Lợi nhuận tối thiểu
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Time & Cost - Combined */}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="flex items-center gap-2 text-sm">
+                        <Calendar className="h-4 w-4" />
+                        Thời gian - Chi phí
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 pb-3">
+                      <div className="grid grid-cols-3 gap-x-3 gap-y-1.5 text-sm">
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            Bắt đầu
                           </p>
-                          <p className="text-lg font-bold text-green-900">
-                            {appointment.promotion.minNetProfit?.toLocaleString() ||
+                          <p className="text-xs font-medium">
+                            {new Date(appointment.startTime).toLocaleString(
+                              "vi-VN",
+                              {
+                                day: "2-digit",
+                                month: "2-digit",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
+                            )}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            Kết thúc
+                          </p>
+                          <p className="text-xs font-medium">
+                            {new Date(appointment.endTime).toLocaleString(
+                              "vi-VN",
+                              {
+                                day: "2-digit",
+                                month: "2-digit",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
+                            )}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            Thời lượng
+                          </p>
+                          <p className="text-xs font-medium flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {formatDuration(
+                              appointment.startTime,
+                              appointment.endTime,
+                            )}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">
+                            Chi phí tối thiểu
+                          </p>
+                          <p className="text-xs font-bold">
+                            {appointment.minCost?.toLocaleString() || "0"} VNĐ
+                          </p>
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-xs text-muted-foreground">
+                            Tổng số tiền lock
+                          </p>
+                          <p className="text-xs font-bold">
+                            {appointment.totalLockedAmount?.toLocaleString() ||
                               "0"}{" "}
                             VNĐ
                           </p>
@@ -511,97 +437,138 @@ export function GameAppointmentDetailModal({
                       </div>
                     </CardContent>
                   </Card>
-                )}
 
-                {/* Cost Information */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <DollarSign className="h-5 w-5" />
-                      Chi phí
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">
-                        Chi phí tối thiểu
-                      </p>
-                      <p className="text-lg font-bold">
-                        {appointment.minCost?.toLocaleString() || "0"} VNĐ
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">
-                        Tổng số tiền lock
-                      </p>
-                      <p className="text-lg font-bold">
-                        {appointment.totalLockedAmount?.toLocaleString() || "0"}{" "}
-                        VNĐ
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+                  {/* Promotion */}
+                  {appointment.promotion && (
+                    <Card className="border-green-200 bg-green-50">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="flex items-center gap-2 text-green-800 text-sm">
+                          <Gift className="h-4 w-4" />
+                          Phần thưởng
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pb-3">
+                        <div className="space-y-2">
+                          <p className="text-xs font-medium text-green-800">
+                            {appointment.promotion.promotion}
+                          </p>
+                          <div className="p-2 bg-green-100 rounded">
+                            <p className="text-xs text-green-700">
+                              Lợi nhuận tối thiểu
+                            </p>
+                            <p className="text-sm font-bold text-green-900">
+                              {appointment.promotion.minNetProfit?.toLocaleString() ||
+                                "0"}{" "}
+                              VNĐ
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
 
-                {/* Actions */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Hành động</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {appointment.status === "ACTIVE" && (
-                      <>
-                        {appointment.currentMembers < appointment.maxMembers ? (
-                          <Button
-                            onClick={handleJoin}
-                            disabled={isJoining}
-                            className="w-full"
+                {/* Right Column */}
+                <div className="lg:col-span-4 space-y-3">
+                  {/* Members */}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="flex items-center gap-2 text-sm">
+                        <Users className="h-4 w-4" />
+                        Thành viên ({appointment.currentMembers}/
+                        {appointment.maxMembers})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pb-3">
+                      <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                        {appointment.members.map((member) => (
+                          <div
+                            key={member.id}
+                            className="flex items-center justify-between p-1.5 border rounded text-sm"
                           >
-                            {isJoining ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+                                <Users className="h-3 w-3" />
+                              </div>
+                              <p className="font-medium text-xs">
+                                User #{member.userId}
+                              </p>
+                            </div>
+                            <Badge
+                              variant={
+                                member.status === "JOINED"
+                                  ? "default"
+                                  : "secondary"
+                              }
+                              className="text-xs py-0 h-5"
+                            >
+                              {member.status === "JOINED"
+                                ? "Tham gia"
+                                : member.status}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Actions */}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">Hành động</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 pb-3">
+                      {appointment.status === "ACTIVE" && (
+                        <>
+                          {appointment.currentMembers <
+                          appointment.maxMembers ? (
+                            <Button
+                              onClick={handleJoin}
+                              disabled={isJoining}
+                              className="w-full h-8 text-xs"
+                            >
+                              {isJoining ? (
+                                <>
+                                  <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
+                                  Đang tham gia...
+                                </>
+                              ) : (
+                                <>
+                                  <UserPlus className="mr-1.5 h-3 w-3" />
+                                  Tham gia
+                                </>
+                              )}
+                            </Button>
+                          ) : (
+                            <Button disabled className="w-full h-8 text-xs">
+                              <Users className="mr-1.5 h-3 w-3" />
+                              Đã đủ thành viên
+                            </Button>
+                          )}
+
+                          <Button
+                            variant="outline"
+                            onClick={handleLeave}
+                            disabled={isLeaving}
+                            className="w-full h-8 text-xs"
+                          >
+                            {isLeaving ? (
                               <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Đang tham gia...
+                                <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
+                                Đang rời...
                               </>
                             ) : (
                               <>
-                                <UserPlus className="mr-2 h-4 w-4" />
-                                Tham gia
+                                <UserMinus className="mr-1.5 h-3 w-3" />
+                                Rời hẹn chơi
                               </>
                             )}
                           </Button>
-                        ) : (
-                          <Button disabled className="w-full">
-                            <Users className="mr-2 h-4 w-4" />
-                            Đã đủ thành viên
-                          </Button>
-                        )}
-
-                        <Button
-                          variant="outline"
-                          onClick={handleLeave}
-                          disabled={isLeaving}
-                          className="w-full"
-                        >
-                          {isLeaving ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Đang rời...
-                            </>
-                          ) : (
-                            <>
-                              <UserMinus className="mr-2 h-4 w-4" />
-                              Rời hẹn chơi
-                            </>
-                          )}
-                        </Button>
-                      </>
-                    )}
-
-                    <Button variant="outline" className="w-full">
-                      <MapPin className="mr-2 h-4 w-4" />
-                      Chia sẻ
-                    </Button>
-                  </CardContent>
-                </Card>
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
             </div>
           </div>

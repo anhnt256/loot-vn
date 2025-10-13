@@ -11,16 +11,24 @@ interface RewardHistoryItem {
   updatedAt: string;
   status: "INITIAL" | "APPROVE" | "REJECT";
   note?: string;
-  // Reward fields (from API)
+  type: "STARS" | "EVENT";
+  // Reward fields (from API - STARS type)
   reward_id?: number;
   reward_name?: string;
   reward_value?: number;
   reward_stars?: number;
-  // PromotionCode fields (from API)
+  // PromotionCode fields (from API - STARS type)
   promotionCode_id?: number;
   promotionCode_code?: string;
   promotionCode_name?: string;
   promotionCode_value?: number;
+  // Event Reward fields (from API - EVENT type)
+  eventReward_id?: number;
+  eventReward_name?: string;
+  eventReward_config?: string;
+  eventPromotionCode_code?: string;
+  eventPromotionCode_name?: string;
+  eventPromotionCode_type?: string;
 }
 
 interface RewardHistoryResponse {
@@ -146,6 +154,48 @@ const RewardHistory: React.FC<RewardHistoryProps> = ({ userId }) => {
     return dayjs.utc(dateString).format("DD/MM/YYYY HH:mm");
   };
 
+  // Helper để lấy thông tin reward dựa trên type
+  const getRewardInfo = (item: RewardHistoryItem) => {
+    if (item.type === "EVENT") {
+      return {
+        name:
+          item.eventPromotionCode_name ||
+          item.eventReward_name ||
+          "Phần thưởng Event",
+        icon: getEventRewardIcon(item.eventPromotionCode_type),
+        badgeText: "🎉 Event",
+        badgeColor: "bg-gradient-to-r from-purple-500 to-pink-500",
+        value: null, // Event không hiển thị stars
+      };
+    } else {
+      return {
+        name: item.reward_name || item.promotionCode_name || "Không xác định",
+        icon: "⭐",
+        badgeText:
+          item.reward_stars?.toLocaleString() ||
+          item.promotionCode_value?.toLocaleString(),
+        badgeColor: getRewardIconStyle(item.reward_stars || 0),
+        value: item.reward_stars || item.promotionCode_value,
+      };
+    }
+  };
+
+  // Helper để lấy icon cho event reward type
+  const getEventRewardIcon = (rewardType?: string) => {
+    switch (rewardType) {
+      case "FREE_HOURS":
+        return "⏰";
+      case "FREE_DRINK":
+        return "🥤";
+      case "FREE_SNACK":
+        return "🍿";
+      case "FREE_FOOD":
+        return "🍕";
+      default:
+        return "🎁";
+    }
+  };
+
   // Hàm cập nhật thủ công
   const handleManualRefresh = () => {
     setIsManualRefetching(true);
@@ -222,66 +272,76 @@ const RewardHistory: React.FC<RewardHistoryProps> = ({ userId }) => {
       <div className="flex-1 overflow-y-auto p-3">
         {historyData.rewards.length > 0 ? (
           <div className="space-y-3">
-            {historyData.rewards.map((item, index) => (
-              <div
-                key={item.id}
-                className="bg-white border border-gray-200 rounded-xl p-3 hover:shadow-lg transition-all duration-200 hover:border-gray-300 animate-fade-in"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <div
-                        className={`w-8 h-8 ${getRewardIconStyle(item.reward_stars || 0)} rounded-lg flex items-center justify-center`}
-                      >
-                        <span className="text-white text-sm">⭐</span>
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900 text-sm truncate">
-                          {item.reward_name ||
-                            item.promotionCode_name ||
-                            "Không xác định"}
-                        </h3>
-                        <p className="text-xs text-gray-600 font-medium">
-                          {item.reward_stars?.toLocaleString() ||
-                            item.promotionCode_value?.toLocaleString()}{" "}
-                          <span className="text-white text-sm">⭐</span>
-                        </p>
+            {historyData.rewards.map((item, index) => {
+              const rewardInfo = getRewardInfo(item);
+              return (
+                <div
+                  key={item.id}
+                  className="bg-white border border-gray-200 rounded-xl p-3 hover:shadow-lg transition-all duration-200 hover:border-gray-300 animate-fade-in"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <div
+                          className={`w-8 h-8 ${rewardInfo.badgeColor} rounded-lg flex items-center justify-center`}
+                        >
+                          <span className="text-white text-sm">
+                            {rewardInfo.icon}
+                          </span>
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900 text-sm truncate">
+                            {rewardInfo.name}
+                          </h3>
+                          <div className="flex items-center gap-2">
+                            {item.type === "EVENT" ? (
+                              <span className="text-xs px-2 py-0.5 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 rounded-full font-medium">
+                                {rewardInfo.badgeText}
+                              </span>
+                            ) : (
+                              <p className="text-xs text-gray-600 font-medium">
+                                {rewardInfo.badgeText}{" "}
+                                <span className="text-yellow-500">⭐</span>
+                              </p>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  {getStatusBadge(item.status)}
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2 text-xs text-gray-600">
-                    <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
-                    <span className="font-medium">Yêu cầu:</span>
-                    <span>{formatDate(item.createdAt)}</span>
+                    {getStatusBadge(item.status)}
                   </div>
 
-                  {item.status !== "INITIAL" && (
+                  <div className="space-y-2">
                     <div className="flex items-center space-x-2 text-xs text-gray-600">
-                      <div className="w-1 h-1 bg-green-400 rounded-full"></div>
-                      <span className="font-medium">Xử lý:</span>
-                      <span>{formatDate(item.updatedAt)}</span>
+                      <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
+                      <span className="font-medium">Yêu cầu:</span>
+                      <span>{formatDate(item.createdAt)}</span>
+                    </div>
+
+                    {item.status !== "INITIAL" && (
+                      <div className="flex items-center space-x-2 text-xs text-gray-600">
+                        <div className="w-1 h-1 bg-green-400 rounded-full"></div>
+                        <span className="font-medium">Xử lý:</span>
+                        <span>{formatDate(item.updatedAt)}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {item.note && (
+                    <div className="mt-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+                      <div className="flex items-start space-x-2">
+                        <span className="text-blue-500 text-sm">💬</span>
+                        <div className="text-xs text-gray-700">
+                          <span className="font-medium">Ghi chú:</span>{" "}
+                          {item.note}
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
-
-                {item.note && (
-                  <div className="mt-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
-                    <div className="flex items-start space-x-2">
-                      <span className="text-blue-500 text-sm">💬</span>
-                      <div className="text-xs text-gray-700">
-                        <span className="font-medium">Ghi chú:</span>{" "}
-                        {item.note}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
+              );
+            })}
 
             {/* Pagination */}
             {historyData.pagination.totalPages > 1 && (

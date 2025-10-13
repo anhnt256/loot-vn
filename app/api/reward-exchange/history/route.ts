@@ -54,9 +54,15 @@ export async function GET(request: Request) {
         urm.createdAt,
         urm.updatedAt,
         urm.note,
+        urm.type,
         pr.name as rewardName,
         pr.value as rewardValue,
         pr.starsValue as rewardStars,
+        pc.code as eventPromotionCode,
+        pc.name as eventPromotionCodeName,
+        pc.rewardType as eventPromotionCodeType,
+        pc.rewardValue as eventPromotionCodeValue,
+        er.name as eventRewardName,
         u.userId as userUserId,
         u.userName,
         u.stars as userStars,
@@ -66,7 +72,9 @@ export async function GET(request: Request) {
         ush.newStars as userStarHistory_newStars,
         ush.createdAt as userStarHistory_createdAt
       FROM UserRewardMap urm
-      LEFT JOIN PromotionReward pr ON urm.promotionCodeId = pr.id
+      LEFT JOIN PromotionReward pr ON urm.promotionCodeId = pr.id AND urm.type = 'STARS'
+      LEFT JOIN PromotionCode pc ON urm.promotionCodeId = pc.id AND urm.type = 'EVENT'
+      LEFT JOIN EventReward er ON urm.rewardId = er.id AND urm.type = 'EVENT'
       LEFT JOIN User u ON urm.userId = u.userId AND u.branch = '${branch}'
       LEFT JOIN (
         SELECT ush1.*
@@ -104,8 +112,10 @@ export async function GET(request: Request) {
       fnetHistoryRecords = await db.$queryRawUnsafe<any[]>(`
         SELECT 
           fh.userId,
-          fh.oldMoney,
-          fh.newMoney,
+          fh.oldMainMoney,
+          fh.newMainMoney,
+          fh.oldSubMoney,
+          fh.newSubMoney,
           fh.targetId,
           fh.type,
           fh.createdAt
@@ -119,40 +129,96 @@ export async function GET(request: Request) {
     // Create a map for quick lookup - map by targetId (UserRewardMap.id)
     const fnetMoneyMap = new Map();
     fnetHistoryRecords.forEach((record) => {
-      fnetMoneyMap.set(record.targetId, {
-        oldMoney: record.oldMoney,
-        newMoney: record.newMoney,
+      const oldMain = Number(record.oldMainMoney) || 0;
+      const oldSub = Number(record.oldSubMoney) || 0;
+      const newMain = Number(record.newMainMoney) || 0;
+      const newSub = Number(record.newSubMoney) || 0;
+      const targetId = Number(record.targetId); // Convert to number
+
+      console.log(
+        `[HISTORY] FnetHistory for targetId ${targetId}: oldMain=${oldMain}, newMain=${newMain}, oldSub=${oldSub}, newSub=${newSub}`,
+      );
+
+      fnetMoneyMap.set(targetId, {
+        oldMain,
+        oldSub,
+        oldTotal: oldMain + oldSub,
+        newMain,
+        newSub,
+        newTotal: newMain + newSub,
       });
     });
 
+    console.log(
+      `[HISTORY] Total FnetHistory records: ${fnetHistoryRecords.length}`,
+    );
+
     // Transform data to match expected format
-    const historiesWithUser = allUserRewardMaps.map((userRewardMap) => ({
-      id: userRewardMap.id,
-      promotionCodeId: userRewardMap.promotionCodeId,
-      duration: userRewardMap.duration,
-      isUsed: userRewardMap.isUsed,
-      status: userRewardMap.status,
-      branch: userRewardMap.branch,
-      createdAt: userRewardMap.createdAt,
-      updatedAt: userRewardMap.updatedAt,
-      note: userRewardMap.note,
-      reward: {
-        id: userRewardMap.rewardId,
-        name: userRewardMap.rewardName,
-        value: userRewardMap.rewardValue,
-        stars: userRewardMap.rewardStars,
-      },
-      user: {
-        userId: userRewardMap.userUserId,
-        userName: userRewardMap.userName,
-        stars:
-          userRewardMap.userStarHistory_newStars ||
-          userRewardMap.userStars ||
-          0,
-        branch: userRewardMap.userBranch,
-        fnetMoney: fnetMoneyMap.get(userRewardMap.id)?.oldMoney || 0,
-      },
-    }));
+    const historiesWithUser = allUserRewardMaps.map((userRewardMap) => {
+      const rewardMapId = Number(userRewardMap.id); // Convert to number
+      const walletInfo = fnetMoneyMap.get(rewardMapId) || {
+        oldMain: 0,
+        oldSub: 0,
+        oldTotal: 0,
+        newMain: 0,
+        newSub: 0,
+        newTotal: 0,
+      };
+
+      const baseData = {
+        id: userRewardMap.id,
+        promotionCodeId: userRewardMap.promotionCodeId,
+        duration: userRewardMap.duration,
+        isUsed: userRewardMap.isUsed,
+        status: userRewardMap.status,
+        branch: userRewardMap.branch,
+        createdAt: userRewardMap.createdAt,
+        updatedAt: userRewardMap.updatedAt,
+        note: userRewardMap.note,
+        type: userRewardMap.type,
+        user: {
+          userId: userRewardMap.userUserId,
+          userName: userRewardMap.userName,
+          stars:
+            userRewardMap.userStarHistory_newStars ||
+            userRewardMap.userStars ||
+            0,
+          branch: userRewardMap.userBranch,
+          fnetMoney: walletInfo.oldTotal, // Backward compatibility
+          fnetMain: walletInfo.oldMain,
+          fnetSub: walletInfo.oldSub,
+          fnetMainAfter: walletInfo.newMain,
+          fnetSubAfter: walletInfo.newSub,
+        },
+      };
+
+      // Thêm thông tin reward dựa trên type
+      if (userRewardMap.type === "EVENT") {
+        return {
+          ...baseData,
+          reward: {
+            id: userRewardMap.rewardId,
+            name:
+              userRewardMap.eventPromotionCodeName ||
+              userRewardMap.eventRewardName ||
+              "Phần thưởng Event",
+            type: userRewardMap.eventPromotionCodeType,
+            code: userRewardMap.eventPromotionCode,
+            value: userRewardMap.eventPromotionCodeValue || null,
+          },
+        };
+      } else {
+        return {
+          ...baseData,
+          reward: {
+            id: userRewardMap.rewardId,
+            name: userRewardMap.rewardName,
+            value: userRewardMap.rewardValue,
+            stars: userRewardMap.rewardStars,
+          },
+        };
+      }
+    });
 
     console.log("histories", historiesWithUser);
     console.log("total", total);

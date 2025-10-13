@@ -345,7 +345,7 @@ export function GameAppointmentAdmin({
                     Chi phí
                   </p>
                   <p className="text-lg">
-                    {appointment.minCost.toLocaleString()} VNĐ
+                    {appointment.minCost?.toLocaleString() || "0"} VNĐ
                   </p>
                 </div>
                 <div>
@@ -353,7 +353,7 @@ export function GameAppointmentAdmin({
                     Tổng lock
                   </p>
                   <p className="text-lg">
-                    {appointment.totalLockedAmount.toLocaleString()} VNĐ
+                    {appointment.totalLockedAmount?.toLocaleString() || "0"} VNĐ
                   </p>
                 </div>
               </div>
@@ -376,8 +376,9 @@ export function GameAppointmentAdmin({
                       Cam kết bắt buộc
                     </p>
                     <p className="text-lg font-bold text-blue-900">
-                      Khóa {appointment.tier.lockedAmount.toLocaleString()} VNĐ
-                      từ mỗi thành viên
+                      Khóa{" "}
+                      {appointment.tier?.lockedAmount?.toLocaleString() || "0"}{" "}
+                      VNĐ từ mỗi thành viên
                     </p>
                     <p className="text-sm text-blue-700">
                       Chơi tối thiểu {appointment.tier.minHours} giờ để được
@@ -400,7 +401,7 @@ export function GameAppointmentAdmin({
                               {task.taskName}
                             </span>
                             <Badge variant="outline" className="text-blue-600">
-                              {task.rewardAmount.toLocaleString()} VNĐ
+                              {task.rewardAmount?.toLocaleString() || "0"} VNĐ
                             </Badge>
                           </div>
                           <p className="text-sm text-blue-700">
@@ -416,9 +417,12 @@ export function GameAppointmentAdmin({
                       Tổng phần thưởng có thể nhận
                     </p>
                     <p className="text-lg font-bold text-blue-900">
-                      {appointment.tier.tasks
-                        .reduce((sum, task) => sum + task.rewardAmount, 0)
-                        .toLocaleString()}{" "}
+                      {appointment.tier?.tasks
+                        ?.reduce(
+                          (sum, task) => sum + (task.rewardAmount || 0),
+                          0,
+                        )
+                        ?.toLocaleString() || "0"}{" "}
                       VNĐ
                     </p>
                   </div>
@@ -460,7 +464,8 @@ export function GameAppointmentAdmin({
                             {tier.minHours}+ giờ
                           </span>
                           <span className="text-xs text-muted-foreground">
-                            Khóa {tier.lockedAmount.toLocaleString()} VNĐ/người
+                            Khóa {tier.lockedAmount?.toLocaleString() || "0"}{" "}
+                            VNĐ/người
                           </span>
                         </div>
                       </SelectItem>
@@ -540,7 +545,8 @@ export function GameAppointmentAdmin({
                         người, {tier.minHours}+ giờ
                       </p>
                       <p>
-                        Khóa: {tier.lockedAmount.toLocaleString()} VNĐ/người
+                        Khóa: {tier.lockedAmount?.toLocaleString() || "0"}{" "}
+                        VNĐ/người
                       </p>
                     </div>
                     <div className="space-y-1">
@@ -551,7 +557,7 @@ export function GameAppointmentAdmin({
                           className="text-xs text-muted-foreground"
                         >
                           • {task.taskName}:{" "}
-                          {task.rewardAmount.toLocaleString()} VNĐ
+                          {task.rewardAmount?.toLocaleString() || "0"} VNĐ
                         </div>
                       ))}
                     </div>

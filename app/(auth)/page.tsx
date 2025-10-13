@@ -111,7 +111,12 @@ const Login = () => {
           toast.success("Chào mừng trở lại The GateWay!");
           setIsToastShown(true);
         }
-        router.push("/dashboard");
+        // Redirect to welcome tour nếu là user mới hoặc user quay lại
+        if (result.data?.isNewUser || result.data?.isReturnedUser) {
+          router.push("/welcome-tour");
+        } else {
+          router.push("/dashboard");
+        }
       } else if (statusCode === 500 || statusCode === 499) {
         setLoginSuccess(false);
         toast.error(message);
@@ -216,7 +221,12 @@ const Login = () => {
           toast.success("Chào mừng đến với The GateWay!");
           setIsToastShown(true);
         }
-        router.push("/dashboard");
+        // Redirect to welcome tour nếu là user mới hoặc user quay lại
+        if (result.data?.isNewUser || result.data?.isReturnedUser) {
+          router.push("/welcome-tour");
+        } else {
+          router.push("/dashboard");
+        }
       } else if (statusCode === 500 || statusCode === 499) {
         setLoginSuccess(false);
         toast.error(message);

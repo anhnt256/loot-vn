@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import { GiftRoundForm } from "./_components/gift-round-form";
 import { toast } from "sonner";
-import { Table, Select } from "antd";
+import { Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import Cookies from "js-cookie";
+import { useBranch } from "@/components/providers/BranchProvider";
 import "../admin-tabs.css";
 
 interface GiftRound {
@@ -27,7 +27,7 @@ export default function GiftRoundsPage() {
   const [selectedGiftRound, setSelectedGiftRound] = useState<GiftRound | null>(
     null,
   );
-  const [selectedBranch, setSelectedBranch] = useState("GO_VAP");
+  const { branch: selectedBranch } = useBranch();
 
   const columns: ColumnsType<GiftRound> = [
     {
@@ -110,12 +110,6 @@ export default function GiftRoundsPage() {
     },
   ];
 
-  // Initialize branch from cookie
-  useEffect(() => {
-    const branch = Cookies.get("branch");
-    if (branch) setSelectedBranch(branch);
-  }, []);
-
   // Fetch gift rounds
   const fetchGiftRounds = async () => {
     try {
@@ -139,13 +133,6 @@ export default function GiftRoundsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Handle branch change
-  const handleBranchChange = async (value: string) => {
-    setSelectedBranch(value);
-    Cookies.set("branch", value, { path: "/" });
-    await fetchGiftRounds(); // Refresh data for the selected branch
   };
 
   // Delete gift round
@@ -190,33 +177,7 @@ export default function GiftRoundsPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <h2 className="text-2xl font-bold text-white">Quản lý lượt chơi</h2>
-          <Select
-            value={selectedBranch}
-            onChange={handleBranchChange}
-            className="w-40 dark custom-branch-select"
-            options={[
-              { value: "GO_VAP", label: "Gò Vấp" },
-              { value: "TAN_PHU", label: "Tân Phú" },
-            ]}
-            style={{
-              backgroundColor: "#23272f",
-              borderColor: "#374151",
-              color: "#fff",
-              fontWeight: 600,
-            }}
-            dropdownStyle={{
-              backgroundColor: "#23272f",
-              color: "#fff",
-              border: "1px solid #374151",
-              borderRadius: 8,
-              padding: 0,
-            }}
-            popupClassName="custom-branch-dropdown"
-            optionLabelProp="label"
-          />
-        </div>
+        <h2 className="text-2xl font-bold text-white">Quản lý lượt chơi</h2>
         <button
           onClick={() => {
             // console.log("Opening form modal");

@@ -23,12 +23,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs from "@/lib/dayjs";
 import StatsCard from "./_components/stats-card";
 import RewardExchangeCard from "./_components/RewardExchangeCard";
-import { DatePicker, Select as AntSelect } from "antd";
+import EventRewardExchangeCard from "./_components/EventRewardExchangeCard";
+import { DatePicker } from "antd";
 const { RangePicker } = DatePicker;
-import Cookies from "js-cookie";
 import { usePolling } from "@/hooks/usePolling";
 import { usePendingCount } from "@/components/admin/AdminSidebar";
 import { useSoundNotification } from "@/hooks/useSoundNotification";
+import { useBranch } from "@/components/providers/BranchProvider";
 
 interface RewardExchange {
   id: number;
@@ -40,18 +41,25 @@ interface RewardExchange {
   createdAt: string;
   updatedAt: string;
   note?: string;
+  type?: "EVENT" | "NORMAL";
   user: {
     userId: number | null;
     userName: string | null;
     stars: number;
     branch: string;
     fnetMoney: number;
+    fnetMain?: number;
+    fnetSub?: number;
+    fnetMainAfter?: number;
+    fnetSubAfter?: number;
   };
   reward: {
     id: number;
     name: string;
     value: number;
     stars: number;
+    type?: string;
+    code?: string;
   };
 }
 
@@ -84,25 +92,17 @@ const RewardExchangePage = () => {
   const [selectedDateRange, setSelectedDateRange] = useState<
     [dayjs.Dayjs, dayjs.Dayjs]
   >([dayjs().startOf("day"), dayjs().endOf("day")]);
-  const [selectedBranch, setSelectedBranch] = useState("GO_VAP");
-  const [loginType, setLoginType] = useState(
-    Cookies.get("loginType") || "username",
-  );
   const [isPollingEnabled, setIsPollingEnabled] = useState(true);
   const queryClient = useQueryClient();
   const { setPendingCount } = usePendingCount();
   const previousPendingCount = useRef(0);
   const { playNotification } = useSoundNotification();
+  const { branch: selectedBranch } = useBranch();
 
-  // Load branch from cookie on component mount
+  // Reset previous count khi branch thay đổi
   useEffect(() => {
-    const branch = Cookies.get("branch");
-    if (branch) {
-      setSelectedBranch(branch);
-      // Reset previous count khi branch thay đổi
-      previousPendingCount.current = 0;
-    }
-  }, []);
+    previousPendingCount.current = 0;
+  }, [selectedBranch]);
 
   // Polling for pending rewards
   const pendingPolling = usePolling<RewardExchange[]>(
@@ -192,16 +192,6 @@ const RewardExchangePage = () => {
     toast.success(
       isPollingEnabled ? "Đã tắt tự động cập nhật" : "Đã bật tự động cập nhật",
     );
-  };
-
-  const handleBranchChange = async (value: string) => {
-    setSelectedBranch(value);
-    Cookies.set("branch", value, { path: "/" });
-    // Invalidate queries to refetch data with new branch
-    queryClient.invalidateQueries({ queryKey: ["reward-exchange-pending"] });
-    if (activeTab === "history") {
-      queryClient.invalidateQueries({ queryKey: ["reward-exchange-history"] });
-    }
   };
 
   const handleDateRangeChange = (dates: any) => {
@@ -336,27 +326,6 @@ const RewardExchangePage = () => {
         >
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">
-              Chi nhánh:
-            </span>
-            <AntSelect
-              value={selectedBranch}
-              onChange={handleBranchChange}
-              className="w-40"
-              disabled={loginType === "mac"}
-              options={[
-                { value: "GO_VAP", label: "Gò Vấp" },
-                { value: "TAN_PHU", label: "Tân Phú" },
-              ]}
-              style={{
-                backgroundColor: "#fff",
-                borderColor: "#d1d5db",
-                borderRadius: "6px",
-                color: loginType === "mac" ? "#bfbfbf" : "#000",
-              }}
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700">
               Khoảng thời gian:
             </span>
             <RangePicker
@@ -469,15 +438,30 @@ const RewardExchangePage = () => {
                     <div className="text-gray-500">Đang tải...</div>
                   </div>
                 ) : pendingRewards && pendingRewards.length > 0 ? (
-                  pendingRewards.map((reward) => (
-                    <RewardExchangeCard
-                      key={reward.id}
-                      reward={reward}
-                      onApprove={handleApprove}
-                      onReject={handleReject}
-                      showActions={true}
-                    />
-                  ))
+                  pendingRewards.map((reward) => {
+                    // Render khác nhau dựa trên type
+                    if (reward.type === "EVENT") {
+                      return (
+                        <EventRewardExchangeCard
+                          key={reward.id}
+                          reward={reward as any}
+                          onApprove={handleApprove}
+                          onReject={handleReject}
+                          showActions={true}
+                        />
+                      );
+                    } else {
+                      return (
+                        <RewardExchangeCard
+                          key={reward.id}
+                          reward={reward}
+                          onApprove={handleApprove}
+                          onReject={handleReject}
+                          showActions={true}
+                        />
+                      );
+                    }
+                  })
                 ) : (
                   <Card className="border-2 border-dashed border-gray-300">
                     <CardContent className="flex items-center justify-center h-32">
@@ -505,13 +489,26 @@ const RewardExchangePage = () => {
                     <div className="space-y-4">
                       {historyData?.histories &&
                       historyData.histories.length > 0 ? (
-                        historyData.histories.map((history) => (
-                          <RewardExchangeCard
-                            key={history.id}
-                            reward={history}
-                            showActions={false}
-                          />
-                        ))
+                        historyData.histories.map((history) => {
+                          // Render khác nhau dựa trên type
+                          if (history.type === "EVENT") {
+                            return (
+                              <EventRewardExchangeCard
+                                key={history.id}
+                                reward={history as any}
+                                showActions={false}
+                              />
+                            );
+                          } else {
+                            return (
+                              <RewardExchangeCard
+                                key={history.id}
+                                reward={history}
+                                showActions={false}
+                              />
+                            );
+                          }
+                        })
                       ) : (
                         <Card className="border-2 border-dashed border-gray-300">
                           <CardContent className="flex items-center justify-center h-32">

@@ -1,0 +1,14 @@
+-- Add MAIN_ACCOUNT_TOPUP to RewardType enum
+-- Run this manually on your database
+
+ALTER TABLE EventReward MODIFY COLUMN rewardType ENUM(
+  'PERCENTAGE_DISCOUNT',
+  'FIXED_DISCOUNT', 
+  'FREE_ITEM',
+  'BONUS_ITEM',
+  'CASH_BACK',
+  'MULTIPLIER',
+  'CONDITIONAL_REWARD',
+  'MAIN_ACCOUNT_TOPUP'
+) NOT NULL;
+

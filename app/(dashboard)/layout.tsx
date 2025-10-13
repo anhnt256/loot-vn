@@ -18,6 +18,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const currentUser = useLocalStorageValue(CURRENT_USER, null);
   const [isClient, setIsClient] = useState(false);
+  const [showWelcomeRewards, setShowWelcomeRewards] = useState(false);
 
   const IS_MAINTENANCE = process.env.NEXT_PUBLIC_IS_MAINTENANCE === "true";
   const GATEWAY_BIRTHDAY_ENABLE =
@@ -25,6 +26,22 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   const STORE_DISABLED = process.env.NEXT_PUBLIC_STORE_DISABLED === "true";
   const BATTLE_PASS_ENABLE =
     process.env.NEXT_PUBLIC_GATEWAY_BATTLE_PASS_ENABLE === "true";
+
+  // Check xem user có phải là user mới hoặc user cũ quay trở lại không
+  useEffect(() => {
+    const userData = localStorage.getItem(CURRENT_USER);
+    if (userData) {
+      try {
+        const parsedData = JSON.parse(userData);
+        const isNewUser = parsedData.isNewUser === true;
+        const isReturnedUser = parsedData.isReturnedUser === true;
+        setShowWelcomeRewards(isNewUser || isReturnedUser);
+      } catch (error) {
+        console.error("Error parsing user data for welcome rewards:", error);
+        setShowWelcomeRewards(false);
+      }
+    }
+  }, [currentUser]);
 
   // Function to call user-calculator API and update localStorage
   const refreshUserData = async () => {
@@ -213,6 +230,17 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
           >
             Điểm danh
           </Link>
+          {showWelcomeRewards && (
+            <Link
+              className={cn(
+                "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
+                pathname === "/welcome-tour" ? "bg-gray-700" : "transparent",
+              )}
+              href="/welcome-tour"
+            >
+              Quà chào mừng
+            </Link>
+          )}
           <Link
             className={cn(
               "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
@@ -222,6 +250,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
           >
             Trò chơi
           </Link>
+          {/* Tạm ẩn tính năng Hẹn chơi */}
           {/* <Link
             className={cn(
               "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
@@ -266,6 +295,15 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
               Battle Pass
             </Link>
           )}
+          <Link
+            className={cn(
+              "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
+              pathname === "/voucher" ? "bg-gray-700" : "transparent",
+            )}
+            href="/voucher"
+          >
+            Voucher
+          </Link>
           {/* {showGatewayBonus && (
             <Link
               className={cn(

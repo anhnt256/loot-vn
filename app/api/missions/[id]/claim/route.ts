@@ -7,7 +7,7 @@ import {
   getStartOfDayVNISO,
   getCurrentDateVNString,
 } from "@/lib/timezone-utils";
-import { calculateMissionUsageHours } from "@/lib/battle-pass-utils";
+import { calculateMissionUsageHours, calculateLevel } from "@/lib/battle-pass-utils";
 import dayjs from "@/lib/dayjs";
 import { cookies } from "next/headers";
 
@@ -235,9 +235,10 @@ export async function POST(
       `);
 
       if (!userProgress || userProgress.length === 0) {
+        // Tạo mới với level = 0 khi exp = 0
         await db.$queryRaw(Prisma.sql`
           INSERT INTO UserBattlePass (userId, seasonId, branch, experience, level, isPremium)
-          VALUES (${userId}, ${season.id}, ${branch}, 0, 1, false)
+          VALUES (${userId}, ${season.id}, ${branch}, 0, 0, false)
         `);
         userProgress = await db.$queryRaw<any[]>(Prisma.sql`
           SELECT * FROM UserBattlePass 
@@ -247,11 +248,14 @@ export async function POST(
         `);
       }
 
-      // Add XP from mission completion
+      // Add XP from mission completion và tính lại level
       const progress = userProgress[0];
+      const newExperience = (progress.experience || 0) + mission.reward;
+      const newLevel = calculateLevel(newExperience, season.maxLevel);
+      
       await db.$queryRaw(Prisma.sql`
         UPDATE UserBattlePass 
-        SET experience = experience + ${mission.reward}
+        SET experience = ${newExperience}, level = ${newLevel}
         WHERE id = ${progress.id}
       `);
     }

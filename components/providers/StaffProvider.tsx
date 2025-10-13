@@ -48,10 +48,12 @@ export const StaffProvider: React.FC<{ children: React.ReactNode }> = ({
   // Monitor branch changes and reinitialize if needed
   useEffect(() => {
     const checkBranchChange = () => {
-      const cookies = document.cookie.split(';');
-      const branchCookie = cookies.find(cookie => cookie.trim().startsWith('branch='));
-      const currentBranch = branchCookie ? branchCookie.split('=')[1] : null;
-      
+      const cookies = document.cookie.split(";");
+      const branchCookie = cookies.find((cookie) =>
+        cookie.trim().startsWith("branch="),
+      );
+      const currentBranch = branchCookie ? branchCookie.split("=")[1] : null;
+
       if (currentBranch && currentBranch !== staffHook.currentBranch) {
         // Clear current staff data and reinitialize
         staffHook.clearStaffCache();
@@ -61,9 +63,13 @@ export const StaffProvider: React.FC<{ children: React.ReactNode }> = ({
 
     // Check for branch changes every 1 second
     const interval = setInterval(checkBranchChange, 1000);
-    
+
     return () => clearInterval(interval);
-  }, [staffHook.currentBranch, staffHook.clearStaffCache, staffHook.initializeStaff]);
+  }, [
+    staffHook.currentBranch,
+    staffHook.clearStaffCache,
+    staffHook.initializeStaff,
+  ]);
 
   return (
     <StaffContext.Provider value={staffHook}>{children}</StaffContext.Provider>

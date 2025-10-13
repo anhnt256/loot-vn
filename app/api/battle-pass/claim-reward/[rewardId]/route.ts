@@ -3,6 +3,16 @@ import { db } from "@/lib/db";
 import { getCurrentTimeVNDB } from "@/lib/timezone-utils";
 import { cookies } from "next/headers";
 
+// Function to generate random 8-character code
+function generateRandomCode(): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let result = "";
+  for (let i = 0; i < 8; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
 export async function POST(
   request: Request,
   { params }: { params: { rewardId: string } },
@@ -125,6 +135,7 @@ export async function POST(
     }
 
     // Use transaction to ensure data consistency
+    let promotionCodeData = null;
     await db.$transaction(async (tx) => {
       // Create claimed reward record
       await tx.$executeRaw`
@@ -160,6 +171,137 @@ export async function POST(
           `;
         }
       }
+
+      // Create PromotionCode if reward has eventRewardId
+      if (reward.eventRewardId) {
+        const randomCode = generateRandomCode();
+        const promotionCode = `BP_${currentSeason.id}_${reward.level}_${randomCode}`;
+
+        console.log(
+          `Creating PromotionCode for Battle Pass reward: ${promotionCode}`,
+        );
+
+        // Get eventReward details
+        const eventRewardResult = await tx.$queryRaw<any[]>`
+          SELECT * FROM EventReward 
+          WHERE id = ${reward.eventRewardId}
+          LIMIT 1
+        `;
+
+        const eventReward = eventRewardResult[0];
+        if (eventReward) {
+          // Parse rewardConfig to get actual value
+          const rewardConfig = eventReward.rewardConfig
+            ? JSON.parse(eventReward.rewardConfig)
+            : {};
+          const actualValue =
+            rewardConfig.value ||
+            rewardConfig.discountAmount ||
+            rewardConfig.freeValue ||
+            null;
+
+          // Calculate expiration date (use season end date)
+          const expirationDate = new Date(currentSeason.endDate);
+          expirationDate.setDate(expirationDate.getDate() + 30); // Add 30 days after season ends
+
+          // Create promotion code using Prisma client
+          // Shorten name to fit VARCHAR(45) limit
+          const rewardName = eventReward.name || "Reward";
+          const shortName = `BP Lv${reward.level} ${rewardName}`.substring(
+            0,
+            45,
+          );
+
+          const createdPromotionCode = await tx.promotionCode.create({
+            data: {
+              name: shortName,
+              code: promotionCode,
+              value: actualValue,
+              branch: branch,
+              isUsed: false,
+              eventId: eventReward.eventId || null,
+              rewardType: eventReward.rewardType,
+              rewardValue: actualValue,
+              expirationDate: expirationDate,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+          });
+
+          promotionCodeData = {
+            id: createdPromotionCode.id,
+            code: promotionCode,
+            name: createdPromotionCode.name,
+            rewardType: eventReward.rewardType,
+            rewardValue: actualValue,
+            expirationDate: expirationDate,
+          };
+
+          console.log(
+            `✅ Created PromotionCode: ${promotionCode} with ID: ${createdPromotionCode.id}`,
+          );
+
+          // Update EventParticipant with new promotionCode in rewardsReceived
+          if (eventReward.eventId) {
+            // Check if EventParticipant exists
+            const eventParticipantResult = await tx.$queryRaw<any[]>`
+              SELECT * FROM EventParticipant
+              WHERE userId = ${decoded.userId} 
+                AND eventId = ${eventReward.eventId}
+                AND branch = ${branch}
+              LIMIT 1
+            `;
+
+            const rewardData = {
+              rewardId: reward.eventRewardId,
+              promotionCodeId: createdPromotionCode.id,
+              claimedAt: getCurrentTimeVNDB(),
+              source: "BATTLE_PASS",
+              level: reward.level,
+              seasonId: currentSeason.id,
+            };
+
+            if (eventParticipantResult.length > 0) {
+              // Update existing EventParticipant
+              const participant = eventParticipantResult[0];
+              let rewardsReceived = [];
+
+              try {
+                rewardsReceived = participant.rewardsReceived
+                  ? JSON.parse(participant.rewardsReceived)
+                  : [];
+              } catch (e) {
+                console.error("Error parsing rewardsReceived:", e);
+                rewardsReceived = [];
+              }
+
+              rewardsReceived.push(rewardData);
+
+              await tx.$executeRaw`
+                UPDATE EventParticipant
+                SET rewardsReceived = ${JSON.stringify(rewardsReceived)}
+                WHERE userId = ${decoded.userId} 
+                  AND eventId = ${eventReward.eventId}
+                  AND branch = ${branch}
+              `;
+
+              console.log(`✅ Updated EventParticipant for Battle Pass reward`);
+            } else {
+              // Create new EventParticipant
+              await tx.$executeRaw`
+                INSERT INTO EventParticipant (
+                  eventId, userId, branch, registeredAt, rewardsReceived
+                )
+                VALUES (
+                  ${eventReward.eventId}, ${decoded.userId}, ${branch}, ${getCurrentTimeVNDB()}, ${JSON.stringify([rewardData])}
+                )
+              `;
+
+              console.log(`✅ Created EventParticipant for Battle Pass reward`);
+            }
+          }
+        }
+      }
     });
 
     return NextResponse.json({
@@ -167,6 +309,7 @@ export async function POST(
       message: "Reward claimed successfully",
       reward,
       starsAdded: reward.rewardType === "stars" ? reward.rewardValue : 0,
+      promotionCode: promotionCodeData,
     });
   } catch (error) {
     console.error("Error claiming reward:", error);

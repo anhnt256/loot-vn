@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Calendar, Search, Eye, Star, Filter } from "lucide-react";
-import Cookies from "js-cookie";
 import {
   FEEDBACK_CATEGORY_ENUM,
   FEEDBACK_STATUS_ENUM,
@@ -16,6 +15,7 @@ import {
   BRANCH_LABELS as HANDOVER_BRANCH_LABELS,
 } from "@/constants/handover-reports.constants";
 import FeedbackDetailDrawer from "./_components/feedback-detail-drawer";
+import { useBranch } from "@/components/providers/BranchProvider";
 
 interface Feedback {
   id: number;
@@ -86,7 +86,6 @@ export default function FeedbackManagementPage() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedPriority, setSelectedPriority] = useState("");
-  const [selectedBranch, setSelectedBranch] = useState("TAN_PHU");
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -95,9 +94,7 @@ export default function FeedbackManagementPage() {
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(
     null,
   );
-  const [loginType, setLoginType] = useState(
-    Cookies.get("loginType") || "username",
-  );
+  const { branch: selectedBranch } = useBranch();
   const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchFeedbacks = async () => {
@@ -151,17 +148,6 @@ export default function FeedbackManagementPage() {
   };
 
   useEffect(() => {
-    const branch = Cookies.get("branch");
-    if (branch && (branch === "TAN_PHU" || branch === "GO_VAP")) {
-      setSelectedBranch(branch);
-    } else {
-      // Default to TAN_PHU if no valid branch in cookie
-      setSelectedBranch("TAN_PHU");
-      Cookies.set("branch", "TAN_PHU", { path: "/" });
-    }
-  }, []);
-
-  useEffect(() => {
     if (selectedBranch) {
       if (fetchTimeoutRef.current) {
         clearTimeout(fetchTimeoutRef.current);
@@ -185,11 +171,6 @@ export default function FeedbackManagementPage() {
     selectedStatus,
     selectedPriority,
   ]);
-
-  const handleBranchChange = (value: string) => {
-    setSelectedBranch(value);
-    Cookies.set("branch", value, { path: "/" });
-  };
 
   const handleSearch = () => {
     if (selectedBranch) {
@@ -262,26 +243,7 @@ export default function FeedbackManagementPage() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
-          {/* Branch */}
-          <select
-            value={selectedBranch}
-            onChange={(e) => handleBranchChange(e.target.value)}
-            required
-            disabled={loginType === "mac"}
-            className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              loginType === "mac"
-                ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                : ""
-            }`}
-          >
-            {branches.map((branch) => (
-              <option key={branch} value={branch}>
-                {HANDOVER_BRANCH_LABELS[branch]}
-              </option>
-            ))}
-          </select>
-
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
           {/* Start Date */}
           <div className="relative">
             <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />

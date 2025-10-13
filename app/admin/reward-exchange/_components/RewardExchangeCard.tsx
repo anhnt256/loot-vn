@@ -21,6 +21,10 @@ interface RewardExchange {
     stars: number;
     branch: string;
     fnetMoney: number;
+    fnetMain?: number;
+    fnetSub?: number;
+    fnetMainAfter?: number;
+    fnetSubAfter?: number;
   };
   reward: {
     id: number;
@@ -92,9 +96,9 @@ export default function RewardExchangeCard({
               </div>
             </div>
 
-            {/* User stats grid - 3 cards in 1 row */}
+            {/* User stats grid - 4 cards in 1 row */}
             <div
-              className={`grid gap-4 ${reward.status === "REJECT" ? "grid-cols-2" : "grid-cols-3"}`}
+              className={`grid gap-4 ${reward.status === "REJECT" ? "grid-cols-3" : "grid-cols-4"}`}
             >
               {/* Card 1: Phần thưởng */}
               <div className="bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg p-3">
@@ -141,26 +145,69 @@ export default function RewardExchangeCard({
                 </div>
               )}
 
-              {/* Card 3: Số tiền Fnet */}
-              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-3">
+              {/* Card 3: Tài khoản chính (Main) */}
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-3">
                 <div className="text-center">
                   <p className="text-xs text-gray-600 font-medium mb-2">
-                    Số tiền Fnet
+                    Tài khoản chính
                   </p>
                   <div className="space-y-1">
                     <div className="flex justify-between items-center">
-                      <span className="text-xs text-gray-500">Hiện tại:</span>
+                      <span className="text-xs text-gray-500">
+                        {reward.status === "INITIAL"
+                          ? "Hiện tại:"
+                          : "Trước đổi:"}
+                      </span>
+                      <span className="text-sm font-bold text-purple-700">
+                        {(reward.user?.fnetMain || 0).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-500">Sau đổi:</span>
+                      <span className="text-sm font-bold text-purple-700">
+                        {reward.status === "INITIAL"
+                          ? (reward.user?.fnetMain || 0).toLocaleString()
+                          : (
+                              reward.user?.fnetMainAfter ||
+                              reward.user?.fnetMain ||
+                              0
+                            ).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 4: Tài khoản phụ (Sub) */}
+              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-3">
+                <div className="text-center">
+                  <p className="text-xs text-gray-600 font-medium mb-2">
+                    Tài khoản phụ
+                  </p>
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-500">
+                        {reward.status === "INITIAL"
+                          ? "Hiện tại:"
+                          : "Trước đổi:"}
+                      </span>
                       <span className="text-sm font-bold text-blue-700">
-                        {(reward.user?.fnetMoney || 0).toLocaleString()}
+                        {(reward.user?.fnetSub || 0).toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-xs text-gray-500">Sau đổi:</span>
                       <span className="text-sm font-bold text-red-600">
-                        {(
-                          (reward.user?.fnetMoney || 0) +
-                          (reward.reward?.value || 0)
-                        ).toLocaleString()}
+                        {reward.status === "INITIAL"
+                          ? (
+                              (reward.user?.fnetSub || 0) +
+                              (reward.reward?.value || 0)
+                            ).toLocaleString()
+                          : (
+                              reward.user?.fnetSubAfter ||
+                              reward.user?.fnetSub ||
+                              0
+                            ).toLocaleString()}
                       </span>
                     </div>
                   </div>

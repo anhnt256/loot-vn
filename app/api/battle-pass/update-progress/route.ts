@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentTimeVNDB } from "@/lib/timezone-utils";
 import { cookies } from "next/headers";
+import { calculateLevel } from "@/lib/battle-pass-utils";
 
 export async function POST(request: Request) {
   try {
@@ -58,9 +59,12 @@ export async function POST(request: Request) {
 
     if (!userProgress) {
       // Create new user progress
+      const newExperience = experience || 0;
+      const newLevel = calculateLevel(newExperience, currentSeason.maxLevel);
+
       await db.$executeRaw`
         INSERT INTO UserBattlePass (userId, seasonId, level, experience, isPremium, totalSpent, branch, createdAt, updatedAt)
-        VALUES (${decoded.userId}, ${currentSeason.id}, 0, ${experience || 0}, false, ${totalSpent || 0}, ${branch}, ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
+        VALUES (${decoded.userId}, ${currentSeason.id}, ${newLevel}, ${newExperience}, false, ${totalSpent || 0}, ${branch}, ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
       `;
 
       const newProgress = await db.$queryRaw<any[]>`
@@ -75,10 +79,11 @@ export async function POST(request: Request) {
         experience !== undefined ? experience : userProgress.experience;
       const newTotalSpent =
         totalSpent !== undefined ? totalSpent : userProgress.totalSpent;
+      const newLevel = calculateLevel(newExperience, currentSeason.maxLevel);
 
       await db.$executeRaw`
         UPDATE UserBattlePass 
-        SET experience = ${newExperience}, totalSpent = ${newTotalSpent}, updatedAt = ${getCurrentTimeVNDB()}
+        SET experience = ${newExperience}, level = ${newLevel}, totalSpent = ${newTotalSpent}, updatedAt = ${getCurrentTimeVNDB()}
         WHERE id = ${userProgress.id}
       `;
 

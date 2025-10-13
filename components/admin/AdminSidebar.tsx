@@ -70,6 +70,13 @@ const menuItems = [
     adminOnly: true,
   },
   {
+    title: "Đơn hàng Premium BP",
+    href: "/admin/battle-pass-orders",
+    icon: "🛒",
+    adminOnly: true,
+    showBattlePassOrderCount: true,
+  },
+  {
     title: "Quản lý đổi thưởng",
     href: "/admin/reward-exchange",
     icon: "🎁",
@@ -97,6 +104,17 @@ const menuItems = [
     icon: "🎮",
     adminOnly: true,
   },
+  {
+    title: "Quản lý Event",
+    href: "/admin/events",
+    icon: "🎪",
+    adminOnly: true,
+  },
+  {
+    title: "Lịch làm việc",
+    href: "/admin/work-schedule",
+    icon: "📅",
+  },
   // {
   //   title: "Lịch sử giao dịch",
   //   href: "/admin/transactions",
@@ -116,6 +134,8 @@ export function AdminSidebar() {
   const [isClient, setIsClient] = useState(false);
   const { pendingCount, setPendingCount } = usePendingCount();
   const previousPendingCount = useRef(0);
+  const [battlePassOrderCount, setBattlePassOrderCount] = useState(0);
+  const previousBattlePassOrderCount = useRef(0);
   const { playNotification, playSound } = useSoundNotification();
 
   // Set isClient to true after mount to prevent hydration mismatch
@@ -133,6 +153,7 @@ export function AdminSidebar() {
       setBranch(branchFromCookie);
       // Reset previous count khi branch thay đổi
       previousPendingCount.current = 0;
+      previousBattlePassOrderCount.current = 0;
     }
   }, []);
 
@@ -144,6 +165,7 @@ export function AdminSidebar() {
         setBranch(branchFromCookie);
         // Reset previous count khi branch thay đổi
         previousPendingCount.current = 0;
+        previousBattlePassOrderCount.current = 0;
       }
     };
 
@@ -183,6 +205,31 @@ export function AdminSidebar() {
     },
   });
 
+  // Polling for battle-pass orders count
+  const isBattlePassOrdersPage = pathname === "/admin/battle-pass-orders";
+  const shouldPollBattlePassOrders =
+    !!branch && pathname?.startsWith("/admin") && !isBattlePassOrdersPage;
+
+  const battlePassOrdersPolling = usePolling<any[]>(
+    `/api/battle-pass/orders?status=PENDING`,
+    {
+      interval: 30000, // 30 seconds
+      enabled: shouldPollBattlePassOrders,
+      onSuccess: (data) => {
+        const newCount = data?.length || 0;
+
+        // Phát âm thanh khi có order mới
+        playNotification(newCount, previousBattlePassOrderCount.current);
+
+        setBattlePassOrderCount(newCount);
+        previousBattlePassOrderCount.current = newCount;
+      },
+      onError: (error) => {
+        console.error("BattlePass orders polling error:", error);
+      },
+    },
+  );
+
   // Filter menu items based on admin role
   const filteredMenuItems = menuItems.filter((item) => {
     // Nếu là admin (loginType === "username"), hiển thị tất cả menu
@@ -196,6 +243,7 @@ export function AdminSidebar() {
       "/admin/reward-exchange", // Quản lý đổi thưởng
       "/admin/handover-reports", // Báo cáo bàn giao
       "/admin/reports", // Báo cáo kết ca
+      "/admin/work-schedule", // Lịch làm việc
     ];
 
     return allowedMenus.includes(item.href);
@@ -249,6 +297,11 @@ export function AdminSidebar() {
               {item.showPendingCount && pendingCount > 0 && (
                 <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full min-w-[20px] text-center">
                   {pendingCount}
+                </span>
+              )}
+              {item.showBattlePassOrderCount && battlePassOrderCount > 0 && (
+                <span className="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full min-w-[20px] text-center">
+                  {battlePassOrderCount}
                 </span>
               )}
             </Link>
