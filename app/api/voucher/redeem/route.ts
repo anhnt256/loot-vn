@@ -100,6 +100,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // **NEW: Xử lý voucher FREE_HOURS (nạp tài khoản phụ)**
+    if (promoCode.rewardType === "FREE_HOURS") {
+      console.log(
+        `[Redeem Voucher] Processing FREE_HOURS for userId: ${userId}`,
+      );
+
+      return await handleFreeHours(
+        promoCode,
+        userId,
+        branch,
+        promotionCodeId,
+      );
+    }
+
     // Lấy eventRewardId từ promotionCode.eventId
     // Tìm EventReward tương ứng với eventId và rewardType
     // Ta cần tìm EventReward có rewardConfig chứa itemType tương ứng với rewardType
@@ -361,6 +375,167 @@ async function handleMainAccountTopup(
     return NextResponse.json(
       {
         error: "Failed to process main account topup",
+        details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 },
+    );
+  }
+}
+
+/**
+ * Handle FREE_HOURS voucher
+ * Steps:
+ * 1. Get eventRewardId
+ * 2. Save FnetHistory with changes in subMoney
+ * 3. Create UserRewardMap with type = EVENT
+ * 4. Mark PromotionCode as used
+ * Note: Không gọi updateFnetMoney ở đây, chờ admin approve mới update wallet
+ */
+async function handleFreeHours(
+  promoCode: any,
+  userId: number,
+  branch: string,
+  promotionCodeId: number,
+) {
+  try {
+    console.log(
+      `[FREE_HOURS] Starting for userId: ${userId}, amount: ${promoCode.rewardValue}`,
+    );
+
+    // Validate rewardValue
+    if (!promoCode.rewardValue || promoCode.rewardValue <= 0) {
+      return NextResponse.json(
+        { error: "Invalid reward value" },
+        { status: 400 },
+      );
+    }
+
+    // Kiểm tra user có tồn tại trong Fnet không
+    const fnetDB = await getFnetDB();
+    const fnetUserCount = await fnetDB.$queryRaw<any[]>`
+      SELECT COUNT(*) as count FROM usertb 
+      WHERE UserId = ${userId}
+    `;
+
+    if (fnetUserCount[0].count === 0) {
+      return NextResponse.json(
+        { error: "User not found in Fnet database" },
+        { status: 404 },
+      );
+    }
+
+    if (fnetUserCount[0].count > 1) {
+      return NextResponse.json(
+        { error: "Multiple accounts found. Please contact admin." },
+        { status: 400 },
+      );
+    }
+
+    // Get eventRewardId
+    const eventRewards = await db.$queryRaw<any[]>`
+      SELECT * FROM EventReward
+      WHERE eventId = ${promoCode.eventId}
+    `;
+
+    let eventRewardId = null;
+    for (const reward of eventRewards) {
+      const config = reward.rewardConfig;
+      if (config && typeof config === "object" && config.itemType === "HOURS") {
+        eventRewardId = reward.id;
+        break;
+      }
+    }
+
+    if (!eventRewardId && eventRewards && eventRewards.length > 0) {
+      eventRewardId = eventRewards[0].id;
+    }
+
+    console.log(`[FREE_HOURS] EventRewardId: ${eventRewardId}`);
+
+    // Transaction để đảm bảo atomic
+    await db.$transaction(async (tx) => {
+      // 1. Lấy wallet hiện tại để save FnetHistory
+      const walletResult = await fnetDB.$queryRaw<any[]>`
+        SELECT main, sub FROM wallettb 
+        WHERE userid = ${userId}
+        LIMIT 1
+      `;
+
+      if (walletResult.length === 0) {
+        throw new Error(`Wallet not found for userId: ${userId}`);
+      }
+
+      const oldMain = Number(walletResult[0].main) || 0;
+      const oldSub = Number(walletResult[0].sub) || 0;
+      const newMain = oldMain; // Main không đổi
+      const newSub = oldSub + promoCode.rewardValue;
+
+      console.log(
+        `[FREE_HOURS] Wallet snapshot - oldMain: ${oldMain}, newMain: ${newMain}, oldSub: ${oldSub}, newSub: ${newSub}`,
+      );
+
+      // 2. Create UserRewardMap với type = EVENT
+      const insertResult = await tx.$executeRaw`
+        INSERT INTO UserRewardMap (userId, rewardId, promotionCodeId, duration, branch, isUsed, status, type, createdAt, updatedAt)
+        VALUES (
+          ${userId},
+          ${eventRewardId},
+          ${promotionCodeId},
+          ${promoCode.rewardValue},
+          ${branch},
+          false,
+          'INITIAL',
+          'EVENT',
+          NOW(),
+          NOW()
+        )
+      `;
+
+      console.log(
+        `[FREE_HOURS] Created UserRewardMap - insertResult:`,
+        insertResult,
+      );
+
+      // Get the inserted UserRewardMap ID
+      const userRewardMapResults = await tx.$queryRaw<
+        any[]
+      >`SELECT LAST_INSERT_ID() as id`;
+      const userRewardMapId = Number(userRewardMapResults[0]?.id);
+
+      console.log(`[FREE_HOURS] UserRewardMap ID: ${userRewardMapId}`);
+
+      // 3. Lưu FnetHistory với thay đổi ở subMoney
+      await tx.$executeRaw`
+        INSERT INTO FnetHistory (userId, branch, oldSubMoney, newSubMoney, oldMainMoney, newMainMoney, moneyType, targetId, type, createdAt, updatedAt)
+        VALUES (${userId}, ${branch}, ${oldSub}, ${newSub}, ${oldMain}, ${newMain}, 'SUB', ${userRewardMapId}, 'REWARD', ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
+      `;
+
+      console.log(`[FREE_HOURS] Saved FnetHistory`);
+
+      // 4. Mark PromotionCode as used
+      await tx.$executeRaw`
+        UPDATE PromotionCode 
+        SET isUsed = true, updatedAt = NOW()
+        WHERE id = ${promotionCodeId}
+      `;
+
+      console.log(`[FREE_HOURS] Marked PromotionCode as used`);
+    });
+
+    console.log(
+      `[FREE_HOURS] Successfully completed for userId: ${userId}`,
+    );
+
+    return NextResponse.json({
+      success: true,
+      message: "Free hours redeemed successfully",
+      amount: promoCode.rewardValue,
+    });
+  } catch (error) {
+    console.error("[FREE_HOURS] Error:", error);
+    return NextResponse.json(
+      {
+        error: "Failed to process free hours",
         details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 },

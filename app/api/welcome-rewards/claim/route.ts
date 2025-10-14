@@ -171,22 +171,31 @@ export async function POST(request: NextRequest) {
       `User ${userId} - Identity validated for claim: ID="${identityValidation.id}", Phone="${identityValidation.phone}"`,
     );
 
-    // Kiểm tra user đã claim welcome rewards chưa
-    const existingClaim = await db.$queryRaw<any[]>`
-      SELECT * FROM EventParticipant ep
-      INNER JOIN Event e ON ep.eventId = e.id
-      WHERE ep.userId = ${userId}
-        AND ep.branch = ${branch}
-        AND e.type = 'NEW_USER_WELCOME'
-        AND e.branch = ${branch}
-      LIMIT 1
-    `;
+    // Check payment data của user trong 14 ngày
+    let userTotalDeposit = 0;
+    try {
+      const now = new Date();
+      const fourteenDaysAgo = new Date(now);
+      fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
 
-    if (existingClaim.length > 0) {
-      return NextResponse.json(
-        { error: "Bạn đã nhận phần thưởng chào mừng rồi" },
-        { status: 400 },
-      );
+      const startDate = fourteenDaysAgo.toISOString().split("T")[0] + " 00:00:00";
+      const endDate = now.toISOString().split("T")[0] + " 23:59:59";
+
+      const paymentResult = (await fnetDB.$queryRawUnsafe(`
+        SELECT 
+          COALESCE(CAST(SUM(AutoAmount) AS DECIMAL(18,2)), 0) AS totalDeposit
+        FROM paymenttb
+        WHERE PaymentType = 4
+          AND UserId = ${userId}
+          AND Note = 'Thời gian phí'
+          AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) >= '${startDate}'
+          AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) <= '${endDate}'
+      `)) as any[];
+
+      userTotalDeposit = parseFloat(paymentResult[0]?.totalDeposit?.toString() || "0");
+      console.log(`User ${userId} - Total deposit in 14 days: ${userTotalDeposit}`);
+    } catch (error) {
+      console.error("Error checking user payment:", error);
     }
 
     // Lấy event NEW_USER_WELCOME đang active
@@ -239,22 +248,54 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Tạo EventParticipant record
-    await db.$executeRaw`
-      INSERT INTO EventParticipant (eventId, userId, branch, status, registeredAt, participatedAt, completedAt, participationData, rewardsReceived, totalSpent)
-      VALUES (
-        ${event.eventId},
-        ${userId},
-        ${branch},
-        'COMPLETED',
-        ${currentTime},
-        ${currentTime},
-        ${currentTime},
-        '{"source": "welcome_tour"}',
-        '[]',
-        0
-      )
+    // Kiểm tra xem đã có EventParticipant chưa
+    const existingParticipant = await db.$queryRaw<any[]>`
+      SELECT id, rewardsReceived FROM EventParticipant
+      WHERE eventId = ${event.eventId}
+        AND userId = ${userId}
+        AND branch = ${branch}
+      LIMIT 1
     `;
+
+    // Nếu chưa có thì tạo mới
+    if (existingParticipant.length === 0) {
+      await db.$executeRaw`
+        INSERT INTO EventParticipant (eventId, userId, branch, status, registeredAt, participatedAt, completedAt, participationData, rewardsReceived, totalSpent)
+        VALUES (
+          ${event.eventId},
+          ${userId},
+          ${branch},
+          'COMPLETED',
+          ${currentTime},
+          ${currentTime},
+          ${currentTime},
+          '{"source": "welcome_tour"}',
+          '[]',
+          0
+        )
+      `;
+    }
+
+    // Lấy danh sách rewards đã claim từ EventParticipant
+    const participantRecord = await db.$queryRaw<any[]>`
+      SELECT rewardsReceived FROM EventParticipant
+      WHERE eventId = ${event.eventId}
+        AND userId = ${userId}
+        AND branch = ${branch}
+      LIMIT 1
+    `;
+
+    let previouslyClaimedRewards = [];
+    if (participantRecord.length > 0 && participantRecord[0].rewardsReceived) {
+      try {
+        previouslyClaimedRewards = JSON.parse(participantRecord[0].rewardsReceived);
+      } catch (e) {
+        console.error("Error parsing previouslyClaimedRewards:", e);
+      }
+    }
+
+    const previouslyClaimedIds = new Set(previouslyClaimedRewards.map((r: any) => r.id));
+    console.log("Previously claimed reward IDs:", Array.from(previouslyClaimedIds));
 
     // Tạo UserRewardMap records và PromotionCode cho từng reward
     const claimedRewards = [];
@@ -269,6 +310,27 @@ export async function POST(request: NextRequest) {
         const rewardConfig = JSON.parse(reward.rewardConfig);
         console.log(`Processing reward ${reward.id}: ${reward.name}`);
         console.log(`Reward config:`, rewardConfig);
+
+        // Check xem reward đã được claim trước đó chưa
+        if (previouslyClaimedIds.has(Number(reward.id))) {
+          console.log(
+            `Reward ${reward.id} đã được claim trước đó, skip...`,
+          );
+          continue; // Skip reward đã claim
+        }
+
+        // Check điều kiện minOrderAmount (hoặc depositAmount cũ)
+        const minOrderRequired = rewardConfig.minOrderAmount || rewardConfig.depositAmount || 0;
+        if (minOrderRequired > 0 && userTotalDeposit < minOrderRequired) {
+          console.log(
+            `Reward ${reward.id} không đủ điều kiện: minOrder=${minOrderRequired}, userDeposit=${userTotalDeposit}`,
+          );
+          continue; // Skip reward này
+        }
+
+        console.log(
+          `Reward ${reward.id} passed deposit check: minOrder=${minOrderRequired}, userDeposit=${userTotalDeposit}`,
+        );
 
         // Kiểm tra giới hạn số lượng
         if (reward.maxQuantity && reward.used >= reward.maxQuantity) {
@@ -391,27 +453,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Cập nhật EventParticipant với rewardsReceived
-    await db.$executeRaw`
-      UPDATE EventParticipant 
-      SET rewardsReceived = ${JSON.stringify(claimedRewards)}
-      WHERE eventId = ${event.eventId} AND userId = ${userId} AND branch = ${branch}
-    `;
-
-    // Cập nhật Event - tăng totalCodesGenerated
-    // Số lượng mã đã tạo = số lượng rewards đã claim thành công
-    const codesGenerated = claimedRewards.length;
-    if (codesGenerated > 0) {
-      await db.$executeRaw`
-        UPDATE Event
-        SET totalCodesGenerated = totalCodesGenerated + ${codesGenerated}
-        WHERE id = ${event.eventId}
-      `;
-      console.log(
-        `✅ Updated Event totalCodesGenerated +${codesGenerated} for eventId: ${event.eventId}`,
-      );
-    }
-
     console.log(`\n=== CLAIM SUMMARY ===`);
     console.log(`Total rewards processed: ${eventRewards.length}`);
     console.log(`Successfully claimed rewards: ${claimedRewards.length}`);
@@ -419,14 +460,48 @@ export async function POST(request: NextRequest) {
       `Claimed rewards:`,
       claimedRewards.map((r) => `${r.name} (ID: ${r.id})`),
     );
+
+    // Check nếu không có reward nào được claim
+    if (claimedRewards.length === 0) {
+      return NextResponse.json(
+        { 
+          success: false,
+          error: "Không có phần thưởng nào để nhận. Bạn đã nhận hết phần thưởng hoặc chưa đủ điều kiện." 
+        },
+        { status: 400 },
+      );
+    }
+
+    // Merge rewards mới với rewards đã claim trước đó
+    const allClaimedRewards = [...previouslyClaimedRewards, ...claimedRewards];
+    
+    // Cập nhật EventParticipant với tất cả rewardsReceived (cũ + mới)
+    await db.$executeRaw`
+      UPDATE EventParticipant 
+      SET rewardsReceived = ${JSON.stringify(allClaimedRewards)},
+          completedAt = ${currentTime}
+      WHERE eventId = ${event.eventId} AND userId = ${userId} AND branch = ${branch}
+    `;
+
+    // Cập nhật Event - tăng totalCodesGenerated
+    const codesGenerated = claimedRewards.length;
+    await db.$executeRaw`
+      UPDATE Event
+      SET totalCodesGenerated = totalCodesGenerated + ${codesGenerated}
+      WHERE id = ${event.eventId}
+    `;
+    console.log(
+      `✅ Updated Event totalCodesGenerated +${codesGenerated} for eventId: ${event.eventId}`,
+    );
+
     console.log(
       `Updated EventParticipant with rewardsReceived:`,
-      JSON.stringify(claimedRewards),
+      JSON.stringify(allClaimedRewards),
     );
 
     return NextResponse.json({
       success: true,
-      message: "Nhận phần thưởng chào mừng thành công!",
+      message: `Nhận ${claimedRewards.length} phần thưởng thành công!`,
       event: {
         id: event.eventId,
         name: event.eventName,

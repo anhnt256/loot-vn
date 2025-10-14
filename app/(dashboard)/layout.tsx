@@ -77,8 +77,15 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
         const user = Array.isArray(freshUserData.data)
           ? freshUserData.data[0]
           : null;
-        if (user) {
-          localStorage.setItem(CURRENT_USER, JSON.stringify(user));
+        if (user && parsedUserData) {
+          // Preserve isNewUser và isReturnedUser từ login response
+          // Vì user-calculator API không trả về 2 field này
+          const updatedUser = {
+            ...user,
+            isNewUser: parsedUserData.isNewUser,
+            isReturnedUser: parsedUserData.isReturnedUser,
+          };
+          localStorage.setItem(CURRENT_USER, JSON.stringify(updatedUser));
         }
       }
     } catch (error) {

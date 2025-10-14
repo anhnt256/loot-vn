@@ -7,7 +7,10 @@ import {
   getStartOfDayVNISO,
   getCurrentDateVNString,
 } from "@/lib/timezone-utils";
-import { calculateMissionUsageHours, calculateLevel } from "@/lib/battle-pass-utils";
+import {
+  calculateMissionUsageHours,
+  calculateLevel,
+} from "@/lib/battle-pass-utils";
 import dayjs from "@/lib/dayjs";
 import { cookies } from "next/headers";
 
@@ -252,7 +255,7 @@ export async function POST(
       const progress = userProgress[0];
       const newExperience = (progress.experience || 0) + mission.reward;
       const newLevel = calculateLevel(newExperience, season.maxLevel);
-      
+
       await db.$queryRaw(Prisma.sql`
         UPDATE UserBattlePass 
         SET experience = ${newExperience}, level = ${newLevel}

@@ -117,14 +117,16 @@ export async function GET(request: Request) {
 
     console.log(`[PENDING] Total wallets loaded: ${fnetWallets.length}`);
 
-    // Get FnetHistory for pending rewards (to show before/after for MAIN_ACCOUNT_TOPUP)
+    // Get FnetHistory for pending rewards (to show before/after for EVENT rewards)
     const rewardIds = pendingRewards.map((r) => Number(r.id)).filter(Boolean);
     let fnetHistories = [];
     if (rewardIds.length > 0) {
       fnetHistories = await db.$queryRaw<any[]>`
-        SELECT targetId, oldMainMoney, newMainMoney, oldSubMoney, newSubMoney
+        SELECT targetId, oldMainMoney, newMainMoney, oldSubMoney, newSubMoney, type
         FROM FnetHistory
         WHERE targetId IN (${rewardIds.join(",")})
+          AND branch = ${branch}
+          AND type IN ('REWARD', 'VOUCHER')
       `;
     }
 
@@ -132,12 +134,18 @@ export async function GET(request: Request) {
     const fnetHistoryMap = new Map();
     fnetHistories.forEach((record) => {
       const targetId = Number(record.targetId);
-      fnetHistoryMap.set(targetId, {
+      const historyData = {
         oldMain: Number(record.oldMainMoney) || 0,
         newMain: Number(record.newMainMoney) || 0,
         oldSub: Number(record.oldSubMoney) || 0,
         newSub: Number(record.newSubMoney) || 0,
-      });
+        type: record.type,
+      };
+      fnetHistoryMap.set(targetId, historyData);
+      console.log(
+        `[PENDING] FnetHistory for targetId ${targetId}:`,
+        JSON.stringify(historyData),
+      );
     });
 
     console.log(

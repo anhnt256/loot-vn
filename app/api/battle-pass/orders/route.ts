@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
   try {
     // Get branch from cookie
     const branch = await getBranchFromCookie();
-    
+
     if (!branch) {
       return NextResponse.json(
         { error: "Branch cookie is required" },

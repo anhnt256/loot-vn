@@ -122,7 +122,7 @@ export async function GET(request: Request) {
         FROM FnetHistory fh
         WHERE fh.targetId IN (${targetIds.join(",")})
           AND fh.branch = '${branch}'
-          AND fh.type = 'REWARD'
+          AND fh.type IN ('REWARD', 'VOUCHER')
       `);
     }
 

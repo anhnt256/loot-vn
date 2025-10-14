@@ -424,14 +424,15 @@ export async function GET(request: NextRequest) {
       let alreadyClaimed = false;
 
       if (rewardConfig) {
-        depositRequired = rewardConfig.depositAmount || 0;
+        // Support cả depositAmount (cũ) và minOrderAmount (mới)
+        depositRequired = rewardConfig.minOrderAmount || rewardConfig.depositAmount || 0;
 
         // Check xem reward đã được claim chưa
         alreadyClaimed = claimedRewardIds.has(Number(reward.id));
 
         // User có thể claim nếu:
         // 1. Trong vòng 14 ngày đầu sau khi tạo tài khoản
-        // 2. Đã nạp đủ số tiền yêu cầu
+        // 2. Đã nạp đủ số tiền yêu cầu (totalDeposit >= minOrderAmount)
         // 3. CHƯA claim HOẶC đã bị reject
         if (
           userPaymentData?.isWithin14Days &&
@@ -456,7 +457,13 @@ export async function GET(request: NextRequest) {
         priority: Number(reward.priority),
         isActive: Boolean(reward.isActive),
         canClaim: canClaim,
+        alreadyClaimed: alreadyClaimed,
         depositRequired: depositRequired,
+        userDeposit: userPaymentData?.totalDeposit || 0,
+        isWithin14Days: userPaymentData?.isWithin14Days || false,
+        daysRemaining: 0,
+        hoursRemaining: 0,
+        minutesRemaining: 0,
       };
     });
 

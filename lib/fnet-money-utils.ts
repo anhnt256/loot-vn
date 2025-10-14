@@ -129,8 +129,7 @@ export async function updateFnetMoney(params: UpdateFnetMoneyParams) {
     // Also update Birthdate and ExpiryDate for compatibility
     const today = new Date();
     today.setFullYear(today.getFullYear() - 20);
-    const todayFormatted =
-      today.toISOString().split("T")[0] + "T00:00:00.000Z";
+    const todayFormatted = today.toISOString().split("T")[0] + "T00:00:00.000Z";
 
     const expiryDate = new Date();
     expiryDate.setFullYear(expiryDate.getFullYear() + 10);

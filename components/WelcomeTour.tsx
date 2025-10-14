@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FlipCard } from "@/components/ui/flip-card";
@@ -17,6 +17,7 @@ import {
 import Image from "next/image";
 import { fetcher } from "@/lib/fetcher";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface WelcomeReward {
   id: number;
@@ -32,6 +33,7 @@ interface WelcomeReward {
   priority: number;
   isActive: boolean;
   canClaim: boolean;
+  alreadyClaimed: boolean;
   depositRequired: number;
   userDeposit: number;
   isWithin14Days: boolean;
@@ -214,6 +216,10 @@ export default function WelcomeTour({
   const [welcomeRewards, setWelcomeRewards] = useState<WelcomeReward[]>([]);
   const [isLoadingRewards, setIsLoadingRewards] = useState(false);
   const [isClaimingRewards, setIsClaimingRewards] = useState(false);
+  
+  // Refs để prevent duplicate API calls
+  const hasFetchedRewards = useRef(false);
+  const isClaimingRef = useRef(false);
 
   // Tạo tourSlides động dựa vào loại user
   const tourSlides = React.useMemo(() => {
@@ -242,41 +248,51 @@ export default function WelcomeTour({
 
   // Fetch welcome rewards từ API - chỉ gọi 1 lần khi component mount
   useEffect(() => {
-    let isMounted = true;
-    let hasFetched = false; // Thêm flag để tránh call 2 lần
-
     const fetchWelcomeRewards = async () => {
-      if (!isMounted || hasFetched) return;
-      hasFetched = true;
-
+      // Prevent duplicate calls
+      if (hasFetchedRewards.current || !isOpen) return;
+      
+      hasFetchedRewards.current = true;
       setIsLoadingRewards(true);
+      
       try {
-        const response = (await fetcher(
-          "/api/welcome-rewards",
-        )) as WelcomeRewardsResponse;
-        if (isMounted && response.success && response.rewards) {
-          setWelcomeRewards(response.rewards);
+        const response = await fetch("/api/welcome-rewards", {
+          credentials: "include",
+        });
+        
+        const data = await response.json();
+        
+        console.log("Welcome rewards response:", { status: response.status, data });
+        
+        // API có thể trả về success: true hoặc success: false
+        // Trong cả 2 trường hợp đều có rewards array (có thể rỗng)
+        if (data.rewards) {
+          setWelcomeRewards(data.rewards);
+          
+          // Chỉ show error nếu có error message và không phải trường hợp identity validation
+          // (identity validation sẽ được handle khi user click claim)
+          if (!response.ok && data.error && !data.requiresIdentityUpdate) {
+            toast.error(data.error);
+          }
+        } else if (data.error) {
+          // Trường hợp lỗi thực sự (không có rewards array)
+          toast.error(data.error);
+          setWelcomeRewards([]);
+        } else {
+          // Không có rewards và không có error - empty state
+          setWelcomeRewards([]);
         }
       } catch (error) {
         console.error("Error fetching welcome rewards:", error);
-        if (isMounted) {
-          setWelcomeRewards([]);
-        }
+        toast.error("Lỗi khi tải phần thưởng");
+        setWelcomeRewards([]);
       } finally {
-        if (isMounted) {
-          setIsLoadingRewards(false);
-        }
+        setIsLoadingRewards(false);
       }
     };
 
-    if (isOpen && welcomeRewards.length === 0 && !isLoadingRewards) {
-      fetchWelcomeRewards();
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [isOpen]); // Chỉ depend vào isOpen, không depend vào welcomeRewards.length
+    fetchWelcomeRewards();
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -306,24 +322,52 @@ export default function WelcomeTour({
   };
 
   const handleClaimRewards = async () => {
+    // Prevent double click
+    if (isClaimingRef.current) {
+      console.log("Already claiming rewards, ignoring duplicate call");
+      return;
+    }
+    
+    isClaimingRef.current = true;
     setIsClaimingRewards(true);
+    
     try {
-      const response = await fetcher("/api/welcome-rewards/claim", {
+      const response = await fetch("/api/welcome-rewards/claim", {
         method: "POST",
+        credentials: "include",
       });
+      
+      const data = await response.json();
+      
+      console.log("Claim response:", { status: response.status, data });
 
-      if (response.success) {
-        // Show success message hoặc redirect
-        console.log("Claimed rewards:", response.claimedRewards);
-        handleComplete();
+      if (response.ok && data.success) {
+        toast.success("Nhận phần thưởng thành công! 🎉");
+        console.log("Claimed rewards:", data.claimedRewards);
+        
+        // Delay một chút để user thấy toast rồi mới redirect
+        setTimeout(() => {
+          handleComplete();
+        }, 1500);
       } else {
-        console.error("Failed to claim rewards:", response.error);
-        // Có thể show error message ở đây
+        // Handle errors - hiển thị message chính xác từ API
+        const errorMessage = data.error || data.message || "Không thể nhận phần thưởng";
+        toast.error(errorMessage);
+        console.error("Failed to claim rewards:", { 
+          status: response.status, 
+          error: data.error,
+          requiresIdentityUpdate: data.requiresIdentityUpdate 
+        });
+        
+        // Không redirect khi lỗi - để user đọc message và tự quyết định
+        // User có thể click "Sử dụng app" hoặc "Bỏ qua tour" để rời khỏi
       }
     } catch (error) {
       console.error("Error claiming rewards:", error);
+      toast.error("Đã có lỗi xảy ra khi nhận thưởng. Vui lòng thử lại sau.");
     } finally {
       setIsClaimingRewards(false);
+      isClaimingRef.current = false;
     }
   };
 
@@ -342,6 +386,16 @@ export default function WelcomeTour({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-gray-900/90 via-gray-800/90 to-black/90 backdrop-blur-sm">
+      {/* Overlay để prevent clicks khi đang claim rewards */}
+      {isClaimingRewards && (
+        <div className="absolute inset-0 z-[60] bg-black/50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 shadow-xl flex flex-col items-center">
+            <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-gray-800 font-semibold">Đang xử lý...</p>
+            <p className="text-gray-500 text-sm mt-2">Vui lòng đợi</p>
+          </div>
+        </div>
+      )}
       {/* Game-style background effects */}
       <div className="absolute inset-0 overflow-hidden">
         {/* Animated stars */}
@@ -481,135 +535,139 @@ export default function WelcomeTour({
                   {/* Rewards section */}
                   {"isRewardPage" in currentSlideData &&
                     currentSlideData.isRewardPage && (
-                    <div className="mb-8 max-w-4xl w-full">
-                      {isLoadingRewards ? (
-                        <div className="flex justify-center items-center h-32">
-                          <div className="text-white/70">
-                            Đang tải phần thưởng...
+                      <div className="mb-8 max-w-4xl w-full">
+                        {isLoadingRewards ? (
+                          <div className="flex justify-center items-center h-32">
+                            <div className="text-white/70">
+                              Đang tải phần thưởng...
+                            </div>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          {welcomeRewards.map((reward, index) => {
-                            // Map reward config thành display format
-                            let icon = "🎁";
-                            let displayName = reward.name;
-                            let depositAmount = "50,000đ";
+                        ) : (
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {welcomeRewards.map((reward, index) => {
+                              // Map reward config thành display format
+                              let icon = "🎁";
+                              let displayName = reward.name;
+                              let depositAmount = "50,000đ";
 
-                            if (reward.config) {
-                              if (reward.config.type === "GAME_TIME") {
-                                icon = "🎮";
-                                displayName = `${reward.config.value || 5}h FREE`;
-                              } else if (reward.config.type === "DRINK") {
-                                icon = "🥤";
-                                displayName = `${reward.config.value || 1} nước pha chế`;
-                              } else if (
-                                reward.config.type === "SPECIAL_GIFT"
-                              ) {
-                                icon = "🎁";
-                                displayName = "Quà đặc biệt";
+                              if (reward.config) {
+                                if (reward.config.type === "GAME_TIME") {
+                                  icon = "🎮";
+                                  displayName = `${reward.config.value || 5}h FREE`;
+                                } else if (reward.config.type === "DRINK") {
+                                  icon = "🥤";
+                                  displayName = `${reward.config.value || 1} nước pha chế`;
+                                } else if (
+                                  reward.config.type === "SPECIAL_GIFT"
+                                ) {
+                                  icon = "🎁";
+                                  displayName = "Quà đặc biệt";
+                                }
+
+                                // Lấy minOrderAmount từ config (hoặc depositAmount cũ)
+                                const minOrder = reward.config.minOrderAmount || reward.config.depositAmount || 0;
+                                if (minOrder > 0) {
+                                  depositAmount = `${minOrder.toLocaleString()}đ`;
+                                } else {
+                                  depositAmount = "0đ";
+                                }
                               }
 
-                              // Lấy deposit amount từ config
-                              if (reward.config.depositAmount) {
-                                depositAmount = `${reward.config.depositAmount.toLocaleString()}đ`;
-                              } else {
-                                // Fallback theo index
-                                const amounts = [
-                                  "50,000đ",
-                                  "75,000đ",
-                                  "100,000đ",
-                                ];
-                                depositAmount = amounts[index] || "50,000đ";
-                              }
-                            }
+                              return (
+                                <FlipCard
+                                  key={reward.id}
+                                  disabled={reward.alreadyClaimed}
+                                  frontContent={
+                                    <div
+                                      className={`${index === 0 ? "bg-gradient-to-br from-blue-500 to-blue-700" : index === 1 ? "bg-gradient-to-br from-emerald-500 to-emerald-700" : "bg-gradient-to-br from-orange-500 to-orange-700"} rounded-xl h-full flex flex-col items-center justify-center text-white p-4 shadow-lg overflow-hidden relative group ${reward.canClaim ? "ring-2 ring-green-400 ring-opacity-75" : ""} ${reward.alreadyClaimed ? "opacity-70" : ""}`}
+                                    >
+                                      <div className="text-4xl mb-4">
+                                        {icon}
+                                      </div>
+                                      <div className="text-2xl font-bold text-center">
+                                        {displayName}
+                                      </div>
 
-                            return (
-                              <FlipCard
-                                key={reward.id}
-                                frontContent={
-                                  <div
-                                    className={`${index === 0 ? "bg-gradient-to-br from-blue-500 to-blue-700" : index === 1 ? "bg-gradient-to-br from-emerald-500 to-emerald-700" : "bg-gradient-to-br from-orange-500 to-orange-700"} rounded-xl h-full flex flex-col items-center justify-center text-white p-4 shadow-lg overflow-hidden relative group ${reward.canClaim ? "ring-2 ring-green-400 ring-opacity-75" : ""}`}
-                                  >
-                                    <div className="text-4xl mb-4">{icon}</div>
-                                    <div className="text-2xl font-bold text-center">
-                                      {displayName}
+                                      {/* Checkmark icon cho reward đã claim */}
+                                      {reward.alreadyClaimed && (
+                                        <div className="absolute top-3 right-3 bg-green-500 rounded-full p-2 shadow-lg">
+                                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
+                                          </svg>
+                                        </div>
+                                      )}
+
+                                      {/* Subtle visual indicator for claimable rewards (chưa claim) */}
+                                      {reward.canClaim && !reward.alreadyClaimed && (
+                                        <div className="absolute top-2 right-2 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                                      )}
+
+                                      {/* Hover icon */}
+                                      {!reward.alreadyClaimed && (
+                                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                          <div className="bg-white/20 rounded-full p-2">
+                                            <ChevronRight className="w-4 h-4 text-white" />
+                                          </div>
+                                        </div>
+                                      )}
                                     </div>
+                                  }
+                                  backContent={
+                                    <div
+                                      className={`bg-gradient-to-b ${reward.canClaim ? "from-green-500 to-green-600" : "from-orange-500 to-orange-600"} rounded-xl h-full flex flex-col items-center justify-center text-white p-4 shadow-lg overflow-hidden`}
+                                    >
+                                      <div className="text-3xl mb-3">
+                                        {reward.canClaim ? "🎁" : "💰"}
+                                      </div>
 
-                                    {/* Subtle visual indicator for claimable rewards */}
-                                    {reward.canClaim && (
-                                      <div className="absolute top-2 right-2 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                                    )}
+                                      {reward.canClaim ? (
+                                        <>
+                                          <div className="text-xl font-bold mb-3 text-center">
+                                            {displayName}
+                                          </div>
+                                          <div className="text-sm text-center opacity-90 px-2">
+                                            Bạn đã đủ điều kiện để nhận phần
+                                            thưởng này
+                                          </div>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <div className="text-base font-semibold mb-2">
+                                            Yêu cầu nạp tiền
+                                          </div>
+                                          <div className="text-xl font-bold mb-2">
+                                            {depositAmount}
+                                          </div>
+                                          <div className="text-xs text-center opacity-90 px-2 mb-2">
+                                            Đã nạp:{" "}
+                                            {reward.userDeposit.toLocaleString()}
+                                            đ
+                                          </div>
+                                          {!reward.isWithin14Days && (
+                                            <div className="text-xs text-center text-red-300 px-2 mt-1">
+                                              ⚠️{" "}
+                                              {formatCountdown(
+                                                reward.daysRemaining,
+                                                reward.hoursRemaining,
+                                                reward.minutesRemaining,
+                                              )}
+                                            </div>
+                                          )}
+                                        </>
+                                      )}
 
-                                    {/* Hover icon */}
-                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                      <div className="bg-white/20 rounded-full p-2">
-                                        <ChevronRight className="w-4 h-4 text-white" />
+                                      <div className="text-xs mt-3 opacity-70">
+                                        Tap để quay lại
                                       </div>
                                     </div>
-                                  </div>
-                                }
-                                backContent={
-                                  <div
-                                    className={`bg-gradient-to-b ${reward.canClaim ? "from-green-500 to-green-600" : "from-orange-500 to-orange-600"} rounded-xl h-full flex flex-col items-center justify-center text-white p-4 shadow-lg overflow-hidden`}
-                                  >
-                                    <div className="text-3xl mb-3">
-                                      {reward.canClaim ? "🎁" : "💰"}
-                                    </div>
-
-                                    {reward.canClaim ? (
-                                      <>
-                                        <div className="text-base font-semibold mb-2 text-center">
-                                          Có thể nhận ngay!
-                                        </div>
-                                        <div className="text-lg font-bold mb-2 text-center">
-                                          {displayName}
-                                        </div>
-                                        <div className="text-xs text-center opacity-90 px-2 mb-3">
-                                          Bạn đã đủ điều kiện để nhận phần
-                                          thưởng này
-                                        </div>
-                                        <div className="bg-white text-green-600 text-sm font-semibold px-4 py-2 rounded-full text-center animate-pulse">
-                                          🎁 Nhấn để nhận
-                                        </div>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <div className="text-base font-semibold mb-2">
-                                          Yêu cầu nạp tiền
-                                        </div>
-                                        <div className="text-xl font-bold mb-2">
-                                          {depositAmount}
-                                        </div>
-                                        <div className="text-xs text-center opacity-90 px-2 mb-2">
-                                          Đã nạp:{" "}
-                                          {reward.userDeposit.toLocaleString()}đ
-                                        </div>
-                                        {!reward.isWithin14Days && (
-                                          <div className="text-xs text-center text-red-300 px-2 mt-1">
-                                            ⚠️{" "}
-                                            {formatCountdown(
-                                              reward.daysRemaining,
-                                              reward.hoursRemaining,
-                                              reward.minutesRemaining,
-                                            )}
-                                          </div>
-                                        )}
-                                      </>
-                                    )}
-
-                                    <div className="text-xs mt-3 opacity-70">
-                                      Tap để quay lại
-                                    </div>
-                                  </div>
-                                }
-                              />
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                                  }
+                                />
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
                 </div>
 
                 {/* Fixed button area */}

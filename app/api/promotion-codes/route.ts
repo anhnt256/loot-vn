@@ -50,15 +50,15 @@ export async function GET(request: NextRequest) {
       LEFT JOIN Event e ON pc.eventId = e.id
       WHERE (pc.branch = '${branch}' OR e.branch = 'ALL')
     `;
-    
+
     if (eventId) {
       sqlQuery += ` AND pc.eventId = '${eventId}'`;
     }
-    
+
     if (isUsed !== null) {
       sqlQuery += ` AND pc.isUsed = ${isUsed === "true" ? 1 : 0}`;
     }
-    
+
     sqlQuery += `
       ORDER BY pc.createdAt DESC
       LIMIT ${limit}

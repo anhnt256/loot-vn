@@ -22,8 +22,8 @@ export function getDebugConfig(): DebugConfig {
 
   // Default values for Go Vap branch
   const goVapDefaults = {
-    macAddress: "A4-0C-66-0B-E6-AF",
-    userId: 10853,
+    macAddress: "A4-0C-66-0B-E8-6B",
+    userId: 15796,
     machineName: "GO_VAP_01",
   };
 

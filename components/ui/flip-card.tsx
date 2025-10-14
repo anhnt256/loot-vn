@@ -8,6 +8,7 @@ interface FlipCardProps {
   backContent: React.ReactNode;
   className?: string;
   onClick?: () => void;
+  disabled?: boolean;
 }
 
 export function FlipCard({
@@ -15,10 +16,12 @@ export function FlipCard({
   backContent,
   className,
   onClick,
+  disabled = false,
 }: FlipCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
 
   const handleClick = () => {
+    if (disabled) return; // Không cho flip nếu disabled
     setIsFlipped(!isFlipped);
     onClick?.();
   };
@@ -26,7 +29,8 @@ export function FlipCard({
   return (
     <div
       className={cn(
-        "relative w-full h-48 cursor-pointer perspective-1000",
+        "relative w-full h-48 perspective-1000",
+        disabled ? "cursor-default" : "cursor-pointer",
         className,
       )}
       onClick={handleClick}
