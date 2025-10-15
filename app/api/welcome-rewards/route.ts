@@ -425,7 +425,8 @@ export async function GET(request: NextRequest) {
 
       if (rewardConfig) {
         // Support cả depositAmount (cũ) và minOrderAmount (mới)
-        depositRequired = rewardConfig.minOrderAmount || rewardConfig.depositAmount || 0;
+        depositRequired =
+          rewardConfig.minOrderAmount || rewardConfig.depositAmount || 0;
 
         // Check xem reward đã được claim chưa
         alreadyClaimed = claimedRewardIds.has(Number(reward.id));

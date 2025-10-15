@@ -216,7 +216,7 @@ export default function WelcomeTour({
   const [welcomeRewards, setWelcomeRewards] = useState<WelcomeReward[]>([]);
   const [isLoadingRewards, setIsLoadingRewards] = useState(false);
   const [isClaimingRewards, setIsClaimingRewards] = useState(false);
-  
+
   // Refs để prevent duplicate API calls
   const hasFetchedRewards = useRef(false);
   const isClaimingRef = useRef(false);
@@ -251,24 +251,27 @@ export default function WelcomeTour({
     const fetchWelcomeRewards = async () => {
       // Prevent duplicate calls
       if (hasFetchedRewards.current || !isOpen) return;
-      
+
       hasFetchedRewards.current = true;
       setIsLoadingRewards(true);
-      
+
       try {
         const response = await fetch("/api/welcome-rewards", {
           credentials: "include",
         });
-        
+
         const data = await response.json();
-        
-        console.log("Welcome rewards response:", { status: response.status, data });
-        
+
+        console.log("Welcome rewards response:", {
+          status: response.status,
+          data,
+        });
+
         // API có thể trả về success: true hoặc success: false
         // Trong cả 2 trường hợp đều có rewards array (có thể rỗng)
         if (data.rewards) {
           setWelcomeRewards(data.rewards);
-          
+
           // Chỉ show error nếu có error message và không phải trường hợp identity validation
           // (identity validation sẽ được handle khi user click claim)
           if (!response.ok && data.error && !data.requiresIdentityUpdate) {
@@ -327,38 +330,39 @@ export default function WelcomeTour({
       console.log("Already claiming rewards, ignoring duplicate call");
       return;
     }
-    
+
     isClaimingRef.current = true;
     setIsClaimingRewards(true);
-    
+
     try {
       const response = await fetch("/api/welcome-rewards/claim", {
         method: "POST",
         credentials: "include",
       });
-      
+
       const data = await response.json();
-      
+
       console.log("Claim response:", { status: response.status, data });
 
       if (response.ok && data.success) {
         toast.success("Nhận phần thưởng thành công! 🎉");
         console.log("Claimed rewards:", data.claimedRewards);
-        
+
         // Delay một chút để user thấy toast rồi mới redirect
         setTimeout(() => {
           handleComplete();
         }, 1500);
       } else {
         // Handle errors - hiển thị message chính xác từ API
-        const errorMessage = data.error || data.message || "Không thể nhận phần thưởng";
+        const errorMessage =
+          data.error || data.message || "Không thể nhận phần thưởng";
         toast.error(errorMessage);
-        console.error("Failed to claim rewards:", { 
-          status: response.status, 
+        console.error("Failed to claim rewards:", {
+          status: response.status,
           error: data.error,
-          requiresIdentityUpdate: data.requiresIdentityUpdate 
+          requiresIdentityUpdate: data.requiresIdentityUpdate,
         });
-        
+
         // Không redirect khi lỗi - để user đọc message và tự quyết định
         // User có thể click "Sử dụng app" hoặc "Bỏ qua tour" để rời khỏi
       }
@@ -565,7 +569,10 @@ export default function WelcomeTour({
                                 }
 
                                 // Lấy minOrderAmount từ config (hoặc depositAmount cũ)
-                                const minOrder = reward.config.minOrderAmount || reward.config.depositAmount || 0;
+                                const minOrder =
+                                  reward.config.minOrderAmount ||
+                                  reward.config.depositAmount ||
+                                  0;
                                 if (minOrder > 0) {
                                   depositAmount = `${minOrder.toLocaleString()}đ`;
                                 } else {
@@ -591,16 +598,27 @@ export default function WelcomeTour({
                                       {/* Checkmark icon cho reward đã claim */}
                                       {reward.alreadyClaimed && (
                                         <div className="absolute top-3 right-3 bg-green-500 rounded-full p-2 shadow-lg">
-                                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
+                                          <svg
+                                            className="w-6 h-6 text-white"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                          >
+                                            <path
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              strokeWidth="3"
+                                              d="M5 13l4 4L19 7"
+                                            ></path>
                                           </svg>
                                         </div>
                                       )}
 
                                       {/* Subtle visual indicator for claimable rewards (chưa claim) */}
-                                      {reward.canClaim && !reward.alreadyClaimed && (
-                                        <div className="absolute top-2 right-2 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                                      )}
+                                      {reward.canClaim &&
+                                        !reward.alreadyClaimed && (
+                                          <div className="absolute top-2 right-2 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                                        )}
 
                                       {/* Hover icon */}
                                       {!reward.alreadyClaimed && (

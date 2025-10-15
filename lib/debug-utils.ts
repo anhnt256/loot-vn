@@ -22,15 +22,15 @@ export function getDebugConfig(): DebugConfig {
 
   // Default values for Go Vap branch
   const goVapDefaults = {
-    macAddress: "A4-0C-66-0B-E8-6B",
-    userId: 15796,
+    macAddress: "00-CF-E0-46-C1-91",
+    userId: 111,
     machineName: "GO_VAP_01",
   };
 
   // Default values for Tan Phu branch
   const tanPhuDefaults = {
-    macAddress: "EC-D6-8A-DE-81-5E",
-    userId: 130009,
+    macAddress: "EC-D6-8A-DE-81-E2",
+    userId: 2980,
     machineName: "TAN_PHU_01",
   };
 

@@ -311,6 +311,16 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
           >
             Voucher
           </Link>
+          {/* Tạm ẩn tính năng Hẹn chơi */}
+          {/* <Link
+            className={cn(
+              "block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700",
+              pathname.startsWith("/game-appointments") ? "bg-gray-700" : "transparent",
+            )}
+            href="/game-appointments"
+          >
+            🎮 Hẹn chơi
+          </Link> */}
           {/* {showGatewayBonus && (
             <Link
               className={cn(

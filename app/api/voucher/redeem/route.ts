@@ -106,12 +106,7 @@ export async function POST(request: NextRequest) {
         `[Redeem Voucher] Processing FREE_HOURS for userId: ${userId}`,
       );
 
-      return await handleFreeHours(
-        promoCode,
-        userId,
-        branch,
-        promotionCodeId,
-      );
+      return await handleFreeHours(promoCode, userId, branch, promotionCodeId);
     }
 
     // Lấy eventRewardId từ promotionCode.eventId
@@ -522,9 +517,7 @@ async function handleFreeHours(
       console.log(`[FREE_HOURS] Marked PromotionCode as used`);
     });
 
-    console.log(
-      `[FREE_HOURS] Successfully completed for userId: ${userId}`,
-    );
+    console.log(`[FREE_HOURS] Successfully completed for userId: ${userId}`);
 
     return NextResponse.json({
       success: true,

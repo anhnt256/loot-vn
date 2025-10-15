@@ -171,6 +171,48 @@ export default function BattlePassPage() {
     },
   });
 
+  // Hàm gọi user-calculator để cập nhật lại user info sau khi claim reward
+  const refreshUserData = async () => {
+    const userId = userData?.userId || userData?.id;
+    if (!userId) return;
+
+    try {
+      console.log(`Refreshing user data after claiming reward for user ${userId}`);
+      const response = await fetch("/api/user-calculator", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ listUsers: [Number(userId)] }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+          const updatedUserData = result.data[0];
+          
+          // Preserve isNewUser và isReturnedUser từ userData cũ
+          const mergedUserData = {
+            ...updatedUserData,
+            isNewUser: userData?.isNewUser,
+            isReturnedUser: userData?.isReturnedUser,
+          };
+          
+          localStorage.setItem(CURRENT_USER, JSON.stringify(mergedUserData));
+          setUserData(mergedUserData); // Update state để UI reflect ngay
+          
+          console.log(`✅ User data refreshed successfully:`, {
+            userId,
+            stars: updatedUserData.stars,
+            magicStone: updatedUserData.magicStone,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error refreshing user data:", error);
+      // Không throw error để không làm gián đoạn flow claim reward
+    }
+  };
+
   const claimRewardMutation = useMutation({
     mutationFn: async (rewardId: number) => {
       const response = await fetch(
@@ -182,13 +224,56 @@ export default function BattlePassPage() {
       if (!response.ok) throw new Error("Failed to claim reward");
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ["userProgress"] });
       toast.success("Nhận thưởng thành công!");
       setShouldCloseRewardModal(true);
+      
+      // Refresh user data để update số dư
+      await refreshUserData();
     },
     onError: (error) => {
       toast.error("Nhận thưởng thất bại");
+    },
+  });
+
+  const claimAllRewardsMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/battle-pass/claim-all-rewards", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to claim rewards");
+      }
+      return response.json();
+    },
+    onSuccess: async (data) => {
+      queryClient.invalidateQueries({ queryKey: ["userProgress"] });
+      
+      if (data.claimedCount === 0) {
+        toast.info("Không có phần thưởng nào để nhận");
+      } else {
+        let message = `🎉 Đã nhận ${data.claimedCount} phần thưởng!`;
+        
+        if (data.totalStarsAdded > 0) {
+          message += ` Tổng: +${data.totalStarsAdded.toLocaleString()} điểm`;
+        }
+        
+        if (data.totalPromotionCodes > 0) {
+          message += ` | ${data.totalPromotionCodes} voucher`;
+        }
+        
+        toast.success(message);
+      }
+      
+      // Refresh user data để update số dư
+      await refreshUserData();
+    },
+    onError: (error: any) => {
+      const errorMessage = error.message || "Nhận thưởng thất bại";
+      toast.error(errorMessage);
     },
   });
 
@@ -220,21 +305,9 @@ export default function BattlePassPage() {
       toast.error("🚫 Mùa đã kết thúc - Không thể nhận thưởng");
       return;
     }
-    const availableRewards = userProgress?.availableRewards || [];
-    const claimableRewardIds = availableRewards
-      .filter((reward) => rewardIds.includes(reward.id))
-      .map((reward) => reward.id);
-    if (claimableRewardIds.length > 0) {
-      for (const rewardId of claimableRewardIds) {
-        await claimRewardMutation.mutateAsync(rewardId);
-      }
-      const totalValue = availableRewards
-        .filter((reward) => claimableRewardIds.includes(reward.id))
-        .reduce((sum, r) => sum + (r.rewardValue || 0), 0);
-      toast.success(
-        `🎉 Đã nhận ${claimableRewardIds.length} phần thưởng! Tổng: +${totalValue.toLocaleString()} điểm`,
-      );
-    }
+    
+    // Backend sẽ tự động claim tất cả rewards có thể claim
+    claimAllRewardsMutation.mutate();
   };
 
   const handlePurchasePremium = () => {

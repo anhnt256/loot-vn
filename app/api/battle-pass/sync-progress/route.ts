@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentTimeVNDB } from "@/lib/timezone-utils";
 import { cookies } from "next/headers";
+import { getOrCreateUserBattlePass } from "@/lib/battle-pass-creation";
 
 export async function POST(request: Request) {
   try {
@@ -59,54 +60,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // Find or create user progress
-    // Check exist trước để tránh duplicate
-    let userProgressResult = await db.$queryRaw<any[]>`
-      SELECT * FROM UserBattlePass 
-      WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id} AND branch = ${branch}
-      LIMIT 1
-    `;
-
-    let userProgress = userProgressResult[0];
-
-    // Chỉ tạo mới nếu chưa có
-    if (!userProgress) {
-      const now = getCurrentTimeVNDB();
-
-      try {
-        await db.$executeRawUnsafe(
-          `
-          INSERT INTO UserBattlePass (userId, seasonId, level, experience, isPremium, totalSpent, branch, createdAt, updatedAt)
-          VALUES (?, ?, 0, 0, false, 0, ?, ?, ?)
-        `,
-          decoded.userId,
-          currentSeason.id,
-          branch,
-          now,
-          now,
-        );
-
-        // Lấy lại sau khi insert
-        userProgressResult = await db.$queryRaw<any[]>`
-          SELECT * FROM UserBattlePass 
-          WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id} AND branch = ${branch}
-          LIMIT 1
-        `;
-        userProgress = userProgressResult[0];
-      } catch (error: any) {
-        // Nếu bị duplicate key error (race condition), lấy lại record
-        if (error.code === "ER_DUP_ENTRY" || error.code === "23000") {
-          userProgressResult = await db.$queryRaw<any[]>`
-            SELECT * FROM UserBattlePass 
-            WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id} AND branch = ${branch}
-            LIMIT 1
-          `;
-          userProgress = userProgressResult[0];
-        } else {
-          throw error;
-        }
-      }
-    }
+    // Find or create user progress với Redis lock
+    const userProgress = await getOrCreateUserBattlePass({
+      userId: decoded.userId,
+      seasonId: currentSeason.id,
+      branch,
+      maxLevel: 100, // Default max level, sẽ được override nếu season có maxLevel
+      initialExperience: 0,
+      initialLevel: 0,
+    });
 
     if (!userProgress) {
       return NextResponse.json(

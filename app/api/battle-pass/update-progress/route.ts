@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { getCurrentTimeVNDB } from "@/lib/timezone-utils";
 import { cookies } from "next/headers";
 import { calculateLevel } from "@/lib/battle-pass-utils";
+import { getOrCreateUserBattlePass } from "@/lib/battle-pass-creation";
 
 export async function POST(request: Request) {
   try {
@@ -48,39 +49,29 @@ export async function POST(request: Request) {
       );
     }
 
-    // Find or create user progress
-    const existingProgress = await db.$queryRaw<any[]>`
-      SELECT * FROM UserBattlePass 
-      WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id} AND branch = ${branch}
-      LIMIT 1
-    `;
+    // Find or create user progress với Redis lock
+    let userProgress = await getOrCreateUserBattlePass({
+      userId: decoded.userId,
+      seasonId: currentSeason.id,
+      branch,
+      maxLevel: currentSeason.maxLevel,
+      initialExperience: experience || 0,
+      initialLevel: undefined, // Let it calculate from experience
+    });
 
-    let userProgress = existingProgress[0];
+    // Update existing progress if needed
+    const newExperience =
+      experience !== undefined ? experience : userProgress.experience;
+    const newTotalSpent =
+      totalSpent !== undefined ? totalSpent : userProgress.totalSpent;
+    const newLevel = calculateLevel(newExperience, currentSeason.maxLevel);
 
-    if (!userProgress) {
-      // Create new user progress
-      const newExperience = experience || 0;
-      const newLevel = calculateLevel(newExperience, currentSeason.maxLevel);
-
-      await db.$executeRaw`
-        INSERT INTO UserBattlePass (userId, seasonId, level, experience, isPremium, totalSpent, branch, createdAt, updatedAt)
-        VALUES (${decoded.userId}, ${currentSeason.id}, ${newLevel}, ${newExperience}, false, ${totalSpent || 0}, ${branch}, ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
-      `;
-
-      const newProgress = await db.$queryRaw<any[]>`
-        SELECT * FROM UserBattlePass 
-        WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id} AND branch = ${branch}
-        LIMIT 1
-      `;
-      userProgress = newProgress[0];
-    } else {
-      // Update existing progress
-      const newExperience =
-        experience !== undefined ? experience : userProgress.experience;
-      const newTotalSpent =
-        totalSpent !== undefined ? totalSpent : userProgress.totalSpent;
-      const newLevel = calculateLevel(newExperience, currentSeason.maxLevel);
-
+    // Only update if values changed
+    if (
+      newExperience !== userProgress.experience ||
+      newTotalSpent !== userProgress.totalSpent ||
+      newLevel !== userProgress.level
+    ) {
       await db.$executeRaw`
         UPDATE UserBattlePass 
         SET experience = ${newExperience}, level = ${newLevel}, totalSpent = ${newTotalSpent}, updatedAt = ${getCurrentTimeVNDB()}

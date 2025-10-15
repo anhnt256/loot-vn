@@ -178,7 +178,8 @@ export async function POST(request: NextRequest) {
       const fourteenDaysAgo = new Date(now);
       fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
 
-      const startDate = fourteenDaysAgo.toISOString().split("T")[0] + " 00:00:00";
+      const startDate =
+        fourteenDaysAgo.toISOString().split("T")[0] + " 00:00:00";
       const endDate = now.toISOString().split("T")[0] + " 23:59:59";
 
       const paymentResult = (await fnetDB.$queryRawUnsafe(`
@@ -192,8 +193,12 @@ export async function POST(request: NextRequest) {
           AND (ServeDate + INTERVAL ServeTime HOUR_SECOND) <= '${endDate}'
       `)) as any[];
 
-      userTotalDeposit = parseFloat(paymentResult[0]?.totalDeposit?.toString() || "0");
-      console.log(`User ${userId} - Total deposit in 14 days: ${userTotalDeposit}`);
+      userTotalDeposit = parseFloat(
+        paymentResult[0]?.totalDeposit?.toString() || "0",
+      );
+      console.log(
+        `User ${userId} - Total deposit in 14 days: ${userTotalDeposit}`,
+      );
     } catch (error) {
       console.error("Error checking user payment:", error);
     }
@@ -288,14 +293,21 @@ export async function POST(request: NextRequest) {
     let previouslyClaimedRewards = [];
     if (participantRecord.length > 0 && participantRecord[0].rewardsReceived) {
       try {
-        previouslyClaimedRewards = JSON.parse(participantRecord[0].rewardsReceived);
+        previouslyClaimedRewards = JSON.parse(
+          participantRecord[0].rewardsReceived,
+        );
       } catch (e) {
         console.error("Error parsing previouslyClaimedRewards:", e);
       }
     }
 
-    const previouslyClaimedIds = new Set(previouslyClaimedRewards.map((r: any) => r.id));
-    console.log("Previously claimed reward IDs:", Array.from(previouslyClaimedIds));
+    const previouslyClaimedIds = new Set(
+      previouslyClaimedRewards.map((r: any) => r.id),
+    );
+    console.log(
+      "Previously claimed reward IDs:",
+      Array.from(previouslyClaimedIds),
+    );
 
     // Tạo UserRewardMap records và PromotionCode cho từng reward
     const claimedRewards = [];
@@ -313,14 +325,13 @@ export async function POST(request: NextRequest) {
 
         // Check xem reward đã được claim trước đó chưa
         if (previouslyClaimedIds.has(Number(reward.id))) {
-          console.log(
-            `Reward ${reward.id} đã được claim trước đó, skip...`,
-          );
+          console.log(`Reward ${reward.id} đã được claim trước đó, skip...`);
           continue; // Skip reward đã claim
         }
 
         // Check điều kiện minOrderAmount (hoặc depositAmount cũ)
-        const minOrderRequired = rewardConfig.minOrderAmount || rewardConfig.depositAmount || 0;
+        const minOrderRequired =
+          rewardConfig.minOrderAmount || rewardConfig.depositAmount || 0;
         if (minOrderRequired > 0 && userTotalDeposit < minOrderRequired) {
           console.log(
             `Reward ${reward.id} không đủ điều kiện: minOrder=${minOrderRequired}, userDeposit=${userTotalDeposit}`,
@@ -464,9 +475,10 @@ export async function POST(request: NextRequest) {
     // Check nếu không có reward nào được claim
     if (claimedRewards.length === 0) {
       return NextResponse.json(
-        { 
+        {
           success: false,
-          error: "Không có phần thưởng nào để nhận. Bạn đã nhận hết phần thưởng hoặc chưa đủ điều kiện." 
+          error:
+            "Không có phần thưởng nào để nhận. Bạn đã nhận hết phần thưởng hoặc chưa đủ điều kiện.",
         },
         { status: 400 },
       );
@@ -474,7 +486,7 @@ export async function POST(request: NextRequest) {
 
     // Merge rewards mới với rewards đã claim trước đó
     const allClaimedRewards = [...previouslyClaimedRewards, ...claimedRewards];
-    
+
     // Cập nhật EventParticipant với tất cả rewardsReceived (cũ + mới)
     await db.$executeRaw`
       UPDATE EventParticipant 
