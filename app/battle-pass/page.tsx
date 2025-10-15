@@ -177,7 +177,9 @@ export default function BattlePassPage() {
     if (!userId) return;
 
     try {
-      console.log(`Refreshing user data after claiming reward for user ${userId}`);
+      console.log(
+        `Refreshing user data after claiming reward for user ${userId}`,
+      );
       const response = await fetch("/api/user-calculator", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -187,19 +189,23 @@ export default function BattlePassPage() {
 
       if (response.ok) {
         const result = await response.json();
-        if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+        if (
+          result.success &&
+          Array.isArray(result.data) &&
+          result.data.length > 0
+        ) {
           const updatedUserData = result.data[0];
-          
+
           // Preserve isNewUser và isReturnedUser từ userData cũ
           const mergedUserData = {
             ...updatedUserData,
             isNewUser: userData?.isNewUser,
             isReturnedUser: userData?.isReturnedUser,
           };
-          
+
           localStorage.setItem(CURRENT_USER, JSON.stringify(mergedUserData));
           setUserData(mergedUserData); // Update state để UI reflect ngay
-          
+
           console.log(`✅ User data refreshed successfully:`, {
             userId,
             stars: updatedUserData.stars,
@@ -228,7 +234,7 @@ export default function BattlePassPage() {
       queryClient.invalidateQueries({ queryKey: ["userProgress"] });
       toast.success("Nhận thưởng thành công!");
       setShouldCloseRewardModal(true);
-      
+
       // Refresh user data để update số dư
       await refreshUserData();
     },
@@ -251,23 +257,23 @@ export default function BattlePassPage() {
     },
     onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ["userProgress"] });
-      
+
       if (data.claimedCount === 0) {
         toast.info("Không có phần thưởng nào để nhận");
       } else {
         let message = `🎉 Đã nhận ${data.claimedCount} phần thưởng!`;
-        
+
         if (data.totalStarsAdded > 0) {
           message += ` Tổng: +${data.totalStarsAdded.toLocaleString()} điểm`;
         }
-        
+
         if (data.totalPromotionCodes > 0) {
           message += ` | ${data.totalPromotionCodes} voucher`;
         }
-        
+
         toast.success(message);
       }
-      
+
       // Refresh user data để update số dư
       await refreshUserData();
     },
@@ -305,7 +311,7 @@ export default function BattlePassPage() {
       toast.error("🚫 Mùa đã kết thúc - Không thể nhận thưởng");
       return;
     }
-    
+
     // Backend sẽ tự động claim tất cả rewards có thể claim
     claimAllRewardsMutation.mutate();
   };

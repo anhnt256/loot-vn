@@ -310,9 +310,7 @@ export async function POST(request: Request) {
     console.log(
       `✅ Successfully claimed ${claimableRewards.length} rewards for user ${decoded.userId}`,
     );
-    console.log(
-      `✅ Created ${promotionCodes.length} promotion codes`,
-    );
+    console.log(`✅ Created ${promotionCodes.length} promotion codes`);
 
     return NextResponse.json({
       success: true,
@@ -331,4 +329,3 @@ export async function POST(request: Request) {
     );
   }
 }
-

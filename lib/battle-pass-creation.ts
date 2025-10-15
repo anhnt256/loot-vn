@@ -19,8 +19,15 @@ interface CreateUserBattlePassParams {
 export async function getOrCreateUserBattlePass(
   params: CreateUserBattlePassParams,
 ): Promise<any> {
-  const { userId, seasonId, branch, maxLevel, initialExperience, initialLevel } = params;
-  
+  const {
+    userId,
+    seasonId,
+    branch,
+    maxLevel,
+    initialExperience,
+    initialLevel,
+  } = params;
+
   // Tạo lock key duy nhất cho user + season + branch
   const lockKey = `battle_pass_lock:${userId}:${seasonId}:${branch}`;
   const lockValue = `${Date.now()}`; // Unique value để release đúng lock
@@ -35,20 +42,24 @@ export async function getOrCreateUserBattlePass(
     `;
 
     if (userProgressResult.length > 0) {
-      console.log(`UserBattlePass already exists for user ${userId}, season ${seasonId}, branch ${branch}`);
+      console.log(
+        `UserBattlePass already exists for user ${userId}, season ${seasonId}, branch ${branch}`,
+      );
       return userProgressResult[0];
     }
 
     // Step 2: Acquire Redis lock (SET NX EX)
-    const lockAcquired = await redis.set(lockKey, lockValue, "NX", "EX", lockTTL);
+    const lockAcquired = await redis.set(lockKey, lockValue, "EX", lockTTL, "NX");
 
     if (!lockAcquired) {
       // Lock không lấy được, có request khác đang xử lý
-      console.log(`Lock not acquired for user ${userId}, waiting for other request...`);
-      
+      console.log(
+        `Lock not acquired for user ${userId}, waiting for other request...`,
+      );
+
       // Đợi một chút rồi query lại (request khác đã tạo xong)
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       userProgressResult = await db.$queryRaw<any[]>`
         SELECT * FROM UserBattlePass 
         WHERE userId = ${userId} AND seasonId = ${seasonId} AND branch = ${branch}
@@ -60,7 +71,9 @@ export async function getOrCreateUserBattlePass(
       }
 
       // Nếu vẫn chưa có, throw error
-      throw new Error("Failed to create UserBattlePass: concurrent request timeout");
+      throw new Error(
+        "Failed to create UserBattlePass: concurrent request timeout",
+      );
     }
 
     try {
@@ -72,7 +85,9 @@ export async function getOrCreateUserBattlePass(
       `;
 
       if (userProgressResult.length > 0) {
-        console.log(`UserBattlePass created by another request while acquiring lock`);
+        console.log(
+          `UserBattlePass created by another request while acquiring lock`,
+        );
         return userProgressResult[0];
       }
 
@@ -81,8 +96,10 @@ export async function getOrCreateUserBattlePass(
       const level = initialLevel ?? calculateLevel(experience, maxLevel);
       const now = getCurrentTimeVNDB();
 
-      console.log(`Creating UserBattlePass for user ${userId}, season ${seasonId}, branch ${branch}`);
-      
+      console.log(
+        `Creating UserBattlePass for user ${userId}, season ${seasonId}, branch ${branch}`,
+      );
+
       await db.$executeRawUnsafe(
         `
         INSERT INTO UserBattlePass (userId, seasonId, level, experience, isPremium, totalSpent, branch, createdAt, updatedAt)
@@ -110,7 +127,6 @@ export async function getOrCreateUserBattlePass(
 
       console.log(`UserBattlePass created successfully for user ${userId}`);
       return userProgressResult[0];
-
     } finally {
       // Step 6: Release lock (chỉ release nếu đúng lockValue)
       const script = `
@@ -122,10 +138,9 @@ export async function getOrCreateUserBattlePass(
       `;
       await redis.eval(script, 1, lockKey, lockValue);
     }
-
   } catch (error: any) {
     console.error("Error in getOrCreateUserBattlePass:", error);
-    
+
     // Nếu lỗi duplicate (bất ngờ), vẫn cố gắng lấy record
     if (error.code === "ER_DUP_ENTRY" || error.code === "23000") {
       console.log("Duplicate entry detected, fetching existing record");
@@ -134,13 +149,12 @@ export async function getOrCreateUserBattlePass(
         WHERE userId = ${userId} AND seasonId = ${seasonId} AND branch = ${branch}
         LIMIT 1
       `;
-      
+
       if (userProgressResult.length > 0) {
         return userProgressResult[0];
       }
     }
-    
+
     throw error;
   }
 }
-
