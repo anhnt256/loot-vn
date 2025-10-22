@@ -3,6 +3,7 @@ import { db, getFnetDB } from "@/lib/db";
 import { cookies } from "next/headers";
 import { getCurrentTimeVNDB } from "@/lib/timezone-utils";
 import { verifyJWT } from "@/lib/jwt";
+import { hasUserUsedNewUserWelcomeReward } from "@/lib/event-reward-utils";
 
 // Function to generate random 8-character code
 function generateRandomCode(): string {
@@ -315,6 +316,21 @@ export async function POST(request: NextRequest) {
     console.log(
       `Processing ${eventRewards.length} rewards for event ${event.eventId}`,
     );
+
+    // Check if user has already used NEW_USER_WELCOME reward
+    const hasUsedWelcome = await hasUserUsedNewUserWelcomeReward(
+      userId,
+      branch,
+    );
+    if (hasUsedWelcome) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Bạn đã nhận phần thưởng chào mừng thành viên mới rồi",
+        },
+        { status: 400 },
+      );
+    }
 
     for (const reward of eventRewards) {
       console.log(`\n=== PROCESSING REWARD ${reward.id} ===`);

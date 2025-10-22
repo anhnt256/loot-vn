@@ -49,7 +49,13 @@ export async function getOrCreateUserBattlePass(
     }
 
     // Step 2: Acquire Redis lock (SET NX EX)
-    const lockAcquired = await redis.set(lockKey, lockValue, "EX", lockTTL, "NX");
+    const lockAcquired = await redis.set(
+      lockKey,
+      lockValue,
+      "EX",
+      lockTTL,
+      "NX",
+    );
 
     if (!lockAcquired) {
       // Lock không lấy được, có request khác đang xử lý

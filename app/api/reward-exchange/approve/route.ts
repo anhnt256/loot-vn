@@ -125,19 +125,11 @@ export async function POST(request: NextRequest) {
             );
           }
 
-          // 2. Insert vào EventRewardUsed
-          if (rewardMap[0].rewardId && rewardMap[0].eventId) {
-            await tx.$executeRaw`
-              INSERT INTO EventRewardUsed (eventRewardId, userId, branch, usedAt)
-              VALUES (
-                ${rewardMap[0].rewardId},
-                ${user[0].userId},
-                ${branch},
-                NOW()
-              )
-            `;
-            console.log("[APPROVE EVENT] Inserted EventRewardUsed");
-          }
+          // 2. Update UserRewardMap để track việc sử dụng event reward
+          // UserRewardMap đã có field isUsed = true ở trên, không cần thêm bảng riêng
+          console.log(
+            "[APPROVE EVENT] Event reward usage tracked via UserRewardMap.isUsed = true",
+          );
 
           // 3. Xử lý FREE_HOURS - update Fnet money
           if (

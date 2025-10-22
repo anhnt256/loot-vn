@@ -42,9 +42,6 @@ export async function GET(request: Request) {
       `;
     }
 
-    console.log("userFilter------", userFilter);
-    console.log("userJoin------", userJoin);
-
     const pendingRewards = await db.$queryRawUnsafe<any[]>(`
       SELECT 
         urm.id,
@@ -104,10 +101,6 @@ export async function GET(request: Request) {
       const sub = Number(wallet.sub) || 0;
       const userId = Number(wallet.userid); // Convert to number for consistent key
 
-      console.log(
-        `[PENDING] Wallet for userId ${userId}: main=${main}, sub=${sub}`,
-      );
-
       fnetMoneyMap.set(userId, {
         main,
         sub,
@@ -115,19 +108,17 @@ export async function GET(request: Request) {
       });
     });
 
-    console.log(`[PENDING] Total wallets loaded: ${fnetWallets.length}`);
-
     // Get FnetHistory for pending rewards (to show before/after for EVENT rewards)
     const rewardIds = pendingRewards.map((r) => Number(r.id)).filter(Boolean);
     let fnetHistories = [];
+
     if (rewardIds.length > 0) {
-      fnetHistories = await db.$queryRaw<any[]>`
+      fnetHistories = await db.$queryRawUnsafe<any[]>(`
         SELECT targetId, oldMainMoney, newMainMoney, oldSubMoney, newSubMoney, type
         FROM FnetHistory
         WHERE targetId IN (${rewardIds.join(",")})
-          AND branch = ${branch}
           AND type IN ('REWARD', 'VOUCHER')
-      `;
+      `);
     }
 
     // Create a map for FnetHistory lookup by targetId (UserRewardMap.id)
@@ -142,15 +133,7 @@ export async function GET(request: Request) {
         type: record.type,
       };
       fnetHistoryMap.set(targetId, historyData);
-      console.log(
-        `[PENDING] FnetHistory for targetId ${targetId}:`,
-        JSON.stringify(historyData),
-      );
     });
-
-    console.log(
-      `[PENDING] Total FnetHistory records loaded: ${fnetHistories.length}`,
-    );
 
     // Transform data to simplified format
     const rewardsWithUser = pendingRewards.map((reward) => {
@@ -167,13 +150,6 @@ export async function GET(request: Request) {
       };
       const rewardId = Number(reward.id);
       const historyInfo = fnetHistoryMap.get(rewardId);
-
-      console.log(
-        `[PENDING] Reward ${rewardId} for userId ${userId}: walletInfo=`,
-        walletInfo,
-        "historyInfo=",
-        historyInfo,
-      );
 
       const baseData = {
         id: reward.id,

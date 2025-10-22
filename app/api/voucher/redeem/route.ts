@@ -3,6 +3,10 @@ import { db, getFnetDB } from "@/lib/db";
 import { verifyJWT } from "@/lib/jwt";
 import { getCurrentTimeVNDB } from "@/lib/timezone-utils";
 import { updateFnetMoney } from "@/lib/fnet-money-utils";
+import {
+  hasUserUsedEventReward,
+  hasUserUsedNewUserWelcomeReward,
+} from "@/lib/event-reward-utils";
 
 export async function POST(request: NextRequest) {
   try {
@@ -157,6 +161,36 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`[Redeem Voucher] Final EventRewardId: ${eventRewardId}`);
+
+    // Check if user has already used this event reward
+    if (eventRewardId) {
+      // Special check for NEW_USER_WELCOME - only 1 record per user per branch
+      if (promoCode.rewardType === "NEW_USER_WELCOME") {
+        const hasUsedWelcome = await hasUserUsedNewUserWelcomeReward(
+          userId,
+          branch,
+        );
+        if (hasUsedWelcome) {
+          return NextResponse.json(
+            { error: "Bạn đã nhận phần thưởng chào mừng thành viên mới rồi" },
+            { status: 400 },
+          );
+        }
+      } else {
+        // Normal check for other event rewards
+        const hasUsed = await hasUserUsedEventReward(
+          userId,
+          eventRewardId,
+          branch,
+        );
+        if (hasUsed) {
+          return NextResponse.json(
+            { error: "Bạn đã sử dụng phần thưởng này rồi" },
+            { status: 400 },
+          );
+        }
+      }
+    }
 
     // Tạo UserRewardMap với type = EVENT
     const currentTime = getCurrentTimeVNDB();
@@ -446,6 +480,36 @@ async function handleFreeHours(
     }
 
     console.log(`[FREE_HOURS] EventRewardId: ${eventRewardId}`);
+
+    // Check if user has already used this event reward
+    if (eventRewardId) {
+      // Special check for NEW_USER_WELCOME - only 1 record per user per branch
+      if (promoCode.rewardType === "NEW_USER_WELCOME") {
+        const hasUsedWelcome = await hasUserUsedNewUserWelcomeReward(
+          userId,
+          branch,
+        );
+        if (hasUsedWelcome) {
+          return NextResponse.json(
+            { error: "Bạn đã nhận phần thưởng chào mừng thành viên mới rồi" },
+            { status: 400 },
+          );
+        }
+      } else {
+        // Normal check for other event rewards
+        const hasUsed = await hasUserUsedEventReward(
+          userId,
+          eventRewardId,
+          branch,
+        );
+        if (hasUsed) {
+          return NextResponse.json(
+            { error: "Bạn đã sử dụng phần thưởng này rồi" },
+            { status: 400 },
+          );
+        }
+      }
+    }
 
     // Transaction để đảm bảo atomic
     await db.$transaction(async (tx) => {
