@@ -375,25 +375,6 @@ async function handleMainAccountTopup(
       console.log(`[MAIN_ACCOUNT_TOPUP] Marked PromotionCode as used`);
     });
 
-    // 5. Call updateFnetMoney to add money to main account (outside transaction vì có nested transaction)
-    console.log(
-      `[MAIN_ACCOUNT_TOPUP] Calling updateFnetMoney for userId: ${userId}, amount: ${promoCode.rewardValue}`,
-    );
-
-    await updateFnetMoney({
-      userId: userId,
-      branch: branch,
-      walletType: "MAIN",
-      amount: Number(promoCode.rewardValue),
-      targetId: promotionCodeId,
-      transactionType: "VOUCHER",
-      saveHistory: false, // Đã lưu history ở trên rồi
-    });
-
-    console.log(
-      `[MAIN_ACCOUNT_TOPUP] Successfully completed for userId: ${userId}`,
-    );
-
     return NextResponse.json({
       success: true,
       message: "Main account topup successful",

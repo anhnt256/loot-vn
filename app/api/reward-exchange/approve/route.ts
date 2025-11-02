@@ -205,6 +205,52 @@ export async function POST(request: NextRequest) {
               `[APPROVE EVENT] Successfully updated fnet money for user ${user[0].userId}`,
             );
           }
+
+          // 4. Xử lý MAIN_ACCOUNT_TOPUP - update Fnet money (MAIN account)
+          if (
+            rewardMap[0].eventRewardType === "MAIN_ACCOUNT_TOPUP" &&
+            rewardMap[0].eventRewardValue &&
+            user[0].userId
+          ) {
+            const fnetDB = await getFnetDB();
+
+            // Kiểm tra user có bao nhiêu tài khoản
+            const fnetUserCount = await fnetDB.$queryRaw<any[]>`
+              SELECT COUNT(*) as count FROM usertb 
+              WHERE UserId = ${user[0].userId}
+            `;
+
+            if (fnetUserCount[0].count > 1) {
+              throw new Error(
+                `User ${user[0].userId} has multiple accounts (${fnetUserCount[0].count}). Cannot process reward exchange.`,
+              );
+            }
+
+            if (fnetUserCount[0].count === 0) {
+              throw new Error(
+                `User ${user[0].userId} not found in fnet database.`,
+              );
+            }
+
+            console.log(
+              `[APPROVE EVENT] Processing MAIN_ACCOUNT_TOPUP for user ${user[0].userId}: amount ${rewardMap[0].eventRewardValue}`,
+            );
+
+            // Use updateFnetMoney utility function (saveHistory = false vì đã lưu khi user redeem)
+            await updateFnetMoney({
+              userId: user[0].userId,
+              branch: branch,
+              walletType: "MAIN",
+              amount: Number(rewardMap[0].eventRewardValue),
+              targetId: rewardMapId,
+              transactionType: "REWARD",
+              saveHistory: false,
+            });
+
+            console.log(
+              `[APPROVE EVENT] Successfully updated fnet MAIN account money for user ${user[0].userId}`,
+            );
+          }
         } else if (rewardType === "STARS") {
           // Xử lý STARS reward (logic cũ)
           console.log("[APPROVE STARS] Processing stars reward:", rewardMap[0]);
