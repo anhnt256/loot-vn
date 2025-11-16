@@ -70,6 +70,10 @@ export async function GET(request: NextRequest) {
       eveningStaffId: report.eveningStaffId,
       eveningStaffName: report.eveningStaff?.fullName || null,
       materials: report.materials
+        .filter((material) => {
+          // Only include materials that match the report's reportType
+          return material.material?.reportType === report.reportType;
+        })
         .map((material) => ({
           id: material.id,
           materialName: material.material?.name || "Unknown",
