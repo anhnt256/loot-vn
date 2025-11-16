@@ -84,6 +84,7 @@ export async function checkLoginRateLimit(
 }
 
 // Kiểm tra spam từ database (persistent)
+// Chỉ đếm user được tạo trong gateway core, không check Fnet
 export async function checkDatabaseRateLimit(
   branch: string,
   windowMs: number = 60 * 60 * 1000,
@@ -98,8 +99,9 @@ export async function checkDatabaseRateLimit(
 
   const recentUsers = Number(recentUsersResult[0].count);
 
-  // Giới hạn 10 user mới từ cùng branch trong 1 giờ
-  const maxUsersPerHour = 10;
+  // Giới hạn 50 user mới từ cùng branch trong 1 giờ (tăng từ 10 lên 50)
+  // để tránh chặn user đăng nhập lần đầu (đã có trong Fnet nhưng mới tạo trong gateway)
+  const maxUsersPerHour = 50;
 
   return {
     allowed: recentUsers < maxUsersPerHour,
