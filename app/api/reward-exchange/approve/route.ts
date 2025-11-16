@@ -88,6 +88,42 @@ export async function POST(request: NextRequest) {
     }
 
     await db.$transaction(async (tx) => {
+      // Lock and re-check status to prevent race condition
+      const lockedRewardMap = await tx.$queryRaw<any[]>`
+        SELECT 
+          urm.id,
+          urm.userId,
+          urm.rewardId,
+          urm.promotionCodeId,
+          urm.duration,
+          urm.isUsed,
+          urm.status,
+          urm.branch,
+          urm.createdAt,
+          urm.updatedAt,
+          urm.note,
+          urm.type,
+          pr.name as rewardName,
+          pr.value as rewardValue,
+          pr.starsValue as rewardStars,
+          pc.code as eventPromotionCode,
+          pc.eventId as eventId,
+          pc.rewardType as eventRewardType,
+          pc.rewardValue as eventRewardValue
+        FROM UserRewardMap urm
+        LEFT JOIN PromotionReward pr ON urm.promotionCodeId = pr.id AND urm.type = 'STARS'
+        LEFT JOIN PromotionCode pc ON urm.promotionCodeId = pc.id AND urm.type = 'EVENT'
+        WHERE urm.id = ${rewardMapId}
+          AND urm.branch = ${branch}
+          AND urm.status = 'INITIAL'
+        LIMIT 1
+        FOR UPDATE
+      `;
+
+      if (lockedRewardMap.length === 0) {
+        throw new Error("Reward exchange not found or already processed");
+      }
+
       // Update reward map status
       await tx.$executeRaw`
         UPDATE UserRewardMap 
@@ -95,11 +131,12 @@ export async function POST(request: NextRequest) {
             note = ${note || null},
             updatedAt = ${getCurrentTimeVNDB()}
         WHERE id = ${rewardMapId}
+          AND status = 'INITIAL'
       `;
 
       if (action === "APPROVE") {
         const currentTime = getCurrentTimeVNDB();
-        const rewardType = rewardMap[0].type;
+        const rewardType = lockedRewardMap[0].type;
 
         // Mark reward map as used
         await tx.$executeRaw`
@@ -110,18 +147,18 @@ export async function POST(request: NextRequest) {
 
         // Xử lý theo type
         if (rewardType === "EVENT") {
-          console.log("[APPROVE EVENT] Processing event reward:", rewardMap[0]);
+          console.log("[APPROVE EVENT] Processing event reward:", lockedRewardMap[0]);
 
           // 1. Update PromotionCode status thành đã sử dụng
-          if (rewardMap[0].promotionCodeId) {
+          if (lockedRewardMap[0].promotionCodeId) {
             await tx.$executeRaw`
               UPDATE PromotionCode 
               SET isUsed = true, updatedAt = NOW()
-              WHERE id = ${rewardMap[0].promotionCodeId}
+              WHERE id = ${lockedRewardMap[0].promotionCodeId}
             `;
             console.log(
               "[APPROVE EVENT] Updated PromotionCode:",
-              rewardMap[0].promotionCodeId,
+              lockedRewardMap[0].promotionCodeId,
             );
           }
 
@@ -133,8 +170,8 @@ export async function POST(request: NextRequest) {
 
           // 3. Xử lý FREE_HOURS - update Fnet money
           if (
-            rewardMap[0].eventRewardType === "FREE_HOURS" &&
-            rewardMap[0].eventRewardValue &&
+            lockedRewardMap[0].eventRewardType === "FREE_HOURS" &&
+            lockedRewardMap[0].eventRewardValue &&
             user[0].userId
           ) {
             const fnetDB = await getFnetDB();
@@ -187,7 +224,7 @@ export async function POST(request: NextRequest) {
             }
 
             console.log(
-              `[APPROVE EVENT] Processing FREE_HOURS for user ${user[0].userId}: amount ${rewardMap[0].eventRewardValue}`,
+              `[APPROVE EVENT] Processing FREE_HOURS for user ${user[0].userId}: amount ${lockedRewardMap[0].eventRewardValue}`,
             );
 
             // Use updateFnetMoney utility function (saveHistory = false vì đã lưu khi user request)
@@ -195,7 +232,7 @@ export async function POST(request: NextRequest) {
               userId: user[0].userId,
               branch: branch,
               walletType: "SUB",
-              amount: Number(rewardMap[0].eventRewardValue),
+              amount: Number(lockedRewardMap[0].eventRewardValue),
               targetId: rewardMapId,
               transactionType: "REWARD",
               saveHistory: false,
@@ -208,8 +245,8 @@ export async function POST(request: NextRequest) {
 
           // 4. Xử lý MAIN_ACCOUNT_TOPUP - update Fnet money (MAIN account)
           if (
-            rewardMap[0].eventRewardType === "MAIN_ACCOUNT_TOPUP" &&
-            rewardMap[0].eventRewardValue &&
+            lockedRewardMap[0].eventRewardType === "MAIN_ACCOUNT_TOPUP" &&
+            lockedRewardMap[0].eventRewardValue &&
             user[0].userId
           ) {
             const fnetDB = await getFnetDB();
@@ -233,7 +270,7 @@ export async function POST(request: NextRequest) {
             }
 
             console.log(
-              `[APPROVE EVENT] Processing MAIN_ACCOUNT_TOPUP for user ${user[0].userId}: amount ${rewardMap[0].eventRewardValue}`,
+              `[APPROVE EVENT] Processing MAIN_ACCOUNT_TOPUP for user ${user[0].userId}: amount ${lockedRewardMap[0].eventRewardValue}`,
             );
 
             // Use updateFnetMoney utility function (saveHistory = false vì đã lưu khi user redeem)
@@ -241,7 +278,7 @@ export async function POST(request: NextRequest) {
               userId: user[0].userId,
               branch: branch,
               walletType: "MAIN",
-              amount: Number(rewardMap[0].eventRewardValue),
+              amount: Number(lockedRewardMap[0].eventRewardValue),
               targetId: rewardMapId,
               transactionType: "REWARD",
               saveHistory: false,
@@ -253,7 +290,7 @@ export async function POST(request: NextRequest) {
           }
         } else if (rewardType === "STARS") {
           // Xử lý STARS reward (logic cũ)
-          console.log("[APPROVE STARS] Processing stars reward:", rewardMap[0]);
+          console.log("[APPROVE STARS] Processing stars reward:", lockedRewardMap[0]);
 
           // Insert UserStarHistory
           await tx.$executeRaw`
@@ -261,7 +298,7 @@ export async function POST(request: NextRequest) {
             VALUES (
               ${user[0].userId},
               'REWARD',
-              ${user[0].stars + (rewardMap[0].rewardStars || 0)},
+              ${user[0].stars + (lockedRewardMap[0].rewardStars || 0)},
               ${user[0].stars},
               ${rewardMapId},
               ${getCurrentTimeVNDB()},
@@ -270,7 +307,7 @@ export async function POST(request: NextRequest) {
           `;
 
           // Update money in fnet database
-          if (rewardMap[0].rewardValue && user[0].userId) {
+          if (lockedRewardMap[0].rewardValue && user[0].userId) {
             const fnetDB = await getFnetDB();
 
             // Kiểm tra user có bao nhiêu tài khoản
@@ -292,7 +329,7 @@ export async function POST(request: NextRequest) {
             }
 
             console.log(
-              `[APPROVE STARS] Processing reward for user ${user[0].userId}: amount ${rewardMap[0].rewardValue}`,
+              `[APPROVE STARS] Processing reward for user ${user[0].userId}: amount ${lockedRewardMap[0].rewardValue}`,
             );
 
             // Use updateFnetMoney utility function (saveHistory = false vì đã lưu khi user request)
@@ -300,7 +337,7 @@ export async function POST(request: NextRequest) {
               userId: user[0].userId,
               branch: branch,
               walletType: "SUB",
-              amount: Number(rewardMap[0].rewardValue),
+              amount: Number(lockedRewardMap[0].rewardValue),
               targetId: rewardMapId,
               transactionType: "REWARD",
               saveHistory: false,
@@ -312,20 +349,20 @@ export async function POST(request: NextRequest) {
           }
         }
       } else if (action === "REJECT") {
-        const rewardType = rewardMap[0].type;
+        const rewardType = lockedRewardMap[0].type;
 
         if (rewardType === "EVENT") {
           // Xử lý REJECT cho EVENT - revert rewardsReceived
-          console.log("[REJECT EVENT] Processing event reward:", rewardMap[0]);
-          console.log("[REJECT EVENT] eventId:", rewardMap[0].eventId);
+          console.log("[REJECT EVENT] Processing event reward:", lockedRewardMap[0]);
+          console.log("[REJECT EVENT] eventId:", lockedRewardMap[0].eventId);
           console.log(
             "[REJECT EVENT] promotionCodeId:",
-            rewardMap[0].promotionCodeId,
+            lockedRewardMap[0].promotionCodeId,
           );
           console.log("[REJECT EVENT] userId:", user[0].userId);
           console.log("[REJECT EVENT] branch:", branch);
 
-          if (rewardMap[0].promotionCodeId) {
+          if (lockedRewardMap[0].promotionCodeId) {
             // KHÔNG xóa khỏi rewardsReceived - đó là lịch sử claim
             // Revert PromotionCode về isUsed = false để user có thể redeem lại
             // Logic hiển thị sẽ dựa vào UserRewardMap.status
@@ -335,14 +372,14 @@ export async function POST(request: NextRequest) {
             );
             console.log(
               "[REJECT EVENT] Reverting PromotionCode isUsed to false:",
-              rewardMap[0].promotionCodeId,
+              lockedRewardMap[0].promotionCodeId,
             );
 
             // Revert PromotionCode về isUsed = false
             await tx.$executeRaw`
               UPDATE PromotionCode 
               SET isUsed = false 
-              WHERE id = ${rewardMap[0].promotionCodeId}
+              WHERE id = ${lockedRewardMap[0].promotionCodeId}
             `;
 
             console.log(
@@ -351,16 +388,16 @@ export async function POST(request: NextRequest) {
           }
         } else if (rewardType === "STARS") {
           // Hoàn trả số sao cho user khi từ chối STARS reward
-          if (rewardMap[0].rewardStars) {
+          if (lockedRewardMap[0].rewardStars) {
             await tx.$executeRaw`
               UPDATE User 
-              SET stars = ${Number(user[0].stars) + Number(rewardMap[0].rewardStars)},
+              SET stars = ${Number(user[0].stars) + Number(lockedRewardMap[0].rewardStars)},
                   updatedAt = ${getCurrentTimeVNDB()}
               WHERE id = ${user[0].id}
             `;
             console.log(
               "[REJECT STARS] Refunded stars to user:",
-              rewardMap[0].rewardStars,
+              lockedRewardMap[0].rewardStars,
             );
           }
         }

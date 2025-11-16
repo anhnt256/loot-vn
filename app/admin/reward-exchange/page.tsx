@@ -87,6 +87,10 @@ const RewardExchangePage = () => {
   const [action, setAction] = useState<"APPROVE" | "REJECT" | null>(null);
   const [note, setNote] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingRewardId, setProcessingRewardId] = useState<number | null>(
+    null,
+  );
   const [activeTab, setActiveTab] = useState<"pending" | "history">("pending");
   const [historyPage, setHistoryPage] = useState(1);
   const [selectedDateRange, setSelectedDateRange] = useState<
@@ -207,7 +211,10 @@ const RewardExchangePage = () => {
   };
 
   const handleAction = async () => {
-    if (!selectedReward || !action) return;
+    if (!selectedReward || !action || isProcessing) return;
+
+    setIsProcessing(true);
+    setProcessingRewardId(selectedReward.id);
 
     try {
       const response = await fetch("/api/reward-exchange/approve", {
@@ -245,6 +252,9 @@ const RewardExchangePage = () => {
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "An error occurred");
+    } finally {
+      setIsProcessing(false);
+      setProcessingRewardId(null);
     }
   };
 
@@ -252,6 +262,9 @@ const RewardExchangePage = () => {
     reward: RewardExchange,
     actionType: "APPROVE" | "REJECT",
   ) => {
+    // Prevent opening dialog if already processing
+    if (isProcessing) return;
+    
     setSelectedReward(reward);
     setAction(actionType);
     setNote("");
@@ -448,6 +461,9 @@ const RewardExchangePage = () => {
                           onApprove={handleApprove}
                           onReject={handleReject}
                           showActions={true}
+                          isProcessing={
+                            isProcessing && processingRewardId === reward.id
+                          }
                         />
                       );
                     } else {
@@ -458,6 +474,9 @@ const RewardExchangePage = () => {
                           onApprove={handleApprove}
                           onReject={handleReject}
                           showActions={true}
+                          isProcessing={
+                            isProcessing && processingRewardId === reward.id
+                          }
                         />
                       );
                     }
@@ -633,6 +652,7 @@ const RewardExchangePage = () => {
                 variant="outline"
                 onClick={() => setIsDialogOpen(false)}
                 className="px-6"
+                disabled={isProcessing}
               >
                 Hủy
               </Button>
@@ -643,9 +663,16 @@ const RewardExchangePage = () => {
                     ? "bg-green-600 hover:bg-green-700"
                     : "bg-red-600 hover:bg-red-700"
                 }`}
-                disabled={action === "REJECT" && !note.trim()}
+                disabled={
+                  isProcessing ||
+                  (action === "REJECT" && !note.trim())
+                }
               >
-                {action === "APPROVE" ? "✅ Duyệt" : "❌ Từ chối"}
+                {isProcessing
+                  ? "Đang xử lý..."
+                  : action === "APPROVE"
+                    ? "✅ Duyệt"
+                    : "❌ Từ chối"}
               </Button>
             </div>
           </div>

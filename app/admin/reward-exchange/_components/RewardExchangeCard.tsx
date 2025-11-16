@@ -39,6 +39,7 @@ interface RewardExchangeCardProps {
   onApprove?: (id: number) => void;
   onReject?: (id: number) => void;
   showActions?: boolean;
+  isProcessing?: boolean;
 }
 
 const getStatusBadge = (status: string) => {
@@ -71,6 +72,7 @@ export default function RewardExchangeCard({
   onApprove,
   onReject,
   showActions = true,
+  isProcessing = false,
 }: RewardExchangeCardProps) {
   return (
     <Card className="w-full mb-4 shadow-sm hover:shadow-md transition-shadow">
@@ -234,17 +236,19 @@ export default function RewardExchangeCard({
             <Button
               onClick={() => onApprove?.(reward.id)}
               className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+              disabled={isProcessing}
             >
               <Check className="w-4 h-4 mr-2" />
-              Duyệt
+              {isProcessing ? "Đang xử lý..." : "Duyệt"}
             </Button>
             <Button
               onClick={() => onReject?.(reward.id)}
               variant="destructive"
               className="flex-1"
+              disabled={isProcessing}
             >
               <X className="w-4 h-4 mr-2" />
-              Từ chối
+              {isProcessing ? "Đang xử lý..." : "Từ chối"}
             </Button>
           </div>
         </CardContent>
