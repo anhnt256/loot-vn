@@ -157,7 +157,11 @@ function combineDateTime(dateVal: string | Date, timeVal: string | Date) {
 /**
  * Kiểm tra xem user có đang mua combo (combo đang active) không
  */
-function isUserUsingCombo(combos: ComboDetail[], userId?: number, isDebug?: boolean): boolean {
+function isUserUsingCombo(
+  combos: ComboDetail[],
+  userId?: number,
+  isDebug?: boolean,
+): boolean {
   if (!combos || combos.length === 0) {
     return false;
   }
@@ -168,10 +172,12 @@ function isUserUsingCombo(combos: ComboDetail[], userId?: number, isDebug?: bool
     const comboStart = combineDateTime(combo.FromDate, combo.FromTime);
     const comboEnd = combineDateTime(combo.ToDate, combo.ToTime);
 
-
     // Check xem thời gian hiện tại có nằm trong khoảng combo không (bao gồm cả điểm đầu và cuối)
     // isSameOrBefore tương đương với !isAfter
-    if (now.isSameOrAfter(comboStart) && (now.isBefore(comboEnd) || now.isSame(comboEnd))) {
+    if (
+      now.isSameOrAfter(comboStart) &&
+      (now.isBefore(comboEnd) || now.isSame(comboEnd))
+    ) {
       return true;
     }
   }
@@ -193,41 +199,40 @@ function calculateCheckInMinutes(
   const todayStart = now.startOf("day");
   const todayDate = now.format("YYYY-MM-DD");
 
-
   // Check xem có session nào đang chạy trong ngày hôm nay không
   // (bao gồm cả session bắt đầu từ hôm nay và session từ hôm qua vẫn đang chạy)
   const hasActiveSessionToday = sessions.some((s) => {
     if (!s.EnterDate || !s.EnterTime) return false;
-    
+
     const enter = combineDateTime(s.EnterDate, s.EnterTime);
     let end: dayjs.Dayjs;
-    
+
     if (s.EndDate && s.EndTime) {
       end = combineDateTime(s.EndDate, s.EndTime);
     } else {
       end = now; // Session đang chạy
     }
-    
+
     // Session đang chạy trong ngày hôm nay nếu:
     // - Bắt đầu từ hôm nay, hoặc
     // - Bắt đầu từ hôm qua nhưng vẫn đang chạy (chưa kết thúc) và overlap với ngày hôm nay
-    const enterDate = typeof s.EnterDate === "string" 
-      ? s.EnterDate 
-      : dayjs(s.EnterDate).format("YYYY-MM-DD");
-    
+    const enterDate =
+      typeof s.EnterDate === "string"
+        ? s.EnterDate
+        : dayjs(s.EnterDate).format("YYYY-MM-DD");
+
     if (enterDate === todayDate) {
       return true; // Session bắt đầu từ hôm nay
     }
-    
+
     // Session từ hôm qua nhưng vẫn đang chạy và overlap với ngày hôm nay
     if (!s.EndDate || !s.EndTime) {
       // Session chưa kết thúc, check xem có overlap với ngày hôm nay không
       return enter.isBefore(todayStart) && end.isAfter(todayStart);
     }
-    
+
     return false;
   });
-
 
   // Nếu không có session nào đang chạy trong ngày hôm nay, reset về 0 (qua ngày reset điểm check-in)
   if (!hasActiveSessionToday) {
@@ -247,7 +252,10 @@ function calculateCheckInMinutes(
     const comboEndInToday = comboEnd.isAfter(now) ? now : comboEnd;
 
     // Chỉ thêm nếu combo overlap với ngày hôm nay
-    if (comboEndInToday.isAfter(comboStartInToday) && comboStartInToday.isBefore(now)) {
+    if (
+      comboEndInToday.isAfter(comboStartInToday) &&
+      comboStartInToday.isBefore(now)
+    ) {
       comboRanges.push({
         start: comboStartInToday,
         end: comboEndInToday,
@@ -274,8 +282,8 @@ function calculateCheckInMinutes(
     }
 
     // Chỉ tính phần trong ngày hôm nay
-    let sessionStart = enter.isBefore(todayStart) ? todayStart : enter;
-    let sessionEnd = end.isAfter(now) ? now : end;
+    const sessionStart = enter.isBefore(todayStart) ? todayStart : enter;
+    const sessionEnd = end.isAfter(now) ? now : end;
 
     // Nếu session bắt đầu sau hôm nay, bỏ qua
     if (sessionStart.isAfter(now)) {
@@ -543,8 +551,9 @@ export async function calculateActiveUsersInfo(
           AND (ToDate + INTERVAL ToTime HOUR_SECOND) >= DATE_SUB(NOW(), INTERVAL 1 DAY)
         )
     `;
-    
-    const comboData = await fnetDB.$queryRawUnsafe<ComboDetail[]>(comboQueryString);
+
+    const comboData =
+      await fnetDB.$queryRawUnsafe<ComboDetail[]>(comboQueryString);
 
     // Tạo map combo data theo userId
     const userComboMap = new Map<number, ComboDetail[]>();
@@ -594,8 +603,12 @@ export async function calculateActiveUsersInfo(
       if (!activeUsersMap.has(userId)) {
         // Check xem user có đang mua combo không
         const userCombos = userComboMap.get(userId) || [];
-        const isUsingCombo = isUserUsingCombo(userCombos, userId, isDebug && debugUsers.includes(userId));
-        
+        const isUsingCombo = isUserUsingCombo(
+          userCombos,
+          userId,
+          isDebug && debugUsers.includes(userId),
+        );
+
         activeUsersMap.set(userId, {
           userId: userId,
           userType: isUsingCombo ? 5 : session.UserType,
@@ -676,10 +689,10 @@ export async function calculateActiveUsersInfo(
         // Tính CheckIn loại bỏ thời gian combo
         const userCombos = userComboMap.get(userId) || [];
         const totalPlayTimeMinutes = calculateCheckInMinutes(
-          sessions, 
+          sessions,
           userCombos,
           userId,
-          isDebug && debugUsers.includes(userId)
+          isDebug && debugUsers.includes(userId),
         );
         const totalPlayTimeHours = Math.floor(totalPlayTimeMinutes / 60);
         totalCheckIn = Math.floor(totalPlayTimeHours * starsPerHour);

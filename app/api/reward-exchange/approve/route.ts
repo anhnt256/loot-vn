@@ -147,7 +147,10 @@ export async function POST(request: NextRequest) {
 
         // Xử lý theo type
         if (rewardType === "EVENT") {
-          console.log("[APPROVE EVENT] Processing event reward:", lockedRewardMap[0]);
+          console.log(
+            "[APPROVE EVENT] Processing event reward:",
+            lockedRewardMap[0],
+          );
 
           // 1. Update PromotionCode status thành đã sử dụng
           if (lockedRewardMap[0].promotionCodeId) {
@@ -290,7 +293,10 @@ export async function POST(request: NextRequest) {
           }
         } else if (rewardType === "STARS") {
           // Xử lý STARS reward (logic cũ)
-          console.log("[APPROVE STARS] Processing stars reward:", lockedRewardMap[0]);
+          console.log(
+            "[APPROVE STARS] Processing stars reward:",
+            lockedRewardMap[0],
+          );
 
           // Insert UserStarHistory
           await tx.$executeRaw`
@@ -353,7 +359,10 @@ export async function POST(request: NextRequest) {
 
         if (rewardType === "EVENT") {
           // Xử lý REJECT cho EVENT - revert rewardsReceived
-          console.log("[REJECT EVENT] Processing event reward:", lockedRewardMap[0]);
+          console.log(
+            "[REJECT EVENT] Processing event reward:",
+            lockedRewardMap[0],
+          );
           console.log("[REJECT EVENT] eventId:", lockedRewardMap[0].eventId);
           console.log(
             "[REJECT EVENT] promotionCodeId:",

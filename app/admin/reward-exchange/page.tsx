@@ -264,7 +264,7 @@ const RewardExchangePage = () => {
   ) => {
     // Prevent opening dialog if already processing
     if (isProcessing) return;
-    
+
     setSelectedReward(reward);
     setAction(actionType);
     setNote("");
@@ -663,10 +663,7 @@ const RewardExchangePage = () => {
                     ? "bg-green-600 hover:bg-green-700"
                     : "bg-red-600 hover:bg-red-700"
                 }`}
-                disabled={
-                  isProcessing ||
-                  (action === "REJECT" && !note.trim())
-                }
+                disabled={isProcessing || (action === "REJECT" && !note.trim())}
               >
                 {isProcessing
                   ? "Đang xử lý..."
