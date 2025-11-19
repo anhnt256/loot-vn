@@ -371,7 +371,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
           return NextResponse.json(
             {
               statusCode: 429,
-              message: `Quá nhiều tài khoản được tạo trong chi nhánh này. Vui lòng thử lại sau 1 giờ. (${dbRateLimit.count}/10)`,
+              message: `Quá nhiều tài khoản được tạo trong chi nhánh này. Vui lòng thử lại sau 1 giờ. (${dbRateLimit.count}/50)`,
               data: null,
             },
             { status: 429 },

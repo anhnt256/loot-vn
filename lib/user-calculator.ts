@@ -7,6 +7,7 @@ import {
   getEndOfWeekVNISO,
   getCurrentDayOfWeekVN,
 } from "@/lib/timezone-utils";
+import dayjs from "@/lib/dayjs";
 
 export interface BattlePassData {
   level: number;
@@ -22,7 +23,7 @@ export interface BattlePass {
 export interface UserInfo {
   userId: number;
   userName?: string;
-  userType?: string;
+  userType?: number;
   totalCheckIn: number;
   claimedCheckIn: number;
   availableCheckIn: number;
@@ -94,6 +95,14 @@ interface CheckInItem {
   stars: number;
 }
 
+interface ComboDetail {
+  Ownerid: number;
+  FromDate: string | Date;
+  FromTime: string | Date;
+  ToDate: string | Date;
+  ToTime: string | Date;
+}
+
 // Hàm chuyển BigInt về string để tránh lỗi serialize
 function convertBigIntToString(obj: any): any {
   if (Array.isArray(obj)) {
@@ -126,13 +135,197 @@ function convertBigIntToNumber(value: any): number {
 }
 
 /**
+ * Kết hợp ngày (YYYY-MM-DD) và giờ (HH:mm:ss) thành dayjs object
+ */
+function combineDateTime(dateVal: string | Date, timeVal: string | Date) {
+  const dateStr = typeof dateVal === "string" ? dateVal : dateVal.toISOString();
+  const timeStr = typeof timeVal === "string" ? timeVal : timeVal.toISOString();
+
+  const a = dateStr.split("T")[0];
+  let b;
+
+  if (timeStr.includes("T")) {
+    b = timeStr.split("T")[1].replace("Z", "");
+  } else {
+    b = timeStr;
+  }
+
+  const fullDate = `${a}T${b}`;
+  return dayjs(fullDate).tz("Asia/Ho_Chi_Minh");
+}
+
+/**
+ * Kiểm tra xem user có đang mua combo (combo đang active) không
+ */
+function isUserUsingCombo(combos: ComboDetail[], userId?: number, isDebug?: boolean): boolean {
+  if (!combos || combos.length === 0) {
+    return false;
+  }
+
+  const now = dayjs().tz("Asia/Ho_Chi_Minh");
+
+  for (const combo of combos) {
+    const comboStart = combineDateTime(combo.FromDate, combo.FromTime);
+    const comboEnd = combineDateTime(combo.ToDate, combo.ToTime);
+
+
+    // Check xem thời gian hiện tại có nằm trong khoảng combo không (bao gồm cả điểm đầu và cuối)
+    // isSameOrBefore tương đương với !isAfter
+    if (now.isSameOrAfter(comboStart) && (now.isBefore(comboEnd) || now.isSame(comboEnd))) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Tính thời gian CheckIn trong ngày hiện tại, loại bỏ các khoảng thời gian trùng với combo
+ * Chỉ tính từ 0h hôm nay đến hiện tại, nếu qua ngày thì reset về 0
+ */
+function calculateCheckInMinutes(
+  sessions: FnetSession[],
+  combos: ComboDetail[],
+  userId?: number,
+  isDebug?: boolean,
+): number {
+  const now = dayjs().tz("Asia/Ho_Chi_Minh");
+  const todayStart = now.startOf("day");
+  const todayDate = now.format("YYYY-MM-DD");
+
+
+  // Check xem có session nào đang chạy trong ngày hôm nay không
+  // (bao gồm cả session bắt đầu từ hôm nay và session từ hôm qua vẫn đang chạy)
+  const hasActiveSessionToday = sessions.some((s) => {
+    if (!s.EnterDate || !s.EnterTime) return false;
+    
+    const enter = combineDateTime(s.EnterDate, s.EnterTime);
+    let end: dayjs.Dayjs;
+    
+    if (s.EndDate && s.EndTime) {
+      end = combineDateTime(s.EndDate, s.EndTime);
+    } else {
+      end = now; // Session đang chạy
+    }
+    
+    // Session đang chạy trong ngày hôm nay nếu:
+    // - Bắt đầu từ hôm nay, hoặc
+    // - Bắt đầu từ hôm qua nhưng vẫn đang chạy (chưa kết thúc) và overlap với ngày hôm nay
+    const enterDate = typeof s.EnterDate === "string" 
+      ? s.EnterDate 
+      : dayjs(s.EnterDate).format("YYYY-MM-DD");
+    
+    if (enterDate === todayDate) {
+      return true; // Session bắt đầu từ hôm nay
+    }
+    
+    // Session từ hôm qua nhưng vẫn đang chạy và overlap với ngày hôm nay
+    if (!s.EndDate || !s.EndTime) {
+      // Session chưa kết thúc, check xem có overlap với ngày hôm nay không
+      return enter.isBefore(todayStart) && end.isAfter(todayStart);
+    }
+    
+    return false;
+  });
+
+
+  // Nếu không có session nào đang chạy trong ngày hôm nay, reset về 0 (qua ngày reset điểm check-in)
+  if (!hasActiveSessionToday) {
+    return 0;
+  }
+
+  // Tạo danh sách các khoảng thời gian combo trong ngày hôm nay
+  const comboRanges: Array<{ start: dayjs.Dayjs; end: dayjs.Dayjs }> = [];
+  for (const combo of combos) {
+    const comboStart = combineDateTime(combo.FromDate, combo.FromTime);
+    const comboEnd = combineDateTime(combo.ToDate, combo.ToTime);
+
+    // Chỉ lấy phần combo trong ngày hôm nay
+    const comboStartInToday = comboStart.isBefore(todayStart)
+      ? todayStart
+      : comboStart;
+    const comboEndInToday = comboEnd.isAfter(now) ? now : comboEnd;
+
+    // Chỉ thêm nếu combo overlap với ngày hôm nay
+    if (comboEndInToday.isAfter(comboStartInToday) && comboStartInToday.isBefore(now)) {
+      comboRanges.push({
+        start: comboStartInToday,
+        end: comboEndInToday,
+      });
+    }
+  }
+
+  // Sắp xếp combo ranges theo thời gian bắt đầu
+  comboRanges.sort((a, b) => a.start.diff(b.start));
+
+  // Tính tổng thời gian session trong ngày hôm nay
+  let totalMinutes = 0;
+
+  for (const session of sessions) {
+    if (!session.EnterDate || !session.EnterTime) continue;
+
+    const enter = combineDateTime(session.EnterDate, session.EnterTime);
+    let end: dayjs.Dayjs;
+
+    if (session.EndDate && session.EndTime) {
+      end = combineDateTime(session.EndDate, session.EndTime);
+    } else {
+      end = now;
+    }
+
+    // Chỉ tính phần trong ngày hôm nay
+    let sessionStart = enter.isBefore(todayStart) ? todayStart : enter;
+    let sessionEnd = end.isAfter(now) ? now : end;
+
+    // Nếu session bắt đầu sau hôm nay, bỏ qua
+    if (sessionStart.isAfter(now)) {
+      continue;
+    }
+
+    // Nếu session kết thúc trước hôm nay, bỏ qua
+    if (sessionEnd.isBefore(todayStart)) {
+      continue;
+    }
+
+    // Tính thời gian session ban đầu
+    const sessionDuration = sessionEnd.diff(sessionStart, "minute");
+    if (sessionDuration <= 0) {
+      continue;
+    }
+
+    // Loại bỏ các khoảng thời gian trùng với combo
+    let remainingMinutes = sessionDuration;
+    for (const comboRange of comboRanges) {
+      // Check overlap
+      const overlapStart = sessionStart.isAfter(comboRange.start)
+        ? sessionStart
+        : comboRange.start;
+      const overlapEnd = sessionEnd.isBefore(comboRange.end)
+        ? sessionEnd
+        : comboRange.end;
+
+      if (overlapEnd.isAfter(overlapStart)) {
+        const overlapMinutes = overlapEnd.diff(overlapStart, "minute");
+        remainingMinutes -= overlapMinutes;
+      }
+    }
+
+    if (remainingMinutes > 0) {
+      totalMinutes += remainingMinutes;
+    }
+  }
+
+  return Math.max(0, totalMinutes);
+}
+
+/**
  * Tính toán thông tin chi tiết cho danh sách active users
  */
 export async function calculateActiveUsersInfo(
   listUsers: number[],
   branch: string,
-  isDebug: boolean = false,
-  debugUsers: number[] = [],
+  isDebug: boolean = true,
+  debugUsers: number[] = [14852],
 ): Promise<UserInfo[]> {
   try {
     // Nếu debug mode, thêm debugUsers vào listUsers
@@ -154,12 +347,6 @@ export async function calculateActiveUsersInfo(
     const startOfWeekVN = getStartOfWeekVNISO();
     const endOfWeekVN = getEndOfWeekVNISO();
     const todayDayOfWeek = getCurrentDayOfWeekVN();
-
-    if (isDebug) {
-      console.log("=== DEBUG TIMEZONE CONVERSION ===");
-      console.log("startOfWeekVN:", startOfWeekVN);
-      console.log("endOfWeekVN:", endOfWeekVN);
-    }
 
     // Tối ưu: Gộp tất cả queries thành 4 query chính thay vì 6
     const [
@@ -235,20 +422,12 @@ export async function calculateActiveUsersInfo(
         GROUP BY u.id, u.userId, u.userName, u.stars, u.magicStone, u.isUseApp, u.note, u.createdAt, u.updatedAt, u.branch
         `;
 
-        console.log(`[DEBUG] User calculator query:`, queryString);
         const result = await db.$queryRawUnsafe(queryString);
-        console.log(`[DEBUG] User calculator result:`, result);
         return result;
       })(),
 
       // 3. Game rounds riêng vì cần time range khác
       (async () => {
-        if (isDebug) {
-          console.log("=== DEBUG GAME ROUNDS QUERY ===");
-          console.log("startOfWeekVN:", startOfWeekVN);
-          console.log("endOfWeekVN:", endOfWeekVN);
-        }
-
         const userIdsStr = finalListUsers.join(",");
         const queryString = `
         SELECT 
@@ -346,13 +525,36 @@ export async function calculateActiveUsersInfo(
       (deviceData as any[]).forEach((device) => {
         deviceDataMap.set(device.machineName, device);
       });
-
-      if (isDebug) {
-        console.log("=== DEBUG DEVICE DATA ===");
-        console.log("Machine names from sessions:", machineNames);
-        console.log("Device data found:", deviceData);
-      }
     }
+
+    // Query combo data cho các users
+    const userIdsStr = finalListUsers.join(",");
+    const comboQueryString = `
+      SELECT 
+        Ownerid,
+        FromDate,
+        FromTime,
+        ToDate,
+        ToTime
+      FROM fnet.combodetailtb
+      WHERE FIND_IN_SET(Ownerid, '${userIdsStr}')
+        AND (
+          (FromDate + INTERVAL FromTime HOUR_SECOND) <= NOW()
+          AND (ToDate + INTERVAL ToTime HOUR_SECOND) >= DATE_SUB(NOW(), INTERVAL 1 DAY)
+        )
+    `;
+    
+    const comboData = await fnetDB.$queryRawUnsafe<ComboDetail[]>(comboQueryString);
+
+    // Tạo map combo data theo userId
+    const userComboMap = new Map<number, ComboDetail[]>();
+    (comboData as any[]).forEach((combo) => {
+      const userId = convertBigIntToNumber(combo.Ownerid);
+      if (!userComboMap.has(userId)) {
+        userComboMap.set(userId, []);
+      }
+      userComboMap.get(userId)!.push(combo);
+    });
 
     // Cache check-in items - chỉ query 1 lần
     const todayCheckInResult = await db.$queryRawUnsafe<CheckInItem[]>(`
@@ -390,9 +592,13 @@ export async function calculateActiveUsersInfo(
 
       // Active users map
       if (!activeUsersMap.has(userId)) {
+        // Check xem user có đang mua combo không
+        const userCombos = userComboMap.get(userId) || [];
+        const isUsingCombo = isUserUsingCombo(userCombos, userId, isDebug && debugUsers.includes(userId));
+        
         activeUsersMap.set(userId, {
           userId: userId,
-          userType: session.UserType,
+          userType: isUsingCombo ? 5 : session.UserType,
         });
       }
     });
@@ -441,17 +647,6 @@ export async function calculateActiveUsersInfo(
         continue;
       }
 
-      if (isDebug && debugUsers.includes(userId)) {
-        console.log(`=== DEBUG USER ${userId} ===`);
-        console.log("Active user data:", activeUser);
-        console.log("User sessions:", userSessionsMap.get(userId));
-        console.log("User claims:", userClaimsMap.get(userId));
-        console.log("User data:", userDataMap.get(userId));
-        console.log("User top ups:", userTopUpsMap.get(userId));
-        console.log("User gift rounds:", userGiftRoundsMap.get(userId));
-        console.log("User game rounds:", userGameRoundsMap.get(userId));
-      }
-
       let checkIn = 0;
       let totalCheckIn = 0;
       let claimedCheckIn = 0;
@@ -464,10 +659,6 @@ export async function calculateActiveUsersInfo(
 
       if (userId) {
         const sessions: FnetSession[] = userSessionsMap.get(userId) || [];
-
-        if (isDebug && debugUsers.includes(userId)) {
-          console.log(`User ${userId} sessions:`, sessions);
-        }
 
         if (sessions.length > 0) {
           const latestSession = sessions.reduce((latest, current) => {
@@ -482,35 +673,23 @@ export async function calculateActiveUsersInfo(
           machineName = latestSession.MachineName;
         }
 
-        const totalPlayTimeMinutes = calculateDailyUsageMinutes(sessions);
+        // Tính CheckIn loại bỏ thời gian combo
+        const userCombos = userComboMap.get(userId) || [];
+        const totalPlayTimeMinutes = calculateCheckInMinutes(
+          sessions, 
+          userCombos,
+          userId,
+          isDebug && debugUsers.includes(userId)
+        );
         const totalPlayTimeHours = Math.floor(totalPlayTimeMinutes / 60);
         totalCheckIn = Math.floor(totalPlayTimeHours * starsPerHour);
-
-        if (isDebug && debugUsers.includes(userId)) {
-          console.log(
-            `User ${userId} totalPlayTimeMinutes:`,
-            totalPlayTimeMinutes,
-          );
-          console.log(`User ${userId} totalPlayTimeHours:`, totalPlayTimeHours);
-          console.log(`User ${userId} starsPerHour:`, starsPerHour);
-          console.log(`User ${userId} totalCheckIn:`, totalCheckIn);
-        }
 
         // Lấy từ cache đã tính sẵn
         const totalClaimed = userClaimsMap.get(userId) || 0;
 
-        if (isDebug && debugUsers.includes(userId)) {
-          console.log(`User ${userId} totalClaimed:`, totalClaimed);
-        }
-
         userData = userDataMap.get(userId);
         claimedCheckIn = totalClaimed;
         availableCheckIn = Math.max(0, totalCheckIn - totalClaimed);
-
-        if (isDebug && debugUsers.includes(userId)) {
-          console.log(`User ${userId} claimedCheckIn:`, claimedCheckIn);
-          console.log(`User ${userId} availableCheckIn:`, availableCheckIn);
-        }
 
         if (userData?.id) {
           checkIn = availableCheckIn;
@@ -528,27 +707,12 @@ export async function calculateActiveUsersInfo(
       const spendPerRound = Number(process.env.NEXT_PUBLIC_SPEND_PER_ROUND);
       const round = Math.floor(userTopUp ? userTopUp / spendPerRound : 0);
 
-      if (isDebug && debugUsers.includes(userId)) {
-        console.log(`User ${userId} userTopUp:`, userTopUp);
-        console.log(`User ${userId} spendPerRound:`, spendPerRound);
-        console.log(`User ${userId} round:`, round);
-      }
-
       // Lấy từ cache đã tính sẵn
       totalGiftRounds = userGiftRoundsMap.get(userId) || 0;
-
-      if (isDebug && debugUsers.includes(userId)) {
-        console.log(`User ${userId} totalGiftRounds:`, totalGiftRounds);
-      }
 
       if (userData?.id) {
         const usedRounds = userGameRoundsMap.get(userId) || 0;
         totalRound = round - usedRounds;
-
-        if (isDebug && debugUsers.includes(userId)) {
-          console.log(`User ${userId} usedRounds:`, usedRounds);
-          console.log(`User ${userId} totalRound:`, totalRound);
-        }
 
         // Cập nhật magicStone - chỉ update khi cần thiết
         if (userData.magicStone !== totalRound) {
@@ -560,14 +724,6 @@ export async function calculateActiveUsersInfo(
         }
       } else {
         totalRound = round;
-
-        if (isDebug && debugUsers.includes(userId)) {
-          console.log(`User ${userId} not logged in, totalRound:`, totalRound);
-        }
-      }
-
-      if (userId === 244) {
-        console.log(">>>> DEBUG USER 244 >>>>", userData);
       }
 
       const device = machineName ? deviceDataMap.get(machineName) : null;
@@ -589,37 +745,10 @@ export async function calculateActiveUsersInfo(
             data: null,
           };
 
-      if (isDebug && debugUsers.includes(userId)) {
-        console.log(`User ${userId} machineName:`, machineName);
-        console.log(`User ${userId} battlePass:`, battlePass);
-        // console.log(`User ${userId} device lookup result:`, device);
-        console.log(`User ${userId} final result:`, {
-          userId,
-          userName: userData?.userName,
-          userType: userType?.toString(),
-          totalCheckIn: totalCheckIn || 0,
-          claimedCheckIn: claimedCheckIn || 0,
-          availableCheckIn: availableCheckIn || 0,
-          round: totalRound,
-          stars: convertBigIntToNumber(userData?.stars),
-          magicStone: convertBigIntToNumber(userData?.magicStone),
-          isUseApp:
-            userData?.isUseApp !== undefined
-              ? Boolean(userData.isUseApp)
-              : true,
-          note: userData?.note || "",
-          totalPayment: userTopUp,
-          giftRound: totalGiftRounds,
-          machineName: machineName || "",
-          device: device || null,
-          battlePass: battlePass,
-        });
-      }
-
       const result: UserInfo = {
         userId,
         userName: userData?.userName,
-        userType: userType?.toString(),
+        userType: userType,
         totalCheckIn: totalCheckIn || 0,
         claimedCheckIn: claimedCheckIn || 0,
         availableCheckIn: availableCheckIn || 0,

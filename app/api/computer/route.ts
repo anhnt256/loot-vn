@@ -357,7 +357,7 @@ export async function GET() {
         status: Status || "UNKNOWN",
         userId: UserId || null,
         userName: userInfo?.userName || null,
-        userType: UserType || null,
+        userType: userInfo?.userType ?? UserType ?? null,
         totalCheckIn: userInfo?.totalCheckIn || 0,
         claimedCheckIn: userInfo?.claimedCheckIn || 0,
         availableCheckIn: userInfo?.availableCheckIn || 0,
