@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { BattlePassProgress } from "@/app/components/battle-pass/BattlePassProgress";
 import { toast } from "sonner";
 import { CURRENT_USER } from "@/constants/token.constant";
+import dayjs from "@/lib/dayjs";
 
 interface Season {
   id: number;
@@ -299,7 +300,10 @@ export default function BattlePassPage() {
   }, [currentSeason?.id]); // Chỉ phụ thuộc vào seasonId để tránh call nhiều lần
 
   const handleClaimReward = async (rewardId: number) => {
-    if (currentSeason && new Date() >= new Date(currentSeason.endDate)) {
+    if (
+      currentSeason &&
+      !dayjs(currentSeason.endDate).utcOffset(7).isAfter(dayjs().utcOffset(7))
+    ) {
       toast.error("🚫 Mùa đã kết thúc - Không thể nhận thưởng");
       return;
     }
@@ -307,7 +311,10 @@ export default function BattlePassPage() {
   };
 
   const handleClaimAll = async (rewardIds: number[]) => {
-    if (currentSeason && new Date() >= new Date(currentSeason.endDate)) {
+    if (
+      currentSeason &&
+      !dayjs(currentSeason.endDate).utcOffset(7).isAfter(dayjs().utcOffset(7))
+    ) {
       toast.error("🚫 Mùa đã kết thúc - Không thể nhận thưởng");
       return;
     }
@@ -317,7 +324,10 @@ export default function BattlePassPage() {
   };
 
   const handlePurchasePremium = () => {
-    if (currentSeason && new Date() >= new Date(currentSeason.endDate)) {
+    if (
+      currentSeason &&
+      !dayjs(currentSeason.endDate).utcOffset(7).isAfter(dayjs().utcOffset(7))
+    ) {
       toast.error("🚫 Mùa đã kết thúc - Không thể mua Premium");
       return;
     }

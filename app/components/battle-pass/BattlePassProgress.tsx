@@ -5,6 +5,7 @@ import { Clock, Lock, Star, Gift, Award } from "lucide-react";
 import { DailyMissions } from "@/app/components/missions/DailyMissions";
 import { RewardSlot } from "./RewardSlot";
 import { LevelColumn } from "./LevelColumn";
+import dayjs from "@/lib/dayjs";
 
 export interface BattlePassReward {
   id: number;
@@ -111,15 +112,16 @@ export function BattlePassProgress({
         return;
       }
 
-      const now = new Date();
-      const endDate = new Date(seasonEndDate);
+      // So sánh theo timezone VN (UTC+7)
+      const nowVN = dayjs().utcOffset(7);
+      const endDateVN = dayjs(seasonEndDate).utcOffset(7);
 
-      if (endDate <= now) {
+      if (!endDateVN.isAfter(nowVN)) {
         setSeasonTimeLeft("Đã kết thúc");
         return;
       }
 
-      const diff = endDate.getTime() - now.getTime();
+      const diff = endDateVN.diff(nowVN, "millisecond");
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
       const hours = Math.floor(
         (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
@@ -143,9 +145,9 @@ export function BattlePassProgress({
       : Boolean(selectedReward.isBonus)
     : false;
 
-  // Check if season has ended
+  // Check if season has ended (so sánh theo timezone VN)
   const isSeasonEnded = seasonEndDate
-    ? new Date() >= new Date(seasonEndDate)
+    ? !dayjs(seasonEndDate).utcOffset(7).isAfter(dayjs().utcOffset(7))
     : false;
 
   // Debug Premium button visibility
