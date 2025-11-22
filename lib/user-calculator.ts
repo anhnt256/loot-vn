@@ -263,10 +263,25 @@ function calculateCheckInMinutes(
     }
   }
 
-  // Sắp xếp combo ranges theo thời gian bắt đầu
+  // Sắp xếp combo ranges theo thời gian bắt đầu và merge các ranges overlap
   comboRanges.sort((a, b) => a.start.diff(b.start));
+  const mergedComboRanges: Array<{ start: dayjs.Dayjs; end: dayjs.Dayjs }> = [];
+  for (const comboRange of comboRanges) {
+    if (mergedComboRanges.length === 0) {
+      mergedComboRanges.push({ ...comboRange });
+    } else {
+      const lastRange = mergedComboRanges[mergedComboRanges.length - 1];
+      // Nếu overlap hoặc tiếp giáp, merge
+      if (comboRange.start.isBefore(lastRange.end) || comboRange.start.isSame(lastRange.end)) {
+        lastRange.end = comboRange.end.isAfter(lastRange.end) ? comboRange.end : lastRange.end;
+      } else {
+        mergedComboRanges.push({ ...comboRange });
+      }
+    }
+  }
 
-  // Tính tổng thời gian session trong ngày hôm nay
+  // Tính tổng thời gian session trong ngày hôm nay (từ 0h đến thời điểm hiện tại)
+  // Chỉ tính phần trong ngày hiện tại, không tính phần từ ngày hôm trước
   let totalMinutes = 0;
 
   for (const session of sessions) {
@@ -278,33 +293,36 @@ function calculateCheckInMinutes(
     if (session.EndDate && session.EndTime) {
       end = combineDateTime(session.EndDate, session.EndTime);
     } else {
-      end = now;
+      end = now; // Session đang chạy, kết thúc tại thời điểm hiện tại
     }
 
-    // Chỉ tính phần trong ngày hôm nay
+    // QUAN TRỌNG: Chỉ tính phần trong ngày hôm nay (từ 0h đến thời điểm claim)
+    // Nếu session từ hôm trước, chỉ tính từ 0h hôm nay
     const sessionStart = enter.isBefore(todayStart) ? todayStart : enter;
+    // Không được vượt quá thời điểm hiện tại (thời điểm claim)
     const sessionEnd = end.isAfter(now) ? now : end;
 
-    // Nếu session bắt đầu sau hôm nay, bỏ qua
+    // Nếu session bắt đầu sau thời điểm hiện tại, bỏ qua
     if (sessionStart.isAfter(now)) {
       continue;
     }
 
-    // Nếu session kết thúc trước hôm nay, bỏ qua
+    // Nếu session kết thúc trước 0h hôm nay, bỏ qua
     if (sessionEnd.isBefore(todayStart)) {
       continue;
     }
 
-    // Tính thời gian session ban đầu
+    // Tính thời gian session trong ngày hôm nay
     const sessionDuration = sessionEnd.diff(sessionStart, "minute");
     if (sessionDuration <= 0) {
       continue;
     }
 
     // Loại bỏ các khoảng thời gian trùng với combo
+    // Sử dụng mergedComboRanges để tránh trừ đi nhiều lần phần overlap
     let remainingMinutes = sessionDuration;
-    for (const comboRange of comboRanges) {
-      // Check overlap
+    for (const comboRange of mergedComboRanges) {
+      // Check overlap giữa session và combo
       const overlapStart = sessionStart.isAfter(comboRange.start)
         ? sessionStart
         : comboRange.start;
@@ -312,18 +330,22 @@ function calculateCheckInMinutes(
         ? sessionEnd
         : comboRange.end;
 
+      // Nếu có overlap, trừ đi thời gian overlap
       if (overlapEnd.isAfter(overlapStart)) {
         const overlapMinutes = overlapEnd.diff(overlapStart, "minute");
         remainingMinutes -= overlapMinutes;
       }
     }
 
+    // Đảm bảo không âm
     if (remainingMinutes > 0) {
       totalMinutes += remainingMinutes;
     }
   }
 
-  return Math.max(0, totalMinutes);
+  // Giới hạn tối đa 24 giờ (1440 phút) trong 1 ngày để giảm thiểu rủi ro nếu logic lỗi
+  const maxMinutesPerDay = 24 * 60; // 1440 phút
+  return Math.min(Math.max(0, totalMinutes), maxMinutesPerDay);
 }
 
 /**
