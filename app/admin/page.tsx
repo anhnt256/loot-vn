@@ -12,7 +12,7 @@ import {
   message,
   Tabs,
 } from "antd";
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import _, { isEmpty } from "lodash";
 import { EnumComputerStatus } from "@/constants/enum";
 import { usePolling } from "@/hooks/usePolling";
@@ -192,6 +192,7 @@ const AdminDashboard = () => {
   const [editedNote, setEditedNote] = useState("");
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [noteModalContent, setNoteModalContent] = useState("");
+  const [fundAmount, setFundAmount] = useState<number | null>(null);
 
   const deviceList = [
     {
@@ -228,21 +229,36 @@ const AdminDashboard = () => {
     },
   ];
 
+  // Fetch fund amount function
+  const fetchFund = useCallback(async () => {
+    try {
+      const response = await fetch("/api/game/fund");
+      if (response.ok) {
+        const amount = await response.json();
+        setFundAmount(Number(amount) || 0);
+      }
+    } catch (error) {
+      console.error("Error fetching fund:", error);
+    }
+  }, []);
+
   // Memoize the polling options
   const pollingOptions = useMemo(
     () => ({
       interval: COUNT_DOWN_TIME * 1000, // 90 seconds
-      onSuccess: (data: any[]) => {
+      onSuccess: async (data: any[]) => {
         const computerSorted = _.sortBy(data, (o) => o.name);
         setComputers(computerSorted);
         setCountdown(COUNT_DOWN_TIME);
+        // Fetch fund amount together with computer data
+        await fetchFund();
       },
       onError: (error: Error) => {
         console.error("Error fetching data:", error);
       },
     }),
-    [],
-  ); // Empty dependency array since these functions don't depend on any props/state
+    [fetchFund],
+  );
 
   const { data, refetch } = usePolling<any[]>(`/api/computer`, pollingOptions);
 
@@ -585,12 +601,34 @@ const AdminDashboard = () => {
       <div className="shadow-lg rounded-lg w-full overflow-auto max-h-[89vh] relative">
         <div className="w-full bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-lg">
           <div className="flex justify-between items-center gap-4 mt-4 text-sm mb-4">
-            <Button
-              className="ml-2 bg-green-600 hover:bg-green-700 text-white"
-              onClick={() => setShowCheckLoginModal(true)}
-            >
-              Kiểm tra đăng nhập
-            </Button>
+            <div className="flex items-center gap-4">
+              <Button
+                className="ml-2 bg-green-600 hover:bg-green-700 text-white"
+                onClick={() => setShowCheckLoginModal(true)}
+              >
+                Kiểm tra đăng nhập
+              </Button>
+              {fundAmount !== null && (() => {
+                const upRateAmount = Number(process.env.NEXT_PUBLIC_UP_RATE_AMOUNT) || 0;
+                const threshold = upRateAmount * 0.9; // 90% threshold
+                const isNearJackpot = fundAmount >= threshold;
+                
+                return (
+                  <div className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
+                    isNearJackpot 
+                      ? "bg-red-600/40 border-red-500" 
+                      : "bg-yellow-600/20 border-yellow-600/50"
+                  }`}>
+                    <span className={`font-semibold ${
+                      isNearJackpot ? "text-red-300" : "text-yellow-400"
+                    }`}>
+                      Tổng quỹ: {fundAmount.toLocaleString("vi-VN")} VNĐ
+                      {isNearJackpot && " ⚠️ Sắp nổ hũ!"}
+                    </span>
+                  </div>
+                );
+              })()}
+            </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <span className="text-gray-300">{`Dữ liệu sẽ cập nhật sau: ${countdown}s`}</span>

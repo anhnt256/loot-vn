@@ -1,13 +1,13 @@
 "use server";
 
-import { db } from "@/lib/db";
+import { db, getFnetDB } from "@/lib/db";
 import { cookies } from "next/headers";
 import { createSafeAction } from "@/lib/create-safe-action";
 import { checkGameRollRateLimit } from "@/lib/rate-limit";
 
 import { GameItemResults, InputType, ReturnType } from "./type";
 import { CreateGameResult } from "@/actions/create-gameResult/schema";
-import { getCurrentTimeVNISO, getCurrentTimeVNDB } from "@/lib/timezone-utils";
+import { getCurrentTimeVNISO, getCurrentTimeVNDB, getStartOfWeekVNISO, getEndOfWeekVNISO } from "@/lib/timezone-utils";
 
 const UP_RATE = 0.5;
 const ROUND_COST = process.env.NEXT_PUBLIC_SPEND_PER_ROUND; // 30000 một vòng quay
@@ -350,11 +350,56 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         
         const user = (users as any[])[0];
         if (!user) return { error: "User not found" };
-        if (user.magicStone < rolls) {
-          console.log(`[DEBUG] Insufficient magic stone - user has: ${user.magicStone}, needs: ${rolls}`);
+        
+        // Tính toán lại magicStone thay vì dựa vào giá trị trong DB
+        // 1. Tính tổng topup từ paymenttb trong FnetDB (giống user-calculator)
+        const fnetDB = await getFnetDB();
+        const startOfWeekVN = getStartOfWeekVNISO();
+        const endOfWeekVN = getEndOfWeekVNISO();
+        
+        const topupResult = await fnetDB.$queryRawUnsafe<any[]>(`
+          SELECT COALESCE(CAST(SUM(p.AutoAmount) AS DECIMAL(18,2)), 0) AS totalTopUp
+          FROM fnet.paymenttb p
+          WHERE p.UserId = ${userId}
+            AND p.PaymentType = 4
+            AND p.Note = N'Thời gian phí'
+            AND (p.ServeDate + INTERVAL p.ServeTime HOUR_SECOND) >= '${startOfWeekVN}'
+            AND (p.ServeDate + INTERVAL p.ServeTime HOUR_SECOND) <= NOW()
+        `);
+        
+        // Convert BigInt to number nếu cần
+        const topUpValue = topupResult[0]?.totalTopUp;
+        const userTopUp = typeof topUpValue === 'bigint' 
+          ? Number(topUpValue) 
+          : Number(topUpValue || 0);
+        
+        // 2. Tính số rounds từ topup
+        const spendPerRound = Number(process.env.NEXT_PUBLIC_SPEND_PER_ROUND || 30000);
+        const round = Math.floor(userTopUp / spendPerRound);
+        
+        // 3. Đếm số rounds đã dùng (từ UserStarHistory type = 'GAME' trong tuần này)
+        // Dùng hàm từ timezone-utils để tính đầu tuần và cuối tuần theo timezone VN
+        
+        const usedRoundsResult = await tx.$queryRaw<any[]>`
+          SELECT COUNT(*) as count
+          FROM UserStarHistory
+          WHERE userId = ${userId} AND branch = ${branch}
+            AND type = 'GAME'
+            AND createdAt >= ${startOfWeekVN}
+            AND createdAt <= ${endOfWeekVN}
+        `;
+        const usedRounds = Number(usedRoundsResult[0]?.count || 0);
+        
+        // 4. Tính magicStone thực tế
+        const actualMagicStone = round - usedRounds;
+        
+        console.log(`[DEBUG] Calculated magicStone - userTopUp: ${userTopUp}, round: ${round}, usedRounds: ${usedRounds}, actualMagicStone: ${actualMagicStone}, DB magicStone: ${user.magicStone}`);
+        
+        if (actualMagicStone < rolls) {
+          console.log(`[DEBUG] Insufficient magic stone - user has: ${actualMagicStone}, needs: ${rolls}`);
           return { error: "Bạn không đủ đá năng lượng." };
         }
-        console.log(`[DEBUG] User found - magicStone: ${user.magicStone}, stars: ${user.stars}`);
+        console.log(`[DEBUG] User found - actualMagicStone: ${actualMagicStone}, stars: ${user.stars}`);
 
         console.log(`[DEBUG] Getting item rates and jackpot info in transaction`);
         let itemRates = await getItemRates(tx);
@@ -419,13 +464,14 @@ const handler = async (data: InputType): Promise<ReturnType> => {
           // Update rate nếu cần
           itemRates = await updateRates(tx, itemRates, jackpotHit, totalFund);
         }
-        // Update user cuối cùng
-        console.log(`[DEBUG] Updating User in transaction - new stars: ${user.stars + totalAddedStars}, new magicStone: ${user.magicStone - rolls}`);
+        // Update user cuối cùng - dùng actualMagicStone đã tính
+        const newMagicStone = actualMagicStone - rolls;
+        console.log(`[DEBUG] Updating User in transaction - new stars: ${user.stars + totalAddedStars}, new magicStone: ${newMagicStone} (was ${actualMagicStone})`);
         try {
           await tx.$executeRaw`
             UPDATE User 
             SET stars = ${user.stars + totalAddedStars}, 
-                magicStone = ${user.magicStone - rolls}, 
+                magicStone = ${newMagicStone}, 
                 updatedAt = ${getCurrentTimeVNDB()}
             WHERE id = ${user.id}
           `;

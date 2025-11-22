@@ -17,16 +17,21 @@ export async function GET(req: Request) {
     }
 
     const query = Prisma.sql`
-      SELECT gr.*, i.title, i.value,
+      SELECT gr.id, gr.userId, gr.itemId, gr.createdAt, gr.updatedAt,
+             i.title, i.value,
              CONCAT(SUBSTRING(u.userName, 1, LENGTH(u.userName)-3), '***') as maskedUsername,
-             ush.oldStars,
-             ush.newStars
+             MAX(ush.oldStars) as oldStars,
+             MAX(ush.newStars) as newStars
       FROM GameResult gr
              INNER JOIN Item i ON gr.itemId = i.id
              INNER JOIN User u ON gr.userId = u.userId AND u.branch = ${branch}
-             INNER JOIN UserStarHistory ush ON gr.userId = ush.userId AND ush.targetId = gr.id AND ush.branch = ${branch}
+             LEFT JOIN UserStarHistory ush ON gr.userId = ush.userId 
+               AND ush.targetId = gr.id 
+               AND ush.branch = ${branch}
+               AND ush.type = 'GAME'
       WHERE gr.createdAt >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-      ORDER BY gr.createdAt DESC, ush.newStars DESC
+      GROUP BY gr.id, gr.userId, gr.itemId, gr.createdAt, gr.updatedAt, i.title, i.value, u.userName
+      ORDER BY gr.createdAt DESC, MAX(ush.newStars) DESC
       LIMIT 100
   `;
     const gameResults = await db.$queryRaw(query);
