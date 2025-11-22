@@ -305,12 +305,12 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         }
         
         // Update user cuối cùng
-        console.log(`[DEBUG] Updating User in Gift transaction - new stars: ${user.stars + totalAddedStars}`);
+        console.log(`[DEBUG] Updating User in Gift transaction - new stars: ${user.stars + totalAddedStars}, userId: ${userId}, branch: ${branch}`);
         try {
           await tx.$executeRaw`
             UPDATE User 
             SET stars = ${user.stars + totalAddedStars}, updatedAt = ${getCurrentTimeVNDB()}
-            WHERE id = ${user.id}
+            WHERE userId = ${userId} AND branch = ${branch}
           `;
           console.log(`[DEBUG] User updated successfully in Gift transaction`);
         } catch (error) {
@@ -466,14 +466,14 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         }
         // Update user cuối cùng - dùng actualMagicStone đã tính
         const newMagicStone = actualMagicStone - rolls;
-        console.log(`[DEBUG] Updating User in transaction - new stars: ${user.stars + totalAddedStars}, new magicStone: ${newMagicStone} (was ${actualMagicStone})`);
+        console.log(`[DEBUG] Updating User in transaction - new stars: ${user.stars + totalAddedStars}, new magicStone: ${newMagicStone} (was ${actualMagicStone}), userId: ${userId}, branch: ${branch}`);
         try {
           await tx.$executeRaw`
             UPDATE User 
             SET stars = ${user.stars + totalAddedStars}, 
                 magicStone = ${newMagicStone}, 
                 updatedAt = ${getCurrentTimeVNDB()}
-            WHERE id = ${user.id}
+            WHERE userId = ${userId} AND branch = ${branch}
           `;
           console.log(`[DEBUG] User updated successfully in transaction`);
         } catch (error) {

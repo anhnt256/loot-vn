@@ -132,7 +132,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
           await tx.$executeRaw`
             UPDATE User 
             SET stars = ${newStars}, updatedAt = ${getCurrentTimeVNDB()}
-            WHERE id = ${user.id}
+            WHERE userId = ${userId} AND branch = ${branch}
           `;
         }
       }
