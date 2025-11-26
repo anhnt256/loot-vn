@@ -354,8 +354,8 @@ function calculateCheckInMinutes(
 export async function calculateActiveUsersInfo(
   listUsers: number[],
   branch: string,
-  isDebug: boolean = true,
-  debugUsers: number[] = [14852],
+  isDebug: boolean = false,
+  debugUsers: number[] = [],
 ): Promise<UserInfo[]> {
   try {
     // Nếu debug mode, thêm debugUsers vào listUsers
