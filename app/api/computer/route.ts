@@ -228,19 +228,6 @@ export async function GET() {
     const machineDetailsRaw =
       queryResults[4].status === "fulfilled" ? queryResults[4].value : [];
 
-    // Log kết quả từng query để debug
-    console.log("Query results:", {
-      computerStatus: Array.isArray(computerStatus) ? computerStatus.length : 0,
-      deviceHistories: Array.isArray(deviceHistoriesRaw)
-        ? deviceHistoriesRaw.length
-        : 0,
-      computers: Array.isArray(computers) ? computers.length : 0,
-      checkInItems: Array.isArray(checkInItems) ? checkInItems.length : 0,
-      machineDetails: Array.isArray(machineDetailsRaw)
-        ? machineDetailsRaw.length
-        : 0,
-    });
-
     // Nếu không có computer data, trả về lỗi
     if (!Array.isArray(computers) || computers.length === 0) {
       console.warn("No computer data found from local DB");
