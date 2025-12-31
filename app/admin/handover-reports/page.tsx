@@ -598,6 +598,9 @@ export default function HandoverReportsPage() {
         selectedDate={selectedDate}
         defaultReportType={selectedReportType}
         onReportSubmitted={fetchReports}
+        onReportTypeChange={(reportType) => {
+          setSelectedReportType(reportType);
+        }}
       />
     </div>
   );

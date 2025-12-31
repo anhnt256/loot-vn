@@ -36,6 +36,7 @@ interface SendReportDrawerProps {
   selectedDate: string;
   defaultReportType?: string;
   onReportSubmitted?: () => void;
+  onReportTypeChange?: (reportType: string) => void;
 }
 
 interface Staff {
@@ -136,21 +137,46 @@ const mapMaterialData = (
 
   // Trường hợp 3: submissionCount = 1 - Lần thứ 2 khởi tạo báo cáo (edit mode)
   if (submissionCount === 1) {
-    if (materials?.currentDay) {
-      return materials.currentDay.map((material: any) => {
+    // Merge availableMaterials với currentDay để đảm bảo luôn có danh sách đầy đủ
+    const availableMaterialsMap = new Map();
+    (materials?.availableMaterials || []).forEach((mat: any) => {
+      availableMaterialsMap.set(String(mat.id), mat);
+    });
+
+    const currentDayMap = new Map();
+    (materials?.currentDay || []).forEach((mat: any) => {
+      currentDayMap.set(String(mat.id), mat);
+    });
+
+    // Sử dụng availableMaterials làm danh sách gốc, merge với currentDay nếu có
+    const materialsToMap = Array.from(availableMaterialsMap.values());
+
+    if (materialsToMap && materialsToMap.length > 0) {
+      return materialsToMap.map((material: any) => {
+        const currentDayMaterial = currentDayMap.get(String(material.id));
         let shiftData: any = {};
 
-        // Lấy dữ liệu theo ca
-        switch (selectedShift) {
-          case SHIFT_ENUM.SANG:
-            shiftData = material.morning || {};
-            break;
-          case SHIFT_ENUM.CHIEU:
-            shiftData = material.afternoon || {};
-            break;
-          case SHIFT_ENUM.TOI:
-            shiftData = material.evening || {};
-            break;
+        // Nếu có trong currentDay, lấy dữ liệu theo ca
+        if (currentDayMaterial) {
+          switch (selectedShift) {
+            case SHIFT_ENUM.SANG:
+              shiftData = currentDayMaterial.morning || {};
+              break;
+            case SHIFT_ENUM.CHIEU:
+              shiftData = currentDayMaterial.afternoon || {};
+              break;
+            case SHIFT_ENUM.TOI:
+              shiftData = currentDayMaterial.evening || {};
+              break;
+          }
+        } else {
+          // Nếu không có trong currentDay, dữ liệu mặc định
+          shiftData = {
+            beginning: 0,
+            received: 0,
+            issued: 0,
+            ending: 0,
+          };
         }
 
         return {
@@ -168,20 +194,46 @@ const mapMaterialData = (
 
   // Trường hợp 4: submissionCount >= 2 - Ca đã hoàn tất
   if (submissionCount >= 2) {
-    if (materials?.currentDay) {
-      return materials.currentDay.map((material: any) => {
+    // Merge availableMaterials với currentDay để đảm bảo luôn có danh sách đầy đủ
+    const availableMaterialsMap = new Map();
+    (materials?.availableMaterials || []).forEach((mat: any) => {
+      availableMaterialsMap.set(String(mat.id), mat);
+    });
+
+    const currentDayMap = new Map();
+    (materials?.currentDay || []).forEach((mat: any) => {
+      currentDayMap.set(String(mat.id), mat);
+    });
+
+    // Sử dụng availableMaterials làm danh sách gốc, merge với currentDay nếu có
+    const materialsToMap = Array.from(availableMaterialsMap.values());
+
+    if (materialsToMap && materialsToMap.length > 0) {
+      return materialsToMap.map((material: any) => {
+        const currentDayMaterial = currentDayMap.get(String(material.id));
         let shiftData: any = {};
 
-        switch (selectedShift) {
-          case SHIFT_ENUM.SANG:
-            shiftData = material.morning || {};
-            break;
-          case SHIFT_ENUM.CHIEU:
-            shiftData = material.afternoon || {};
-            break;
-          case SHIFT_ENUM.TOI:
-            shiftData = material.evening || {};
-            break;
+        // Nếu có trong currentDay, lấy dữ liệu theo ca
+        if (currentDayMaterial) {
+          switch (selectedShift) {
+            case SHIFT_ENUM.SANG:
+              shiftData = currentDayMaterial.morning || {};
+              break;
+            case SHIFT_ENUM.CHIEU:
+              shiftData = currentDayMaterial.afternoon || {};
+              break;
+            case SHIFT_ENUM.TOI:
+              shiftData = currentDayMaterial.evening || {};
+              break;
+          }
+        } else {
+          // Nếu không có trong currentDay, dữ liệu mặc định là 0
+          shiftData = {
+            beginning: 0,
+            received: 0,
+            issued: 0,
+            ending: 0,
+          };
         }
 
         return {
@@ -206,6 +258,7 @@ export default function SendReportDrawer({
   selectedDate,
   defaultReportType,
   onReportSubmitted,
+  onReportTypeChange,
 }: SendReportDrawerProps) {
   const [selectedShift, setSelectedShift] = useState("");
 
@@ -269,65 +322,119 @@ export default function SendReportDrawer({
     }
   }, [isOpen, defaultReportType]);
 
+  // Helper function to fetch initial report data (with auto shift selection)
+  const fetchInitialReportData = async () => {
+    if (!isOpen || !selectedReportType) return;
+
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.append(
+        "date",
+        selectedDateState || new Date().toISOString().split("T")[0],
+      );
+      params.append("reportType", selectedReportType);
+
+      console.log("Fetching report data for reportType:", selectedReportType);
+
+      const response = await fetch(
+        `/api/handover-reports/get-report-data?${params.toString()}`,
+      );
+      const result = await response.json();
+
+      if (result.success) {
+        const { isInitialData, submissionTracking } = result.data;
+        setSubmissionTracking(submissionTracking);
+
+        // Decide shift first, then map materials using that shift
+        let autoShift: string = SHIFT_ENUM.SANG;
+        if (submissionTracking) {
+          if (submissionTracking.morningSubmissionCount < 2) {
+            autoShift = SHIFT_ENUM.SANG;
+          } else if (submissionTracking.afternoonSubmissionCount < 2) {
+            autoShift = SHIFT_ENUM.CHIEU;
+          } else if (submissionTracking.eveningSubmissionCount < 2) {
+            autoShift = SHIFT_ENUM.TOI;
+          }
+        }
+
+        isAutoSettingShiftRef.current = true;
+        setSelectedShift(autoShift);
+        isAutoSettingShiftRef.current = false;
+
+        const mappedMaterials = mapMaterialData(
+          isInitialData,
+          result.data.materials,
+          submissionTracking,
+          autoShift,
+        );
+        setMaterialData(mappedMaterials);
+      } else {
+        console.error("Failed to fetch report data:", result.error);
+        setMaterialData([]);
+      }
+    } catch (error) {
+      console.error("Error fetching report data:", error);
+      setMaterialData([]);
+    } finally {
+      setLoading(false);
+      // Always set initialized flag to prevent duplicate calls
+      hasInitializedRef.current = true;
+    }
+  };
+
+  // Helper function to fetch report data when reportType changes (preserve current shift, staff, date)
+  const fetchReportDataForTypeChange = async (newReportType?: string) => {
+    const reportTypeToUse = newReportType || selectedReportType;
+    if (!isOpen || !reportTypeToUse) return;
+
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.append(
+        "date",
+        selectedDateState || new Date().toISOString().split("T")[0],
+      );
+      params.append("reportType", reportTypeToUse);
+
+      console.log("Fetching report data for reportType change:", reportTypeToUse);
+
+      const response = await fetch(
+        `/api/handover-reports/get-report-data?${params.toString()}`,
+      );
+      const result = await response.json();
+
+      if (result.success) {
+        const { isInitialData, submissionTracking } = result.data;
+        setSubmissionTracking(submissionTracking);
+
+        // Use current shift instead of auto-selecting new one
+        const currentShift = selectedShift || SHIFT_ENUM.SANG;
+
+        const mappedMaterials = mapMaterialData(
+          isInitialData,
+          result.data.materials,
+          submissionTracking,
+          currentShift,
+        );
+        setMaterialData(mappedMaterials);
+      } else {
+        console.error("Failed to fetch report data:", result.error);
+        setMaterialData([]);
+      }
+    } catch (error) {
+      console.error("Error fetching report data:", error);
+      setMaterialData([]);
+    } finally {
+      setLoading(false);
+      // Always set initialized flag to prevent duplicate calls
+      hasInitializedRef.current = true;
+    }
+  };
+
   // Call API get-report-data when init and set into materialData state
   useEffect(() => {
     if (isOpen && selectedReportType && !hasInitializedRef.current) {
-      const fetchInitialReportData = async () => {
-        setLoading(true);
-        try {
-          const params = new URLSearchParams();
-          params.append(
-            "date",
-            selectedDateState || new Date().toISOString().split("T")[0],
-          );
-          params.append("reportType", selectedReportType);
-
-          const response = await fetch(
-            `/api/handover-reports/get-report-data?${params.toString()}`,
-          );
-          const result = await response.json();
-
-          if (result.success) {
-            const { isInitialData, submissionTracking } = result.data;
-            setSubmissionTracking(submissionTracking);
-
-            // Decide shift first, then map materials using that shift
-            let autoShift: string = SHIFT_ENUM.SANG;
-            if (submissionTracking) {
-              if (submissionTracking.morningSubmissionCount < 2) {
-                autoShift = SHIFT_ENUM.SANG;
-              } else if (submissionTracking.afternoonSubmissionCount < 2) {
-                autoShift = SHIFT_ENUM.CHIEU;
-              } else if (submissionTracking.eveningSubmissionCount < 2) {
-                autoShift = SHIFT_ENUM.TOI;
-              }
-            }
-
-            isAutoSettingShiftRef.current = true;
-            setSelectedShift(autoShift);
-            isAutoSettingShiftRef.current = false;
-
-            const mappedMaterials = mapMaterialData(
-              isInitialData,
-              result.data.materials,
-              submissionTracking,
-              autoShift,
-            );
-            setMaterialData(mappedMaterials);
-          } else {
-            console.error("Failed to fetch report data:", result.error);
-            setMaterialData([]);
-          }
-        } catch (error) {
-          console.error("Error fetching report data:", error);
-          setMaterialData([]);
-        } finally {
-          setLoading(false);
-          // Always set initialized flag to prevent duplicate calls
-          hasInitializedRef.current = true;
-        }
-      };
-
       fetchInitialReportData();
     }
   }, [isOpen, selectedReportType, selectedDateState]);
@@ -401,15 +508,19 @@ export default function SendReportDrawer({
     }
   }, [selectedShift]);
 
-  // Update material data when selectedReportType changes
+  // Update material data when selectedReportType changes (preserve other fields)
+  // Note: This useEffect is a fallback for programmatic changes, user changes are handled in onChange
+  // We skip this if hasInitializedRef is false to avoid conflict with fetchInitialReportData
   useEffect(() => {
-    if (
-      isOpen &&
-      selectedReportType &&
-      selectedShift &&
-      hasInitializedRef.current
-    ) {
-      fetchReportData();
+    if (isOpen && selectedReportType && hasInitializedRef.current) {
+      // Only update materials and submissionTracking, keep shift, staff, date unchanged
+      // Don't reset hasInitializedRef to prevent fetchInitialReportData from running
+      // Call API with current shift, staff, date preserved
+      fetchReportDataForTypeChange(selectedReportType);
+      // Notify parent component about reportType change
+      if (onReportTypeChange) {
+        onReportTypeChange(selectedReportType);
+      }
     }
   }, [selectedReportType]);
 
@@ -742,7 +853,18 @@ export default function SendReportDrawer({
                     id="report-type-select"
                     placeholder="Chọn loại báo cáo"
                     value={selectedReportType}
-                    onChange={setSelectedReportType}
+                    onChange={(value) => {
+                      setSelectedReportType(value);
+                      // Notify parent component immediately when user changes reportType
+                      if (onReportTypeChange) {
+                        onReportTypeChange(value);
+                      }
+                      // If drawer is already initialized, fetch data with current shift/staff/date preserved
+                      // Don't reset hasInitializedRef to prevent fetchInitialReportData from running
+                      if (hasInitializedRef.current && isOpen) {
+                        fetchReportDataForTypeChange(value);
+                      }
+                    }}
                     className="w-full"
                     size="large"
                   >

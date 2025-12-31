@@ -137,6 +137,7 @@ export async function GET(request: NextRequest) {
         FROM HandoverMaterial hm
         LEFT JOIN Material m ON hm.materialId = m.id
         WHERE hm.handoverReportId = ${handoverReportId}
+        AND m.reportType = ${reportType}
       `;
 
       currentDayData = currentMaterialsResult.map((material) => ({
@@ -233,6 +234,7 @@ export async function GET(request: NextRequest) {
         FROM HandoverMaterial hm
         LEFT JOIN Material m ON hm.materialId = m.id
         WHERE hm.handoverReportId = ${previousHandoverReportId}
+        AND m.reportType = ${reportType}
       `;
 
       console.log("Previous materials result:", previousMaterialsResult);
@@ -271,6 +273,7 @@ export async function GET(request: NextRequest) {
         FROM HandoverMaterial hm
         LEFT JOIN Material m ON hm.materialId = m.id
         WHERE hm.handoverReportId = ${handoverReportId}
+        AND m.reportType = ${reportType}
       `;
 
       currentMorningData = currentShiftMaterialsResult.map((material) => ({
