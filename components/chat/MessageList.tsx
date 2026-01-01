@@ -3,7 +3,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import dayjs from "@/lib/dayjs";
 import { ChatMessage } from "@/hooks/useChat";
-import { filterProfanity } from "@/lib/profanity-filter";
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -212,7 +211,7 @@ export function MessageList({
                     className="text-xs whitespace-pre-wrap"
                     style={{ fontSize: "10px" }}
                   >
-                    {filterProfanity(message.content)}
+                    {message.content}
                   </div>
                   <div
                     className={`text-xs mt-0 ${
