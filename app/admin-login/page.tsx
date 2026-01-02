@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useLogin } from "@/queries/auth.query";
@@ -31,9 +31,24 @@ const AdminLogin = () => {
   const [userName, setUsername] = useState<string>("");
   const [macAddress, setMacAddress] = useState<string>("");
   const [currentMacAddress, setCurrentMacAddress] = useState<string>("");
+  const [displayMacAddress, setDisplayMacAddress] = useState<string>("");
   const [pageLoading, setPageLoading] = useState<boolean>(false);
   const loginMutation = useLogin();
   const router = useRouter();
+
+  useEffect(() => {
+    const fetchMacAddress = async () => {
+      try {
+        const macAddresses = await getMacAddresses();
+        const mac = macAddresses[0] || "";
+        setDisplayMacAddress(mac);
+      } catch (error) {
+        console.error("Error getting MAC address:", error);
+        setDisplayMacAddress("");
+      }
+    };
+    fetchMacAddress();
+  }, []);
 
   const handleLogin = useCallback(
     async (isAutoLogin: boolean = false) => {
@@ -187,7 +202,7 @@ const AdminLogin = () => {
             <div className="text-center space-y-2">
               <h1 className="text-2xl font-bold text-white">Admin Portal</h1>
               <p className="text-gray-400 text-sm">
-                Please sign in to continue
+                {displayMacAddress || "Loading MAC address..."}
               </p>
             </div>
 
