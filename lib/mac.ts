@@ -14,7 +14,7 @@ export const getMacAddresses = async (): Promise<string[]> => {
   if (typeof window !== "undefined" && window.electron) {
     const result = await window.electron.getMacAddresses();
     // Convert from [{ address: string }, ...] to string[]
-    return result.map(item => item.address);
+    return result.map((item) => item.address);
   }
   return [];
 };

@@ -1,8 +1,25 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, List, Tag, Spin, Empty, Statistic, Divider, Image, Modal } from "antd";
-import { DollarSign, Calendar, Gift, Award, AlertTriangle, ImageIcon } from "lucide-react";
+import {
+  Card,
+  List,
+  Tag,
+  Spin,
+  Empty,
+  Statistic,
+  Divider,
+  Image,
+  Modal,
+} from "antd";
+import {
+  DollarSign,
+  Calendar,
+  Gift,
+  Award,
+  AlertTriangle,
+  ImageIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import dayjs from "@/lib/dayjs";
 
@@ -52,7 +69,10 @@ interface PenaltyRecord {
 
 export default function SalaryBonus({ staffId }: SalaryBonusProps) {
   const [loading, setLoading] = useState(false);
-  const [imagePreview, setImagePreview] = useState<{ url: string; visible: boolean }>({
+  const [imagePreview, setImagePreview] = useState<{
+    url: string;
+    visible: boolean;
+  }>({
     url: "",
     visible: false,
   });
@@ -108,7 +128,11 @@ export default function SalaryBonus({ staffId }: SalaryBonusProps) {
             title="Tổng lương"
             value={summary.totalSalary}
             prefix="₫"
-            valueStyle={{ fontSize: "16px", fontWeight: "bold", color: "#1890ff" }}
+            valueStyle={{
+              fontSize: "16px",
+              fontWeight: "bold",
+              color: "#1890ff",
+            }}
           />
         </Card>
         <Card className="text-center">
@@ -116,7 +140,11 @@ export default function SalaryBonus({ staffId }: SalaryBonusProps) {
             title="Tổng thưởng"
             value={summary.totalBonus}
             prefix="₫"
-            valueStyle={{ fontSize: "16px", fontWeight: "bold", color: "#52c41a" }}
+            valueStyle={{
+              fontSize: "16px",
+              fontWeight: "bold",
+              color: "#52c41a",
+            }}
           />
         </Card>
         <Card className="text-center">
@@ -124,7 +152,11 @@ export default function SalaryBonus({ staffId }: SalaryBonusProps) {
             title="Tổng phạt"
             value={summary.totalPenalties}
             prefix="₫"
-            valueStyle={{ fontSize: "16px", fontWeight: "bold", color: "#ff4d4f" }}
+            valueStyle={{
+              fontSize: "16px",
+              fontWeight: "bold",
+              color: "#ff4d4f",
+            }}
           />
         </Card>
         <Card className="text-center">
@@ -132,7 +164,11 @@ export default function SalaryBonus({ staffId }: SalaryBonusProps) {
             title="Lương chờ"
             value={summary.pendingSalary}
             prefix="₫"
-            valueStyle={{ fontSize: "16px", fontWeight: "bold", color: "#faad14" }}
+            valueStyle={{
+              fontSize: "16px",
+              fontWeight: "bold",
+              color: "#faad14",
+            }}
           />
         </Card>
       </div>
@@ -151,11 +187,16 @@ export default function SalaryBonus({ staffId }: SalaryBonusProps) {
                     <span className="font-medium text-lg">
                       Tháng {item.month}/{item.year}
                     </span>
-                    <Tag color={item.status === "PAID" ? "green" : "orange"} className="text-sm">
-                      {item.status === "PAID" ? "Đã thanh toán" : "Chờ thanh toán"}
+                    <Tag
+                      color={item.status === "PAID" ? "green" : "orange"}
+                      className="text-sm"
+                    >
+                      {item.status === "PAID"
+                        ? "Đã thanh toán"
+                        : "Chờ thanh toán"}
                     </Tag>
                   </div>
-                  
+
                   <div className="bg-gray-50 p-3 rounded-lg space-y-2 mb-2">
                     {/* A: Lương từ giờ làm */}
                     <div className="flex justify-between text-sm">
@@ -167,15 +208,14 @@ export default function SalaryBonus({ staffId }: SalaryBonusProps) {
                       </span>
                     </div>
                     <div className="text-xs text-gray-500 pl-2">
-                      {item.totalHours.toFixed(2)} giờ × {item.hourlySalary.toLocaleString("vi-VN")} ₫/giờ
+                      {item.totalHours.toFixed(2)} giờ ×{" "}
+                      {item.hourlySalary.toLocaleString("vi-VN")} ₫/giờ
                     </div>
 
                     {/* C: Thưởng */}
                     {item.bonus > 0 && (
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">
-                          (C) Thưởng:
-                        </span>
+                        <span className="text-gray-600">(C) Thưởng:</span>
                         <span className="font-medium text-green-600">
                           + {item.bonus.toLocaleString("vi-VN")} ₫
                         </span>
@@ -185,9 +225,7 @@ export default function SalaryBonus({ staffId }: SalaryBonusProps) {
                     {/* B: Tạm ứng */}
                     {item.advance > 0 && (
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">
-                          (B) Tạm ứng:
-                        </span>
+                        <span className="text-gray-600">(B) Tạm ứng:</span>
                         <span className="font-medium text-orange-600">
                           - {item.advance.toLocaleString("vi-VN")} ₫
                         </span>
@@ -197,9 +235,7 @@ export default function SalaryBonus({ staffId }: SalaryBonusProps) {
                     {/* D: Phạt */}
                     {item.penalty > 0 && (
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">
-                          (D) Phạt:
-                        </span>
+                        <span className="text-gray-600">(D) Phạt:</span>
                         <span className="font-medium text-red-600">
                           - {item.penalty.toLocaleString("vi-VN")} ₫
                         </span>
@@ -225,7 +261,8 @@ export default function SalaryBonus({ staffId }: SalaryBonusProps) {
 
                   {item.paidAt && (
                     <div className="text-xs text-gray-500">
-                      Thanh toán: {dayjs(item.paidAt).format("DD/MM/YYYY HH:mm")}
+                      Thanh toán:{" "}
+                      {dayjs(item.paidAt).format("DD/MM/YYYY HH:mm")}
                     </div>
                   )}
                 </div>
@@ -236,13 +273,13 @@ export default function SalaryBonus({ staffId }: SalaryBonusProps) {
       </Card>
 
       {/* Bonus History */}
-      <Card 
+      <Card
         title={
           <span className="flex items-center gap-2">
             <Award size={18} className="text-green-600" />
             Lịch sử thưởng
           </span>
-        } 
+        }
         className="shadow-sm"
       >
         {bonusHistory.length === 0 ? (
@@ -260,8 +297,8 @@ export default function SalaryBonus({ staffId }: SalaryBonusProps) {
                         item.status === "PAID"
                           ? "green"
                           : item.status === "APPROVED"
-                          ? "blue"
-                          : "orange"
+                            ? "blue"
+                            : "orange"
                       }
                     >
                       {item.status === "PAID" && "Đã thanh toán"}
@@ -274,9 +311,7 @@ export default function SalaryBonus({ staffId }: SalaryBonusProps) {
                       Số tiền: {item.amount.toLocaleString("vi-VN")} ₫
                     </div>
                     {item.description && (
-                      <div className="text-gray-700">
-                        {item.description}
-                      </div>
+                      <div className="text-gray-700">{item.description}</div>
                     )}
                     {item.imageUrl && (
                       <div className="mt-2">
@@ -287,12 +322,22 @@ export default function SalaryBonus({ staffId }: SalaryBonusProps) {
                           height={120}
                           className="rounded cursor-pointer object-cover"
                           preview={{
-                            visible: imagePreview.visible && imagePreview.url === item.imageUrl,
+                            visible:
+                              imagePreview.visible &&
+                              imagePreview.url === item.imageUrl,
                             onVisibleChange: (visible) => {
-                              setImagePreview({ url: item.imageUrl || "", visible });
+                              setImagePreview({
+                                url: item.imageUrl || "",
+                                visible,
+                              });
                             },
                           }}
-                          onClick={() => setImagePreview({ url: item.imageUrl || "", visible: true })}
+                          onClick={() =>
+                            setImagePreview({
+                              url: item.imageUrl || "",
+                              visible: true,
+                            })
+                          }
                         />
                       </div>
                     )}
@@ -303,7 +348,9 @@ export default function SalaryBonus({ staffId }: SalaryBonusProps) {
                     )}
                     <div className="text-xs text-gray-500">
                       <Calendar size={12} className="inline mr-1" />
-                      {item.rewardDate ? dayjs(item.rewardDate).format("DD/MM/YYYY HH:mm") : dayjs(item.createdAt).format("DD/MM/YYYY HH:mm")}
+                      {item.rewardDate
+                        ? dayjs(item.rewardDate).format("DD/MM/YYYY HH:mm")
+                        : dayjs(item.createdAt).format("DD/MM/YYYY HH:mm")}
                     </div>
                   </div>
                 </div>
@@ -314,13 +361,13 @@ export default function SalaryBonus({ staffId }: SalaryBonusProps) {
       </Card>
 
       {/* Penalties History */}
-      <Card 
+      <Card
         title={
           <span className="flex items-center gap-2">
             <AlertTriangle size={18} className="text-red-600" />
             Lịch sử phạt
           </span>
-        } 
+        }
         className="shadow-sm"
       >
         {penaltiesHistory.length === 0 ? (
@@ -338,8 +385,8 @@ export default function SalaryBonus({ staffId }: SalaryBonusProps) {
                         item.status === "PAID"
                           ? "red"
                           : item.status === "APPROVED"
-                          ? "orange"
-                          : "default"
+                            ? "orange"
+                            : "default"
                       }
                     >
                       {item.status === "PAID" && "Đã trừ"}
@@ -352,9 +399,7 @@ export default function SalaryBonus({ staffId }: SalaryBonusProps) {
                       Số tiền: {item.amount.toLocaleString("vi-VN")} ₫
                     </div>
                     {item.description && (
-                      <div className="text-gray-700">
-                        {item.description}
-                      </div>
+                      <div className="text-gray-700">{item.description}</div>
                     )}
                     {item.imageUrl && (
                       <div className="mt-2">
@@ -365,12 +410,22 @@ export default function SalaryBonus({ staffId }: SalaryBonusProps) {
                           height={120}
                           className="rounded cursor-pointer object-cover"
                           preview={{
-                            visible: imagePreview.visible && imagePreview.url === item.imageUrl,
+                            visible:
+                              imagePreview.visible &&
+                              imagePreview.url === item.imageUrl,
                             onVisibleChange: (visible) => {
-                              setImagePreview({ url: item.imageUrl || "", visible });
+                              setImagePreview({
+                                url: item.imageUrl || "",
+                                visible,
+                              });
                             },
                           }}
-                          onClick={() => setImagePreview({ url: item.imageUrl || "", visible: true })}
+                          onClick={() =>
+                            setImagePreview({
+                              url: item.imageUrl || "",
+                              visible: true,
+                            })
+                          }
                         />
                       </div>
                     )}
@@ -393,4 +448,3 @@ export default function SalaryBonus({ staffId }: SalaryBonusProps) {
     </div>
   );
 }
-

@@ -2,7 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { Tabs, Card, Button, Spin, Avatar, Badge, Select } from "antd";
-import { User, Clock, Award, AlertTriangle, LogOut, BarChart3, Settings } from "lucide-react";
+import {
+  User,
+  Clock,
+  Award,
+  AlertTriangle,
+  LogOut,
+  BarChart3,
+  Settings,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useLogout } from "@/queries/auth.query";
@@ -23,14 +31,17 @@ export default function StaffPage() {
   const router = useRouter();
 
   // Month filter state - default to current month or previous month
-  const [selectedMonth, setSelectedMonth] = useState<{ month: number; year: number } | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<{
+    month: number;
+    year: number;
+  } | null>(null);
 
   useEffect(() => {
     // Set default to current month
     const now = dayjs();
     const currentMonth = now.month() + 1;
     const currentYear = now.year();
-    
+
     setSelectedMonth({ month: currentMonth, year: currentYear });
   }, []);
 
@@ -89,8 +100,12 @@ export default function StaffPage() {
                 {staffData?.fullName?.charAt(0)?.toUpperCase() || "S"}
               </Avatar>
               <div>
-                <h1 className="text-xl font-bold">{staffData?.fullName || "Nhân viên"}</h1>
-                <p className="text-orange-100 text-sm">{staffData?.userName || ""}</p>
+                <h1 className="text-xl font-bold">
+                  {staffData?.fullName || "Nhân viên"}
+                </h1>
+                <p className="text-orange-100 text-sm">
+                  {staffData?.userName || ""}
+                </p>
                 <p className="text-orange-100 text-xs mt-1">
                   {staffData?.staffType === "STAFF" && "Nhân viên"}
                   {staffData?.staffType === "KITCHEN" && "Bếp"}
@@ -98,11 +113,12 @@ export default function StaffPage() {
                   {staffData?.staffType === "CASHIER" && "Thu ngân"}
                   {staffData?.staffType === "MANAGER" && "Quản lý"}
                   {staffData?.staffType === "SUPER_ADMIN" && "Super Admin"}
-                  {staffData?.staffType === "BRANCH_ADMIN" && "Quản lý chi nhánh"}
+                  {staffData?.staffType === "BRANCH_ADMIN" &&
+                    "Quản lý chi nhánh"}
                 </p>
                 {/* Show manager button if user is manager */}
-                {(staffData?.staffType === "MANAGER" || 
-                  staffData?.staffType === "SUPER_ADMIN" || 
+                {(staffData?.staffType === "MANAGER" ||
+                  staffData?.staffType === "SUPER_ADMIN" ||
                   staffData?.staffType === "BRANCH_ADMIN") && (
                   <Button
                     type="default"
@@ -146,9 +162,9 @@ export default function StaffPage() {
                   const now = dayjs();
                   const currentMonth = now.month() + 1;
                   const currentYear = now.year();
-                  
+
                   const options = [];
-                  
+
                   // Previous month
                   if (currentMonth === 1) {
                     options.push({
@@ -161,13 +177,13 @@ export default function StaffPage() {
                       label: `Tháng ${currentMonth - 1}/${currentYear}`,
                     });
                   }
-                  
+
                   // Current month
                   options.push({
                     value: `${currentMonth}-${currentYear}`,
                     label: `Tháng ${currentMonth}/${currentYear}`,
                   });
-                  
+
                   return options;
                 })()}
               />
@@ -190,15 +206,18 @@ export default function StaffPage() {
                   <span className="hidden sm:inline">Chấm công</span>
                 </span>
               ),
-              children: staffData?.id && selectedMonth ? (
-                <CheckIn 
-                  staffId={staffData.id} 
-                  month={selectedMonth.month}
-                  year={selectedMonth.year}
-                /> 
-              ) : (
-                <div className="text-center py-8 text-gray-500">Đang tải...</div>
-              ),
+              children:
+                staffData?.id && selectedMonth ? (
+                  <CheckIn
+                    staffId={staffData.id}
+                    month={selectedMonth.month}
+                    year={selectedMonth.year}
+                  />
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    Đang tải...
+                  </div>
+                ),
             },
             {
               key: "summary",
@@ -208,15 +227,18 @@ export default function StaffPage() {
                   <span className="hidden sm:inline">Tổng quan</span>
                 </span>
               ),
-              children: staffData?.id && selectedMonth ? (
-                <SalarySummary 
-                  staffId={staffData.id} 
-                  month={selectedMonth.month}
-                  year={selectedMonth.year}
-                /> 
-              ) : (
-                <div className="text-center py-8 text-gray-500">Đang tải...</div>
-              ),
+              children:
+                staffData?.id && selectedMonth ? (
+                  <SalarySummary
+                    staffId={staffData.id}
+                    month={selectedMonth.month}
+                    year={selectedMonth.year}
+                  />
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    Đang tải...
+                  </div>
+                ),
             },
             {
               key: "time",
@@ -226,15 +248,18 @@ export default function StaffPage() {
                   <span className="hidden sm:inline">Chấm công</span>
                 </span>
               ),
-              children: staffData?.id && selectedMonth ? (
-                <TimeTracking 
-                  staffId={staffData.id}
-                  month={selectedMonth.month}
-                  year={selectedMonth.year}
-                /> 
-              ) : (
-                <div className="text-center py-8 text-gray-500">Đang tải...</div>
-              ),
+              children:
+                staffData?.id && selectedMonth ? (
+                  <TimeTracking
+                    staffId={staffData.id}
+                    month={selectedMonth.month}
+                    year={selectedMonth.year}
+                  />
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    Đang tải...
+                  </div>
+                ),
             },
             {
               key: "bonus",
@@ -244,15 +269,18 @@ export default function StaffPage() {
                   <span className="hidden sm:inline">Thưởng</span>
                 </span>
               ),
-              children: staffData?.id && selectedMonth ? (
-                <BonusHistory 
-                  staffId={staffData.id}
-                  month={selectedMonth.month}
-                  year={selectedMonth.year}
-                /> 
-              ) : (
-                <div className="text-center py-8 text-gray-500">Đang tải...</div>
-              ),
+              children:
+                staffData?.id && selectedMonth ? (
+                  <BonusHistory
+                    staffId={staffData.id}
+                    month={selectedMonth.month}
+                    year={selectedMonth.year}
+                  />
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    Đang tải...
+                  </div>
+                ),
             },
             {
               key: "penalty",
@@ -262,15 +290,18 @@ export default function StaffPage() {
                   <span className="hidden sm:inline">Phạt</span>
                 </span>
               ),
-              children: staffData?.id && selectedMonth ? (
-                <PenaltyHistory 
-                  staffId={staffData.id}
-                  month={selectedMonth.month}
-                  year={selectedMonth.year}
-                /> 
-              ) : (
-                <div className="text-center py-8 text-gray-500">Đang tải...</div>
-              ),
+              children:
+                staffData?.id && selectedMonth ? (
+                  <PenaltyHistory
+                    staffId={staffData.id}
+                    month={selectedMonth.month}
+                    year={selectedMonth.year}
+                  />
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    Đang tải...
+                  </div>
+                ),
             },
             {
               key: "info",
@@ -280,7 +311,9 @@ export default function StaffPage() {
                   <span className="hidden sm:inline">Thông tin</span>
                 </span>
               ),
-              children: <StaffInfo staffData={staffData} onRefresh={fetchStaffInfo} />,
+              children: (
+                <StaffInfo staffData={staffData} onRefresh={fetchStaffInfo} />
+              ),
             },
           ]}
           className="staff-tabs"
@@ -289,4 +322,3 @@ export default function StaffPage() {
     </div>
   );
 }
-

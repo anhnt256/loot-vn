@@ -24,7 +24,10 @@ function isPasswordResetRequired(
 }
 
 // Helper function to check admin access
-async function checkAdminAccess(): Promise<{ isAdmin: boolean; error?: string }> {
+async function checkAdminAccess(): Promise<{
+  isAdmin: boolean;
+  error?: string;
+}> {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("token")?.value;
@@ -157,16 +160,19 @@ export async function POST(request: NextRequest) {
     // Validation
     if (!userName || !password || !fullName) {
       return NextResponse.json(
-        { success: false, error: "userName, password, and fullName are required" },
+        {
+          success: false,
+          error: "userName, password, and fullName are required",
+        },
         { status: 400 },
       );
     }
 
     // Check if userName already exists
-    const existingStaff = await db.$queryRawUnsafe(
+    const existingStaff = (await db.$queryRawUnsafe(
       `SELECT id FROM Staff WHERE userName = ?`,
       userName,
-    ) as any[];
+    )) as any[];
 
     if (existingStaff.length > 0) {
       return NextResponse.json(
@@ -210,11 +216,11 @@ export async function POST(request: NextRequest) {
     );
 
     // Get created staff
-    const createdStaff = await db.$queryRawUnsafe(
+    const createdStaff = (await db.$queryRawUnsafe(
       `SELECT * FROM Staff WHERE userName = ? AND branch = ?`,
       userName,
       branch,
-    ) as any[];
+    )) as any[];
 
     return NextResponse.json({
       success: true,
@@ -281,11 +287,11 @@ export async function PUT(request: NextRequest) {
     }
 
     // Check if staff exists
-    const existingStaff = await db.$queryRawUnsafe(
+    const existingStaff = (await db.$queryRawUnsafe(
       `SELECT id, userName FROM Staff WHERE id = ? AND branch = ?`,
       id,
       branch,
-    ) as any[];
+    )) as any[];
 
     if (existingStaff.length === 0) {
       return NextResponse.json(
@@ -296,11 +302,11 @@ export async function PUT(request: NextRequest) {
 
     // Check if userName is being changed and if new userName already exists
     if (userName && userName !== existingStaff[0].userName) {
-      const userNameCheck = await db.$queryRawUnsafe(
+      const userNameCheck = (await db.$queryRawUnsafe(
         `SELECT id FROM Staff WHERE userName = ? AND id != ?`,
         userName,
         id,
-      ) as any[];
+      )) as any[];
 
       if (userNameCheck.length > 0) {
         return NextResponse.json(
@@ -409,11 +415,11 @@ export async function PUT(request: NextRequest) {
     await db.$executeRawUnsafe(query, ...updateValues);
 
     // Get updated staff
-    const updatedStaff = await db.$queryRawUnsafe(
+    const updatedStaff = (await db.$queryRawUnsafe(
       `SELECT * FROM Staff WHERE id = ? AND branch = ?`,
       id,
       branch,
-    ) as any[];
+    )) as any[];
 
     return NextResponse.json({
       success: true,
@@ -458,11 +464,11 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Check if staff exists
-    const existingStaff = await db.$queryRawUnsafe(
+    const existingStaff = (await db.$queryRawUnsafe(
       `SELECT id, isAdmin FROM Staff WHERE id = ? AND branch = ?`,
       id,
       branch,
-    ) as any[];
+    )) as any[];
 
     if (existingStaff.length === 0) {
       return NextResponse.json(

@@ -18,9 +18,12 @@ export default function LeaveManagement() {
             description={
               <div className="text-center py-8">
                 <Calendar size={48} className="mx-auto mb-4 text-gray-400" />
-                <p className="text-gray-500 mb-2 text-lg font-medium">Chức năng quản lý nghỉ đang được phát triển</p>
+                <p className="text-gray-500 mb-2 text-lg font-medium">
+                  Chức năng quản lý nghỉ đang được phát triển
+                </p>
                 <p className="text-sm text-gray-400">
-                  Tính năng này sẽ cho phép quản lý xem và duyệt đơn nghỉ phép của nhân viên
+                  Tính năng này sẽ cho phép quản lý xem và duyệt đơn nghỉ phép
+                  của nhân viên
                 </p>
               </div>
             }
@@ -32,4 +35,3 @@ export default function LeaveManagement() {
     </div>
   );
 }
-

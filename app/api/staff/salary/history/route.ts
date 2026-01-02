@@ -58,42 +58,47 @@ export async function GET(request: NextRequest) {
             createdAt: `${year}-${String(month).padStart(2, "0")}-15T10:00:00Z`,
           },
         ],
-        penaltiesHistory: month === 12 ? [
-          {
-            id: 1,
-            amount: 150000,
-            reason: "Vi phạm quy định",
-            description: "Không tuân thủ quy trình làm việc",
-            imageUrl: null,
-            note: "Cần cải thiện",
-            penaltyDate: `${year}-${String(month).padStart(2, "0")}-10T00:00:00Z`,
-            status: "PAID",
-            createdAt: `${year}-${String(month).padStart(2, "0")}-10T10:00:00Z`,
-          },
-          {
-            id: 2,
-            amount: 100000,
-            reason: "Đi muộn",
-            description: "Đi muộn 2 lần trong tháng",
-            imageUrl: null,
-            note: "Vui lòng đến đúng giờ",
-            penaltyDate: `${year}-${String(month).padStart(2, "0")}-20T00:00:00Z`,
-            status: "APPROVED",
-            createdAt: `${year}-${String(month).padStart(2, "0")}-20T10:00:00Z`,
-          },
-        ] : month === 11 ? [
-          {
-            id: 3,
-            amount: 200000,
-            reason: "Đi muộn",
-            description: "Đi muộn 3 lần trong tháng",
-            imageUrl: null,
-            note: "Vui lòng đến đúng giờ",
-            penaltyDate: `${year}-${String(month).padStart(2, "0")}-15T00:00:00Z`,
-            status: "PAID",
-            createdAt: `${year}-${String(month).padStart(2, "0")}-15T10:00:00Z`,
-          },
-        ] : [],
+        penaltiesHistory:
+          month === 12
+            ? [
+                {
+                  id: 1,
+                  amount: 150000,
+                  reason: "Vi phạm quy định",
+                  description: "Không tuân thủ quy trình làm việc",
+                  imageUrl: null,
+                  note: "Cần cải thiện",
+                  penaltyDate: `${year}-${String(month).padStart(2, "0")}-10T00:00:00Z`,
+                  status: "PAID",
+                  createdAt: `${year}-${String(month).padStart(2, "0")}-10T10:00:00Z`,
+                },
+                {
+                  id: 2,
+                  amount: 100000,
+                  reason: "Đi muộn",
+                  description: "Đi muộn 2 lần trong tháng",
+                  imageUrl: null,
+                  note: "Vui lòng đến đúng giờ",
+                  penaltyDate: `${year}-${String(month).padStart(2, "0")}-20T00:00:00Z`,
+                  status: "APPROVED",
+                  createdAt: `${year}-${String(month).padStart(2, "0")}-20T10:00:00Z`,
+                },
+              ]
+            : month === 11
+              ? [
+                  {
+                    id: 3,
+                    amount: 200000,
+                    reason: "Đi muộn",
+                    description: "Đi muộn 3 lần trong tháng",
+                    imageUrl: null,
+                    note: "Vui lòng đến đúng giờ",
+                    penaltyDate: `${year}-${String(month).padStart(2, "0")}-15T00:00:00Z`,
+                    status: "PAID",
+                    createdAt: `${year}-${String(month).padStart(2, "0")}-15T10:00:00Z`,
+                  },
+                ]
+              : [],
       },
     });
   }
@@ -138,7 +143,7 @@ export async function GET(request: NextRequest) {
     // Validate: Only allow current month or previous month (max 1 month back)
     // Example: If current month is January, can view December (previous year) and January (current)
     let isValid = false;
-    
+
     // Check if requested month is current month
     if (requestedYear === currentYear && requestedMonth === currentMonth) {
       isValid = true;
@@ -151,21 +156,27 @@ export async function GET(request: NextRequest) {
       }
     } else {
       // Previous month in same year
-      if (requestedYear === currentYear && requestedMonth === currentMonth - 1) {
+      if (
+        requestedYear === currentYear &&
+        requestedMonth === currentMonth - 1
+      ) {
         isValid = true;
       }
     }
 
     if (!isValid) {
       return NextResponse.json(
-        { success: false, error: "Chỉ được xem lịch sử của tháng hiện tại hoặc tháng trước" },
+        {
+          success: false,
+          error: "Chỉ được xem lịch sử của tháng hiện tại hoặc tháng trước",
+        },
         { status: 403 },
       );
     }
 
     try {
       // Get salary history for the month
-      const salaryHistory = await db.$queryRawUnsafe(
+      const salaryHistory = (await db.$queryRawUnsafe(
         `SELECT 
           id, month, year, totalHours, hourlySalary, salaryFromHours,
           advance, bonus, penalty, total, status, paidAt, note
@@ -175,12 +186,12 @@ export async function GET(request: NextRequest) {
         parseInt(staffId),
         requestedMonth,
         requestedYear,
-      ) as any[];
+      )) as any[];
 
       // Get bonus history for the month
       let bonusHistory: any[] = [];
       try {
-        bonusHistory = await db.$queryRawUnsafe(
+        bonusHistory = (await db.$queryRawUnsafe(
           `SELECT 
             id, amount, reason, description, imageUrl, note,
             rewardDate, status, createdAt
@@ -192,7 +203,7 @@ export async function GET(request: NextRequest) {
           parseInt(staffId),
           requestedYear,
           requestedMonth,
-        ) as any[];
+        )) as any[];
       } catch (error: any) {
         if (!error.message?.includes("doesn't exist")) {
           throw error;
@@ -202,7 +213,7 @@ export async function GET(request: NextRequest) {
       // Get penalties history for the month
       let penaltiesHistory: any[] = [];
       try {
-        penaltiesHistory = await db.$queryRawUnsafe(
+        penaltiesHistory = (await db.$queryRawUnsafe(
           `SELECT 
             id, amount, reason, description, imageUrl, note,
             penaltyDate, status, createdAt
@@ -214,7 +225,7 @@ export async function GET(request: NextRequest) {
           parseInt(staffId),
           requestedYear,
           requestedMonth,
-        ) as any[];
+        )) as any[];
       } catch (error: any) {
         if (!error.message?.includes("doesn't exist")) {
           throw error;
@@ -246,9 +257,11 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error("Error fetching salary history:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to fetch salary history" },
+      {
+        success: false,
+        error: error.message || "Failed to fetch salary history",
+      },
       { status: 500 },
     );
   }
 }
-

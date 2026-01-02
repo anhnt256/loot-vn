@@ -14,7 +14,10 @@ function hashPassword(password: string): string {
 }
 
 // Helper function to check admin access
-async function checkAdminAccess(): Promise<{ isAdmin: boolean; error?: string }> {
+async function checkAdminAccess(): Promise<{
+  isAdmin: boolean;
+  error?: string;
+}> {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("token")?.value;
@@ -76,11 +79,11 @@ export async function POST(
     }
 
     // Check if staff exists
-    const existingStaff = await db.$queryRawUnsafe(
+    const existingStaff = (await db.$queryRawUnsafe(
       `SELECT id, isAdmin FROM Staff WHERE id = ? AND branch = ?`,
       id,
       branch,
-    ) as any[];
+    )) as any[];
 
     if (existingStaff.length === 0) {
       return NextResponse.json(
@@ -111,7 +114,8 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message: "Password reset successfully. User will be required to set a new password on next login.",
+      message:
+        "Password reset successfully. User will be required to set a new password on next login.",
     });
   } catch (error: any) {
     console.error("Error resetting password:", error);
@@ -121,4 +125,3 @@ export async function POST(
     );
   }
 }
-

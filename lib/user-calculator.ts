@@ -272,7 +272,10 @@ function calculateCheckInMinutes(
     } else {
       const lastRange = mergedComboRanges[mergedComboRanges.length - 1];
       // Nếu overlap hoặc tiếp giáp, merge
-      if (comboRange.start.isBefore(lastRange.end) || comboRange.start.isSame(lastRange.end)) {
+      if (
+        comboRange.start.isBefore(lastRange.end) ||
+        comboRange.start.isSame(lastRange.end)
+      ) {
         lastRange.end = comboRange.end.isAfter(lastRange.end)
           ? comboRange.end
           : lastRange.end;

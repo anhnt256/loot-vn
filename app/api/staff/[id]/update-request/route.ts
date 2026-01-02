@@ -30,10 +30,10 @@ export async function POST(
     const body = await request.json();
 
     // Check if staff exists and get current staff type
-    const staff = await db.$queryRawUnsafe(
+    const staff = (await db.$queryRawUnsafe(
       `SELECT id, staffType FROM Staff WHERE id = ? AND isDeleted = false`,
       staffId,
-    ) as any[];
+    )) as any[];
 
     if (staff.length === 0) {
       return NextResponse.json(
@@ -51,7 +51,10 @@ export async function POST(
       currentStaffType !== "BRANCH_ADMIN"
     ) {
       return NextResponse.json(
-        { success: false, error: "Chỉ quản lý hoặc admin mới được chỉnh sửa thông tin" },
+        {
+          success: false,
+          error: "Chỉ quản lý hoặc admin mới được chỉnh sửa thông tin",
+        },
         { status: 403 },
       );
     }
@@ -59,7 +62,7 @@ export async function POST(
     // Create update request (you may want to create a StaffUpdateRequest table)
     // For now, we'll just return success - you can implement the approval workflow later
     // This is a placeholder - you should create a table to store update requests
-    
+
     return NextResponse.json({
       success: true,
       message: "Yêu cầu cập nhật đã được gửi, chờ admin/manager duyệt",
@@ -71,9 +74,11 @@ export async function POST(
   } catch (error: any) {
     console.error("Error creating update request:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to create update request" },
+      {
+        success: false,
+        error: error.message || "Failed to create update request",
+      },
       { status: 500 },
     );
   }
 }
-

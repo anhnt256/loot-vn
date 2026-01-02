@@ -14,7 +14,11 @@ interface ManagerHeaderProps {
   color?: "blue" | "green" | "red" | "purple" | "orange";
 }
 
-export default function ManagerHeader({ title, showBackButton = true, color = "blue" }: ManagerHeaderProps) {
+export default function ManagerHeader({
+  title,
+  showBackButton = true,
+  color = "blue",
+}: ManagerHeaderProps) {
   const [selectedBranch, setSelectedBranch] = useState<string>("GO_VAP");
   const logoutMutation = useLogout();
   const router = useRouter();
@@ -81,7 +85,7 @@ export default function ManagerHeader({ title, showBackButton = true, color = "b
           <div className="mb-4">
             <h1 className="text-2xl font-bold mb-2">{title}</h1>
           </div>
-          
+
           {/* Navigation and Actions */}
           <div className="flex items-center justify-between">
             {showBackButton ? (
@@ -96,7 +100,7 @@ export default function ManagerHeader({ title, showBackButton = true, color = "b
             ) : (
               <div />
             )}
-            
+
             <Button
               type="text"
               icon={<LogOut size={18} />}
@@ -125,4 +129,3 @@ export default function ManagerHeader({ title, showBackButton = true, color = "b
     </>
   );
 }
-

@@ -397,7 +397,10 @@ export default function SendReportDrawer({
       );
       params.append("reportType", reportTypeToUse);
 
-      console.log("Fetching report data for reportType change:", reportTypeToUse);
+      console.log(
+        "Fetching report data for reportType change:",
+        reportTypeToUse,
+      );
 
       const response = await fetch(
         `/api/handover-reports/get-report-data?${params.toString()}`,

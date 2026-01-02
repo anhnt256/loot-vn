@@ -24,9 +24,16 @@ interface PenaltyRecord {
   createdAt: string;
 }
 
-export default function PenaltyHistory({ staffId, month, year }: PenaltyHistoryProps) {
+export default function PenaltyHistory({
+  staffId,
+  month,
+  year,
+}: PenaltyHistoryProps) {
   const [loading, setLoading] = useState(false);
-  const [imagePreview, setImagePreview] = useState<{ url: string; visible: boolean }>({
+  const [imagePreview, setImagePreview] = useState<{
+    url: string;
+    visible: boolean;
+  }>({
     url: "",
     visible: false,
   });
@@ -40,11 +47,11 @@ export default function PenaltyHistory({ staffId, month, year }: PenaltyHistoryP
 
   const fetchHistory = async () => {
     if (!month || !year || !staffId) return;
-    
+
     try {
       setLoading(true);
       const response = await fetch(
-        `/api/staff/salary/history?staffId=${staffId}&month=${month}&year=${year}`
+        `/api/staff/salary/history?staffId=${staffId}&month=${month}&year=${year}`,
       );
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -72,15 +79,14 @@ export default function PenaltyHistory({ staffId, month, year }: PenaltyHistoryP
 
   return (
     <div className="space-y-4 pb-4">
-
       {/* Penalties History */}
-      <Card 
+      <Card
         title={
           <span className="flex items-center gap-2">
             <AlertTriangle size={18} className="text-red-600" />
             Lịch sử phạt
           </span>
-        } 
+        }
         className="shadow-sm"
       >
         {penaltiesHistory.length === 0 ? (
@@ -98,8 +104,8 @@ export default function PenaltyHistory({ staffId, month, year }: PenaltyHistoryP
                         item.status === "PAID"
                           ? "red"
                           : item.status === "APPROVED"
-                          ? "orange"
-                          : "default"
+                            ? "orange"
+                            : "default"
                       }
                     >
                       {item.status === "PAID" && "Đã trừ"}
@@ -123,12 +129,22 @@ export default function PenaltyHistory({ staffId, month, year }: PenaltyHistoryP
                           height={120}
                           className="rounded cursor-pointer object-cover"
                           preview={{
-                            visible: imagePreview.visible && imagePreview.url === item.imageUrl,
+                            visible:
+                              imagePreview.visible &&
+                              imagePreview.url === item.imageUrl,
                             onVisibleChange: (visible) => {
-                              setImagePreview({ url: item.imageUrl || "", visible });
+                              setImagePreview({
+                                url: item.imageUrl || "",
+                                visible,
+                              });
                             },
                           }}
-                          onClick={() => setImagePreview({ url: item.imageUrl || "", visible: true })}
+                          onClick={() =>
+                            setImagePreview({
+                              url: item.imageUrl || "",
+                              visible: true,
+                            })
+                          }
                         />
                       </div>
                     )}
@@ -151,4 +167,3 @@ export default function PenaltyHistory({ staffId, month, year }: PenaltyHistoryP
     </div>
   );
 }
-

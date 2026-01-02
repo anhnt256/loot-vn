@@ -44,12 +44,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Find staff by username and branch
-    const staffByUsername = await db.$queryRawUnsafe(
+    const staffByUsername = (await db.$queryRawUnsafe(
       `SELECT id, userName, fullName, branch, isDeleted, isAdmin, password FROM Staff 
        WHERE userName = ? AND branch = ? AND isDeleted = false AND isAdmin = false`,
       userName.trim(),
       branch,
-    ) as any[];
+    )) as any[];
 
     if (staffByUsername.length === 0) {
       return NextResponse.json(
@@ -93,4 +93,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

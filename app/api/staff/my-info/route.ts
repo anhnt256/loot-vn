@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get staff info from database
-    const staff = await db.$queryRawUnsafe(
+    const staff = (await db.$queryRawUnsafe(
       `SELECT 
         id, fullName, userName, staffType, phone, email,
         address, dateOfBirth, gender, hireDate, idCard,
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
       LIMIT 1`,
       userName,
       branch,
-    ) as any[];
+    )) as any[];
 
     if (staff.length === 0) {
       return NextResponse.json(
@@ -69,4 +69,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

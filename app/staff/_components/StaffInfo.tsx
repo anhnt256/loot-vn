@@ -10,4 +10,3 @@ interface StaffInfoProps {
 export default function StaffInfo({ staffData, onRefresh }: StaffInfoProps) {
   return <StaffInfoEdit staffData={staffData} onRefresh={onRefresh} />;
 }
-

@@ -57,15 +57,25 @@ export async function GET(
   `;
 
     const gameResults = await db.$queryRaw(query);
-    
-    console.log(`[GAME_USER_RESULT_GET] Found ${Array.isArray(gameResults) ? gameResults.length : 0} results for userId: ${parsedUserId}, branch: ${branch}`);
+
+    console.log(
+      `[GAME_USER_RESULT_GET] Found ${Array.isArray(gameResults) ? gameResults.length : 0} results for userId: ${parsedUserId}, branch: ${branch}`,
+    );
     if (Array.isArray(gameResults) && gameResults.length > 0) {
-      console.log(`[GAME_USER_RESULT_GET] First result:`, JSON.stringify(gameResults[0]));
+      console.log(
+        `[GAME_USER_RESULT_GET] First result:`,
+        JSON.stringify(gameResults[0]),
+      );
       const ids = gameResults.map((r: any) => r.id);
       const uniqueIds = [...new Set(ids)];
       if (ids.length !== uniqueIds.length) {
-        console.error(`[GAME_USER_RESULT_GET] DUPLICATE IDs FOUND! Total: ${ids.length}, Unique: ${uniqueIds.length}`);
-        console.error(`[GAME_USER_RESULT_GET] Duplicate IDs:`, ids.filter((id: any, index: number) => ids.indexOf(id) !== index));
+        console.error(
+          `[GAME_USER_RESULT_GET] DUPLICATE IDs FOUND! Total: ${ids.length}, Unique: ${uniqueIds.length}`,
+        );
+        console.error(
+          `[GAME_USER_RESULT_GET] Duplicate IDs:`,
+          ids.filter((id: any, index: number) => ids.indexOf(id) !== index),
+        );
       }
     }
 

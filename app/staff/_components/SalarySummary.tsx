@@ -11,7 +11,11 @@ interface SalarySummaryProps {
   year: number;
 }
 
-export default function SalarySummary({ staffId, month, year }: SalarySummaryProps) {
+export default function SalarySummary({
+  staffId,
+  month,
+  year,
+}: SalarySummaryProps) {
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState({
     totalHours: 0,
@@ -29,10 +33,12 @@ export default function SalarySummary({ staffId, month, year }: SalarySummaryPro
 
   const fetchSummary = async () => {
     if (!staffId || !month || !year) return;
-    
+
     try {
       setLoading(true);
-      const response = await fetch(`/api/staff/salary?staffId=${staffId}&month=${month}&year=${year}`);
+      const response = await fetch(
+        `/api/staff/salary?staffId=${staffId}&month=${month}&year=${year}`,
+      );
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || "Failed to fetch salary summary");
@@ -71,7 +77,11 @@ export default function SalarySummary({ staffId, month, year }: SalarySummaryPro
             }
             value={summary.totalHours.toFixed(1)}
             suffix="giờ"
-            valueStyle={{ fontSize: "16px", fontWeight: "bold", color: "#1890ff" }}
+            valueStyle={{
+              fontSize: "16px",
+              fontWeight: "bold",
+              color: "#1890ff",
+            }}
           />
         </Card>
         <Card className="text-center">
@@ -84,7 +94,11 @@ export default function SalarySummary({ staffId, month, year }: SalarySummaryPro
             }
             value={summary.salary}
             prefix="₫"
-            valueStyle={{ fontSize: "16px", fontWeight: "bold", color: "#1890ff" }}
+            valueStyle={{
+              fontSize: "16px",
+              fontWeight: "bold",
+              color: "#1890ff",
+            }}
           />
         </Card>
         <Card className="text-center">
@@ -97,7 +111,11 @@ export default function SalarySummary({ staffId, month, year }: SalarySummaryPro
             }
             value={summary.bonus}
             prefix="₫"
-            valueStyle={{ fontSize: "16px", fontWeight: "bold", color: "#52c41a" }}
+            valueStyle={{
+              fontSize: "16px",
+              fontWeight: "bold",
+              color: "#52c41a",
+            }}
           />
         </Card>
         <Card className="text-center">
@@ -110,7 +128,11 @@ export default function SalarySummary({ staffId, month, year }: SalarySummaryPro
             }
             value={summary.penalty}
             prefix="₫"
-            valueStyle={{ fontSize: "16px", fontWeight: "bold", color: "#ff4d4f" }}
+            valueStyle={{
+              fontSize: "16px",
+              fontWeight: "bold",
+              color: "#ff4d4f",
+            }}
           />
         </Card>
       </div>
@@ -119,14 +141,19 @@ export default function SalarySummary({ staffId, month, year }: SalarySummaryPro
       <Card className="text-center bg-gradient-to-r from-green-50 to-green-100 border-green-300">
         <Statistic
           title={
-            <span className="text-lg font-semibold text-gray-700">Thực lĩnh</span>
+            <span className="text-lg font-semibold text-gray-700">
+              Thực lĩnh
+            </span>
           }
           value={summary.netSalary}
           prefix="₫"
-          valueStyle={{ fontSize: "24px", fontWeight: "bold", color: "#52c41a" }}
+          valueStyle={{
+            fontSize: "24px",
+            fontWeight: "bold",
+            color: "#52c41a",
+          }}
         />
       </Card>
     </div>
   );
 }
-

@@ -1,7 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, Button, Modal, Form, Input, InputNumber, Select, DatePicker, Tag, Row, Col, Empty, Spin } from "antd";
+import {
+  Card,
+  Button,
+  Modal,
+  Form,
+  Input,
+  InputNumber,
+  Select,
+  DatePicker,
+  Tag,
+  Row,
+  Col,
+  Empty,
+  Spin,
+} from "antd";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import dayjs from "@/lib/dayjs";
@@ -32,7 +46,10 @@ export default function PenaltyManagement() {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [form] = Form.useForm();
-  const [selectedMonth, setSelectedMonth] = useState<{ month: number; year: number } | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<{
+    month: number;
+    year: number;
+  } | null>(null);
 
   useEffect(() => {
     const now = dayjs();
@@ -64,7 +81,7 @@ export default function PenaltyManagement() {
     try {
       setLoading(true);
       const response = await fetch(
-        `/api/manager/penalty?month=${selectedMonth.month}&year=${selectedMonth.year}`
+        `/api/manager/penalty?month=${selectedMonth.month}&year=${selectedMonth.year}`,
       );
       if (!response.ok) throw new Error("Failed to fetch penalties");
       const result = await response.json();
@@ -85,7 +102,9 @@ export default function PenaltyManagement() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...values,
-          penaltyDate: values.penaltyDate ? values.penaltyDate.format("YYYY-MM-DD") : null,
+          penaltyDate: values.penaltyDate
+            ? values.penaltyDate.format("YYYY-MM-DD")
+            : null,
         }),
       });
 
@@ -108,7 +127,7 @@ export default function PenaltyManagement() {
     const currentMonth = now.month() + 1;
     const currentYear = now.year();
     const options = [];
-    
+
     if (currentMonth === 1) {
       options.push({
         value: `12-${currentYear - 1}`,
@@ -120,12 +139,12 @@ export default function PenaltyManagement() {
         label: `Tháng ${currentMonth - 1}/${currentYear}`,
       });
     }
-    
+
     options.push({
       value: `${currentMonth}-${currentYear}`,
       label: `Tháng ${currentMonth}/${currentYear}`,
     });
-    
+
     return options;
   })();
 
@@ -135,7 +154,11 @@ export default function PenaltyManagement() {
       <Card>
         <div className="flex items-center justify-between flex-wrap gap-3">
           <Select
-            value={selectedMonth ? `${selectedMonth.month}-${selectedMonth.year}` : null}
+            value={
+              selectedMonth
+                ? `${selectedMonth.month}-${selectedMonth.year}`
+                : null
+            }
             onChange={(value) => {
               const [month, year] = value.split("-").map(Number);
               setSelectedMonth({ month, year });
@@ -143,7 +166,7 @@ export default function PenaltyManagement() {
             style={{ minWidth: 150 }}
             options={monthOptions}
           />
-          
+
           <Button
             type="primary"
             icon={<Plus size={16} />}
@@ -166,38 +189,43 @@ export default function PenaltyManagement() {
           <Row gutter={[16, 16]}>
             {penalties.map((penalty) => (
               <Col xs={24} sm={12} lg={8} key={penalty.id}>
-                <Card
-                  className="h-full"
-                  hoverable
-                >
+                <Card className="h-full" hoverable>
                   <div className="space-y-2">
                     <div>
-                      <div className="font-semibold text-lg">{penalty.fullName}</div>
-                      <div className="text-sm text-gray-500">{penalty.userName}</div>
+                      <div className="font-semibold text-lg">
+                        {penalty.fullName}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {penalty.userName}
+                      </div>
                     </div>
-                    
+
                     <div className="text-2xl font-bold text-red-600">
                       {penalty.amount.toLocaleString("vi-VN")} ₫
                     </div>
-                    
+
                     <div>
                       <div className="text-sm text-gray-600">Lý do:</div>
                       <div className="font-medium">{penalty.reason}</div>
                     </div>
-                    
+
                     {penalty.description && (
                       <div>
                         <div className="text-sm text-gray-600">Mô tả:</div>
                         <div className="text-sm">{penalty.description}</div>
                       </div>
                     )}
-                    
+
                     <div className="flex items-center justify-between pt-2 border-t">
                       <div className="text-sm text-gray-500">
                         {dayjs(penalty.penaltyDate).format("DD/MM/YYYY")}
                       </div>
-                      <Tag color={penalty.status === "PENDING" ? "orange" : "red"}>
-                        {penalty.status === "PENDING" ? "Chờ duyệt" : "Đã duyệt"}
+                      <Tag
+                        color={penalty.status === "PENDING" ? "orange" : "red"}
+                      >
+                        {penalty.status === "PENDING"
+                          ? "Chờ duyệt"
+                          : "Đã duyệt"}
                       </Tag>
                     </div>
                   </div>
@@ -218,11 +246,7 @@ export default function PenaltyManagement() {
         footer={null}
         width={600}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-        >
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item
             label="Nhân viên"
             name="staffId"
@@ -233,7 +257,9 @@ export default function PenaltyManagement() {
               showSearch
               optionFilterProp="children"
               filterOption={(input, option) =>
-                (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                (option?.label ?? "")
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
               }
               options={staffList
                 .filter((s) => s.staffType === "STAFF")
@@ -251,7 +277,9 @@ export default function PenaltyManagement() {
           >
             <InputNumber
               min={0}
-              formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+              formatter={(value) =>
+                `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+              }
               parser={(value) => {
                 const parsed = value?.replace(/\$\s?|(,*)/g, "") || "0";
                 return (parseFloat(parsed) || 0) as any;
@@ -291,4 +319,3 @@ export default function PenaltyManagement() {
     </div>
   );
 }
-

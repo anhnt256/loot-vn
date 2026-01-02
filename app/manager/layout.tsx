@@ -6,4 +6,3 @@ import StaffLayout from "../staff/layout";
 export default function ManagerLayout({ children }: { children: ReactNode }) {
   return <StaffLayout>{children}</StaffLayout>;
 }
-

@@ -60,7 +60,10 @@ export async function GET(request: NextRequest) {
     query += ` ORDER BY m.transactionDate DESC, m.createdAt DESC LIMIT 100`;
 
     try {
-      const transactions = await db.$queryRawUnsafe(query, ...params) as any[];
+      const transactions = (await db.$queryRawUnsafe(
+        query,
+        ...params,
+      )) as any[];
 
       return NextResponse.json({
         success: true,
@@ -78,7 +81,10 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error("Error fetching income/expense:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to fetch transactions" },
+      {
+        success: false,
+        error: error.message || "Failed to fetch transactions",
+      },
       { status: 500 },
     );
   }
@@ -114,11 +120,21 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { type, amount, reason, description, transactionDate, branch: bodyBranch } = body;
+    const {
+      type,
+      amount,
+      reason,
+      description,
+      transactionDate,
+      branch: bodyBranch,
+    } = body;
 
     if (!type || !amount || !reason || !transactionDate) {
       return NextResponse.json(
-        { success: false, error: "type, amount, reason, and transactionDate are required" },
+        {
+          success: false,
+          error: "type, amount, reason, and transactionDate are required",
+        },
         { status: 400 },
       );
     }
@@ -163,7 +179,11 @@ export async function POST(request: NextRequest) {
     } catch (error: any) {
       if (error.message?.includes("doesn't exist")) {
         return NextResponse.json(
-          { success: false, error: "Table ManagerIncomeExpense does not exist. Please create it first." },
+          {
+            success: false,
+            error:
+              "Table ManagerIncomeExpense does not exist. Please create it first.",
+          },
           { status: 500 },
         );
       }
@@ -172,9 +192,11 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error("Error creating income/expense:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to create transaction" },
+      {
+        success: false,
+        error: error.message || "Failed to create transaction",
+      },
       { status: 500 },
     );
   }
 }
-

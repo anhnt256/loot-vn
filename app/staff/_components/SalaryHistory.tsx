@@ -52,8 +52,14 @@ interface PenaltyRecord {
 
 export default function SalaryHistory({ staffId }: SalaryHistoryProps) {
   const [loading, setLoading] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState<{ month: number; year: number } | null>(null);
-  const [imagePreview, setImagePreview] = useState<{ url: string; visible: boolean }>({
+  const [selectedMonth, setSelectedMonth] = useState<{
+    month: number;
+    year: number;
+  } | null>(null);
+  const [imagePreview, setImagePreview] = useState<{
+    url: string;
+    visible: boolean;
+  }>({
     url: "",
     visible: false,
   });
@@ -66,7 +72,7 @@ export default function SalaryHistory({ staffId }: SalaryHistoryProps) {
     const now = dayjs();
     const currentMonth = now.month() + 1; // 1-12
     const currentYear = now.year();
-    
+
     // If current month is January, show December of previous year
     // Otherwise show previous month
     if (currentMonth === 1) {
@@ -84,11 +90,11 @@ export default function SalaryHistory({ staffId }: SalaryHistoryProps) {
 
   const fetchHistory = async () => {
     if (!selectedMonth || !staffId) return;
-    
+
     try {
       setLoading(true);
       const response = await fetch(
-        `/api/staff/salary/history?staffId=${staffId}&month=${selectedMonth.month}&year=${selectedMonth.year}`
+        `/api/staff/salary/history?staffId=${staffId}&month=${selectedMonth.month}&year=${selectedMonth.year}`,
       );
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -113,9 +119,9 @@ export default function SalaryHistory({ staffId }: SalaryHistoryProps) {
     const now = dayjs();
     const currentMonth = now.month() + 1;
     const currentYear = now.year();
-    
+
     const options = [];
-    
+
     // Previous month
     if (currentMonth === 1) {
       options.push({
@@ -132,7 +138,7 @@ export default function SalaryHistory({ staffId }: SalaryHistoryProps) {
         year: currentYear,
       });
     }
-    
+
     // Current month
     options.push({
       value: `${currentMonth}-${currentYear}`,
@@ -140,7 +146,7 @@ export default function SalaryHistory({ staffId }: SalaryHistoryProps) {
       month: currentMonth,
       year: currentYear,
     });
-    
+
     return options;
   };
 
@@ -191,20 +197,28 @@ export default function SalaryHistory({ staffId }: SalaryHistoryProps) {
                     <span className="font-medium text-lg">
                       Tháng {item.month}/{item.year}
                     </span>
-                    <Tag color={item.status === "PAID" ? "green" : "orange"} className="text-sm">
-                      {item.status === "PAID" ? "Đã thanh toán" : "Chờ thanh toán"}
+                    <Tag
+                      color={item.status === "PAID" ? "green" : "orange"}
+                      className="text-sm"
+                    >
+                      {item.status === "PAID"
+                        ? "Đã thanh toán"
+                        : "Chờ thanh toán"}
                     </Tag>
                   </div>
-                  
+
                   <div className="bg-gray-50 p-3 rounded-lg space-y-2 mb-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">(A) Lương từ giờ làm:</span>
+                      <span className="text-gray-600">
+                        (A) Lương từ giờ làm:
+                      </span>
                       <span className="font-medium">
                         {item.salaryFromHours.toLocaleString("vi-VN")} ₫
                       </span>
                     </div>
                     <div className="text-xs text-gray-500 pl-2">
-                      {item.totalHours.toFixed(2)} giờ × {item.hourlySalary.toLocaleString("vi-VN")} ₫/giờ
+                      {item.totalHours.toFixed(2)} giờ ×{" "}
+                      {item.hourlySalary.toLocaleString("vi-VN")} ₫/giờ
                     </div>
 
                     {item.bonus > 0 && (
@@ -252,7 +266,8 @@ export default function SalaryHistory({ staffId }: SalaryHistoryProps) {
 
                   {item.paidAt && (
                     <div className="text-xs text-gray-500">
-                      Thanh toán: {dayjs(item.paidAt).format("DD/MM/YYYY HH:mm")}
+                      Thanh toán:{" "}
+                      {dayjs(item.paidAt).format("DD/MM/YYYY HH:mm")}
                     </div>
                   )}
                 </div>
@@ -263,13 +278,13 @@ export default function SalaryHistory({ staffId }: SalaryHistoryProps) {
       </Card>
 
       {/* Bonus History */}
-      <Card 
+      <Card
         title={
           <span className="flex items-center gap-2">
             <Award size={18} className="text-green-600" />
             Lịch sử thưởng
           </span>
-        } 
+        }
         className="shadow-sm"
       >
         {bonusHistory.length === 0 ? (
@@ -287,8 +302,8 @@ export default function SalaryHistory({ staffId }: SalaryHistoryProps) {
                         item.status === "PAID"
                           ? "green"
                           : item.status === "APPROVED"
-                          ? "blue"
-                          : "orange"
+                            ? "blue"
+                            : "orange"
                       }
                     >
                       {item.status === "PAID" && "Đã thanh toán"}
@@ -312,12 +327,22 @@ export default function SalaryHistory({ staffId }: SalaryHistoryProps) {
                           height={120}
                           className="rounded cursor-pointer object-cover"
                           preview={{
-                            visible: imagePreview.visible && imagePreview.url === item.imageUrl,
+                            visible:
+                              imagePreview.visible &&
+                              imagePreview.url === item.imageUrl,
                             onVisibleChange: (visible) => {
-                              setImagePreview({ url: item.imageUrl || "", visible });
+                              setImagePreview({
+                                url: item.imageUrl || "",
+                                visible,
+                              });
                             },
                           }}
-                          onClick={() => setImagePreview({ url: item.imageUrl || "", visible: true })}
+                          onClick={() =>
+                            setImagePreview({
+                              url: item.imageUrl || "",
+                              visible: true,
+                            })
+                          }
                         />
                       </div>
                     )}
@@ -328,7 +353,9 @@ export default function SalaryHistory({ staffId }: SalaryHistoryProps) {
                     )}
                     <div className="text-xs text-gray-500">
                       <Calendar size={12} className="inline mr-1" />
-                      {item.rewardDate ? dayjs(item.rewardDate).format("DD/MM/YYYY HH:mm") : dayjs(item.createdAt).format("DD/MM/YYYY HH:mm")}
+                      {item.rewardDate
+                        ? dayjs(item.rewardDate).format("DD/MM/YYYY HH:mm")
+                        : dayjs(item.createdAt).format("DD/MM/YYYY HH:mm")}
                     </div>
                   </div>
                 </div>
@@ -339,13 +366,13 @@ export default function SalaryHistory({ staffId }: SalaryHistoryProps) {
       </Card>
 
       {/* Penalties History */}
-      <Card 
+      <Card
         title={
           <span className="flex items-center gap-2">
             <AlertTriangle size={18} className="text-red-600" />
             Lịch sử phạt
           </span>
-        } 
+        }
         className="shadow-sm"
       >
         {penaltiesHistory.length === 0 ? (
@@ -363,8 +390,8 @@ export default function SalaryHistory({ staffId }: SalaryHistoryProps) {
                         item.status === "PAID"
                           ? "red"
                           : item.status === "APPROVED"
-                          ? "orange"
-                          : "default"
+                            ? "orange"
+                            : "default"
                       }
                     >
                       {item.status === "PAID" && "Đã trừ"}
@@ -388,12 +415,22 @@ export default function SalaryHistory({ staffId }: SalaryHistoryProps) {
                           height={120}
                           className="rounded cursor-pointer object-cover"
                           preview={{
-                            visible: imagePreview.visible && imagePreview.url === item.imageUrl,
+                            visible:
+                              imagePreview.visible &&
+                              imagePreview.url === item.imageUrl,
                             onVisibleChange: (visible) => {
-                              setImagePreview({ url: item.imageUrl || "", visible });
+                              setImagePreview({
+                                url: item.imageUrl || "",
+                                visible,
+                              });
                             },
                           }}
-                          onClick={() => setImagePreview({ url: item.imageUrl || "", visible: true })}
+                          onClick={() =>
+                            setImagePreview({
+                              url: item.imageUrl || "",
+                              visible: true,
+                            })
+                          }
                         />
                       </div>
                     )}
@@ -416,4 +453,3 @@ export default function SalaryHistory({ staffId }: SalaryHistoryProps) {
     </div>
   );
 }
-

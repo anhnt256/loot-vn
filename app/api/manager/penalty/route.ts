@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
     query += ` ORDER BY p.penaltyDate DESC, p.createdAt DESC LIMIT 100`;
 
     try {
-      const penalties = await db.$queryRawUnsafe(query, ...params) as any[];
+      const penalties = (await db.$queryRawUnsafe(query, ...params)) as any[];
 
       return NextResponse.json({
         success: true,
@@ -118,7 +118,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { staffId, amount, reason, description, imageUrl, note, penaltyDate } = body;
+    const {
+      staffId,
+      amount,
+      reason,
+      description,
+      imageUrl,
+      note,
+      penaltyDate,
+    } = body;
 
     if (!staffId || !amount || !reason) {
       return NextResponse.json(
@@ -128,11 +136,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify staff exists and belongs to same branch
-    const staff = await db.$queryRawUnsafe(
+    const staff = (await db.$queryRawUnsafe(
       `SELECT id FROM Staff WHERE id = ? AND branch = ? AND isDeleted = false`,
       parseInt(staffId),
       branch,
-    ) as any[];
+    )) as any[];
 
     if (staff.length === 0) {
       return NextResponse.json(
@@ -170,4 +178,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

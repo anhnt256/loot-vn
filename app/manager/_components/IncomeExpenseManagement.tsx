@@ -1,7 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, Button, Modal, Form, Input, InputNumber, Select, DatePicker, Tag, Row, Col, Empty, Spin } from "antd";
+import {
+  Card,
+  Button,
+  Modal,
+  Form,
+  Input,
+  InputNumber,
+  Select,
+  DatePicker,
+  Tag,
+  Row,
+  Col,
+  Empty,
+  Spin,
+} from "antd";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import dayjs from "@/lib/dayjs";
@@ -26,7 +40,10 @@ export default function IncomeExpenseManagement() {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [form] = Form.useForm();
-  const [selectedMonth, setSelectedMonth] = useState<{ month: number; year: number } | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<{
+    month: number;
+    year: number;
+  } | null>(null);
 
   useEffect(() => {
     const now = dayjs();
@@ -43,9 +60,9 @@ export default function IncomeExpenseManagement() {
     if (!selectedMonth) return;
     try {
       setLoading(true);
-      const branch = getCookie("branch") as string || "GO_VAP";
+      const branch = (getCookie("branch") as string) || "GO_VAP";
       const response = await fetch(
-        `/api/manager/income-expense?month=${selectedMonth.month}&year=${selectedMonth.year}&branch=${branch}`
+        `/api/manager/income-expense?month=${selectedMonth.month}&year=${selectedMonth.year}&branch=${branch}`,
       );
       if (!response.ok) throw new Error("Failed to fetch transactions");
       const result = await response.json();
@@ -61,13 +78,15 @@ export default function IncomeExpenseManagement() {
 
   const handleSubmit = async (values: any) => {
     try {
-      const branch = getCookie("branch") as string || "GO_VAP";
+      const branch = (getCookie("branch") as string) || "GO_VAP";
       const response = await fetch("/api/manager/income-expense", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...values,
-          transactionDate: values.transactionDate ? values.transactionDate.format("YYYY-MM-DD") : null,
+          transactionDate: values.transactionDate
+            ? values.transactionDate.format("YYYY-MM-DD")
+            : null,
           branch: branch,
         }),
       });
@@ -91,7 +110,7 @@ export default function IncomeExpenseManagement() {
     const currentMonth = now.month() + 1;
     const currentYear = now.year();
     const options = [];
-    
+
     if (currentMonth === 1) {
       options.push({
         value: `12-${currentYear - 1}`,
@@ -103,23 +122,23 @@ export default function IncomeExpenseManagement() {
         label: `Tháng ${currentMonth - 1}/${currentYear}`,
       });
     }
-    
+
     options.push({
       value: `${currentMonth}-${currentYear}`,
       label: `Tháng ${currentMonth}/${currentYear}`,
     });
-    
+
     return options;
   })();
 
   const totalIncome = transactions
     .filter((t) => t.type === "INCOME")
     .reduce((sum, t) => sum + t.amount, 0);
-  
+
   const totalExpense = transactions
     .filter((t) => t.type === "EXPENSE")
     .reduce((sum, t) => sum + t.amount, 0);
-  
+
   const balance = totalIncome - totalExpense;
 
   return (
@@ -150,7 +169,9 @@ export default function IncomeExpenseManagement() {
           <Card>
             <div className="text-center">
               <div className="text-sm text-gray-600 mb-1">Số dư</div>
-              <div className={`text-2xl font-bold ${balance >= 0 ? "text-blue-600" : "text-red-600"}`}>
+              <div
+                className={`text-2xl font-bold ${balance >= 0 ? "text-blue-600" : "text-red-600"}`}
+              >
                 {balance.toLocaleString("vi-VN")} ₫
               </div>
             </div>
@@ -162,7 +183,11 @@ export default function IncomeExpenseManagement() {
       <Card>
         <div className="flex items-center justify-between flex-wrap gap-3">
           <Select
-            value={selectedMonth ? `${selectedMonth.month}-${selectedMonth.year}` : null}
+            value={
+              selectedMonth
+                ? `${selectedMonth.month}-${selectedMonth.year}`
+                : null
+            }
             onChange={(value) => {
               const [month, year] = value.split("-").map(Number);
               setSelectedMonth({ month, year });
@@ -170,7 +195,7 @@ export default function IncomeExpenseManagement() {
             style={{ minWidth: 150 }}
             options={monthOptions}
           />
-          
+
           <Button
             type="primary"
             icon={<Plus size={16} />}
@@ -193,41 +218,46 @@ export default function IncomeExpenseManagement() {
           <Row gutter={[16, 16]}>
             {transactions.map((transaction) => (
               <Col xs={24} sm={12} lg={8} key={transaction.id}>
-                <Card
-                  className="h-full"
-                  hoverable
-                >
+                <Card className="h-full" hoverable>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Tag color={transaction.type === "INCOME" ? "green" : "red"}>
+                      <Tag
+                        color={transaction.type === "INCOME" ? "green" : "red"}
+                      >
                         {transaction.type === "INCOME" ? "Thu" : "Chi"}
                       </Tag>
                       <div className="text-sm text-gray-500">
-                        {dayjs(transaction.transactionDate).format("DD/MM/YYYY")}
+                        {dayjs(transaction.transactionDate).format(
+                          "DD/MM/YYYY",
+                        )}
                       </div>
                     </div>
-                    
-                    <div className={`text-2xl font-bold ${transaction.type === "INCOME" ? "text-green-600" : "text-red-600"}`}>
-                      {transaction.type === "INCOME" ? "+" : "-"} {transaction.amount.toLocaleString("vi-VN")} ₫
+
+                    <div
+                      className={`text-2xl font-bold ${transaction.type === "INCOME" ? "text-green-600" : "text-red-600"}`}
+                    >
+                      {transaction.type === "INCOME" ? "+" : "-"}{" "}
+                      {transaction.amount.toLocaleString("vi-VN")} ₫
                     </div>
-                    
+
                     <div>
                       <div className="text-sm text-gray-600">Lý do:</div>
                       <div className="font-medium">{transaction.reason}</div>
                     </div>
-                    
+
                     {transaction.description && (
                       <div>
                         <div className="text-sm text-gray-600">Mô tả:</div>
                         <div className="text-sm">{transaction.description}</div>
                       </div>
                     )}
-                    
+
                     {transaction.createdByName && (
                       <div className="pt-2 border-t">
                         <div className="text-xs text-gray-500">
                           Người tạo: {transaction.createdByName}
-                          {transaction.createdByUserName && ` (${transaction.createdByUserName})`}
+                          {transaction.createdByUserName &&
+                            ` (${transaction.createdByUserName})`}
                         </div>
                       </div>
                     )}
@@ -250,15 +280,13 @@ export default function IncomeExpenseManagement() {
         footer={null}
         width={600}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-        >
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item
             label="Loại giao dịch"
             name="type"
-            rules={[{ required: true, message: "Vui lòng chọn loại giao dịch" }]}
+            rules={[
+              { required: true, message: "Vui lòng chọn loại giao dịch" },
+            ]}
           >
             <Select placeholder="Chọn loại giao dịch">
               <Select.Option value="INCOME">Thu</Select.Option>
@@ -273,7 +301,9 @@ export default function IncomeExpenseManagement() {
           >
             <InputNumber
               min={0}
-              formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+              formatter={(value) =>
+                `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+              }
               parser={(value) => {
                 const parsed = value?.replace(/\$\s?|(,*)/g, "") || "0";
                 return (parseFloat(parsed) || 0) as any;
@@ -313,4 +343,3 @@ export default function IncomeExpenseManagement() {
     </div>
   );
 }
-

@@ -2,7 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { Card, Avatar, Button, Row, Col, Select } from "antd";
-import { Award, AlertTriangle, DollarSign, Calendar, LogOut, ArrowLeft } from "lucide-react";
+import {
+  Award,
+  AlertTriangle,
+  DollarSign,
+  Calendar,
+  LogOut,
+  ArrowLeft,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useLogout } from "@/queries/auth.query";
@@ -117,7 +124,9 @@ export default function ManagerPage() {
                   <DollarSign size={32} className="text-purple-600" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">Quản lý thu chi</h3>
-                <p className="text-gray-500 text-sm">Theo dõi tiền quản lý thực giữ</p>
+                <p className="text-gray-500 text-sm">
+                  Theo dõi tiền quản lý thực giữ
+                </p>
               </div>
             </Card>
           </Col>
@@ -133,7 +142,9 @@ export default function ManagerPage() {
                   <Award size={32} className="text-green-600" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">Quản lý thưởng</h3>
-                <p className="text-gray-500 text-sm">Thêm và quản lý thưởng cho nhân viên</p>
+                <p className="text-gray-500 text-sm">
+                  Thêm và quản lý thưởng cho nhân viên
+                </p>
               </div>
             </Card>
           </Col>
@@ -149,7 +160,9 @@ export default function ManagerPage() {
                   <AlertTriangle size={32} className="text-red-600" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">Quản lý phạt</h3>
-                <p className="text-gray-500 text-sm">Thêm và quản lý phạt cho nhân viên</p>
+                <p className="text-gray-500 text-sm">
+                  Thêm và quản lý phạt cho nhân viên
+                </p>
               </div>
             </Card>
           </Col>
@@ -165,7 +178,9 @@ export default function ManagerPage() {
                   <Calendar size={32} className="text-orange-600" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">Quản lý nghỉ</h3>
-                <p className="text-gray-500 text-sm">Xem và quản lý đơn nghỉ phép</p>
+                <p className="text-gray-500 text-sm">
+                  Xem và quản lý đơn nghỉ phép
+                </p>
               </div>
             </Card>
           </Col>
@@ -174,4 +189,3 @@ export default function ManagerPage() {
     </div>
   );
 }
-

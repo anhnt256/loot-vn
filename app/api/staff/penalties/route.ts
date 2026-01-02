@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-      const penalties = await db.$queryRawUnsafe(
+      const penalties = (await db.$queryRawUnsafe(
         `SELECT 
           id, amount, reason, description, imageUrl, note,
           penaltyDate, status, createdAt, updatedAt
@@ -47,12 +47,12 @@ export async function GET(request: NextRequest) {
         parseInt(staffId),
         limit,
         offset,
-      ) as any[];
+      )) as any[];
 
-      const totalCount = await db.$queryRawUnsafe(
+      const totalCount = (await db.$queryRawUnsafe(
         `SELECT COUNT(*) as count FROM StaffPenalty WHERE staffId = ?`,
         parseInt(staffId),
-      ) as any[];
+      )) as any[];
 
       return NextResponse.json({
         success: true,
@@ -82,4 +82,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

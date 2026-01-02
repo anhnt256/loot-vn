@@ -2,7 +2,19 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Table, Modal, Drawer, Form, Input, Select, DatePicker, Switch, Button, Tooltip, Tabs } from "antd";
+import {
+  Table,
+  Modal,
+  Drawer,
+  Form,
+  Input,
+  Select,
+  DatePicker,
+  Switch,
+  Button,
+  Tooltip,
+  Tabs,
+} from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useBranch } from "@/components/providers/BranchProvider";
 import dayjs from "@/lib/dayjs";
@@ -251,9 +263,7 @@ export default function StaffManagementPage() {
         dateOfBirth: values.dateOfBirth
           ? values.dateOfBirth.format("YYYY-MM-DD")
           : null,
-        hireDate: values.hireDate
-          ? values.hireDate.format("YYYY-MM-DD")
-          : null,
+        hireDate: values.hireDate ? values.hireDate.format("YYYY-MM-DD") : null,
         idCardExpiryDate: values.idCardExpiryDate
           ? values.idCardExpiryDate.format("YYYY-MM-DD")
           : null,
@@ -307,9 +317,7 @@ export default function StaffManagementPage() {
     setSelectedStaff(staffItem);
     form.setFieldsValue({
       ...staffItem,
-      dateOfBirth: staffItem.dateOfBirth
-        ? dayjs(staffItem.dateOfBirth)
-        : null,
+      dateOfBirth: staffItem.dateOfBirth ? dayjs(staffItem.dateOfBirth) : null,
       hireDate: staffItem.hireDate ? dayjs(staffItem.hireDate) : null,
       idCardExpiryDate: staffItem.idCardExpiryDate
         ? dayjs(staffItem.idCardExpiryDate)
@@ -383,128 +391,153 @@ export default function StaffManagementPage() {
                 label: "Thông tin căn bản",
                 children: (
                   <>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-            <Form.Item
-              label="Tên đăng nhập"
-              name="userName"
-              rules={[
-                { required: true, message: "Vui lòng nhập tên đăng nhập" },
-                {
-                  min: 3,
-                  message: "Tên đăng nhập phải có ít nhất 3 ký tự",
-                },
-              ]}
-            >
-              <Input disabled={!!selectedStaff} />
-            </Form.Item>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                      <Form.Item
+                        label="Tên đăng nhập"
+                        name="userName"
+                        rules={[
+                          {
+                            required: true,
+                            message: "Vui lòng nhập tên đăng nhập",
+                          },
+                          {
+                            min: 3,
+                            message: "Tên đăng nhập phải có ít nhất 3 ký tự",
+                          },
+                        ]}
+                      >
+                        <Input disabled={!!selectedStaff} />
+                      </Form.Item>
 
-            <Form.Item
-              label="Mật khẩu"
-              name="password"
-              rules={[
-                {
-                  required: !selectedStaff,
-                  message: "Vui lòng nhập mật khẩu",
-                },
-                {
-                  min: 6,
-                  message: "Mật khẩu phải có ít nhất 6 ký tự",
-                },
-              ]}
-            >
-              <Input.Password
-                placeholder={selectedStaff ? "Để trống nếu không đổi" : ""}
-              />
-            </Form.Item>
+                      <Form.Item
+                        label="Mật khẩu"
+                        name="password"
+                        rules={[
+                          {
+                            required: !selectedStaff,
+                            message: "Vui lòng nhập mật khẩu",
+                          },
+                          {
+                            min: 6,
+                            message: "Mật khẩu phải có ít nhất 6 ký tự",
+                          },
+                        ]}
+                      >
+                        <Input.Password
+                          placeholder={
+                            selectedStaff ? "Để trống nếu không đổi" : ""
+                          }
+                        />
+                      </Form.Item>
 
-            <Form.Item
-              label="Họ tên"
-              name="fullName"
-              rules={[{ required: true, message: "Vui lòng nhập họ tên" }]}
-            >
-              <Input />
-            </Form.Item>
+                      <Form.Item
+                        label="Họ tên"
+                        name="fullName"
+                        rules={[
+                          { required: true, message: "Vui lòng nhập họ tên" },
+                        ]}
+                      >
+                        <Input />
+                      </Form.Item>
 
-            <Form.Item
-              label="Loại nhân viên"
-              name="staffType"
-              rules={[
-                { required: true, message: "Vui lòng chọn loại nhân viên" },
-              ]}
-            >
-              <Select>
-                <Select.Option value="STAFF">Nhân viên</Select.Option>
-                <Select.Option value="KITCHEN">Bếp</Select.Option>
-                <Select.Option value="SECURITY">Bảo vệ</Select.Option>
-                          <Select.Option value="CASHIER">Thu ngân</Select.Option>
+                      <Form.Item
+                        label="Loại nhân viên"
+                        name="staffType"
+                        rules={[
+                          {
+                            required: true,
+                            message: "Vui lòng chọn loại nhân viên",
+                          },
+                        ]}
+                      >
+                        <Select>
+                          <Select.Option value="STAFF">Nhân viên</Select.Option>
+                          <Select.Option value="KITCHEN">Bếp</Select.Option>
+                          <Select.Option value="SECURITY">Bảo vệ</Select.Option>
+                          <Select.Option value="CASHIER">
+                            Thu ngân
+                          </Select.Option>
                           <Select.Option value="MANAGER">Quản lý</Select.Option>
-                          <Select.Option value="BRANCH_ADMIN">Quản lý chi nhánh</Select.Option>
-                          <Select.Option value="SUPER_ADMIN">Super Admin</Select.Option>
-              </Select>
-            </Form.Item>
+                          <Select.Option value="BRANCH_ADMIN">
+                            Quản lý chi nhánh
+                          </Select.Option>
+                          <Select.Option value="SUPER_ADMIN">
+                            Super Admin
+                          </Select.Option>
+                        </Select>
+                      </Form.Item>
 
-            <Form.Item label="Số điện thoại" name="phone">
-              <Input />
-            </Form.Item>
+                      <Form.Item label="Số điện thoại" name="phone">
+                        <Input />
+                      </Form.Item>
 
-            <Form.Item label="Email" name="email">
-              <Input type="email" />
-            </Form.Item>
+                      <Form.Item label="Email" name="email">
+                        <Input type="email" />
+                      </Form.Item>
 
-            <Form.Item label="Giới tính" name="gender">
-              <Select>
-                <Select.Option value="MALE">Nam</Select.Option>
-                <Select.Option value="FEMALE">Nữ</Select.Option>
-                <Select.Option value="OTHER">Khác</Select.Option>
-              </Select>
-            </Form.Item>
+                      <Form.Item label="Giới tính" name="gender">
+                        <Select>
+                          <Select.Option value="MALE">Nam</Select.Option>
+                          <Select.Option value="FEMALE">Nữ</Select.Option>
+                          <Select.Option value="OTHER">Khác</Select.Option>
+                        </Select>
+                      </Form.Item>
 
-            <Form.Item label="Ngày sinh" name="dateOfBirth">
-              <DatePicker className="w-full" format="DD/MM/YYYY" />
-            </Form.Item>
+                      <Form.Item label="Ngày sinh" name="dateOfBirth">
+                        <DatePicker className="w-full" format="DD/MM/YYYY" />
+                      </Form.Item>
 
-            <Form.Item label="Ngày vào làm" name="hireDate">
-              <DatePicker className="w-full" format="DD/MM/YYYY" />
-            </Form.Item>
+                      <Form.Item label="Ngày vào làm" name="hireDate">
+                        <DatePicker className="w-full" format="DD/MM/YYYY" />
+                      </Form.Item>
 
-            <Form.Item label="Ngày nghỉ việc" name="resignDate">
-              <DatePicker className="w-full" format="DD/MM/YYYY" />
-            </Form.Item>
+                      <Form.Item label="Ngày nghỉ việc" name="resignDate">
+                        <DatePicker className="w-full" format="DD/MM/YYYY" />
+                      </Form.Item>
 
-            <Form.Item label="CMND/CCCD" name="idCard">
-              <Input />
-            </Form.Item>
+                      <Form.Item label="CMND/CCCD" name="idCard">
+                        <Input />
+                      </Form.Item>
 
-            <Form.Item label="Ngày cấp CMND/CCCD" name="idCardIssueDate">
-              <DatePicker className="w-full" format="DD/MM/YYYY" />
-            </Form.Item>
+                      <Form.Item
+                        label="Ngày cấp CMND/CCCD"
+                        name="idCardIssueDate"
+                      >
+                        <DatePicker className="w-full" format="DD/MM/YYYY" />
+                      </Form.Item>
 
-            <Form.Item label="Ngày hết hạn CMND/CCCD" name="idCardExpiryDate">
-              <DatePicker className="w-full" format="DD/MM/YYYY" />
-            </Form.Item>
-          </div>
+                      <Form.Item
+                        label="Ngày hết hạn CMND/CCCD"
+                        name="idCardExpiryDate"
+                      >
+                        <DatePicker className="w-full" format="DD/MM/YYYY" />
+                      </Form.Item>
+                    </div>
 
-          <Form.Item label="Địa chỉ" name="address">
-            <TextArea rows={2} />
-          </Form.Item>
+                    <Form.Item label="Địa chỉ" name="address">
+                      <TextArea rows={2} />
+                    </Form.Item>
 
-          <Form.Item label="Ghi chú" name="note">
-            <TextArea rows={3} />
-          </Form.Item>
+                    <Form.Item label="Ghi chú" name="note">
+                      <TextArea rows={3} />
+                    </Form.Item>
 
-          <Form.Item
-            label="Kiểm tra MAC Address"
-            name="needCheckMacAddress"
-            valuePropName="checked"
-          >
-            <Switch />
-          </Form.Item>
+                    <Form.Item
+                      label="Kiểm tra MAC Address"
+                      name="needCheckMacAddress"
+                      valuePropName="checked"
+                    >
+                      <Switch />
+                    </Form.Item>
 
                     <Form.Item
                       label="Lương cơ bản (₫/giờ)"
                       name="baseSalary"
                       rules={[
-                        { required: true, message: "Vui lòng nhập lương cơ bản" },
+                        {
+                          required: true,
+                          message: "Vui lòng nhập lương cơ bản",
+                        },
                         { type: "number", min: 0, message: "Lương phải >= 0" },
                       ]}
                     >
@@ -522,7 +555,10 @@ export default function StaffManagementPage() {
                 label: "Thông tin thanh toán",
                 children: (
                   <div className="grid grid-cols-1 gap-x-4 gap-y-2">
-                    <Form.Item label="Tên tài khoản ngân hàng" name="bankAccountName">
+                    <Form.Item
+                      label="Tên tài khoản ngân hàng"
+                      name="bankAccountName"
+                    >
                       <Input placeholder="Nhập tên tài khoản ngân hàng" />
                     </Form.Item>
 
@@ -578,4 +614,3 @@ export default function StaffManagementPage() {
     </div>
   );
 }
-

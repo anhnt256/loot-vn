@@ -56,11 +56,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if staff exists and get current password
-    const existingStaff = await db.$queryRawUnsafe(
+    const existingStaff = (await db.$queryRawUnsafe(
       `SELECT id, password, branch FROM Staff WHERE id = ? AND branch = ? AND isDeleted = false AND isAdmin = false`,
       staffId,
       branch,
-    ) as any[];
+    )) as any[];
 
     if (existingStaff.length === 0) {
       return NextResponse.json(
@@ -118,4 +118,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

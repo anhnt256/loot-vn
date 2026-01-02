@@ -1,8 +1,30 @@
 "use client";
 
 import { useState } from "react";
-import { Card, Descriptions, Tag, Button, Form, Input, Select, DatePicker, Switch, Modal, message } from "antd";
-import { Edit, Phone, Mail, MapPin, Calendar, CreditCard, DollarSign, Save, X } from "lucide-react";
+import {
+  Card,
+  Descriptions,
+  Tag,
+  Button,
+  Form,
+  Input,
+  Select,
+  DatePicker,
+  Switch,
+  Modal,
+  message,
+} from "antd";
+import {
+  Edit,
+  Phone,
+  Mail,
+  MapPin,
+  Calendar,
+  CreditCard,
+  DollarSign,
+  Save,
+  X,
+} from "lucide-react";
 import dayjs from "@/lib/dayjs";
 import { toast } from "sonner";
 
@@ -11,14 +33,18 @@ interface StaffInfoEditProps {
   onRefresh: () => void;
 }
 
-export default function StaffInfoEdit({ staffData, onRefresh }: StaffInfoEditProps) {
+export default function StaffInfoEdit({
+  staffData,
+  onRefresh,
+}: StaffInfoEditProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
-  const canEdit = staffData?.staffType === "MANAGER" || 
-                 staffData?.staffType === "SUPER_ADMIN" || 
-                 staffData?.staffType === "BRANCH_ADMIN";
+  const canEdit =
+    staffData?.staffType === "MANAGER" ||
+    staffData?.staffType === "SUPER_ADMIN" ||
+    staffData?.staffType === "BRANCH_ADMIN";
 
   const handleEdit = () => {
     if (!canEdit) {
@@ -34,8 +60,12 @@ export default function StaffInfoEdit({ staffData, onRefresh }: StaffInfoEditPro
       dateOfBirth: staffData.dateOfBirth ? dayjs(staffData.dateOfBirth) : null,
       hireDate: staffData.hireDate ? dayjs(staffData.hireDate) : null,
       idCard: staffData.idCard,
-      idCardExpiryDate: staffData.idCardExpiryDate ? dayjs(staffData.idCardExpiryDate) : null,
-      idCardIssueDate: staffData.idCardIssueDate ? dayjs(staffData.idCardIssueDate) : null,
+      idCardExpiryDate: staffData.idCardExpiryDate
+        ? dayjs(staffData.idCardExpiryDate)
+        : null,
+      idCardIssueDate: staffData.idCardIssueDate
+        ? dayjs(staffData.idCardIssueDate)
+        : null,
       note: staffData.note,
       bankAccountName: staffData.bankAccountName,
       bankAccountNumber: staffData.bankAccountNumber,
@@ -51,17 +81,28 @@ export default function StaffInfoEdit({ staffData, onRefresh }: StaffInfoEditPro
   const handleSubmit = async (values: any) => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/staff/${staffData.id}/update-request`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...values,
-          dateOfBirth: values.dateOfBirth ? values.dateOfBirth.format("YYYY-MM-DD") : null,
-          hireDate: values.hireDate ? values.hireDate.format("YYYY-MM-DD") : null,
-          idCardExpiryDate: values.idCardExpiryDate ? values.idCardExpiryDate.format("YYYY-MM-DD") : null,
-          idCardIssueDate: values.idCardIssueDate ? values.idCardIssueDate.format("YYYY-MM-DD") : null,
-        }),
-      });
+      const response = await fetch(
+        `/api/staff/${staffData.id}/update-request`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...values,
+            dateOfBirth: values.dateOfBirth
+              ? values.dateOfBirth.format("YYYY-MM-DD")
+              : null,
+            hireDate: values.hireDate
+              ? values.hireDate.format("YYYY-MM-DD")
+              : null,
+            idCardExpiryDate: values.idCardExpiryDate
+              ? values.idCardExpiryDate.format("YYYY-MM-DD")
+              : null,
+            idCardIssueDate: values.idCardIssueDate
+              ? values.idCardIssueDate.format("YYYY-MM-DD")
+              : null,
+          }),
+        },
+      );
 
       if (!response.ok) {
         const error = await response.json();
@@ -83,30 +124,24 @@ export default function StaffInfoEdit({ staffData, onRefresh }: StaffInfoEditPro
   };
 
   if (!staffData) {
-    return <div className="text-center py-8 text-gray-500">Không có thông tin</div>;
+    return (
+      <div className="text-center py-8 text-gray-500">Không có thông tin</div>
+    );
   }
 
   if (isEditing) {
     return (
       <div className="space-y-4 pb-4">
-        <Card 
+        <Card
           title="Chỉnh sửa thông tin"
           extra={
-            <Button 
-              type="text" 
-              icon={<X size={16} />}
-              onClick={handleCancel}
-            >
+            <Button type="text" icon={<X size={16} />} onClick={handleCancel}>
               Hủy
             </Button>
           }
           className="shadow-sm"
         >
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleSubmit}
-          >
+          <Form form={form} layout="vertical" onFinish={handleSubmit}>
             <Form.Item
               label="Họ tên"
               name="fullName"
@@ -167,9 +202,9 @@ export default function StaffInfoEdit({ staffData, onRefresh }: StaffInfoEditPro
             </div>
 
             <Form.Item className="mt-4">
-              <Button 
-                type="primary" 
-                htmlType="submit" 
+              <Button
+                type="primary"
+                htmlType="submit"
                 icon={<Save size={16} />}
                 loading={loading}
                 block
@@ -185,12 +220,12 @@ export default function StaffInfoEdit({ staffData, onRefresh }: StaffInfoEditPro
 
   return (
     <div className="space-y-4 pb-4">
-      <Card 
+      <Card
         className="shadow-sm"
         extra={
           canEdit ? (
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               icon={<Edit size={16} />}
               onClick={handleEdit}
             >
@@ -205,8 +240,12 @@ export default function StaffInfoEdit({ staffData, onRefresh }: StaffInfoEditPro
           size="small"
           labelStyle={{ fontWeight: 600, width: "40%" }}
         >
-          <Descriptions.Item label="Họ tên">{staffData.fullName}</Descriptions.Item>
-          <Descriptions.Item label="Tên đăng nhập">{staffData.userName}</Descriptions.Item>
+          <Descriptions.Item label="Họ tên">
+            {staffData.fullName}
+          </Descriptions.Item>
+          <Descriptions.Item label="Tên đăng nhập">
+            {staffData.userName}
+          </Descriptions.Item>
           <Descriptions.Item label="Loại nhân viên">
             <Tag color="blue">
               {staffData.staffType === "STAFF" && "Nhân viên"}
@@ -294,7 +333,9 @@ export default function StaffInfoEdit({ staffData, onRefresh }: StaffInfoEditPro
       </Card>
 
       {/* Thông tin thanh toán */}
-      {(staffData.bankAccountName || staffData.bankAccountNumber || staffData.bankName) && (
+      {(staffData.bankAccountName ||
+        staffData.bankAccountNumber ||
+        staffData.bankName) && (
         <Card title="Thông tin thanh toán" className="shadow-sm">
           <Descriptions
             column={1}
@@ -336,4 +377,3 @@ export default function StaffInfoEdit({ staffData, onRefresh }: StaffInfoEditPro
     </div>
   );
 }
-

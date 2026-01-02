@@ -75,10 +75,7 @@ export async function POST(request: NextRequest) {
       `;
 
       if (!userLock || userLock.length === 0) {
-        return NextResponse.json(
-          { error: "User not found" },
-          { status: 404 },
-        );
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
       }
 
       // Kiểm tra xem user có đang có yêu cầu đổi thưởng đang chờ duyệt không
@@ -199,7 +196,9 @@ export async function POST(request: NextRequest) {
       // Nếu không tìm thấy EventReward phù hợp, lấy cái đầu tiên
       if (!eventRewardId && eventRewards && eventRewards.length > 0) {
         eventRewardId = eventRewards[0].id;
-        console.log(`[Redeem Voucher] Using first EventReward: ${eventRewardId}`);
+        console.log(
+          `[Redeem Voucher] Using first EventReward: ${eventRewardId}`,
+        );
       }
 
       console.log(`[Redeem Voucher] Final EventRewardId: ${eventRewardId}`);

@@ -5,7 +5,11 @@ import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { useLogin, verifyStaffUsername, updateStaffPassword } from "@/queries/auth.query";
+import {
+  useLogin,
+  verifyStaffUsername,
+  updateStaffPassword,
+} from "@/queries/auth.query";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { setCookie } from "cookies-next";
@@ -24,7 +28,9 @@ const StaffLogin = () => {
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [selectedBranch, setSelectedBranch] = useState<string>("GO_VAP");
   const [pageLoading, setPageLoading] = useState<boolean>(false);
-  const [loginStep, setLoginStep] = useState<"username" | "password" | "reset">("username");
+  const [loginStep, setLoginStep] = useState<"username" | "password" | "reset">(
+    "username",
+  );
   const [staffInfo, setStaffInfo] = useState<any>(null);
   const [verifyingUsername, setVerifyingUsername] = useState<boolean>(false);
   const loginMutation = useLogin();
@@ -38,7 +44,10 @@ const StaffLogin = () => {
       return;
     }
 
-    if (!selectedBranch || (selectedBranch !== "GO_VAP" && selectedBranch !== "TAN_PHU")) {
+    if (
+      !selectedBranch ||
+      (selectedBranch !== "GO_VAP" && selectedBranch !== "TAN_PHU")
+    ) {
       toast.error("Vui lòng chọn chi nhánh");
       return;
     }
@@ -46,7 +55,7 @@ const StaffLogin = () => {
     setVerifyingUsername(true);
     try {
       const result = await verifyStaffUsername(userName.trim(), selectedBranch);
-      
+
       if (result.statusCode === 200 && result.data) {
         setStaffInfo(result.data);
         if (result.data.requirePasswordReset) {
@@ -86,15 +95,22 @@ const StaffLogin = () => {
       return;
     }
 
-    if (!selectedBranch || (selectedBranch !== "GO_VAP" && selectedBranch !== "TAN_PHU")) {
+    if (
+      !selectedBranch ||
+      (selectedBranch !== "GO_VAP" && selectedBranch !== "TAN_PHU")
+    ) {
       toast.error("Chi nhánh không hợp lệ");
       return;
     }
 
     setPageLoading(true);
     try {
-      const result = await updateStaffPassword(staffInfo.staffId, newPassword, selectedBranch);
-      
+      const result = await updateStaffPassword(
+        staffInfo.staffId,
+        newPassword,
+        selectedBranch,
+      );
+
       if (result.statusCode === 200) {
         toast.success("Cập nhật mật khẩu thành công. Vui lòng đăng nhập.");
         setNewPassword("");
@@ -111,67 +127,83 @@ const StaffLogin = () => {
     }
   }, [newPassword, confirmPassword, staffInfo, selectedBranch]);
 
-  const handleLogin = useCallback(
-    async () => {
-      if (pageLoading) return;
+  const handleLogin = useCallback(async () => {
+    if (pageLoading) return;
 
-      if (loginStep === "username") {
-        handleVerifyUsername();
-        return;
-      }
+    if (loginStep === "username") {
+      handleVerifyUsername();
+      return;
+    }
 
-      if (!userName || !password) {
-        toast.error("Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu");
-        return;
-      }
+    if (!userName || !password) {
+      toast.error("Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu");
+      return;
+    }
 
-      if (!selectedBranch || (selectedBranch !== "GO_VAP" && selectedBranch !== "TAN_PHU")) {
-        toast.error("Vui lòng chọn chi nhánh");
-        return;
-      }
+    if (
+      !selectedBranch ||
+      (selectedBranch !== "GO_VAP" && selectedBranch !== "TAN_PHU")
+    ) {
+      toast.error("Vui lòng chọn chi nhánh");
+      return;
+    }
 
-      setPageLoading(true);
-      try {
-        // Set cookies
-        if (selectedBranch && (selectedBranch === "GO_VAP" || selectedBranch === "TAN_PHU")) {
-          setCookie("branch", selectedBranch, {
-            path: "/",
-            expires: new Date(expirationDate),
-          });
-        }
-        setCookie("loginType", "account", {
+    setPageLoading(true);
+    try {
+      // Set cookies
+      if (
+        selectedBranch &&
+        (selectedBranch === "GO_VAP" || selectedBranch === "TAN_PHU")
+      ) {
+        setCookie("branch", selectedBranch, {
           path: "/",
           expires: new Date(expirationDate),
         });
-
-        const result = await loginMutation.mutateAsync({
-          userName: userName,
-          isAdmin: true,
-          password: password,
-          loginMethod: "account",
-          branch: selectedBranch,
-        });
-
-        const { statusCode, message } = result || {};
-
-        if (statusCode === 200) {
-          toast.success("Đăng nhập thành công!");
-          // Always redirect to /staff page
-          router.push("/staff");
-        } else if (statusCode === 403 && result?.data?.requirePasswordReset) {
-          toast.error("Vui lòng đặt mật khẩu mới");
-          setLoginStep("reset");
-        } else if (statusCode === 500 || statusCode === 499 || statusCode === 401) {
-          toast.error(message || "Đăng nhập thất bại");
-        }
-      } catch (error) {
-        console.error("Login error:", error);
-        toast.error("Đã có lỗi xảy ra khi đăng nhập");
       }
-      setPageLoading(false);
-    },
-    [pageLoading, userName, password, selectedBranch, loginMutation, router, loginStep, handleVerifyUsername],
-  );
+      setCookie("loginType", "account", {
+        path: "/",
+        expires: new Date(expirationDate),
+      });
+
+      const result = await loginMutation.mutateAsync({
+        userName: userName,
+        isAdmin: true,
+        password: password,
+        loginMethod: "account",
+        branch: selectedBranch,
+      });
+
+      const { statusCode, message } = result || {};
+
+      if (statusCode === 200) {
+        toast.success("Đăng nhập thành công!");
+        // Always redirect to /staff page
+        router.push("/staff");
+      } else if (statusCode === 403 && result?.data?.requirePasswordReset) {
+        toast.error("Vui lòng đặt mật khẩu mới");
+        setLoginStep("reset");
+      } else if (
+        statusCode === 500 ||
+        statusCode === 499 ||
+        statusCode === 401
+      ) {
+        toast.error(message || "Đăng nhập thất bại");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error("Đã có lỗi xảy ra khi đăng nhập");
+    }
+    setPageLoading(false);
+  }, [
+    pageLoading,
+    userName,
+    password,
+    selectedBranch,
+    loginMutation,
+    router,
+    loginStep,
+    handleVerifyUsername,
+  ]);
 
   if (pageLoading) {
     return (
@@ -198,9 +230,7 @@ const StaffLogin = () => {
 
             <div className="text-center space-y-2">
               <h1 className="text-2xl font-bold text-white">Staff Portal</h1>
-              <p className="text-gray-400 text-sm">
-                Đăng nhập nhân viên
-              </p>
+              <p className="text-gray-400 text-sm">Đăng nhập nhân viên</p>
             </div>
 
             <div className="w-full space-y-4">
@@ -462,4 +492,3 @@ const StaffLogin = () => {
 };
 
 export default StaffLogin;
-

@@ -29,9 +29,14 @@ interface Stats {
 export default function CheckIn({ staffId, month, year }: CheckInProps) {
   const [loading, setLoading] = useState(false);
   const [todayRecords, setTodayRecords] = useState<TimeRecord[]>([]);
-  const [currentWorkingRecord, setCurrentWorkingRecord] = useState<TimeRecord | null>(null);
+  const [currentWorkingRecord, setCurrentWorkingRecord] =
+    useState<TimeRecord | null>(null);
   const [elapsedTime, setElapsedTime] = useState<string>("00:00");
-  const [stats, setStats] = useState<Stats>({ todayHours: 0, weekHours: 0, monthHours: 0 });
+  const [stats, setStats] = useState<Stats>({
+    todayHours: 0,
+    weekHours: 0,
+    monthHours: 0,
+  });
 
   useEffect(() => {
     if (staffId && month && year) {
@@ -44,12 +49,16 @@ export default function CheckIn({ staffId, month, year }: CheckInProps) {
     if (currentWorkingRecord) {
       const updateTimer = () => {
         // Sử dụng Vietnam timezone (UTC+7)
-        const checkInTime = dayjs(currentWorkingRecord.checkInTime).utcOffset(7);
+        const checkInTime = dayjs(currentWorkingRecord.checkInTime).utcOffset(
+          7,
+        );
         const now = dayjs().utcOffset(7);
         const diffMinutes = now.diff(checkInTime, "minute");
         const hours = Math.floor(diffMinutes / 60);
         const minutes = diffMinutes % 60;
-        setElapsedTime(`${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`);
+        setElapsedTime(
+          `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`,
+        );
       };
 
       updateTimer(); // Update immediately
@@ -68,8 +77,10 @@ export default function CheckIn({ staffId, month, year }: CheckInProps) {
       setLoading(true);
       // Sử dụng Vietnam timezone (UTC+7)
       const today = dayjs().utcOffset(7).format("YYYY-MM-DD");
-      const response = await fetch(`/api/staff/time-tracking?staffId=${staffId}&date=${today}`);
-      
+      const response = await fetch(
+        `/api/staff/time-tracking?staffId=${staffId}&date=${today}`,
+      );
+
       if (!response.ok) {
         const errorText = await response.text();
         let errorMessage = "Failed to fetch today's data";
@@ -128,7 +139,8 @@ export default function CheckIn({ staffId, month, year }: CheckInProps) {
       }
 
       if (!response.ok || !result.success) {
-        const errorMessage = result?.error || result?.message || "Check-in thất bại";
+        const errorMessage =
+          result?.error || result?.message || "Check-in thất bại";
         throw new Error(errorMessage);
       }
 
@@ -172,7 +184,8 @@ export default function CheckIn({ staffId, month, year }: CheckInProps) {
       }
 
       if (!response.ok || !result.success) {
-        const errorMessage = result?.error || result?.message || "Check-out thất bại";
+        const errorMessage =
+          result?.error || result?.message || "Check-out thất bại";
         throw new Error(errorMessage);
       }
 
@@ -214,7 +227,10 @@ export default function CheckIn({ staffId, month, year }: CheckInProps) {
                   {elapsedTime}
                 </div>
                 <div className="text-xs text-gray-500">
-                  Check-in: {dayjs(currentWorkingRecord.checkInTime).utcOffset(7).format("HH:mm")}
+                  Check-in:{" "}
+                  {dayjs(currentWorkingRecord.checkInTime)
+                    .utcOffset(7)
+                    .format("HH:mm")}
                 </div>
               </div>
               <Button
@@ -234,7 +250,9 @@ export default function CheckIn({ staffId, month, year }: CheckInProps) {
             <>
               <div className="space-y-2">
                 <Clock size={48} className="mx-auto text-gray-400" />
-                <div className="text-sm text-gray-600">Chưa check-in hôm nay</div>
+                <div className="text-sm text-gray-600">
+                  Chưa check-in hôm nay
+                </div>
               </div>
               <Button
                 type="primary"
@@ -294,9 +312,11 @@ export default function CheckIn({ staffId, month, year }: CheckInProps) {
             renderItem={(record: TimeRecord, index: number) => {
               // Sử dụng Vietnam timezone (UTC+7)
               const checkIn = dayjs(record.checkInTime).utcOffset(7);
-              const checkOut = record.checkOutTime ? dayjs(record.checkOutTime).utcOffset(7) : null;
+              const checkOut = record.checkOutTime
+                ? dayjs(record.checkOutTime).utcOffset(7)
+                : null;
               let hours = record.totalHours;
-              
+
               // Calculate hours if not available
               if (!hours) {
                 if (checkOut) {
@@ -307,7 +327,7 @@ export default function CheckIn({ staffId, month, year }: CheckInProps) {
                   hours = now.diff(checkIn, "hour", true);
                 }
               }
-              
+
               const hoursInt = Math.floor(hours);
               const minutesInt = Math.floor((hours - hoursInt) * 60);
 
@@ -317,8 +337,12 @@ export default function CheckIn({ staffId, month, year }: CheckInProps) {
                     <div className="flex justify-between items-center mb-2">
                       <span className="font-medium">Lần {index + 1}</span>
                       <div className="flex items-center gap-2">
-                        <Tag color={record.status === "WORKING" ? "blue" : "green"}>
-                          {record.status === "WORKING" ? "Đang làm" : "Hoàn thành"}
+                        <Tag
+                          color={record.status === "WORKING" ? "blue" : "green"}
+                        >
+                          {record.status === "WORKING"
+                            ? "Đang làm"
+                            : "Hoàn thành"}
                         </Tag>
                         {record.status === "WORKING" && (
                           <Button
@@ -335,17 +359,24 @@ export default function CheckIn({ staffId, month, year }: CheckInProps) {
                     </div>
                     <div className="text-sm text-gray-600 space-y-1">
                       <div>
-                        <CheckCircle size={12} className="inline mr-1 text-green-600" />
+                        <CheckCircle
+                          size={12}
+                          className="inline mr-1 text-green-600"
+                        />
                         Check-in: {checkIn.format("HH:mm:ss")}
                       </div>
                       {checkOut ? (
                         <div>
-                          <Square size={12} className="inline mr-1 text-red-600" />
+                          <Square
+                            size={12}
+                            className="inline mr-1 text-red-600"
+                          />
                           Check-out: {checkOut.format("HH:mm:ss")}
                         </div>
                       ) : null}
                       <div className="font-medium text-blue-600">
-                        Thời gian: {String(hoursInt).padStart(2, "0")}:{String(minutesInt).padStart(2, "0")}
+                        Thời gian: {String(hoursInt).padStart(2, "0")}:
+                        {String(minutesInt).padStart(2, "0")}
                       </div>
                     </div>
                   </div>
@@ -358,4 +389,3 @@ export default function CheckIn({ staffId, month, year }: CheckInProps) {
     </div>
   );
 }
-

@@ -9,4 +9,3 @@ export default function StaffLayout({ children }: { children: ReactNode }) {
     </div>
   );
 }
-

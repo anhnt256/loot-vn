@@ -608,26 +608,32 @@ const AdminDashboard = () => {
               >
                 Kiểm tra đăng nhập
               </Button>
-              {fundAmount !== null && (() => {
-                const upRateAmount = Number(process.env.NEXT_PUBLIC_UP_RATE_AMOUNT) || 0;
-                const threshold = upRateAmount * 0.9; // 90% threshold
-                const isNearJackpot = fundAmount >= threshold;
-                
-                return (
-                  <div className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
-                    isNearJackpot 
-                      ? "bg-red-600/40 border-red-500" 
-                      : "bg-yellow-600/20 border-yellow-600/50"
-                  }`}>
-                    <span className={`font-semibold ${
-                      isNearJackpot ? "text-red-300" : "text-yellow-400"
-                    }`}>
-                      Tổng quỹ: {fundAmount.toLocaleString("vi-VN")} VNĐ
-                      {isNearJackpot && " ⚠️ Sắp nổ hũ!"}
-                    </span>
-                  </div>
-                );
-              })()}
+              {fundAmount !== null &&
+                (() => {
+                  const upRateAmount =
+                    Number(process.env.NEXT_PUBLIC_UP_RATE_AMOUNT) || 0;
+                  const threshold = upRateAmount * 0.9; // 90% threshold
+                  const isNearJackpot = fundAmount >= threshold;
+
+                  return (
+                    <div
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
+                        isNearJackpot
+                          ? "bg-red-600/40 border-red-500"
+                          : "bg-yellow-600/20 border-yellow-600/50"
+                      }`}
+                    >
+                      <span
+                        className={`font-semibold ${
+                          isNearJackpot ? "text-red-300" : "text-yellow-400"
+                        }`}
+                      >
+                        Tổng quỹ: {fundAmount.toLocaleString("vi-VN")} VNĐ
+                        {isNearJackpot && " ⚠️ Sắp nổ hũ!"}
+                      </span>
+                    </div>
+                  );
+                })()}
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">

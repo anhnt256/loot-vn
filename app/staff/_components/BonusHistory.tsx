@@ -24,9 +24,16 @@ interface BonusRecord {
   createdAt: string;
 }
 
-export default function BonusHistory({ staffId, month, year }: BonusHistoryProps) {
+export default function BonusHistory({
+  staffId,
+  month,
+  year,
+}: BonusHistoryProps) {
   const [loading, setLoading] = useState(false);
-  const [imagePreview, setImagePreview] = useState<{ url: string; visible: boolean }>({
+  const [imagePreview, setImagePreview] = useState<{
+    url: string;
+    visible: boolean;
+  }>({
     url: "",
     visible: false,
   });
@@ -40,11 +47,11 @@ export default function BonusHistory({ staffId, month, year }: BonusHistoryProps
 
   const fetchHistory = async () => {
     if (!month || !year || !staffId) return;
-    
+
     try {
       setLoading(true);
       const response = await fetch(
-        `/api/staff/salary/history?staffId=${staffId}&month=${month}&year=${year}`
+        `/api/staff/salary/history?staffId=${staffId}&month=${month}&year=${year}`,
       );
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -72,15 +79,14 @@ export default function BonusHistory({ staffId, month, year }: BonusHistoryProps
 
   return (
     <div className="space-y-4 pb-4">
-
       {/* Bonus History */}
-      <Card 
+      <Card
         title={
           <span className="flex items-center gap-2">
             <Award size={18} className="text-green-600" />
             Lịch sử thưởng
           </span>
-        } 
+        }
         className="shadow-sm"
       >
         {bonusHistory.length === 0 ? (
@@ -98,8 +104,8 @@ export default function BonusHistory({ staffId, month, year }: BonusHistoryProps
                         item.status === "PAID"
                           ? "green"
                           : item.status === "APPROVED"
-                          ? "blue"
-                          : "orange"
+                            ? "blue"
+                            : "orange"
                       }
                     >
                       {item.status === "PAID" && "Đã thanh toán"}
@@ -123,12 +129,22 @@ export default function BonusHistory({ staffId, month, year }: BonusHistoryProps
                           height={120}
                           className="rounded cursor-pointer object-cover"
                           preview={{
-                            visible: imagePreview.visible && imagePreview.url === item.imageUrl,
+                            visible:
+                              imagePreview.visible &&
+                              imagePreview.url === item.imageUrl,
                             onVisibleChange: (visible) => {
-                              setImagePreview({ url: item.imageUrl || "", visible });
+                              setImagePreview({
+                                url: item.imageUrl || "",
+                                visible,
+                              });
                             },
                           }}
-                          onClick={() => setImagePreview({ url: item.imageUrl || "", visible: true })}
+                          onClick={() =>
+                            setImagePreview({
+                              url: item.imageUrl || "",
+                              visible: true,
+                            })
+                          }
                         />
                       </div>
                     )}
@@ -139,7 +155,9 @@ export default function BonusHistory({ staffId, month, year }: BonusHistoryProps
                     )}
                     <div className="text-xs text-gray-500">
                       <Calendar size={12} className="inline mr-1" />
-                      {item.rewardDate ? dayjs(item.rewardDate).format("DD/MM/YYYY HH:mm") : dayjs(item.createdAt).format("DD/MM/YYYY HH:mm")}
+                      {item.rewardDate
+                        ? dayjs(item.rewardDate).format("DD/MM/YYYY HH:mm")
+                        : dayjs(item.createdAt).format("DD/MM/YYYY HH:mm")}
                     </div>
                   </div>
                 </div>
@@ -151,4 +169,3 @@ export default function BonusHistory({ staffId, month, year }: BonusHistoryProps
     </div>
   );
 }
-

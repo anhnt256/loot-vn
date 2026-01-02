@@ -15,7 +15,8 @@ import { isNewUser } from "@/lib/timezone-utils";
 const expirationDuration = 1;
 
 // Admin username from env
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || process.env.NEXT_PUBLIC_ADMIN_USERNAME;
+const ADMIN_USERNAME =
+  process.env.ADMIN_USERNAME || process.env.NEXT_PUBLIC_ADMIN_USERNAME;
 const expirationDate = dayjs().add(expirationDuration, "day").format();
 
 /**
@@ -136,31 +137,41 @@ export async function POST(req: Request, res: Response): Promise<any> {
   try {
     const body = await req.text();
 
-    const { userName, machineName, isAdmin, password, loginMethod, macAddress, currentMacAddress } = JSON.parse(body);
+    const {
+      userName,
+      machineName,
+      isAdmin,
+      password,
+      loginMethod,
+      macAddress,
+      currentMacAddress,
+    } = JSON.parse(body);
 
-      // Xử lý đăng nhập admin/staff
-      if (isAdmin) {
-        const loginTypeFromCookie = cookieStore.get("loginType")?.value;
-        let loginType = loginTypeFromCookie || "username";
-        let userId, role, staffUserName = ADMIN_USERNAME;
-        let staffData: any = null;
-        let branchFromMac = branchFromCookie; // Branch từ MAC address trong DB
+    // Xử lý đăng nhập admin/staff
+    if (isAdmin) {
+      const loginTypeFromCookie = cookieStore.get("loginType")?.value;
+      let loginType = loginTypeFromCookie || "username";
+      let userId,
+        role,
+        staffUserName = ADMIN_USERNAME;
+      let staffData: any = null;
+      let branchFromMac = branchFromCookie; // Branch từ MAC address trong DB
 
       // Handle account login (username + password)
       if (loginMethod === "account" && password) {
         // Verify staff credentials
         const crypto = await import("crypto");
-        
+
         const hashPassword = (pwd: string) => {
           return crypto.createHash("sha256").update(pwd).digest("hex");
         };
 
         // First, find staff by username only (to check if password reset is required)
-        const staffByUsername = await db.$queryRawUnsafe(
+        const staffByUsername = (await db.$queryRawUnsafe(
           `SELECT id, userName, fullName, branch, isDeleted, isAdmin, password, staffType FROM Staff 
            WHERE userName = ? AND isDeleted = false AND isAdmin = false`,
           userName,
-        ) as any[];
+        )) as any[];
 
         if (staffByUsername.length === 0) {
           return NextResponse.json(
@@ -174,9 +185,11 @@ export async function POST(req: Request, res: Response): Promise<any> {
         }
 
         staffData = staffByUsername[0];
-        
+
         // Check if password reset is required (password in DB is reset password hash)
-        const resetPasswordHash = hashPassword("RESET_PASSWORD_REQUIRED_" + staffData.id);
+        const resetPasswordHash = hashPassword(
+          "RESET_PASSWORD_REQUIRED_" + staffData.id,
+        );
         if (staffData.password === resetPasswordHash) {
           // Password has been reset, user needs to set new password
           // Don't require old password authentication
@@ -206,13 +219,18 @@ export async function POST(req: Request, res: Response): Promise<any> {
         // Set branch from staff data
         if (staffData.branch) {
           loginType = "account";
-          
+
           // For STAFF or MANAGER type, use real staffId and include staffType
           // For other types (admin, etc.), keep hardcoded values to avoid breaking existing logic
-          if (staffData.staffType === "STAFF" || staffData.staffType === "MANAGER" || 
-              staffData.staffType === "SUPER_ADMIN" || staffData.staffType === "BRANCH_ADMIN" ||
-              staffData.staffType === "KITCHEN" || staffData.staffType === "SECURITY" || 
-              staffData.staffType === "CASHIER") {
+          if (
+            staffData.staffType === "STAFF" ||
+            staffData.staffType === "MANAGER" ||
+            staffData.staffType === "SUPER_ADMIN" ||
+            staffData.staffType === "BRANCH_ADMIN" ||
+            staffData.staffType === "KITCHEN" ||
+            staffData.staffType === "SECURITY" ||
+            staffData.staffType === "CASHIER"
+          ) {
             userId = staffData.id; // Use real staff ID
             role = "staff";
             staffUserName = staffData.userName;
@@ -232,17 +250,23 @@ export async function POST(req: Request, res: Response): Promise<any> {
             { status: 401 },
           );
         }
-      } else if (loginMethod === "mac" || (!loginMethod && loginTypeFromCookie === "mac")) {
+      } else if (
+        loginMethod === "mac" ||
+        (!loginMethod && loginTypeFromCookie === "mac")
+      ) {
         // Handle MAC login - determine which case
         const hasMac = !!macAddress && macAddress.trim() !== "";
         // Check if username matches admin username (if ADMIN_USERNAME is set)
         // If ADMIN_USERNAME is not set, any username is considered admin username
-        const isAdminUsername = ADMIN_USERNAME ? userName === ADMIN_USERNAME : !!userName && userName.trim() !== "";
-        const hasUsername = userName && userName.trim() !== "" && isAdminUsername;
+        const isAdminUsername = ADMIN_USERNAME
+          ? userName === ADMIN_USERNAME
+          : !!userName && userName.trim() !== "";
+        const hasUsername =
+          userName && userName.trim() !== "" && isAdminUsername;
         const isAdminDebugLogin = hasMac && hasUsername; // Case 3: Cả MAC + Username
         const isStaffMacLogin = hasMac && !hasUsername; // Case 1: Chỉ MAC
         const isAdminOnlyLogin = !hasMac && hasUsername; // Case 2: Chỉ Username
-        
+
         if (isStaffMacLogin) {
           // Case 1: Chỉ MAC Address trong admin-login → vẫn là admin
           // Bắt buộc phải có currentMacAddress để verify
@@ -261,15 +285,16 @@ export async function POST(req: Request, res: Response): Promise<any> {
           const normalizeMac = (mac: string) => {
             return mac.replace(/[:-]/g, "").toUpperCase();
           };
-          
+
           const normalizedInput = normalizeMac(macAddress);
           const normalizedCurrent = normalizeMac(currentMacAddress);
-          
+
           if (normalizedInput !== normalizedCurrent) {
             return NextResponse.json(
               {
                 statusCode: 401,
-                message: "MAC address không khớp với MAC address hiện tại của máy",
+                message:
+                  "MAC address không khớp với MAC address hiện tại của máy",
                 data: null,
               },
               { status: 401 },
@@ -277,11 +302,15 @@ export async function POST(req: Request, res: Response): Promise<any> {
           }
 
           // Check MAC address từ DB và lấy branch
-          const normalizedMacForDB = macAddress.replaceAll(":", "-").toUpperCase();
-          const computer = await db.$queryRawUnsafe<Array<{
-            branch: string;
-            name: string;
-          }>>(
+          const normalizedMacForDB = macAddress
+            .replaceAll(":", "-")
+            .toUpperCase();
+          const computer = await db.$queryRawUnsafe<
+            Array<{
+              branch: string;
+              name: string;
+            }>
+          >(
             `SELECT branch, name FROM Computer WHERE localIp = ? LIMIT 1`,
             normalizedMacForDB,
           );
@@ -306,11 +335,15 @@ export async function POST(req: Request, res: Response): Promise<any> {
           // Case 3: Cả MAC + Username (admin) → admin
           // Bypass MAC check vì đây là admin debug login
           // Chỉ cần check MAC từ DB để lấy branch (nếu có)
-          const normalizedMacForDB = macAddress.replaceAll(":", "-").toUpperCase();
-          const computer = await db.$queryRawUnsafe<Array<{
-            branch: string;
-            name: string;
-          }>>(
+          const normalizedMacForDB = macAddress
+            .replaceAll(":", "-")
+            .toUpperCase();
+          const computer = await db.$queryRawUnsafe<
+            Array<{
+              branch: string;
+              name: string;
+            }>
+          >(
             `SELECT branch, name FROM Computer WHERE localIp = ? LIMIT 1`,
             normalizedMacForDB,
           );
@@ -359,7 +392,10 @@ export async function POST(req: Request, res: Response): Promise<any> {
       let finalBranch = branchFromCookie;
       if (loginMethod === "account" && staffData && staffData.branch) {
         finalBranch = staffData.branch;
-      } else if ((loginMethod === "mac" || loginType === "mac") && branchFromMac) {
+      } else if (
+        (loginMethod === "mac" || loginType === "mac") &&
+        branchFromMac
+      ) {
         // Branch đã được set từ DB ở trên
         finalBranch = branchFromMac;
       } else if (!finalBranch) {
@@ -376,11 +412,17 @@ export async function POST(req: Request, res: Response): Promise<any> {
       };
 
       // Add staffType and staffId for STAFF/MANAGER types (only for account login)
-      if (loginMethod === "account" && staffData && 
-          (staffData.staffType === "STAFF" || staffData.staffType === "MANAGER" || 
-           staffData.staffType === "SUPER_ADMIN" || staffData.staffType === "BRANCH_ADMIN" ||
-           staffData.staffType === "KITCHEN" || staffData.staffType === "SECURITY" || 
-           staffData.staffType === "CASHIER")) {
+      if (
+        loginMethod === "account" &&
+        staffData &&
+        (staffData.staffType === "STAFF" ||
+          staffData.staffType === "MANAGER" ||
+          staffData.staffType === "SUPER_ADMIN" ||
+          staffData.staffType === "BRANCH_ADMIN" ||
+          staffData.staffType === "KITCHEN" ||
+          staffData.staffType === "SECURITY" ||
+          staffData.staffType === "CASHIER")
+      ) {
         adminData.staffType = staffData.staffType;
         adminData.staffId = staffData.id;
       }
@@ -414,7 +456,11 @@ export async function POST(req: Request, res: Response): Promise<any> {
       });
 
       // Set branch cookie nếu chưa có hoặc đã thay đổi hoặc login bằng MAC
-      if (!branchFromCookie || (loginMethod === "account" && staffData && staffData.branch) || (loginMethod === "mac" && branchFromMac)) {
+      if (
+        !branchFromCookie ||
+        (loginMethod === "account" && staffData && staffData.branch) ||
+        (loginMethod === "mac" && branchFromMac)
+      ) {
         response.cookies.set({
           name: "branch",
           value: finalBranch || "GO_VAP",

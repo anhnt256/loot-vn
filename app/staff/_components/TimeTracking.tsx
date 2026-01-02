@@ -21,11 +21,19 @@ interface TimeRecord {
   status: "WORKING" | "COMPLETED";
 }
 
-export default function TimeTracking({ staffId, month, year }: TimeTrackingProps) {
+export default function TimeTracking({
+  staffId,
+  month,
+  year,
+}: TimeTrackingProps) {
   const [loading, setLoading] = useState(false);
   const [todayRecord, setTodayRecord] = useState<TimeRecord | null>(null);
   const [history, setHistory] = useState<TimeRecord[]>([]);
-  const [stats, setStats] = useState({ todayHours: 0, weekHours: 0, monthHours: 0 });
+  const [stats, setStats] = useState({
+    todayHours: 0,
+    weekHours: 0,
+    monthHours: 0,
+  });
 
   useEffect(() => {
     if (staffId && month && year) {
@@ -35,16 +43,20 @@ export default function TimeTracking({ staffId, month, year }: TimeTrackingProps
 
   const fetchTimeData = async () => {
     if (!staffId || !month || !year) return;
-    
+
     try {
       setLoading(true);
-      const response = await fetch(`/api/staff/time-tracking?staffId=${staffId}&month=${month}&year=${year}`);
+      const response = await fetch(
+        `/api/staff/time-tracking?staffId=${staffId}&month=${month}&year=${year}`,
+      );
       if (!response.ok) throw new Error("Failed to fetch time data");
       const result = await response.json();
       if (result.success) {
         setTodayRecord(result.data.todayRecord);
         setHistory(result.data.history || []);
-        setStats(result.data.stats || { todayHours: 0, weekHours: 0, monthHours: 0 });
+        setStats(
+          result.data.stats || { todayHours: 0, weekHours: 0, monthHours: 0 },
+        );
       }
     } catch (error: any) {
       toast.error(error.message || "Không thể tải dữ liệu giờ làm việc");
@@ -148,7 +160,8 @@ export default function TimeTracking({ staffId, month, year }: TimeTrackingProps
                   Đang làm việc
                 </Tag>
                 <p className="text-gray-600">
-                  Check-in: {dayjs(todayRecord?.checkInTime).format("HH:mm DD/MM/YYYY")}
+                  Check-in:{" "}
+                  {dayjs(todayRecord?.checkInTime).format("HH:mm DD/MM/YYYY")}
                 </p>
               </div>
               <Button
@@ -200,7 +213,9 @@ export default function TimeTracking({ staffId, month, year }: TimeTrackingProps
                     <span className="font-medium">
                       {dayjs(item.date).format("DD/MM/YYYY")}
                     </span>
-                    <Tag color={item.status === "COMPLETED" ? "green" : "orange"}>
+                    <Tag
+                      color={item.status === "COMPLETED" ? "green" : "orange"}
+                    >
                       {item.status === "COMPLETED" ? "Hoàn thành" : "Đang làm"}
                     </Tag>
                   </div>
@@ -230,4 +245,3 @@ export default function TimeTracking({ staffId, month, year }: TimeTrackingProps
     </div>
   );
 }
-
