@@ -253,12 +253,104 @@ model Staff {
   resignDate               DateTime?
   staffType                Staff_staffType  @default(STAFF)
   needCheckMacAddress      Boolean          @default(true)
+  bankAccountName          String?          @db.VarChar(255)
+  bankAccountNumber        String?          @db.VarChar(50)
+  bankName                 String?          @db.VarChar(255)
+  baseSalary               Float            @default(0)
   counterStaffReports      Report[]         @relation("CounterStaff")
   kitchenStaffReports      Report[]         @relation("KitchenStaff")
   securityStaffReports     Report[]         @relation("SecurityStaff")
   morningHandoverReports   HandoverReport[] @relation("MorningStaff")
   afternoonHandoverReports HandoverReport[] @relation("AfternoonStaff")
   eveningHandoverReports   HandoverReport[] @relation("EveningStaff")
+}
+
+model StaffTimeTracking {
+  id           Int       @id @default(autoincrement())
+  staffId      Int
+  checkInTime  DateTime  @default(now())
+  checkOutTime DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([staffId])
+  @@index([checkInTime])
+}
+
+model StaffSalary {
+  id          Int       @id @default(autoincrement())
+  staffId     Int
+  month       Int
+  year        Int
+  totalHours  Float     @default(0)
+  hourlySalary Float    @default(0)
+  salaryFromHours Float  @default(0) // A: Số giờ làm * lương = tổng lương
+  advance     Float     @default(0)  // B: Tạm ứng
+  bonus       Float     @default(0)  // C: Thưởng
+  penalty     Float     @default(0)  // D: Phạt
+  total       Float     @default(0)  // Tổng thu nhập = A + C - B - D
+  status      String    @default("PENDING") @db.VarChar(20)
+  paidAt      DateTime?
+  note        String?   @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([staffId])
+  @@index([year, month])
+}
+
+model StaffBonus {
+  id          Int       @id @default(autoincrement())
+  staffId     Int
+  amount      Float
+  reason      String    @db.VarChar(255)
+  description String?   @db.Text
+  imageUrl    String?   @db.VarChar(500)
+  note        String?   @db.Text
+  rewardDate  DateTime  @default(now())
+  status      String    @default("PENDING") @db.VarChar(20)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([staffId])
+  @@index([rewardDate])
+  @@index([status])
+}
+
+model StaffPenalty {
+  id          Int       @id @default(autoincrement())
+  staffId     Int
+  amount      Float
+  reason      String    @db.VarChar(255)
+  description String?   @db.Text
+  imageUrl    String?   @db.VarChar(500)
+  note        String?   @db.Text
+  penaltyDate DateTime  @default(now())
+  status      String    @default("PENDING") @db.VarChar(20)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([staffId])
+  @@index([penaltyDate])
+  @@index([status])
+}
+
+model ManagerIncomeExpense {
+  id              Int       @id @default(autoincrement())
+  type            String    @db.VarChar(20) // INCOME or EXPENSE
+  amount          Float
+  reason          String    @db.VarChar(255)
+  description     String?   @db.Text
+  transactionDate DateTime
+  branch          String    @default("GO_VAP") @db.VarChar(50)
+  createdBy       Int       // Staff ID who created this transaction
+  createdAt       DateTime  @default(now())
+
+  @@index([branch])
+  @@index([transactionDate])
+  @@index([type])
+  @@index([createdBy])
+  @@map("ManagerIncomeExpense")
 }
 
 model GiftRound {
@@ -915,9 +1007,13 @@ enum Staff_gender {
 }
 
 enum Staff_staffType {
+  STAFF
+  KITCHEN
+  SECURITY
+  CASHIER
+  MANAGER
   SUPER_ADMIN
   BRANCH_ADMIN
-  STAFF
 }
 
 enum UserRewardMapStatus {

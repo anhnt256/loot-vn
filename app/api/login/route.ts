@@ -13,6 +13,9 @@ import { calculateActiveUsersInfo } from "@/lib/user-calculator";
 import { isNewUser } from "@/lib/timezone-utils";
 
 const expirationDuration = 1;
+
+// Admin username from env
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || process.env.NEXT_PUBLIC_ADMIN_USERNAME;
 const expirationDate = dayjs().add(expirationDuration, "day").format();
 
 /**
@@ -133,11 +136,176 @@ export async function POST(req: Request, res: Response): Promise<any> {
   try {
     const body = await req.text();
 
-    const { userName, machineName, isAdmin } = JSON.parse(body);
+    const { userName, machineName, isAdmin, password, loginMethod, macAddress, currentMacAddress } = JSON.parse(body);
 
     // Xử lý đăng nhập admin/staff
     if (isAdmin) {
-      if (userName !== "gateway_admin") {
+      const loginTypeFromCookie = cookieStore.get("loginType")?.value;
+      let loginType = loginTypeFromCookie || "username";
+      let userId, role, staffUserName = ADMIN_USERNAME;
+      let staffData: any = null;
+
+      // Handle account login (username + password)
+      if (loginMethod === "account" && password) {
+        // Verify staff credentials
+        const crypto = await import("crypto");
+        
+        const hashPassword = (pwd: string) => {
+          return crypto.createHash("sha256").update(pwd).digest("hex");
+        };
+
+        // First, find staff by username only (to check if password reset is required)
+        const staffByUsername = await db.$queryRawUnsafe(
+          `SELECT id, userName, fullName, branch, isDeleted, isAdmin, password, staffType FROM Staff 
+           WHERE userName = ? AND isDeleted = false AND isAdmin = false`,
+          userName,
+        ) as any[];
+
+        if (staffByUsername.length === 0) {
+          return NextResponse.json(
+            {
+              statusCode: 401,
+              message: "Tên đăng nhập hoặc mật khẩu không đúng",
+              data: null,
+            },
+            { status: 401 },
+          );
+        }
+
+        staffData = staffByUsername[0];
+        
+        // Check if password reset is required (password in DB is reset password hash)
+        const resetPasswordHash = hashPassword("RESET_PASSWORD_REQUIRED_" + staffData.id);
+        if (staffData.password === resetPasswordHash) {
+          // Password has been reset, user needs to set new password
+          // Don't require old password authentication
+          return NextResponse.json(
+            {
+              statusCode: 403,
+              message: "Vui lòng đặt mật khẩu mới",
+              data: { requirePasswordReset: true, staffId: staffData.id },
+            },
+            { status: 403 },
+          );
+        }
+
+        // If not reset password, verify password normally
+        const hashedPassword = hashPassword(password);
+        if (staffData.password !== hashedPassword) {
+          return NextResponse.json(
+            {
+              statusCode: 401,
+              message: "Tên đăng nhập hoặc mật khẩu không đúng",
+              data: null,
+            },
+            { status: 401 },
+          );
+        }
+
+        // Set branch from staff data
+        if (staffData.branch) {
+          loginType = "account";
+          
+          // For STAFF or MANAGER type, use real staffId and include staffType
+          // For other types (admin, etc.), keep hardcoded values to avoid breaking existing logic
+          if (staffData.staffType === "STAFF" || staffData.staffType === "MANAGER" || 
+              staffData.staffType === "SUPER_ADMIN" || staffData.staffType === "BRANCH_ADMIN" ||
+              staffData.staffType === "KITCHEN" || staffData.staffType === "SECURITY" || 
+              staffData.staffType === "CASHIER") {
+            userId = staffData.id; // Use real staff ID
+            role = "staff";
+            staffUserName = staffData.userName;
+          } else {
+            // Keep hardcoded for other cases (backward compatibility)
+            userId = -98; // Staff account login
+            role = "staff";
+            staffUserName = staffData.userName;
+          }
+        } else {
+          return NextResponse.json(
+            {
+              statusCode: 401,
+              message: "Staff account không có branch",
+              data: null,
+            },
+            { status: 401 },
+          );
+        }
+      } else if (loginMethod === "mac" || (!loginMethod && loginTypeFromCookie === "mac")) {
+        // Handle MAC login - determine which case
+        const hasMac = !!macAddress && macAddress.trim() !== "";
+        // Check if username matches admin username (if ADMIN_USERNAME is set)
+        // If ADMIN_USERNAME is not set, any username is considered admin username
+        const isAdminUsername = ADMIN_USERNAME ? userName === ADMIN_USERNAME : !!userName && userName.trim() !== "";
+        const hasUsername = userName && userName.trim() !== "" && isAdminUsername;
+        const isAdminDebugLogin = hasMac && hasUsername; // Case 3: Cả MAC + Username
+        const isStaffMacLogin = hasMac && !hasUsername; // Case 1: Chỉ MAC
+        const isAdminOnlyLogin = !hasMac && hasUsername; // Case 2: Chỉ Username
+        
+        if (isStaffMacLogin) {
+          // Case 1: Chỉ MAC Address → nhân viên, cần check MAC
+          if (macAddress && currentMacAddress) {
+            // Normalize MAC addresses for comparison
+            const normalizeMac = (mac: string) => {
+              return mac.replace(/[:-]/g, "").toUpperCase();
+            };
+            
+            const normalizedInput = normalizeMac(macAddress);
+            const normalizedCurrent = normalizeMac(currentMacAddress);
+            
+            if (normalizedInput !== normalizedCurrent) {
+              return NextResponse.json(
+                {
+                  statusCode: 401,
+                  message: "MAC address không khớp với MAC address hiện tại của máy",
+                  data: null,
+                },
+                { status: 401 },
+              );
+            }
+          }
+          loginType = "mac";
+          if (branchFromCookie === "GO_VAP") {
+            userId = -98; // Staff GO_VAP
+          } else if (branchFromCookie === "TAN_PHU") {
+            userId = -97; // Staff TAN_PHU
+          } else {
+            userId = -99; // Default to admin if branch not recognized
+          }
+          role = "staff";
+        } else if (isAdminDebugLogin) {
+          // Case 3: Cả MAC + Username (admin) → admin debug với tài khoản nhân viên, bypass MAC check
+          // Vẫn giữ role = "staff" và loginType = "mac" để có quyền nhân viên
+          loginType = "mac";
+          if (branchFromCookie === "GO_VAP") {
+            userId = -98; // Staff GO_VAP
+          } else if (branchFromCookie === "TAN_PHU") {
+            userId = -97; // Staff TAN_PHU
+          } else {
+            userId = -99; // Default to admin if branch not recognized
+          }
+          role = "staff";
+        } else if (isAdminOnlyLogin) {
+          // Case 2: Chỉ Username (admin) - không cần MAC, không cần password
+          loginType = loginTypeFromCookie || "username";
+          userId = -99;
+          role = "admin";
+        } else {
+          return NextResponse.json(
+            {
+              statusCode: 400,
+              message: "Vui lòng nhập MAC address hoặc Username",
+              data: null,
+            },
+            { status: 400 },
+          );
+        }
+      } else if (userName === ADMIN_USERNAME && !macAddress && !loginMethod) {
+        // Case 2: Chỉ Username (admin) - fallback khi không có loginMethod
+        loginType = loginTypeFromCookie || "username";
+        userId = -99;
+        role = "admin";
+      } else {
         return NextResponse.json(
           {
             statusCode: 401,
@@ -148,42 +316,32 @@ export async function POST(req: Request, res: Response): Promise<any> {
         );
       }
 
-      // Check loginType to determine if this is admin or staff
-      const loginTypeFromCookie = cookieStore.get("loginType")?.value;
-      const loginType = loginTypeFromCookie || "username";
-
-      console.log("Admin login - loginType from cookie:", loginTypeFromCookie);
-      console.log("Admin login - branch from cookie:", branchFromCookie);
-      console.log("Admin login - final loginType:", loginType);
-      let userId, role;
-
-      if (loginType === "username") {
-        // Admin login
-        userId = -99;
-        role = "admin";
-      } else if (loginType === "mac") {
-        // Staff login - determine userId based on branch
-        if (branchFromCookie === "GO_VAP") {
-          userId = -98; // Staff GO_VAP
-        } else if (branchFromCookie === "TAN_PHU") {
-          userId = -97; // Staff TAN_PHU
-        } else {
-          userId = -99; // Default to admin if branch not recognized
-        }
-        role = "staff";
-      } else {
-        userId = -99; // Default to admin
-        role = "admin";
+      // Determine branch
+      let finalBranch = branchFromCookie;
+      if (loginMethod === "account" && staffData && staffData.branch) {
+        finalBranch = staffData.branch;
+      } else if (!finalBranch) {
+        finalBranch = "GO_VAP";
       }
 
-      const adminData = {
+      const adminData: any = {
         userId: userId,
         id: userId,
-        userName: "gateway_admin",
+        userName: staffUserName,
         role: role,
         loginType: loginType,
-        branch: branchFromCookie,
+        branch: finalBranch,
       };
+
+      // Add staffType and staffId for STAFF/MANAGER types (only for account login)
+      if (loginMethod === "account" && staffData && 
+          (staffData.staffType === "STAFF" || staffData.staffType === "MANAGER" || 
+           staffData.staffType === "SUPER_ADMIN" || staffData.staffType === "BRANCH_ADMIN" ||
+           staffData.staffType === "KITCHEN" || staffData.staffType === "SECURITY" || 
+           staffData.staffType === "CASHIER")) {
+        adminData.staffType = staffData.staffType;
+        adminData.staffId = staffData.id;
+      }
 
       const token = await signJWT(adminData);
       const response = NextResponse.json({
@@ -213,11 +371,11 @@ export async function POST(req: Request, res: Response): Promise<any> {
         path: "/",
       });
 
-      // Set branch cookie nếu chưa có (cho admin đăng nhập bằng username)
-      if (!branchFromCookie) {
+      // Set branch cookie nếu chưa có hoặc đã thay đổi
+      if (!branchFromCookie || (loginMethod === "account" && staffData && staffData.branch)) {
         response.cookies.set({
           name: "branch",
-          value: "GO_VAP",
+          value: finalBranch,
           maxAge: 86400,
           httpOnly: false,
           secure: process.env.NODE_ENV === "production",

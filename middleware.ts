@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import { verifyJWT } from "@/lib/jwt";
+import { db } from "@/lib/db";
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
@@ -65,8 +66,24 @@ export async function middleware(request: NextRequest) {
     "/api/handover-reports/submit-report",
     "/api/handover-reports/materials",
     "/api/staff",
+    "/api/staff/verify-username",
+    "/api/staff/update-password",
+    "/api/staff/my-info",
+    "/api/staff/time-tracking",
+    "/api/staff/salary",
+    "/api/staff/salary/history",
+    "/api/staff/penalties",
+    "/api/manager/my-info",
+    "/api/manager/bonus",
+    "/api/manager/penalty",
     "/admin-login",
+    "/staff-login",
   ];
+
+  // Check for dynamic staff update request route
+  if (request.nextUrl.pathname.match(/^\/api\/staff\/\d+\/update-request$/)) {
+    return response;
+  }
 
   if (publicPaths.includes(request.nextUrl.pathname)) {
     return response;
@@ -141,6 +158,49 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/", request.url));
       }
 
+      // Nếu role là "staff", cho phép truy cập /staff và /manager route
+      if (payload.role === "staff") {
+        const currentPath = request.nextUrl.pathname;
+        const branch = request.cookies.get("branch")?.value;
+        const userName = payload.userName;
+
+        // Kiểm tra staffType từ database để xác định quyền truy cập /manager
+        let isManager = false;
+        try {
+          if (userName && branch) {
+            const staff = await db.$queryRawUnsafe(
+              `SELECT staffType FROM Staff WHERE userName = ? AND branch = ? AND isDeleted = false LIMIT 1`,
+              userName,
+              branch,
+            ) as any[];
+
+            if (staff.length > 0) {
+              const staffType = staff[0].staffType;
+              isManager = staffType === "MANAGER" || staffType === "SUPER_ADMIN" || staffType === "BRANCH_ADMIN";
+            }
+          }
+        } catch (error) {
+          console.error("Error checking staffType in middleware:", error);
+          // Default to regular staff if error
+        }
+
+        // Cho phép tất cả staff truy cập /staff
+        if (currentPath.startsWith("/staff")) {
+          return NextResponse.next();
+        }
+
+        // Chỉ manager mới được truy cập /manager
+        if (currentPath.startsWith("/manager")) {
+          if (!isManager) {
+            return NextResponse.redirect(new URL("/staff", request.url));
+          }
+          return NextResponse.next();
+        }
+
+        // Redirect staff về /staff nếu truy cập route khác
+        return NextResponse.redirect(new URL("/staff", request.url));
+      }
+
       // Kiểm tra quyền truy cập trang dựa trên loại đăng nhập
       const loginType = request.cookies.get("loginType")?.value;
       const currentPath = request.nextUrl.pathname;
@@ -150,7 +210,8 @@ export async function middleware(request: NextRequest) {
         "/admin/gift-rounds",
         "/admin/battle-pass-seasons", 
         "/admin/battle-pass-premium-packages",
-        "/admin/feedback"
+        "/admin/feedback",
+        "/admin/staff"
       ];
       
       // Nếu là trang chỉ dành cho admin và user không phải admin (loginType !== "username")

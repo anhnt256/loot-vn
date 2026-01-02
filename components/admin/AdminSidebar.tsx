@@ -115,6 +115,12 @@ const menuItems = [
     href: "/admin/work-schedule",
     icon: "📅",
   },
+  {
+    title: "Quản lý nhân viên",
+    href: "/admin/staff",
+    icon: "👥",
+    adminOnly: true,
+  },
   // {
   //   title: "Lịch sử giao dịch",
   //   href: "/admin/transactions",
