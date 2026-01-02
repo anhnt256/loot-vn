@@ -145,9 +145,9 @@ const Login = () => {
       setIsDesktopApp(isElectron());
       if (isElectron()) {
         try {
-          const addresses = (await getMacAddresses()) as any;
+          const addresses = await getMacAddresses();
           if (mounted) {
-            const currentMacAddress = addresses[0]?.address as string;
+            const currentMacAddress = addresses[0] || "";
             setMacAddresses(currentMacAddress);
             setCookie("macAddress", currentMacAddress, {
               expires: new Date(expirationDate),

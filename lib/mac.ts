@@ -1,6 +1,6 @@
 interface ElectronWindow extends Window {
   electron: {
-    getMacAddresses: () => Promise<string[]>;
+    getMacAddresses: () => Promise<Array<{ address: string }>>;
   };
 }
 
@@ -12,7 +12,9 @@ declare global {
 
 export const getMacAddresses = async (): Promise<string[]> => {
   if (typeof window !== "undefined" && window.electron) {
-    return await window.electron.getMacAddresses();
+    const result = await window.electron.getMacAddresses();
+    // Convert from [{ address: string }, ...] to string[]
+    return result.map(item => item.address);
   }
   return [];
 };
