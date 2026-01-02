@@ -138,12 +138,13 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
     const { userName, machineName, isAdmin, password, loginMethod, macAddress, currentMacAddress } = JSON.parse(body);
 
-    // Xử lý đăng nhập admin/staff
-    if (isAdmin) {
-      const loginTypeFromCookie = cookieStore.get("loginType")?.value;
-      let loginType = loginTypeFromCookie || "username";
-      let userId, role, staffUserName = ADMIN_USERNAME;
-      let staffData: any = null;
+      // Xử lý đăng nhập admin/staff
+      if (isAdmin) {
+        const loginTypeFromCookie = cookieStore.get("loginType")?.value;
+        let loginType = loginTypeFromCookie || "username";
+        let userId, role, staffUserName = ADMIN_USERNAME;
+        let staffData: any = null;
+        let branchFromMac = branchFromCookie; // Branch từ MAC address trong DB
 
       // Handle account login (username + password)
       if (loginMethod === "account" && password) {
@@ -243,48 +244,86 @@ export async function POST(req: Request, res: Response): Promise<any> {
         const isAdminOnlyLogin = !hasMac && hasUsername; // Case 2: Chỉ Username
         
         if (isStaffMacLogin) {
-          // Case 1: Chỉ MAC Address → nhân viên, cần check MAC
-          if (macAddress && currentMacAddress) {
-            // Normalize MAC addresses for comparison
-            const normalizeMac = (mac: string) => {
-              return mac.replace(/[:-]/g, "").toUpperCase();
-            };
-            
-            const normalizedInput = normalizeMac(macAddress);
-            const normalizedCurrent = normalizeMac(currentMacAddress);
-            
-            if (normalizedInput !== normalizedCurrent) {
-              return NextResponse.json(
-                {
-                  statusCode: 401,
-                  message: "MAC address không khớp với MAC address hiện tại của máy",
-                  data: null,
-                },
-                { status: 401 },
-              );
-            }
+          // Case 1: Chỉ MAC Address trong admin-login → vẫn là admin
+          // Bắt buộc phải có currentMacAddress để verify
+          if (!currentMacAddress || currentMacAddress.trim() === "") {
+            return NextResponse.json(
+              {
+                statusCode: 401,
+                message: "Không thể lấy MAC address hiện tại của máy",
+                data: null,
+              },
+              { status: 401 },
+            );
           }
+
+          // Normalize MAC addresses for comparison
+          const normalizeMac = (mac: string) => {
+            return mac.replace(/[:-]/g, "").toUpperCase();
+          };
+          
+          const normalizedInput = normalizeMac(macAddress);
+          const normalizedCurrent = normalizeMac(currentMacAddress);
+          
+          if (normalizedInput !== normalizedCurrent) {
+            return NextResponse.json(
+              {
+                statusCode: 401,
+                message: "MAC address không khớp với MAC address hiện tại của máy",
+                data: null,
+              },
+              { status: 401 },
+            );
+          }
+
+          // Check MAC address từ DB và lấy branch
+          const normalizedMacForDB = macAddress.replaceAll(":", "-").toUpperCase();
+          const computer = await db.$queryRawUnsafe<Array<{
+            branch: string;
+            name: string;
+          }>>(
+            `SELECT branch, name FROM Computer WHERE localIp = ? LIMIT 1`,
+            normalizedMacForDB,
+          );
+
+          if (!computer || computer.length === 0) {
+            return NextResponse.json(
+              {
+                statusCode: 401,
+                message: "MAC address không được nhận diện trong hệ thống",
+                data: null,
+              },
+              { status: 401 },
+            );
+          }
+
+          const branchFromDB = computer[0].branch;
+          branchFromMac = branchFromDB; // Lưu branch từ DB
           loginType = "mac";
-          if (branchFromCookie === "GO_VAP") {
-            userId = -98; // Staff GO_VAP
-          } else if (branchFromCookie === "TAN_PHU") {
-            userId = -97; // Staff TAN_PHU
-          } else {
-            userId = -99; // Default to admin if branch not recognized
-          }
-          role = "staff";
+          userId = -99; // Admin user ID
+          role = "admin"; // Admin role cho admin-login
         } else if (isAdminDebugLogin) {
-          // Case 3: Cả MAC + Username (admin) → admin debug với tài khoản nhân viên, bypass MAC check
-          // Vẫn giữ role = "staff" và loginType = "mac" để có quyền nhân viên
-          loginType = "mac";
-          if (branchFromCookie === "GO_VAP") {
-            userId = -98; // Staff GO_VAP
-          } else if (branchFromCookie === "TAN_PHU") {
-            userId = -97; // Staff TAN_PHU
-          } else {
-            userId = -99; // Default to admin if branch not recognized
+          // Case 3: Cả MAC + Username (admin) → admin
+          // Bypass MAC check vì đây là admin debug login
+          // Chỉ cần check MAC từ DB để lấy branch (nếu có)
+          const normalizedMacForDB = macAddress.replaceAll(":", "-").toUpperCase();
+          const computer = await db.$queryRawUnsafe<Array<{
+            branch: string;
+            name: string;
+          }>>(
+            `SELECT branch, name FROM Computer WHERE localIp = ? LIMIT 1`,
+            normalizedMacForDB,
+          );
+
+          let branchFromDB = branchFromCookie;
+          if (computer && computer.length > 0) {
+            branchFromDB = computer[0].branch;
+            branchFromMac = branchFromDB; // Lưu branch từ DB
           }
-          role = "staff";
+
+          loginType = "mac";
+          userId = -99; // Admin user ID
+          role = "admin"; // Admin role cho admin-login
         } else if (isAdminOnlyLogin) {
           // Case 2: Chỉ Username (admin) - không cần MAC, không cần password
           loginType = loginTypeFromCookie || "username";
@@ -320,6 +359,9 @@ export async function POST(req: Request, res: Response): Promise<any> {
       let finalBranch = branchFromCookie;
       if (loginMethod === "account" && staffData && staffData.branch) {
         finalBranch = staffData.branch;
+      } else if ((loginMethod === "mac" || loginType === "mac") && branchFromMac) {
+        // Branch đã được set từ DB ở trên
+        finalBranch = branchFromMac;
       } else if (!finalBranch) {
         finalBranch = "GO_VAP";
       }
@@ -371,8 +413,8 @@ export async function POST(req: Request, res: Response): Promise<any> {
         path: "/",
       });
 
-      // Set branch cookie nếu chưa có hoặc đã thay đổi
-      if (!branchFromCookie || (loginMethod === "account" && staffData && staffData.branch)) {
+      // Set branch cookie nếu chưa có hoặc đã thay đổi hoặc login bằng MAC
+      if (!branchFromCookie || (loginMethod === "account" && staffData && staffData.branch) || (loginMethod === "mac" && branchFromMac)) {
         response.cookies.set({
           name: "branch",
           value: finalBranch || "GO_VAP",

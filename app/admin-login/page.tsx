@@ -18,11 +18,7 @@ import { getMacAddresses } from "@/lib/mac";
 const expirationDuration = 1;
 const expirationDate = dayjs().add(expirationDuration, "day").format();
 
-// MAC address to branch mapping with type safety
-const ADMIN_MAC_MAPPING: Record<string, string> = {
-  "00-25-D8-B9-27-0C": "GO_VAP",
-  "D8-BB-C1-5D-0A-DD": "TAN_PHU",
-} as const;
+// MAC address validation sẽ được BE xử lý từ DB
 
 // Admin username from env
 const ADMIN_USERNAME = process.env.NEXT_PUBLIC_ADMIN_USERNAME;
@@ -31,24 +27,9 @@ const AdminLogin = () => {
   const [userName, setUsername] = useState<string>("");
   const [macAddress, setMacAddress] = useState<string>("");
   const [currentMacAddress, setCurrentMacAddress] = useState<string>("");
-  const [displayMacAddress, setDisplayMacAddress] = useState<string>("");
   const [pageLoading, setPageLoading] = useState<boolean>(false);
   const loginMutation = useLogin();
   const router = useRouter();
-
-  useEffect(() => {
-    const fetchMacAddress = async () => {
-      try {
-        const macAddresses = await getMacAddresses();
-        const mac = macAddresses[0] || "";
-        setDisplayMacAddress(mac);
-      } catch (error) {
-        console.error("Error getting MAC address:", error);
-        setDisplayMacAddress("");
-      }
-    };
-    fetchMacAddress();
-  }, []);
 
   const handleLogin = useCallback(
     async (isAutoLogin: boolean = false) => {
@@ -63,39 +44,20 @@ const AdminLogin = () => {
       const isStaffMacLogin = hasMac && !hasUsername; // Case 1: Chỉ MAC
       const isAdminOnlyLogin = !hasMac && hasUsername && isAdminUsername; // Case 2: Chỉ Username (admin)
 
-      // Validation
+      // Validation - chỉ check basic, để BE verify MAC address từ DB
         if (isStaffMacLogin) {
-          // Case 1: Chỉ MAC Address → nhân viên, cần check MAC
-          // Get current MAC address
+          // Case 1: Chỉ MAC Address → nhân viên, cần get current MAC để gửi lên BE
           try {
             const macAddresses = await getMacAddresses();
             const currentMac = macAddresses[0] || "";
             setCurrentMacAddress(currentMac);
-            
-            // Normalize MAC addresses for comparison (remove colons/dashes, uppercase)
-            const normalizeMac = (mac: string) => {
-              return mac.replace(/[:-]/g, "").toUpperCase();
-            };
-            
-            const normalizedInput = normalizeMac(macAddress);
-            const normalizedCurrent = normalizeMac(currentMac);
-            
-            if (normalizedInput !== normalizedCurrent) {
-              toast.error("MAC address không khớp với MAC address hiện tại của máy!");
-              return;
-            }
           } catch (error) {
             console.error("Error getting MAC address:", error);
             toast.error("Không thể lấy MAC address hiện tại. Vui lòng thử lại.");
             return;
           }
-          
-          if (!isAutoLogin && !ADMIN_MAC_MAPPING[macAddress]) {
-            toast.error("MAC address không được nhận diện!");
-            return;
-          }
         } else if (isAdminDebugLogin) {
-          // Case 3: Cả MAC + Username (admin) → admin debug với tài khoản nhân viên, bypass MAC check
+          // Case 3: Cả MAC + Username (admin) → admin debug với tài khoản nhân viên
           try {
             const macAddresses = await getMacAddresses();
             const currentMac = macAddresses[0] || "";
@@ -126,15 +88,10 @@ const AdminLogin = () => {
         const isStaffMacLogin = hasMac && !hasUsername; // Case 1
         const isAdminOnlyLogin = !hasMac && hasUsername && isAdminUsername; // Case 2
 
-        // Set cookies based on login case
+        // Set cookies based on login case - branch sẽ được BE set từ DB
           if (isStaffMacLogin || isAdminDebugLogin) {
             // Case 1 và Case 3: đều dùng loginType = "mac" để giữ quyền nhân viên
-            if (macAddress && ADMIN_MAC_MAPPING[macAddress]) {
-              setCookie("branch", ADMIN_MAC_MAPPING[macAddress], {
-                path: "/",
-                expires: new Date(expirationDate),
-              });
-            }
+            // Branch sẽ được BE set từ DB dựa trên MAC address
             setCookie("loginType", "mac", {
               path: "/",
               expires: new Date(expirationDate),
@@ -151,12 +108,24 @@ const AdminLogin = () => {
           });
         }
 
+        // Đảm bảo currentMacAddress được gửi lên cho case 1
+        let finalCurrentMacAddress = currentMacAddress;
+        if (isStaffMacLogin && !finalCurrentMacAddress) {
+          // Nếu case 1 mà chưa có currentMacAddress, thử lấy lại
+          try {
+            const macAddresses = await getMacAddresses();
+            finalCurrentMacAddress = macAddresses[0] || "";
+          } catch (error) {
+            console.error("Error getting MAC address:", error);
+          }
+        }
+
         const result = await loginMutation.mutateAsync({
           userName: isAutoLogin ? (ADMIN_USERNAME || "") : (userName || ""),
           isAdmin: true,
           loginMethod: "mac",
           macAddress: macAddress || undefined,
-          currentMacAddress: currentMacAddress || undefined,
+          currentMacAddress: finalCurrentMacAddress || undefined,
         });
 
         const { statusCode, message } = result || {};
@@ -201,9 +170,6 @@ const AdminLogin = () => {
 
             <div className="text-center space-y-2">
               <h1 className="text-2xl font-bold text-white">Admin Portal</h1>
-              <p className="text-gray-400 text-sm">
-                {displayMacAddress || "Loading MAC address..."}
-              </p>
             </div>
 
             <div className="w-full space-y-4">
