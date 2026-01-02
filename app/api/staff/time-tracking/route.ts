@@ -299,7 +299,9 @@ export async function GET(request: NextRequest) {
 
     try {
       // Get today's record (only if viewing current month)
-      if (dayjs(today).isBetween(startDate, endDate, "day", "[]")) {
+      const todayDayjs = dayjs(today);
+      if (todayDayjs.isAfter(startDate) && todayDayjs.isBefore(endDate) || 
+          todayDayjs.isSame(startDate, "day") || todayDayjs.isSame(endDate, "day")) {
         todayRecord = await db.$queryRawUnsafe(
           `SELECT * FROM StaffTimeTracking 
            WHERE staffId = ? AND DATE(checkInTime) = ?

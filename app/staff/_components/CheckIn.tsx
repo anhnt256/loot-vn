@@ -222,7 +222,7 @@ export default function CheckIn({ staffId, month, year }: CheckInProps) {
                 danger
                 size="large"
                 icon={<Square size={20} />}
-                onClick={handleCheckOut}
+                onClick={() => handleCheckOut()}
                 loading={loading}
                 block
                 className="max-w-xs mx-auto"

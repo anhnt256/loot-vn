@@ -274,7 +274,10 @@ export default function IncomeExpenseManagement() {
             <InputNumber
               min={0}
               formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-              parser={(value) => value!.replace(/\$\s?|(,*)/g, "")}
+              parser={(value) => {
+                const parsed = value?.replace(/\$\s?|(,*)/g, "") || "0";
+                return (parseFloat(parsed) || 0) as any;
+              }}
               className="w-full"
               placeholder="Nhập số tiền"
             />

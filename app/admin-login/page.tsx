@@ -54,7 +54,7 @@ const AdminLogin = () => {
           // Get current MAC address
           try {
             const macAddresses = await getMacAddresses();
-            const currentMac = macAddresses[0]?.address || "";
+            const currentMac = macAddresses[0] || "";
             setCurrentMacAddress(currentMac);
             
             // Normalize MAC addresses for comparison (remove colons/dashes, uppercase)
@@ -83,7 +83,7 @@ const AdminLogin = () => {
           // Case 3: Cả MAC + Username (admin) → admin debug với tài khoản nhân viên, bypass MAC check
           try {
             const macAddresses = await getMacAddresses();
-            const currentMac = macAddresses[0]?.address || "";
+            const currentMac = macAddresses[0] || "";
             setCurrentMacAddress(currentMac);
           } catch (error) {
             console.error("Error getting MAC address:", error);
@@ -137,7 +137,7 @@ const AdminLogin = () => {
         }
 
         const result = await loginMutation.mutateAsync({
-          userName: isAutoLogin ? ADMIN_USERNAME : userName,
+          userName: isAutoLogin ? (ADMIN_USERNAME || "") : (userName || ""),
           isAdmin: true,
           loginMethod: "mac",
           macAddress: macAddress || undefined,

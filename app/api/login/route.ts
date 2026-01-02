@@ -375,7 +375,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
       if (!branchFromCookie || (loginMethod === "account" && staffData && staffData.branch)) {
         response.cookies.set({
           name: "branch",
-          value: finalBranch,
+          value: finalBranch || "GO_VAP",
           maxAge: 86400,
           httpOnly: false,
           secure: process.env.NODE_ENV === "production",

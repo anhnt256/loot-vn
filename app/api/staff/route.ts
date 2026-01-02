@@ -15,7 +15,7 @@ function hashPassword(password: string): string {
 
 // Helper function to check if password is reset required
 // This can be used in login logic to force password change
-export function isPasswordResetRequired(
+function isPasswordResetRequired(
   hashedPassword: string,
   staffId: number,
 ): boolean {
