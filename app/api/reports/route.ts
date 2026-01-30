@@ -201,6 +201,99 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    // Check if revenue + service money meets threshold and create bonuses
+    const totalRevenue = parseFloat(playtimeMoney || 0) + parseFloat(serviceMoney || 0);
+    
+    // Get threshold from env based on branch and shift
+    const shiftUpper = shift.toUpperCase();
+    const branchUpper = branch.toUpperCase();
+    
+    let threshold = 0;
+    if (shiftUpper === "SANG") {
+      threshold = parseFloat(
+        process.env[`NEXT_PUBLIC_MORNING_TARGET_${branchUpper}`] || "0"
+      );
+    } else if (shiftUpper === "CHIEU") {
+      threshold = parseFloat(
+        process.env[`NEXT_PUBLIC_AFTERNOON_TARGET_${branchUpper}`] || "0"
+      );
+    } else if (shiftUpper === "TOI") {
+      threshold = parseFloat(
+        process.env[`NEXT_PUBLIC_EVENING_TARGET_${branchUpper}`] || "0"
+      );
+    }
+
+    console.log("Checking bonus eligibility:", {
+      totalRevenue,
+      threshold,
+      shift: shiftUpper,
+      branch: branchUpper,
+    });
+
+    // If threshold is met, create bonuses for counter and kitchen staff
+    if (threshold > 0 && totalRevenue >= threshold) {
+      const nowVN = getCurrentTimeVNDB();
+      // Use dateVN with time set to end of day for rewardDate
+      const rewardDate = `${dateVN} 23:59:59`;
+      const bonusAmount = parseFloat(process.env.NEXT_PUBLIC_BONUS || "0");
+      const reason = `Thưởng đạt doanh số ca ${shiftUpper} ngày ${dateVN}`;
+      const description = `Thưởng đạt chỉ tiêu doanh thu ca ${shiftUpper} ngày ${dateVN}. Tổng doanh thu + dịch vụ: ${totalRevenue.toLocaleString('vi-VN')} VNĐ.`;
+
+      try {
+        // Verify staff exists and belongs to branch before creating bonus
+        const counterStaff = (await db.$queryRawUnsafe(
+          `SELECT id FROM Staff WHERE id = ? AND branch = ? AND isDeleted = false`,
+          parseInt(counterStaffId),
+          branch,
+        )) as any[];
+
+        const kitchenStaff = (await db.$queryRawUnsafe(
+          `SELECT id FROM Staff WHERE id = ? AND branch = ? AND isDeleted = false`,
+          parseInt(kitchenStaffId),
+          branch,
+        )) as any[];
+
+        // Create bonus for counter staff (Quầy) if exists
+        if (counterStaff.length > 0) {
+          await db.$executeRawUnsafe(
+            `INSERT INTO StaffBonus (staffId, amount, reason, description, rewardDate, status, createdAt, updatedAt)
+             VALUES (?, ?, ?, ?, ?, 'PENDING', ?, ?)`,
+            parseInt(counterStaffId),
+            bonusAmount,
+            reason,
+            description,
+            rewardDate,
+            nowVN,
+            nowVN,
+          );
+          console.log(`Created bonus for counter staff ${counterStaffId} with amount ${bonusAmount}`);
+        } else {
+          console.warn(`Counter staff ${counterStaffId} not found in branch ${branch}`);
+        }
+
+        // Create bonus for kitchen staff (Bếp) if exists
+        if (kitchenStaff.length > 0) {
+          await db.$executeRawUnsafe(
+            `INSERT INTO StaffBonus (staffId, amount, reason, description, rewardDate, status, createdAt, updatedAt)
+             VALUES (?, ?, ?, ?, ?, 'PENDING', ?, ?)`,
+            parseInt(kitchenStaffId),
+            bonusAmount,
+            reason,
+            description,
+            rewardDate,
+            nowVN,
+            nowVN,
+          );
+          console.log(`Created bonus for kitchen staff ${kitchenStaffId} with amount ${bonusAmount}`);
+        } else {
+          console.warn(`Kitchen staff ${kitchenStaffId} not found in branch ${branch}`);
+        }
+      } catch (bonusError) {
+        console.error("Error creating bonuses:", bonusError);
+        // Don't fail the report creation if bonus creation fails
+      }
+    }
+
     return NextResponse.json({
       success: true,
       data: {
@@ -244,7 +337,15 @@ export async function GET(request: NextRequest) {
     `;
 
     if (date) {
+      // Nếu có filter date thì lấy theo ngày đó
       query += ` AND DATE(r.date) = '${date}'`;
+    } else {
+      // Nếu không có filter date thì chỉ lấy 15 ngày gần nhất
+      const currentDate = getCurrentTimeVNISO().split("T")[0];
+      const fifteenDaysAgo = new Date(currentDate);
+      fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15);
+      const fifteenDaysAgoStr = fifteenDaysAgo.toISOString().split("T")[0];
+      query += ` AND DATE(r.date) >= '${fifteenDaysAgoStr}'`;
     }
 
     if (shift) {

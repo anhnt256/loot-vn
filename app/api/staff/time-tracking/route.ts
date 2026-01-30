@@ -5,136 +5,20 @@ import { verifyJWT } from "@/lib/jwt";
 import { getCurrentTimeVNISO, getCurrentTimeVNDB } from "@/lib/timezone-utils";
 import dayjs from "@/lib/dayjs";
 
-// Set to true to use mock data for UI testing
-const USE_MOCK_DATA = true;
-
 // GET: Lấy lịch sử time tracking
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const month = searchParams.get("month");
-  const year = searchParams.get("year");
-  const dateParam = searchParams.get("date");
-  const staffId = searchParams.get("staffId");
-
-  // Mock data for UI testing
-  if (USE_MOCK_DATA) {
-    // If date parameter provided, return today's records with stats
-    if (dateParam && staffId) {
-      const now = dayjs();
-      const todayRecords = [
-        {
-          id: 1,
-          checkInTime: now.set("hour", 8).set("minute", 0).toISOString(),
-          checkOutTime: null,
-          totalHours: null,
-          status: "WORKING",
-        },
-        {
-          id: 2,
-          checkInTime: now.set("hour", 6).set("minute", 30).toISOString(),
-          checkOutTime: now.set("hour", 7).set("minute", 45).toISOString(),
-          totalHours: 1.25,
-          status: "COMPLETED",
-        },
-      ];
-
-      // Calculate stats
-      const todayTotal =
-        1.25 + now.diff(now.set("hour", 8).set("minute", 0), "hour", true); // 1.25 + current working hours
-      const weekTotal = 45.5; // Mock data
-      const monthTotal = 176.5; // Mock data
-
-      return NextResponse.json({
-        success: true,
-        data: {
-          todayRecords: todayRecords,
-          stats: {
-            todayHours: todayTotal,
-            weekHours: weekTotal,
-            monthHours: monthTotal,
-          },
-        },
-      });
-    }
-
-    const now = dayjs();
-    const selectedMonth = month ? parseInt(month) : now.month() + 1;
-    const selectedYear = year ? parseInt(year) : now.year();
-
-    // Generate history for the selected month
-    const startOfMonth = dayjs(
-      `${selectedYear}-${String(selectedMonth).padStart(2, "0")}-01`,
-    );
-    const daysInMonth = startOfMonth.daysInMonth();
-    const history = [];
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = startOfMonth.date(day);
-      const checkIn = date
-        .set("hour", 8 + Math.floor(Math.random() * 2))
-        .set("minute", Math.floor(Math.random() * 30));
-      const checkOut = checkIn.add(8 + Math.random() * 2, "hour");
-      const hours = parseFloat((8 + Math.random() * 2).toFixed(2));
-      const isToday = date.isSame(now, "day");
-
-      history.push({
-        id: day,
-        date: date.format("YYYY-MM-DD"),
-        checkInTime: checkIn.toISOString(),
-        checkOutTime: isToday ? null : checkOut.toISOString(),
-        totalHours: isToday
-          ? parseFloat(now.diff(checkIn, "hour", true).toFixed(2))
-          : hours,
-        status: isToday ? "WORKING" : "COMPLETED",
-      });
-    }
-
-    const todayCheckIn = now.set("hour", 8).set("minute", 0).toISOString();
-
-    // Calculate month hours
-    const monthHours = history.reduce(
-      (sum, record) => sum + (record.totalHours || 0),
-      0,
-    );
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        todayRecord:
-          now.month() + 1 === selectedMonth && now.year() === selectedYear
-            ? {
-                id: 1,
-                staffId: 1,
-                checkInTime: todayCheckIn,
-                checkOutTime: null,
-                createdAt: todayCheckIn,
-                updatedAt: todayCheckIn,
-              }
-            : null,
-        history: history.reverse(), // Show oldest first
-        stats: {
-          todayHours:
-            now.month() + 1 === selectedMonth && now.year() === selectedYear
-              ? parseFloat(
-                  now.diff(dayjs(todayCheckIn), "hour", true).toFixed(2),
-                )
-              : 0,
-          weekHours: 0, // Not used for monthly view
-          monthHours: parseFloat(monthHours.toFixed(2)),
-        },
-      },
-    });
-  }
-
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value;
+    // Only check staffToken for staff APIs
+    const token = cookieStore.get("staffToken")?.value;
 
     if (!token) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
+      const response = NextResponse.json(
+        { success: false, error: "Unauthorized - Please login again" },
         { status: 401 },
       );
+      response.headers.set("X-Redirect-To", "/staff-login");
+      return response;
     }
 
     const payload = await verifyJWT(token);
@@ -175,53 +59,72 @@ export async function GET(request: NextRequest) {
           .endOf("month")
           .format("YYYY-MM-DD");
 
-        // Get today's records
+        // Get today's records - ensure we only get records from the specified date
+        // Use DATE() function to compare dates correctly
         const todayRecords = (await db.$queryRawUnsafe(
           `SELECT 
             id,
             checkInTime,
             checkOutTime,
             CASE 
-              WHEN checkOutTime IS NOT NULL THEN 
-                TIMESTAMPDIFF(HOUR, checkInTime, checkOutTime) + 
-                TIMESTAMPDIFF(MINUTE, checkInTime, checkOutTime) % 60 / 60.0
-              ELSE NULL
-            END as totalHours,
-            CASE 
-              WHEN checkOutTime IS NULL THEN 'WORKING'
-              ELSE 'COMPLETED'
+              WHEN checkOutTime IS NOT NULL THEN 'COMPLETED'
+              ELSE 'WORKING'
             END as status
           FROM StaffTimeTracking 
-          WHERE staffId = ? AND DATE(checkInTime) = ?
+          WHERE staffId = ? AND DATE(checkInTime) = DATE(?)
           ORDER BY checkInTime DESC`,
           parseInt(staffId),
           dateParam,
         )) as any[];
+        
+        console.log(`[DEBUG] Query dateParam: ${dateParam}, Found ${todayRecords.length} records`);
 
         // Calculate today's total hours
+        // DB stores datetime as VN time, but MySQL/Prisma returns as ISO UTC string or Date object
+        // If checkOutTime is null (still working), set it to current time before calculation
         let todayHours = 0;
+        const now = dayjs().tz("Asia/Ho_Chi_Minh");
+        
         todayRecords.forEach((record: any) => {
-          if (record.checkOutTime) {
-            todayHours += record.totalHours || 0;
-          } else {
-            // Still working - calculate from now
-            const checkIn = dayjs(record.checkInTime);
-            const now = dayjs(getCurrentTimeVNISO());
-            todayHours += now.diff(checkIn, "hour", true);
+          // Parse checkInTime - handle both string and Date object
+          let checkInStr = record.checkInTime;
+          if (checkInStr instanceof Date) {
+            checkInStr = checkInStr.toISOString();
           }
+          if (typeof checkInStr !== 'string') {
+            checkInStr = String(checkInStr);
+          }
+          // Extract "YYYY-MM-DDTHH:mm:ss" from ISO string (remove .000Z)
+          const checkInDateStr = checkInStr.split('.')[0]; // "2026-01-12T02:40:55"
+          const checkIn = dayjs(checkInDateStr).utcOffset(7, true); // Parse as VN time
+          
+          // If checkOutTime is null, set it to current time
+          let checkOut = now;
+          if (record.checkOutTime) {
+            let checkOutStr = record.checkOutTime;
+            if (checkOutStr instanceof Date) {
+              checkOutStr = checkOutStr.toISOString();
+            }
+            if (typeof checkOutStr !== 'string') {
+              checkOutStr = String(checkOutStr);
+            }
+            const checkOutDateStr = checkOutStr.split('.')[0];
+            checkOut = dayjs(checkOutDateStr).utcOffset(7, true);
+          }
+          
+          // Calculate diff: checkOut - checkIn
+          const diffHours = checkOut.diff(checkIn, "hour", true);
+          const hours = Math.abs(diffHours);
+          todayHours += hours;
+          console.log(`[DEBUG] ${record.checkOutTime ? 'Completed' : 'Working'}: ${checkInStr} -> ${record.checkOutTime || 'now'} = ${hours.toFixed(2)}h (${(hours * 60).toFixed(0)} min)`);
         });
+        console.log(`[DEBUG] Total todayHours: ${todayHours.toFixed(2)}h (${(todayHours * 60).toFixed(0)} min), Records: ${todayRecords.length}`);
 
         // Get week's total hours
         const weekRecords = (await db.$queryRawUnsafe(
           `SELECT 
             checkInTime,
-            checkOutTime,
-            CASE 
-              WHEN checkOutTime IS NOT NULL THEN 
-                TIMESTAMPDIFF(HOUR, checkInTime, checkOutTime) + 
-                TIMESTAMPDIFF(MINUTE, checkInTime, checkOutTime) % 60 / 60.0
-              ELSE NULL
-            END as totalHours
+            checkOutTime
           FROM StaffTimeTracking 
           WHERE staffId = ? AND DATE(checkInTime) >= ? AND DATE(checkInTime) <= ?`,
           parseInt(staffId),
@@ -230,28 +133,43 @@ export async function GET(request: NextRequest) {
         )) as any[];
 
         let weekHours = 0;
+        const nowWeek = dayjs().tz("Asia/Ho_Chi_Minh");
         weekRecords.forEach((record: any) => {
-          if (record.checkOutTime) {
-            weekHours += record.totalHours || 0;
-          } else {
-            // Still working - calculate from now
-            const checkIn = dayjs(record.checkInTime);
-            const now = dayjs(getCurrentTimeVNISO());
-            weekHours += now.diff(checkIn, "hour", true);
+          // Parse checkInTime
+          let checkInStr = record.checkInTime;
+          if (checkInStr instanceof Date) {
+            checkInStr = checkInStr.toISOString();
           }
+          if (typeof checkInStr !== 'string') {
+            checkInStr = String(checkInStr);
+          }
+          const checkInDateStr = checkInStr.split('.')[0];
+          const checkIn = dayjs(checkInDateStr).utcOffset(7, true);
+          
+          // If checkOutTime is null, set it to current time
+          let checkOut = nowWeek;
+          if (record.checkOutTime) {
+            let checkOutStr = record.checkOutTime;
+            if (checkOutStr instanceof Date) {
+              checkOutStr = checkOutStr.toISOString();
+            }
+            if (typeof checkOutStr !== 'string') {
+              checkOutStr = String(checkOutStr);
+            }
+            const checkOutDateStr = checkOutStr.split('.')[0];
+            checkOut = dayjs(checkOutDateStr).utcOffset(7, true);
+          }
+          
+          // Calculate diff
+          const diffHours = checkOut.diff(checkIn, "hour", true);
+          weekHours += Math.abs(diffHours);
         });
 
         // Get month's total hours
         const monthRecords = (await db.$queryRawUnsafe(
           `SELECT 
             checkInTime,
-            checkOutTime,
-            CASE 
-              WHEN checkOutTime IS NOT NULL THEN 
-                TIMESTAMPDIFF(HOUR, checkInTime, checkOutTime) + 
-                TIMESTAMPDIFF(MINUTE, checkInTime, checkOutTime) % 60 / 60.0
-              ELSE NULL
-            END as totalHours
+            checkOutTime
           FROM StaffTimeTracking 
           WHERE staffId = ? AND DATE(checkInTime) >= ? AND DATE(checkInTime) <= ?`,
           parseInt(staffId),
@@ -260,15 +178,36 @@ export async function GET(request: NextRequest) {
         )) as any[];
 
         let monthHours = 0;
+        const nowMonth = dayjs().tz("Asia/Ho_Chi_Minh");
         monthRecords.forEach((record: any) => {
-          if (record.checkOutTime) {
-            monthHours += record.totalHours || 0;
-          } else {
-            // Still working - calculate from now
-            const checkIn = dayjs(record.checkInTime);
-            const now = dayjs(getCurrentTimeVNISO());
-            monthHours += now.diff(checkIn, "hour", true);
+          // Parse checkInTime
+          let checkInStr = record.checkInTime;
+          if (checkInStr instanceof Date) {
+            checkInStr = checkInStr.toISOString();
           }
+          if (typeof checkInStr !== 'string') {
+            checkInStr = String(checkInStr);
+          }
+          const checkInDateStr = checkInStr.split('.')[0];
+          const checkIn = dayjs(checkInDateStr).utcOffset(7, true);
+          
+          // If checkOutTime is null, set it to current time
+          let checkOut = nowMonth;
+          if (record.checkOutTime) {
+            let checkOutStr = record.checkOutTime;
+            if (checkOutStr instanceof Date) {
+              checkOutStr = checkOutStr.toISOString();
+            }
+            if (typeof checkOutStr !== 'string') {
+              checkOutStr = String(checkOutStr);
+            }
+            const checkOutDateStr = checkOutStr.split('.')[0];
+            checkOut = dayjs(checkOutDateStr).utcOffset(7, true);
+          }
+          
+          // Calculate diff
+          const diffHours = checkOut.diff(checkIn, "hour", true);
+          monthHours += Math.abs(diffHours);
         });
 
         return NextResponse.json({
@@ -349,18 +288,12 @@ export async function GET(request: NextRequest) {
       }
 
       // Get history for the selected month
-      history = (await db.$queryRawUnsafe(
+      const rawHistory = (await db.$queryRawUnsafe(
         `SELECT 
           id,
           DATE(checkInTime) as date,
           checkInTime,
           checkOutTime,
-          CASE 
-            WHEN checkOutTime IS NOT NULL THEN 
-              TIMESTAMPDIFF(HOUR, checkInTime, checkOutTime) + 
-              TIMESTAMPDIFF(MINUTE, checkInTime, checkOutTime) % 60 / 60.0
-            ELSE NULL
-          END as totalHours,
           CASE 
             WHEN checkOutTime IS NULL THEN 'WORKING'
             ELSE 'COMPLETED'
@@ -372,6 +305,44 @@ export async function GET(request: NextRequest) {
         startDate,
         endDate,
       )) as any[];
+
+      // Calculate totalHours for each record using dayjs
+      const nowMonth = dayjs().tz("Asia/Ho_Chi_Minh");
+      history = rawHistory.map((record: any) => {
+        // Parse checkInTime
+        let checkInStr = record.checkInTime;
+        if (checkInStr instanceof Date) {
+          checkInStr = checkInStr.toISOString();
+        }
+        if (typeof checkInStr !== 'string') {
+          checkInStr = String(checkInStr);
+        }
+        const checkInDateStr = checkInStr.split('.')[0];
+        const checkIn = dayjs(checkInDateStr).utcOffset(7, true);
+        
+        // If checkOutTime is null, set it to current time
+        let checkOut = nowMonth;
+        if (record.checkOutTime) {
+          let checkOutStr = record.checkOutTime;
+          if (checkOutStr instanceof Date) {
+            checkOutStr = checkOutStr.toISOString();
+          }
+          if (typeof checkOutStr !== 'string') {
+            checkOutStr = String(checkOutStr);
+          }
+          const checkOutDateStr = checkOutStr.split('.')[0];
+          checkOut = dayjs(checkOutDateStr).utcOffset(7, true);
+        }
+        
+        // Calculate totalHours
+        const diffHours = checkOut.diff(checkIn, "hour", true);
+        const totalHours = Math.abs(diffHours);
+        
+        return {
+          ...record,
+          totalHours: parseFloat(totalHours.toFixed(2)), // Ensure it's a number
+        };
+      });
 
       // Calculate month hours
       monthRecords = history;
@@ -395,27 +366,52 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate stats
-    const todayHours = todayRecord[0]?.checkOutTime
-      ? parseFloat(
-          (
-            (new Date(todayRecord[0].checkOutTime).getTime() -
-              new Date(todayRecord[0].checkInTime).getTime()) /
-            (1000 * 60 * 60)
-          ).toFixed(2),
-        )
-      : todayRecord[0]
-        ? parseFloat(
-            (
-              (new Date().getTime() -
-                new Date(todayRecord[0].checkInTime).getTime()) /
-              (1000 * 60 * 60)
-            ).toFixed(2),
-          )
-        : 0;
+    // Calculate todayHours from all records in today (not just todayRecord[0])
+    const todayDate = dayjs(getCurrentTimeVNISO()).format("YYYY-MM-DD");
+    const nowStats = dayjs().tz("Asia/Ho_Chi_Minh");
+    let todayHours = 0;
+    
+    // Get all records from today
+    const todayRecordsFromHistory = history.filter((record: any) => {
+      const recordDate = dayjs(record.date).format("YYYY-MM-DD");
+      return recordDate === todayDate;
+    });
+    
+    // Calculate total hours from all today's records
+    todayRecordsFromHistory.forEach((record: any) => {
+      // Parse checkInTime
+      let checkInStr = record.checkInTime;
+      if (checkInStr instanceof Date) {
+        checkInStr = checkInStr.toISOString();
+      }
+      if (typeof checkInStr !== 'string') {
+        checkInStr = String(checkInStr);
+      }
+      const checkInDateStr = checkInStr.split('.')[0];
+      const checkIn = dayjs(checkInDateStr).utcOffset(7, true);
+      
+      // If checkOutTime is null, set it to current time
+      let checkOut = nowStats;
+      if (record.checkOutTime) {
+        let checkOutStr = record.checkOutTime;
+        if (checkOutStr instanceof Date) {
+          checkOutStr = checkOutStr.toISOString();
+        }
+        if (typeof checkOutStr !== 'string') {
+          checkOutStr = String(checkOutStr);
+        }
+        const checkOutDateStr = checkOutStr.split('.')[0];
+        checkOut = dayjs(checkOutDateStr).utcOffset(7, true);
+      }
+      
+      // Calculate diff
+      const diffHours = checkOut.diff(checkIn, "hour", true);
+      todayHours += Math.abs(diffHours);
+    });
 
     const monthHours = monthRecords.reduce((total, record) => {
       const hours = record.totalHours || 0;
-      return total + hours;
+      return total + Math.abs(hours); // Ensure positive
     }, 0);
 
     return NextResponse.json({
@@ -446,13 +442,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value;
+    // Only check staffToken for staff APIs
+    const token = cookieStore.get("staffToken")?.value;
 
     if (!token) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
+      const response = NextResponse.json(
+        { success: false, error: "Unauthorized - Please login again" },
         { status: 401 },
       );
+      response.headers.set("X-Redirect-To", "/staff-login");
+      return response;
     }
 
     const payload = await verifyJWT(token);
@@ -475,7 +474,25 @@ export async function POST(request: NextRequest) {
 
     try {
       if (action === "checkin") {
-        // Allow multiple check-ins per day - just create new record with Vietnam time
+        // Check if there's already a working session (no checkout)
+        const existingWorking = (await db.$queryRawUnsafe(
+          `SELECT id FROM StaffTimeTracking 
+           WHERE staffId = ? AND checkOutTime IS NULL
+           LIMIT 1`,
+          parseInt(staffId),
+        )) as any[];
+
+        if (existingWorking.length > 0) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: "Bạn đang có ca làm việc chưa check-out. Vui lòng check-out trước khi check-in mới.",
+            },
+            { status: 400 },
+          );
+        }
+
+        // Only allow one working session at a time
         const nowVN = getCurrentTimeVNDB();
         await db.$executeRawUnsafe(
           `INSERT INTO StaffTimeTracking (staffId, checkInTime, createdAt, updatedAt)

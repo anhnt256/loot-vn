@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { clearUserData } from "@/lib/utils";
+import { clearAdminData } from "@/lib/utils";
 import { useBranch } from "@/components/providers/BranchProvider";
 
 export function AdminHeader() {
@@ -13,8 +13,9 @@ export function AdminHeader() {
       await fetch("/api/logout", {
         method: "POST",
       });
-      // Xóa thông tin user khỏi localStorage
-      clearUserData();
+      // Xóa thông tin admin khỏi localStorage (cookies đã được API route clear)
+      clearAdminData();
+      
       router.push("/admin-login");
     } catch (error) {
       console.error("Logout error:", error);

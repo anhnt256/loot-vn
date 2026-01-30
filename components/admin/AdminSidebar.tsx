@@ -93,6 +93,11 @@ const menuItems = [
     icon: "📝",
   },
   {
+    title: "Cảnh báo bất thường",
+    href: "/admin/anomaly",
+    icon: "⚠️",
+  },
+  {
     title: "Quản lý Feedback",
     href: "/admin/feedback",
     icon: "💬",
@@ -250,6 +255,7 @@ export function AdminSidebar() {
       "/admin/battle-pass-orders", // Đơn hàng Premium BP
       "/admin/handover-reports", // Báo cáo bàn giao
       "/admin/reports", // Báo cáo kết ca
+      "/admin/anomaly", // Cảnh báo bất thường
       "/admin/work-schedule", // Lịch làm việc
     ];
 

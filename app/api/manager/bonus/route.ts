@@ -4,18 +4,22 @@ import { cookies } from "next/headers";
 import { verifyJWT } from "@/lib/jwt";
 import { getBranchFromCookie } from "@/lib/server-utils";
 import { getCurrentTimeVNDB } from "@/lib/timezone-utils";
+import dayjs from "@/lib/dayjs";
 
 // GET: Get all bonuses for all staff (manager view)
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value;
+    // Only check staffToken for staff/manager APIs
+    const token = cookieStore.get("staffToken")?.value;
 
     if (!token) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
+      const response = NextResponse.json(
+        { success: false, error: "Unauthorized - Please login again" },
         { status: 401 },
       );
+      response.headers.set("X-Redirect-To", "/staff-login");
+      return response;
     }
 
     const payload = await verifyJWT(token);
@@ -26,7 +30,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const branch = await getBranchFromCookie();
+    // Use branch from cookie first, fallback to token payload
+    const branch = (await getBranchFromCookie()) || payload.branch;
     if (!branch) {
       return NextResponse.json(
         { success: false, error: "Missing branch" },
@@ -92,13 +97,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value;
+    // Only check staffToken for staff APIs
+    const token = cookieStore.get("staffToken")?.value;
 
     if (!token) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
+      const response = NextResponse.json(
+        { success: false, error: "Unauthorized - Please login again" },
         { status: 401 },
       );
+      response.headers.set("X-Redirect-To", "/staff-login");
+      return response;
     }
 
     const payload = await verifyJWT(token);
@@ -109,7 +117,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const branch = await getBranchFromCookie();
+    // Use branch from cookie first, fallback to token payload
+    const branch = (await getBranchFromCookie()) || payload.branch;
     if (!branch) {
       return NextResponse.json(
         { success: false, error: "Missing branch" },
@@ -130,12 +139,32 @@ export async function POST(request: NextRequest) {
 
     // Verify staff exists and belongs to same branch
     const staff = (await db.$queryRawUnsafe(
-      `SELECT id FROM Staff WHERE id = ? AND branch = ? AND isDeleted = false`,
+      `SELECT id, branch FROM Staff WHERE id = ? AND branch = ? AND isDeleted = false`,
       parseInt(staffId),
       branch,
     )) as any[];
 
     if (staff.length === 0) {
+      // Check if staff exists in other branch for better error message
+      const staffInOtherBranch = (await db.$queryRawUnsafe(
+        `SELECT id, branch FROM Staff WHERE id = ? AND isDeleted = false`,
+        parseInt(staffId),
+      )) as any[];
+
+      if (staffInOtherBranch.length > 0) {
+        console.error(
+          `Staff ${staffId} exists but in branch ${staffInOtherBranch[0].branch}, not ${branch}`,
+        );
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Staff không thuộc branch ${branch}. Staff này thuộc branch ${staffInOtherBranch[0].branch}`,
+          },
+          { status: 404 },
+        );
+      }
+
+      console.error(`Staff ${staffId} not found in branch ${branch}`);
       return NextResponse.json(
         { success: false, error: "Staff not found" },
         { status: 404 },
@@ -143,7 +172,9 @@ export async function POST(request: NextRequest) {
     }
 
     const nowVN = getCurrentTimeVNDB();
-    const rewardDateValue = rewardDate ? new Date(rewardDate) : nowVN;
+    const rewardDateValue = rewardDate
+      ? dayjs(rewardDate).utcOffset(7).format("YYYY-MM-DD HH:mm:ss")
+      : nowVN;
 
     await db.$executeRawUnsafe(
       `INSERT INTO StaffBonus (staffId, amount, reason, description, imageUrl, note, rewardDate, status, createdAt, updatedAt)

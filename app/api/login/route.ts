@@ -11,6 +11,7 @@ import {
 import { getDebugUserId, logDebugInfo } from "@/lib/debug-utils";
 import { calculateActiveUsersInfo } from "@/lib/user-calculator";
 import { isNewUser } from "@/lib/timezone-utils";
+import { getBranchFromCookie } from "@/lib/server-utils";
 
 const expirationDuration = 1;
 
@@ -402,6 +403,57 @@ export async function POST(req: Request, res: Response): Promise<any> {
         finalBranch = "GO_VAP";
       }
 
+      // Get work shifts for the branch
+      let workShifts: any[] = [];
+      try {
+        const shifts = (await db.$queryRaw`
+          SELECT 
+            id,
+            name,
+            startTime,
+            endTime,
+            isOvernight,
+            branch,
+            FnetStaffId,
+            FfoodStaffId,
+            createdAt,
+            updatedAt
+          FROM WorkShift
+          WHERE branch = ${finalBranch}
+          ORDER BY 
+            CASE name
+              WHEN 'CA_SANG' THEN 1
+              WHEN 'CA_CHIEU' THEN 2
+              WHEN 'CA_TOI' THEN 3
+              ELSE 4
+            END
+        `) as any[];
+
+        // Format time fields to HH:mm:ss format
+        workShifts = shifts.map((shift) => {
+          const formatTime = (time: Date | string) => {
+            if (!time) return null;
+            const date = typeof time === "string" ? new Date(time) : time;
+            const hours = date.getHours().toString().padStart(2, "0");
+            const minutes = date.getMinutes().toString().padStart(2, "0");
+            const seconds = date.getSeconds().toString().padStart(2, "0");
+            return `${hours}:${minutes}:${seconds}`;
+          };
+
+          return {
+            ...shift,
+            startTime: formatTime(shift.startTime),
+            endTime: formatTime(shift.endTime),
+          };
+        });
+      } catch (error) {
+        console.error("Error fetching work shifts:", error);
+        // Don't fail login if work shifts fetch fails
+        workShifts = []; // Ensure workShifts is always an array
+      }
+      
+      console.log(`[Login] Fetched ${workShifts.length} work shifts for branch ${finalBranch}`);
+
       const adminData: any = {
         userId: userId,
         id: userId,
@@ -409,6 +461,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
         role: role,
         loginType: loginType,
         branch: finalBranch,
+        workShifts: workShifts,
       };
 
       // Add staffType and staffId for STAFF/MANAGER types (only for account login)
@@ -434,8 +487,14 @@ export async function POST(req: Request, res: Response): Promise<any> {
         message: "Login Success",
       });
 
+      // For admin routes, always use "token" cookie
+      // Only use "staffToken" for staff login (role === "staff" and loginMethod === "account")
+      // Admin login (role === "admin" or userId === -99) should always use "token"
+      const isAdmin = role === "admin" || userId === -99;
+      const tokenCookieName = isAdmin ? "token" : (loginMethod === "account" ? "staffToken" : "token");
+
       response.cookies.set({
-        name: "token",
+        name: tokenCookieName,
         value: token,
         maxAge: 86400,
         httpOnly: true,
@@ -704,6 +763,54 @@ export async function POST(req: Request, res: Response): Promise<any> {
             branchFromCookie || "",
           );
 
+          // Get work shifts for the branch
+          let workShifts: any[] = [];
+          try {
+            const shifts = (await db.$queryRaw`
+              SELECT 
+                id,
+                name,
+                startTime,
+                endTime,
+                isOvernight,
+                branch,
+                FnetStaffId,
+                FfoodStaffId,
+                createdAt,
+                updatedAt
+              FROM WorkShift
+              WHERE branch = ${branchFromCookie || ""}
+              ORDER BY 
+                CASE name
+                  WHEN 'CA_SANG' THEN 1
+                  WHEN 'CA_CHIEU' THEN 2
+                  WHEN 'CA_TOI' THEN 3
+                  ELSE 4
+                END
+            `) as any[];
+
+            // Format time fields to HH:mm:ss format
+            workShifts = shifts.map((shift) => {
+              const formatTime = (time: Date | string) => {
+                if (!time) return null;
+                const date = typeof time === "string" ? new Date(time) : time;
+                const hours = date.getHours().toString().padStart(2, "0");
+                const minutes = date.getMinutes().toString().padStart(2, "0");
+                const seconds = date.getSeconds().toString().padStart(2, "0");
+                return `${hours}:${minutes}:${seconds}`;
+              };
+
+              return {
+                ...shift,
+                startTime: formatTime(shift.startTime),
+                endTime: formatTime(shift.endTime),
+              };
+            });
+          } catch (error) {
+            console.error("Error fetching work shifts:", error);
+            // Don't fail login if work shifts fetch fails
+          }
+
           // Trả về thông tin user mới tạo
           const token = await signJWT({
             userId: String(userUpdated.userId ?? ""),
@@ -716,6 +823,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
             recordDate: userCreationInfo.recordDate,
             isReturnedUser: userCreationInfo.isReturnedUser,
             lastLoginDate: userCreationInfo.lastLoginDate,
+            workShifts: workShifts,
           };
           const response = NextResponse.json(responseData);
 
@@ -824,6 +932,57 @@ export async function POST(req: Request, res: Response): Promise<any> {
       branchFromCookie || "",
     );
 
+    // Get work shifts for the branch
+    let workShifts: any[] = [];
+    try {
+      const shifts = (await db.$queryRaw`
+        SELECT 
+          id,
+          name,
+          startTime,
+          endTime,
+          isOvernight,
+          branch,
+          FnetStaffId,
+          FfoodStaffId,
+          createdAt,
+          updatedAt
+        FROM WorkShift
+        WHERE branch = ${branchFromCookie || ""}
+        ORDER BY 
+          CASE name
+            WHEN 'CA_SANG' THEN 1
+            WHEN 'CA_CHIEU' THEN 2
+            WHEN 'CA_TOI' THEN 3
+            ELSE 4
+          END
+      `) as any[];
+
+      // Format time fields to HH:mm:ss format
+      workShifts = shifts.map((shift) => {
+        const formatTime = (time: Date | string) => {
+          if (!time) return null;
+          const date = typeof time === "string" ? new Date(time) : time;
+          const hours = date.getHours().toString().padStart(2, "0");
+          const minutes = date.getMinutes().toString().padStart(2, "0");
+          const seconds = date.getSeconds().toString().padStart(2, "0");
+          return `${hours}:${minutes}:${seconds}`;
+        };
+
+        return {
+          ...shift,
+          startTime: formatTime(shift.startTime),
+          endTime: formatTime(shift.endTime),
+        };
+      });
+    } catch (error) {
+      console.error("Error fetching work shifts:", error);
+      // Don't fail login if work shifts fetch fails
+      workShifts = []; // Ensure workShifts is always an array
+    }
+    
+    console.log(`[Login] Fetched ${workShifts.length} work shifts for branch ${branchFromCookie || ""}`);
+
     const token = await signJWT({ userId: String(userUpdated?.userId ?? "") });
     const responseData = {
       statusCode: 200,
@@ -833,6 +992,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
       recordDate: userCreationInfo.recordDate,
       isReturnedUser: userCreationInfo.isReturnedUser,
       lastLoginDate: userCreationInfo.lastLoginDate,
+      workShifts: workShifts,
     };
     const response = NextResponse.json(responseData);
 

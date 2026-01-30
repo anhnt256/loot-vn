@@ -525,9 +525,20 @@ export default function AdminReportsPage() {
     const amount = parseFloat(amountToWithdraw) || 0;
     if (amount <= 0) return [];
 
+    // Chỉ lấy dữ liệu của 7 ngày gần nhất
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
     // Sắp xếp báo cáo từ mới nhất đến cũ nhất để ưu tiên lấy từ ca gần nhất
     return reports
-      .filter((r) => r.playtimeFee + r.serviceFee - r.expense >= amount)
+      .filter((r) => {
+        const reportDate = new Date(r.date);
+        reportDate.setHours(0, 0, 0, 0);
+        return reportDate >= sevenDaysAgo;
+      })
+      .filter((r) => r.playtimeFee + r.serviceFee - r.momo - r.expense >= amount)
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [amountToWithdraw, reports]);
 
@@ -1241,6 +1252,7 @@ export default function AdminReportsPage() {
                         {(
                           report.playtimeFee +
                           report.serviceFee -
+                          report.momo -
                           report.expense
                         ).toLocaleString("en-US")}{" "}
                         VNĐ

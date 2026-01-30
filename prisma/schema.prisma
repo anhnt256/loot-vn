@@ -277,6 +277,23 @@ model StaffTimeTracking {
   @@index([checkInTime])
 }
 
+model WorkShift {
+  id            Int       @id @default(autoincrement())
+  name          String    @db.VarChar(255)
+  startTime     DateTime  @db.Time(0)
+  endTime       DateTime  @db.Time(0)
+  isOvernight   Boolean   @default(false) // true nếu ca qua ngày (như CA_TOI: 22:00 -> 6:00)
+  branch        String    @default("GO_VAP") @db.VarChar(50)
+  FnetStaffId   Int?
+  FfoodStaffId  Int?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([branch])
+  @@index([name])
+  @@map("WorkShift")
+}
+
 model StaffSalary {
   id          Int       @id @default(autoincrement())
   staffId     Int

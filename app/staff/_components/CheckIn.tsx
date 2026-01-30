@@ -48,21 +48,28 @@ export default function CheckIn({ staffId, month, year }: CheckInProps) {
   useEffect(() => {
     if (currentWorkingRecord) {
       const updateTimer = () => {
-        // Sử dụng Vietnam timezone (UTC+7)
-        const checkInTime = dayjs(currentWorkingRecord.checkInTime).utcOffset(
-          7,
-        );
-        const now = dayjs().utcOffset(7);
+        // DB stores datetime as UTC+7 string "YYYY-MM-DD HH:mm:ss"
+        // Parse it as VN time directly without conversion
+        const checkInTime = dayjs.tz(currentWorkingRecord.checkInTime, "Asia/Ho_Chi_Minh");
+        
+        // Current time in Vietnam timezone
+        const now = dayjs().tz("Asia/Ho_Chi_Minh");
+        
+        // Calculate diff: now - checkInTime (hours worked)
         const diffMinutes = now.diff(checkInTime, "minute");
-        const hours = Math.floor(diffMinutes / 60);
-        const minutes = diffMinutes % 60;
+        
+        // Ensure positive value
+        const absDiffMinutes = Math.max(0, diffMinutes);
+        const hours = Math.floor(absDiffMinutes / 60);
+        const minutes = absDiffMinutes % 60;
+        
         setElapsedTime(
           `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`,
         );
       };
 
       updateTimer(); // Update immediately
-      const interval = setInterval(updateTimer, 60000); // Update every minute
+      const interval = setInterval(updateTimer, 1000); // Update every second for real-time
 
       return () => clearInterval(interval);
     } else {
@@ -76,7 +83,7 @@ export default function CheckIn({ staffId, month, year }: CheckInProps) {
     try {
       setLoading(true);
       // Sử dụng Vietnam timezone (UTC+7)
-      const today = dayjs().utcOffset(7).format("YYYY-MM-DD");
+      const today = dayjs().tz("Asia/Ho_Chi_Minh").format("YYYY-MM-DD");
       const response = await fetch(
         `/api/staff/time-tracking?staffId=${staffId}&date=${today}`,
       );
@@ -97,12 +104,25 @@ export default function CheckIn({ staffId, month, year }: CheckInProps) {
       if (result.success) {
         const records = result.data.todayRecords || [];
         setTodayRecords(records);
-        // Tìm record đang làm việc (chưa checkout)
+        // Tìm record đang làm việc (chưa checkout) - chỉ lấy record đầu tiên
         const working = records.find((r: TimeRecord) => r.status === "WORKING");
         setCurrentWorkingRecord(working || null);
         // Set stats
         if (result.data.stats) {
           setStats(result.data.stats);
+        }
+        // Force timer update if there's a working record
+        if (working) {
+          const checkInTime = dayjs.tz(working.checkInTime, "Asia/Ho_Chi_Minh");
+          const now = dayjs().tz("Asia/Ho_Chi_Minh");
+          const diffMinutes = Math.max(0, now.diff(checkInTime, "minute"));
+          const hours = Math.floor(diffMinutes / 60);
+          const minutes = diffMinutes % 60;
+          setElapsedTime(
+            `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`,
+          );
+        } else {
+          setElapsedTime("00:00");
         }
       }
     } catch (error: unknown) {
@@ -228,9 +248,9 @@ export default function CheckIn({ staffId, month, year }: CheckInProps) {
                 </div>
                 <div className="text-xs text-gray-500">
                   Check-in:{" "}
-                  {dayjs(currentWorkingRecord.checkInTime)
-                    .utcOffset(7)
-                    .format("HH:mm")}
+                  {currentWorkingRecord.checkInTime
+                    ? currentWorkingRecord.checkInTime.substring(11, 16) // Extract HH:mm from "YYYY-MM-DD HH:mm:ss"
+                    : ""}
                 </div>
               </div>
               <Button
@@ -310,22 +330,35 @@ export default function CheckIn({ staffId, month, year }: CheckInProps) {
           <List
             dataSource={todayRecords}
             renderItem={(record: TimeRecord, index: number) => {
-              // Sử dụng Vietnam timezone (UTC+7)
-              const checkIn = dayjs(record.checkInTime).utcOffset(7);
-              const checkOut = record.checkOutTime
-                ? dayjs(record.checkOutTime).utcOffset(7)
-                : null;
+              // Display datetime from DB directly, no parsing/formatting
+              // Extract time parts from string "YYYY-MM-DD HH:mm:ss"
+              const checkInTimeStr = record.checkInTime || "";
+              const checkInDisplay = checkInTimeStr.substring(11, 19); // HH:mm:ss
+              
+              const checkOutTimeStr = record.checkOutTime || "";
+              const checkOutDisplay = checkOutTimeStr ? checkOutTimeStr.substring(11, 19) : null; // HH:mm:ss
+              
+              // For timer calculation, parse datetime (but only for diff calculation)
+              const checkIn = dayjs.tz(record.checkInTime, "Asia/Ho_Chi_Minh");
+              let checkOut = null;
+              if (record.checkOutTime) {
+                checkOut = dayjs.tz(record.checkOutTime, "Asia/Ho_Chi_Minh");
+              }
+              
               let hours = record.totalHours;
 
               // Calculate hours if not available
-              if (!hours) {
+              if (!hours || hours < 0) {
                 if (checkOut) {
-                  hours = checkOut.diff(checkIn, "hour", true);
+                  hours = Math.abs(checkOut.diff(checkIn, "hour", true));
                 } else {
                   // Still working - calculate from now (Vietnam time)
-                  const now = dayjs().utcOffset(7);
-                  hours = now.diff(checkIn, "hour", true);
+                  const now = dayjs().tz("Asia/Ho_Chi_Minh");
+                  hours = Math.abs(now.diff(checkIn, "hour", true));
                 }
+              } else {
+                // Ensure positive
+                hours = Math.abs(hours);
               }
 
               const hoursInt = Math.floor(hours);
@@ -363,15 +396,15 @@ export default function CheckIn({ staffId, month, year }: CheckInProps) {
                           size={12}
                           className="inline mr-1 text-green-600"
                         />
-                        Check-in: {checkIn.format("HH:mm:ss")}
+                        Check-in: {checkInDisplay}
                       </div>
-                      {checkOut ? (
+                      {checkOutDisplay ? (
                         <div>
                           <Square
                             size={12}
                             className="inline mr-1 text-red-600"
                           />
-                          Check-out: {checkOut.format("HH:mm:ss")}
+                          Check-out: {checkOutDisplay}
                         </div>
                       ) : null}
                       <div className="font-medium text-blue-600">

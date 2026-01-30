@@ -6,13 +6,16 @@ import { verifyJWT } from "@/lib/jwt";
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value;
+    // Only check staffToken for staff APIs
+    const token = cookieStore.get("staffToken")?.value;
 
     if (!token) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
+      const response = NextResponse.json(
+        { success: false, error: "Unauthorized - Please login again" },
         { status: 401 },
       );
+      response.headers.set("X-Redirect-To", "/staff-login");
+      return response;
     }
 
     const payload = await verifyJWT(token);

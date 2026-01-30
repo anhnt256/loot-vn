@@ -6,13 +6,16 @@ import { verifyJWT } from "@/lib/jwt";
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value;
+    // Only check staffToken for staff APIs
+    const token = cookieStore.get("staffToken")?.value;
 
     if (!token) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
+      const response = NextResponse.json(
+        { success: false, error: "Unauthorized - Please login again" },
         { status: 401 },
       );
+      response.headers.set("X-Redirect-To", "/staff-login");
+      return response;
     }
 
     const payload = await verifyJWT(token);
@@ -26,7 +29,10 @@ export async function GET(request: NextRequest) {
     // Get staff info from token (userId = -98 for staff)
     // We need to get staffId from userName in token
     const userName = payload.userName;
-    const branch = cookieStore.get("branch")?.value;
+    // Use branch from token payload first, fallback to cookie
+    const branch = payload.branch || cookieStore.get("branch")?.value;
+
+    console.log("my-info API - userName:", userName, "branch from token:", payload.branch, "branch from cookie:", cookieStore.get("branch")?.value, "final branch:", branch);
 
     if (!userName || !branch) {
       return NextResponse.json(

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, Button, List, Tag, Space, Spin, Empty, Statistic } from "antd";
-import { Clock, CheckCircle, XCircle, Play, Square } from "lucide-react";
+import { Card, List, Tag, Spin, Empty, Statistic } from "antd";
+import { Clock } from "lucide-react";
 import { toast } from "sonner";
 import dayjs from "@/lib/dayjs";
 
@@ -65,59 +65,13 @@ export default function TimeTracking({
     }
   };
 
-  const handleCheckIn = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch("/api/staff/time-tracking", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ staffId, action: "checkin" }),
-      });
-      const result = await response.json();
-      if (result.success) {
-        toast.success("Check-in thành công!");
-        fetchTimeData();
-      } else {
-        throw new Error(result.error || "Check-in thất bại");
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Check-in thất bại");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCheckOut = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch("/api/staff/time-tracking", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ staffId, action: "checkout" }),
-      });
-      const result = await response.json();
-      if (result.success) {
-        toast.success("Check-out thành công!");
-        fetchTimeData();
-      } else {
-        throw new Error(result.error || "Check-out thất bại");
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Check-out thất bại");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading && !todayRecord) {
+  if (loading && history.length === 0) {
     return (
       <div className="flex justify-center py-8">
         <Spin size="large" />
       </div>
     );
   }
-
-  const isWorking = todayRecord?.status === "WORKING";
 
   return (
     <div className="space-y-4 pb-4">
@@ -148,56 +102,6 @@ export default function TimeTracking({
           />
         </Card>
       </div>
-
-      {/* Check In/Out Button */}
-      <Card className="shadow-sm">
-        <div className="text-center space-y-4">
-          {isWorking ? (
-            <>
-              <div className="space-y-2">
-                <Tag color="green" className="text-base px-4 py-2">
-                  <CheckCircle className="inline mr-2" />
-                  Đang làm việc
-                </Tag>
-                <p className="text-gray-600">
-                  Check-in:{" "}
-                  {dayjs(todayRecord?.checkInTime).format("HH:mm DD/MM/YYYY")}
-                </p>
-              </div>
-              <Button
-                type="primary"
-                danger
-                size="large"
-                icon={<Square size={20} />}
-                onClick={handleCheckOut}
-                loading={loading}
-                className="w-full"
-              >
-                Check-out
-              </Button>
-            </>
-          ) : (
-            <>
-              <div className="space-y-2">
-                <Tag color="default" className="text-base px-4 py-2">
-                  <XCircle className="inline mr-2" />
-                  Chưa check-in
-                </Tag>
-              </div>
-              <Button
-                type="primary"
-                size="large"
-                icon={<Play size={20} />}
-                onClick={handleCheckIn}
-                loading={loading}
-                className="w-full bg-green-500 hover:bg-green-600"
-              >
-                Check-in
-              </Button>
-            </>
-          )}
-        </div>
-      </Card>
 
       {/* History */}
       <Card title="Lịch sử làm việc" className="shadow-sm">
@@ -230,9 +134,9 @@ export default function TimeTracking({
                         Ra: {dayjs(item.checkOutTime).format("HH:mm")}
                       </div>
                     )}
-                    {item.totalHours && (
+                    {item.totalHours != null && (
                       <div className="font-medium text-orange-600">
-                        Tổng: {item.totalHours.toFixed(2)} giờ
+                        Tổng: {Number(item.totalHours).toFixed(2)} giờ
                       </div>
                     )}
                   </div>

@@ -71,8 +71,12 @@ export default function StaffPage() {
 
   const handleLogout = async () => {
     try {
-      await logoutMutation.mutateAsync();
-      router.push("/staff-login");
+      const result = await logoutMutation.mutateAsync();
+      if (result?.redirectPath) {
+        router.push(result.redirectPath);
+      } else {
+        router.push("/staff-login");
+      }
     } catch (error) {
       toast.error("Đăng xuất thất bại");
     }
@@ -203,7 +207,7 @@ export default function StaffPage() {
               label: (
                 <span className="flex items-center gap-2">
                   <Clock size={18} />
-                  <span className="hidden sm:inline">Chấm công</span>
+                  <span className="hidden sm:inline">Điểm danh</span>
                 </span>
               ),
               children:

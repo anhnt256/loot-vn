@@ -177,3 +177,23 @@ export const clearUserData = () => {
     localStorage.removeItem("gateway_staff_fetch_time");
   }
 };
+
+/**
+ * Clears admin-related data from localStorage
+ */
+export const clearAdminData = () => {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("currentUser");
+    localStorage.removeItem("token");
+  }
+};
+
+/**
+ * Clears staff-related data from localStorage
+ */
+export const clearStaffData = () => {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("gateway_staff_data");
+    localStorage.removeItem("gateway_staff_fetch_time");
+  }
+};

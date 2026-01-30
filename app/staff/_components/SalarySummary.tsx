@@ -92,7 +92,7 @@ export default function SalarySummary({
                 Lương
               </span>
             }
-            value={summary.salary}
+            value={Math.round(summary.salary).toLocaleString('vi-VN')}
             prefix="₫"
             valueStyle={{
               fontSize: "16px",
@@ -109,7 +109,7 @@ export default function SalarySummary({
                 Thưởng
               </span>
             }
-            value={summary.bonus}
+            value={Math.round(summary.bonus).toLocaleString('vi-VN')}
             prefix="₫"
             valueStyle={{
               fontSize: "16px",
@@ -126,7 +126,7 @@ export default function SalarySummary({
                 Phạt
               </span>
             }
-            value={summary.penalty}
+            value={Math.round(summary.penalty).toLocaleString('vi-VN')}
             prefix="₫"
             valueStyle={{
               fontSize: "16px",
@@ -138,19 +138,23 @@ export default function SalarySummary({
       </div>
 
       {/* Card Thực lĩnh (full width) */}
-      <Card className="text-center bg-gradient-to-r from-green-50 to-green-100 border-green-300">
+      <Card className={`text-center ${
+        summary.netSalary < 0 
+          ? "bg-gradient-to-r from-red-50 to-red-100 border-red-300" 
+          : "bg-gradient-to-r from-green-50 to-green-100 border-green-300"
+      }`}>
         <Statistic
           title={
             <span className="text-lg font-semibold text-gray-700">
               Thực lĩnh
             </span>
           }
-          value={summary.netSalary}
+          value={Math.round(summary.netSalary).toLocaleString('vi-VN')}
           prefix="₫"
           valueStyle={{
             fontSize: "24px",
             fontWeight: "bold",
-            color: "#52c41a",
+            color: summary.netSalary < 0 ? "#ff4d4f" : "#52c41a",
           }}
         />
       </Card>

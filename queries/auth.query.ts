@@ -1,9 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
-import { deleteCookie, setCookie } from "cookies-next";
+import { deleteCookie, setCookie, getCookie } from "cookies-next";
 import { ACCESS_TOKEN_KEY, CURRENT_USER } from "@/constants/token.constant";
 import dayjs from "@/lib/dayjs";
 import isEmpty from "lodash/isEmpty";
-import { clearUserData } from "@/lib/utils";
+import { clearUserData, clearAdminData, clearStaffData } from "@/lib/utils";
 
 const expirationDuration = 1;
 const expirationDate = dayjs().add(expirationDuration, "day").format();
@@ -62,7 +62,17 @@ export const postLogin = async ({
         };
       }
       
+      // Ensure workShifts is included in the data
+      console.log("[Login] Saving to localStorage, workShifts:", data.workShifts?.length || 0);
       localStorage.setItem(CURRENT_USER, JSON.stringify(data));
+      
+      // Verify it was saved correctly
+      const saved = localStorage.getItem(CURRENT_USER);
+      if (saved) {
+        const savedData = JSON.parse(saved);
+        console.log("[Login] Verified localStorage, workShifts:", savedData.workShifts?.length || 0);
+      }
+      
       return { statusCode: 200, data: data, message: "Login Success" };
     } catch (parseError) {
       return {
@@ -102,9 +112,66 @@ export const postLogout = async (): Promise<any> => {
   const statusCode = result.status;
 
   if (statusCode >= 200 && statusCode < 300) {
-    deleteCookie(ACCESS_TOKEN_KEY);
-    clearUserData();
-    return { statusCode: 200, data: null };
+    // Xác định đang logout từ admin hay staff
+    let redirectPath = "/staff-login"; // default
+    let isAdminLogout = false;
+    let isStaffLogout = false;
+    
+    if (typeof window !== "undefined") {
+      const currentPath = window.location.pathname;
+      if (currentPath.includes("/admin")) {
+        redirectPath = "/admin-login";
+        isAdminLogout = true;
+      } else if (currentPath.includes("/staff")) {
+        redirectPath = "/staff-login";
+        isStaffLogout = true;
+      } else {
+        // Nếu không xác định được từ pathname, dựa vào cookies
+        const token = getCookie(ACCESS_TOKEN_KEY);
+        const staffToken = getCookie("staffToken");
+        if (token && !staffToken) {
+          isAdminLogout = true;
+          redirectPath = "/admin-login";
+        } else if (staffToken && !token) {
+          isStaffLogout = true;
+          redirectPath = "/staff-login";
+        }
+      }
+    }
+
+    // Clear cookies và data tương ứng
+    if (isAdminLogout) {
+      // Admin logout: chỉ clear token và các thông tin liên quan
+      deleteCookie(ACCESS_TOKEN_KEY);
+      const loginType = getCookie("loginType");
+      if (loginType === "username") {
+        deleteCookie("loginType");
+        deleteCookie("branch");
+      } else {
+        deleteCookie("loginType");
+      }
+      clearAdminData();
+    } else if (isStaffLogout) {
+      // Staff logout: chỉ clear staffToken và các thông tin liên quan
+      deleteCookie("staffToken");
+      const loginType = getCookie("loginType");
+      if (loginType === "account") {
+        deleteCookie("loginType");
+        deleteCookie("branch");
+      } else {
+        deleteCookie("loginType");
+      }
+      clearStaffData();
+    } else {
+      // Fallback: clear tất cả (backward compatibility)
+      deleteCookie(ACCESS_TOKEN_KEY);
+      deleteCookie("staffToken");
+      deleteCookie("loginType");
+      deleteCookie("branch");
+      clearUserData();
+    }
+    
+    return { statusCode: 200, data: null, redirectPath };
   }
 
   try {

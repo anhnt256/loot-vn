@@ -51,7 +51,8 @@ apiClient.interceptors.request.use(async (request) => {
       request.headers["Authorization"] = `Key ${secretKey}`;
     }
   } else {
-    const token = getCookie(ACCESS_TOKEN_KEY);
+    // Check both token and staffToken
+    const token = getCookie(ACCESS_TOKEN_KEY) || getCookie("staffToken");
     if (token) {
       request.headers["Authorization"] = `Bearer ${token}`;
     }

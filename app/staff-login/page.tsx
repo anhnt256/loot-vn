@@ -44,9 +44,13 @@ const StaffLogin = () => {
       return;
     }
 
+    // Get branch value directly from DOM to avoid stale closure issue
+    const branchRadio = document.querySelector('input[name="branch"]:checked') as HTMLInputElement;
+    const currentBranch = branchRadio?.value || selectedBranch;
+
     if (
-      !selectedBranch ||
-      (selectedBranch !== "GO_VAP" && selectedBranch !== "TAN_PHU")
+      !currentBranch ||
+      (currentBranch !== "GO_VAP" && currentBranch !== "TAN_PHU")
     ) {
       toast.error("Vui lòng chọn chi nhánh");
       return;
@@ -54,7 +58,8 @@ const StaffLogin = () => {
 
     setVerifyingUsername(true);
     try {
-      const result = await verifyStaffUsername(userName.trim(), selectedBranch);
+      console.log("Verifying username with branch:", currentBranch);
+      const result = await verifyStaffUsername(userName.trim(), currentBranch);
 
       if (result.statusCode === 200 && result.data) {
         setStaffInfo(result.data);
@@ -72,7 +77,7 @@ const StaffLogin = () => {
     } finally {
       setVerifyingUsername(false);
     }
-  }, [userName, selectedBranch]);
+  }, [userName, selectedBranch, verifyingUsername]);
 
   const handleUpdatePassword = useCallback(async () => {
     if (!newPassword || !confirmPassword) {

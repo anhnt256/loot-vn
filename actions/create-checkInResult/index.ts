@@ -11,7 +11,7 @@ import { CreateCheckInResult } from "./schema";
 import { InputType, ReturnType } from "./type";
 import dayjs from "@/lib/dayjs";
 import { calculateActiveUsersInfo } from "@/lib/user-calculator";
-import { getCurrentTimeVNISO, getCurrentTimeVNDB } from "@/lib/timezone-utils";
+import { getCurrentTimeVNISO, getCurrentTimeVNDB, getStartOfDayVNISO } from "@/lib/timezone-utils";
 import { cookies } from "next/headers";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
@@ -88,6 +88,29 @@ const handler = async (data: InputType): Promise<ReturnType> => {
       };
     }
 
+    // Kiểm tra tổng điểm đã claim trong ngày (tối đa 24k/ngày)
+    const startOfDayVN = getStartOfDayVNISO();
+    const totalClaimedTodayResult = await db.$queryRaw<any[]>`
+      SELECT COALESCE(SUM(newStars - oldStars), 0) as totalClaimed
+      FROM UserStarHistory
+      WHERE userId = ${userId}
+        AND branch = ${branch}
+        AND type = 'CHECK_IN'
+        AND createdAt >= ${startOfDayVN}
+    `;
+    const totalClaimedToday = Number(totalClaimedTodayResult[0]?.totalClaimed || 0);
+    const maxDailyCheckInPoints = 24000;
+    const remainingDailyLimit = maxDailyCheckInPoints - totalClaimedToday;
+
+    if (remainingDailyLimit <= 0) {
+      return {
+        error: `Bạn đã nhận tối đa ${maxDailyCheckInPoints.toLocaleString()} điểm danh hôm nay. Vui lòng thử lại vào ngày mai!`,
+      };
+    }
+
+    // Giới hạn số điểm có thể claim không vượt quá giới hạn còn lại
+    const actualPointsToClaim = Math.min(availableCheckIn, remainingDailyLimit);
+
     // console.log('getCurrentTimeVNISO', getCurrentTimeVNISO())
 
     await db.$transaction(async (tx) => {
@@ -120,7 +143,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
 
         if (user) {
           const { stars: oldStars } = user;
-          const newStars = oldStars + availableCheckIn;
+          const newStars = oldStars + actualPointsToClaim;
 
           // Create UserStarHistory using raw SQL
           await tx.$executeRaw`

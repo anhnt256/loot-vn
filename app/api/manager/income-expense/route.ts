@@ -9,13 +9,16 @@ import { getCurrentTimeVNDB } from "@/lib/timezone-utils";
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value;
+    // Only check staffToken for staff/manager APIs
+    const token = cookieStore.get("staffToken")?.value;
 
     if (!token) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
+      const response = NextResponse.json(
+        { success: false, error: "Unauthorized - Please login again" },
         { status: 401 },
       );
+      response.headers.set("X-Redirect-To", "/staff-login");
+      return response;
     }
 
     const payload = await verifyJWT(token);
@@ -26,7 +29,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const branch = await getBranchFromCookie();
+    // Use branch from token payload first, fallback to cookie
+    const branch = payload.branch || await getBranchFromCookie();
     if (!branch) {
       return NextResponse.json(
         { success: false, error: "Missing branch" },
@@ -94,13 +98,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value;
+    // Only check staffToken for staff APIs
+    const token = cookieStore.get("staffToken")?.value;
 
     if (!token) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
+      const response = NextResponse.json(
+        { success: false, error: "Unauthorized - Please login again" },
         { status: 401 },
       );
+      response.headers.set("X-Redirect-To", "/staff-login");
+      return response;
     }
 
     const payload = await verifyJWT(token);
@@ -111,7 +118,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const branch = await getBranchFromCookie();
+    // Use branch from token payload first, fallback to cookie
+    const branch = payload.branch || await getBranchFromCookie();
     if (!branch) {
       return NextResponse.json(
         { success: false, error: "Missing branch" },

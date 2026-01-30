@@ -50,8 +50,12 @@ export default function ManagerPage() {
 
   const handleLogout = async () => {
     try {
-      await logoutMutation.mutateAsync();
-      router.push("/staff-login");
+      const result = await logoutMutation.mutateAsync();
+      if (result?.redirectPath) {
+        router.push(result.redirectPath);
+      } else {
+        router.push("/staff-login");
+      }
     } catch (error) {
       toast.error("Đăng xuất thất bại");
     }

@@ -91,7 +91,19 @@ export async function middleware(request: NextRequest) {
 
   // Verify token cho tất cả API routes
   if (request.nextUrl.pathname.startsWith("/api/")) {
-    const token = request.cookies.get("token")?.value;
+    // Tách biệt rõ ràng: staff/manager APIs chỉ dùng staffToken, admin APIs chỉ dùng token
+    const isStaffOrManagerApi = 
+      request.nextUrl.pathname.startsWith("/api/staff") || 
+      request.nextUrl.pathname.startsWith("/api/manager");
+    
+    let token: string | undefined;
+    if (isStaffOrManagerApi) {
+      // Staff/Manager APIs: CHỈ check staffToken
+      token = request.cookies.get("staffToken")?.value;
+    } else {
+      // Admin và các APIs khác: CHỈ check token
+      token = request.cookies.get("token")?.value;
+    }
 
     if (!token) {
       return NextResponse.json(
@@ -120,8 +132,40 @@ export async function middleware(request: NextRequest) {
     });
   }
 
-  // Lấy token từ cookie
+  // Lấy token từ cookie - tách biệt rõ ràng admin và staff
   const token = request.cookies.get("token")?.value;
+  const staffToken = request.cookies.get("staffToken")?.value;
+
+  // Kiểm tra nếu route bắt đầu bằng /staff
+  if (request.nextUrl.pathname.startsWith("/staff")) {
+    // Skip authentication check for staff login page
+    if (request.nextUrl.pathname === "/staff-login") {
+      return NextResponse.next();
+    }
+
+    // Nếu không có staffToken, chuyển hướng về trang staff-login
+    if (!staffToken) {
+      return NextResponse.redirect(new URL("/staff-login", request.url));
+    }
+
+    try {
+      const payload = await verifyJWT(staffToken);
+
+      if (!payload) {
+        return NextResponse.redirect(new URL("/staff-login", request.url));
+      }
+
+      // Kiểm tra quyền staff
+      if (payload.role !== "staff") {
+        return NextResponse.redirect(new URL("/staff-login", request.url));
+      }
+
+      return NextResponse.next();
+    } catch (error) {
+      // Nếu token không hợp lệ, chuyển hướng về trang staff-login
+      return NextResponse.redirect(new URL("/staff-login", request.url));
+    }
+  }
 
   // Kiểm tra nếu route bắt đầu bằng /admin
   if (request.nextUrl.pathname.startsWith("/admin")) {
@@ -141,7 +185,7 @@ export async function middleware(request: NextRequest) {
     //   }
     // }
 
-    // Nếu không có token, chuyển hướng về trang login
+    // Admin routes: CHỈ check token, không check staffToken
     if (!token) {
       return NextResponse.redirect(new URL("/admin-login", request.url));
     }

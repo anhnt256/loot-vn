@@ -199,39 +199,24 @@ function calculateCheckInMinutes(
   const todayStart = now.startOf("day");
   const todayDate = now.format("YYYY-MM-DD");
 
-  // Check xem có session nào đang chạy trong ngày hôm nay không
-  // (bao gồm cả session bắt đầu từ hôm nay và session từ hôm qua vẫn đang chạy)
+  // Kiểm tra có session nào overlap với ngày hôm nay không
+  // (bao gồm session bắt đầu trong ngày hoặc session từ hôm trước kết thúc trong ngày)
   const hasActiveSessionToday = sessions.some((s) => {
     if (!s.EnterDate || !s.EnterTime) return false;
 
-    const enter = combineDateTime(s.EnterDate, s.EnterTime);
-    let end: dayjs.Dayjs;
-
-    if (s.EndDate && s.EndTime) {
-      end = combineDateTime(s.EndDate, s.EndTime);
-    } else {
-      end = now; // Session đang chạy
-    }
-
-    // Session đang chạy trong ngày hôm nay nếu:
-    // - Bắt đầu từ hôm nay, hoặc
-    // - Bắt đầu từ hôm qua nhưng vẫn đang chạy (chưa kết thúc) và overlap với ngày hôm nay
     const enterDate =
       typeof s.EnterDate === "string"
         ? s.EnterDate
         : dayjs(s.EnterDate).format("YYYY-MM-DD");
+    
+    const endDate = s.EndDate
+      ? (typeof s.EndDate === "string"
+          ? s.EndDate
+          : dayjs(s.EndDate).format("YYYY-MM-DD"))
+      : todayDate; // Session đang chạy, coi như kết thúc trong ngày hôm nay
 
-    if (enterDate === todayDate) {
-      return true; // Session bắt đầu từ hôm nay
-    }
-
-    // Session từ hôm qua nhưng vẫn đang chạy và overlap với ngày hôm nay
-    if (!s.EndDate || !s.EndTime) {
-      // Session chưa kết thúc, check xem có overlap với ngày hôm nay không
-      return enter.isBefore(todayStart) && end.isAfter(todayStart);
-    }
-
-    return false;
+    // Tính session bắt đầu trong ngày hôm nay HOẶC kết thúc trong ngày hôm nay
+    return enterDate === todayDate || endDate === todayDate;
   });
 
   // Nếu không có session nào đang chạy trong ngày hôm nay, reset về 0 (qua ngày reset điểm check-in)
@@ -301,23 +286,44 @@ function calculateCheckInMinutes(
       end = now; // Session đang chạy, kết thúc tại thời điểm hiện tại
     }
 
-    // QUAN TRỌNG: Chỉ tính phần trong ngày hôm nay (từ 0h đến thời điểm claim)
-    // Nếu session từ hôm trước, chỉ tính từ 0h hôm nay
+    // QUAN TRỌNG: Tính phần session trong ngày hôm nay
+    // - Nếu session bắt đầu trong ngày: tính từ lúc bắt đầu đến cuối ngày hoặc thời điểm kết thúc
+    // - Nếu session từ hôm trước kết thúc trong ngày: chỉ tính từ 00:00 đến thời điểm kết thúc
+    const enterDate =
+      typeof session.EnterDate === "string"
+        ? session.EnterDate
+        : dayjs(session.EnterDate).format("YYYY-MM-DD");
+    
+    const endDate = session.EndDate
+      ? (typeof session.EndDate === "string"
+          ? session.EndDate
+          : dayjs(session.EndDate).format("YYYY-MM-DD"))
+      : todayDate; // Session đang chạy, coi như kết thúc trong ngày hôm nay
+
+    // Chỉ tính session bắt đầu trong ngày HOẶC kết thúc trong ngày
+    if (enterDate !== todayDate && endDate !== todayDate) {
+      continue;
+    }
+
+    // Tính phần session trong ngày hôm nay
+    // - Nếu session bắt đầu từ hôm trước: chỉ tính từ 00:00 ngày hôm nay
+    // - Nếu session bắt đầu trong ngày: tính từ lúc bắt đầu
     const sessionStart = enter.isBefore(todayStart) ? todayStart : enter;
-    // Không được vượt quá thời điểm hiện tại (thời điểm claim)
-    const sessionEnd = end.isAfter(now) ? now : end;
+    // Giới hạn sessionEnd không vượt quá cuối ngày hôm nay hoặc thời điểm hiện tại
+    const todayEnd = now.endOf("day");
+    const sessionEnd = end.isAfter(todayEnd) ? todayEnd : (end.isAfter(now) ? now : end);
 
     // Nếu session bắt đầu sau thời điểm hiện tại, bỏ qua
     if (sessionStart.isAfter(now)) {
       continue;
     }
 
-    // Nếu session kết thúc trước 0h hôm nay, bỏ qua
-    if (sessionEnd.isBefore(todayStart)) {
+    // Nếu session kết thúc trước khi bắt đầu, bỏ qua
+    if (sessionEnd.isBefore(sessionStart)) {
       continue;
     }
 
-    // Tính thời gian session trong ngày hôm nay
+    // Tính thời gian session trong ngày hôm nay (chỉ tính phần trong ngày, không tính phần qua ngày hôm sau)
     const sessionDuration = sessionEnd.diff(sessionStart, "minute");
     if (sessionDuration <= 0) {
       continue;
@@ -415,7 +421,7 @@ export async function calculateActiveUsersInfo(
           AND s.status = 3
           AND (
             s.EnterDate = '${curDate}'
-            OR (s.EnterDate = DATE_SUB('${curDate}', INTERVAL 1 DAY) AND s.EndDate IS NULL)
+            OR (s.EndDate = '${curDate}' AND s.EnterDate = DATE_SUB('${curDate}', INTERVAL 1 DAY))
           )
         GROUP BY s.UserId, s.EnterDate, s.EnterTime, s.EndDate, s.EndTime, s.status, u.UserType, s.MachineName
         ORDER BY s.UserId, s.EnterDate DESC, s.EnterTime DESC
@@ -729,7 +735,14 @@ export async function calculateActiveUsersInfo(
 
         userData = userDataMap.get(userId);
         claimedCheckIn = totalClaimed;
-        availableCheckIn = Math.max(0, totalCheckIn - totalClaimed);
+        
+        // Giới hạn tối đa 24k điểm/ngày cho check-in
+        const maxDailyCheckInPoints = 24000;
+        const remainingDailyLimit = Math.max(0, maxDailyCheckInPoints - totalClaimed);
+        availableCheckIn = Math.min(
+          Math.max(0, totalCheckIn - totalClaimed),
+          remainingDailyLimit
+        );
 
         if (userData?.id) {
           checkIn = availableCheckIn;

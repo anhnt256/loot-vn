@@ -2,158 +2,26 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { cookies } from "next/headers";
 import { verifyJWT } from "@/lib/jwt";
-
-// Set to true to use mock data for UI testing
-const USE_MOCK_DATA = true;
+import { getBranchFromCookie } from "@/lib/server-utils";
+import dayjs from "@/lib/dayjs";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const month = searchParams.get("month");
   const year = searchParams.get("year");
 
-  // Mock data for UI testing
-  if (USE_MOCK_DATA) {
-    const selectedMonth = month ? parseInt(month) : 12;
-    const selectedYear = year ? parseInt(year) : 2024;
-
-    // Filter data by month/year
-    const salaryForMonth =
-      selectedMonth === 12
-        ? {
-            id: 1,
-            month: 12,
-            year: 2024,
-            totalHours: 176.5,
-            hourlySalary: 50000,
-            salaryFromHours: 8825000, // 176.5 * 50000
-            advance: 2000000,
-            bonus: 500000,
-            penalty: 0,
-            total: 7325000,
-            status: "PAID",
-            paidAt: "2024-12-31T10:00:00Z",
-            note: null,
-          }
-        : {
-            id: 2,
-            month: 11,
-            year: 2024,
-            totalHours: 160.25,
-            hourlySalary: 50000,
-            salaryFromHours: 8012500, // 160.25 * 50000
-            advance: 1500000,
-            bonus: 1000000,
-            penalty: 200000,
-            total: 7312500,
-            status: "PAID",
-            paidAt: "2024-11-30T10:00:00Z",
-            note: null,
-          };
-
-    const bonusForMonth =
-      selectedMonth === 12
-        ? [
-            {
-              id: 1,
-              amount: 500000,
-              reason: "Thưởng cuối năm",
-              description: "Thưởng cho nhân viên xuất sắc",
-              imageUrl: null,
-              note: "Cảm ơn bạn đã làm việc chăm chỉ",
-              rewardDate: "2024-12-25T00:00:00Z",
-              status: "PAID",
-              createdAt: "2024-12-25T10:00:00Z",
-            },
-          ]
-        : [
-            {
-              id: 2,
-              amount: 1000000,
-              reason: "Thưởng tháng 11",
-              description: "Hoàn thành tốt công việc",
-              imageUrl: null,
-              note: null,
-              rewardDate: "2024-11-30T00:00:00Z",
-              status: "PAID",
-              createdAt: "2024-11-30T10:00:00Z",
-            },
-          ];
-
-    const penaltiesForMonth =
-      selectedMonth === 12
-        ? [
-            {
-              id: 1,
-              amount: 150000,
-              reason: "Vi phạm quy định",
-              description: "Không tuân thủ quy trình làm việc",
-              imageUrl: null,
-              note: "Cần cải thiện",
-              penaltyDate: "2024-12-10T00:00:00Z",
-              status: "PAID",
-              createdAt: "2024-12-10T10:00:00Z",
-            },
-            {
-              id: 2,
-              amount: 100000,
-              reason: "Đi muộn",
-              description: "Đi muộn 2 lần trong tháng",
-              imageUrl: null,
-              note: "Vui lòng đến đúng giờ",
-              penaltyDate: "2024-12-20T00:00:00Z",
-              status: "APPROVED",
-              createdAt: "2024-12-20T10:00:00Z",
-            },
-          ]
-        : selectedMonth === 11
-          ? [
-              {
-                id: 3,
-                amount: 200000,
-                reason: "Đi muộn",
-                description: "Đi muộn 3 lần trong tháng",
-                imageUrl: null,
-                note: "Vui lòng đến đúng giờ",
-                penaltyDate: "2024-11-15T00:00:00Z",
-                status: "PAID",
-                createdAt: "2024-11-15T10:00:00Z",
-              },
-            ]
-          : [];
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        salaryHistory: [salaryForMonth],
-        bonusHistory: bonusForMonth,
-        penaltiesHistory: penaltiesForMonth,
-        summary: {
-          totalHours: salaryForMonth.totalHours || 0,
-          salary: salaryForMonth.salaryFromHours || 0,
-          bonus: bonusForMonth.reduce((sum, b) => sum + b.amount, 0),
-          penalty: penaltiesForMonth
-            .filter((p) => p.status === "PAID" || p.status === "APPROVED")
-            .reduce((sum, p) => sum + p.amount, 0),
-          netSalary:
-            (salaryForMonth.salaryFromHours || 0) +
-            bonusForMonth.reduce((sum, b) => sum + b.amount, 0) -
-            penaltiesForMonth
-              .filter((p) => p.status === "PAID" || p.status === "APPROVED")
-              .reduce((sum, p) => sum + p.amount, 0),
-        },
-      },
-    });
-  }
-
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value;
+    // Only check staffToken for staff APIs
+    const token = cookieStore.get("staffToken")?.value;
 
     if (!token) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
+      const response = NextResponse.json(
+        { success: false, error: "Unauthorized - Please login again" },
         { status: 401 },
       );
+      response.headers.set("X-Redirect-To", "/staff-login");
+      return response;
     }
 
     const payload = await verifyJWT(token);
@@ -164,9 +32,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Use branch from token payload first, fallback to cookie
+    const branch = payload.branch || await getBranchFromCookie();
+    if (!branch) {
+      return NextResponse.json(
+        { success: false, error: "Missing branch" },
+        { status: 400 },
+      );
+    }
+
     const staffId = searchParams.get("staffId");
-    const month = searchParams.get("month");
-    const year = searchParams.get("year");
 
     if (!staffId) {
       return NextResponse.json(
@@ -175,20 +50,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get salary history - filter by month/year if provided
+    // Get salary history - filter by month/year if provided, join with Staff to filter by branch
     let salaryQuery = `SELECT 
-        id, month, year, totalHours, hourlySalary, salaryFromHours,
-        advance, bonus, penalty, total, status, paidAt, note
-      FROM StaffSalary 
-      WHERE staffId = ?`;
+        ss.id, ss.month, ss.year, ss.totalHours, ss.hourlySalary, ss.salaryFromHours,
+        ss.advance, ss.bonus, ss.penalty, ss.total, ss.status, ss.paidAt, ss.note
+      FROM StaffSalary ss
+      LEFT JOIN Staff s ON ss.staffId = s.id AND s.branch = ?
+      WHERE ss.staffId = ? AND s.branch = ?`;
 
-    const queryParams: any[] = [parseInt(staffId)];
+    const queryParams: any[] = [branch, parseInt(staffId), branch];
 
     if (month && year) {
-      salaryQuery += ` AND month = ? AND year = ?`;
+      salaryQuery += ` AND ss.month = ? AND ss.year = ?`;
       queryParams.push(parseInt(month), parseInt(year));
     } else {
-      salaryQuery += ` ORDER BY year DESC, month DESC LIMIT 12`;
+      salaryQuery += ` ORDER BY ss.year DESC, ss.month DESC LIMIT 12`;
     }
 
     const salaryHistory = (await db.$queryRawUnsafe(
@@ -196,23 +72,24 @@ export async function GET(request: NextRequest) {
       ...queryParams,
     )) as any[];
 
-    // Get bonus history - filter by month/year if provided
+    // Get bonus history - filter by month/year if provided, join with Staff to filter by branch
     let bonusHistory: any[] = [];
     try {
       let bonusQuery = `SELECT 
-          id, amount, reason, description, imageUrl, note,
-          rewardDate, status, createdAt
-        FROM StaffBonus 
-        WHERE staffId = ?`;
+          b.id, b.amount, b.reason, b.description, b.imageUrl, b.note,
+          b.rewardDate, b.status, b.createdAt
+        FROM StaffBonus b
+        LEFT JOIN Staff s ON b.staffId = s.id AND s.branch = ?
+        WHERE b.staffId = ? AND s.branch = ?`;
 
-      const bonusParams: any[] = [parseInt(staffId)];
+      const bonusParams: any[] = [branch, parseInt(staffId), branch];
 
       if (month && year) {
-        bonusQuery += ` AND YEAR(rewardDate) = ? AND MONTH(rewardDate) = ?`;
+        bonusQuery += ` AND YEAR(b.rewardDate) = ? AND MONTH(b.rewardDate) = ?`;
         bonusParams.push(parseInt(year), parseInt(month));
       }
 
-      bonusQuery += ` ORDER BY rewardDate DESC, createdAt DESC LIMIT 20`;
+      bonusQuery += ` ORDER BY b.rewardDate DESC, b.createdAt DESC LIMIT 20`;
 
       bonusHistory = (await db.$queryRawUnsafe(
         bonusQuery,
@@ -225,23 +102,24 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Get penalties history - filter by month/year if provided
+    // Get penalties history - filter by month/year if provided, join with Staff to filter by branch
     let penaltiesHistory: any[] = [];
     try {
       let penaltyQuery = `SELECT 
-          id, amount, reason, description, imageUrl, note,
-          penaltyDate, status, createdAt
-        FROM StaffPenalty 
-        WHERE staffId = ?`;
+          p.id, p.amount, p.reason, p.description, p.imageUrl, p.note,
+          p.penaltyDate, p.status, p.createdAt
+        FROM StaffPenalty p
+        LEFT JOIN Staff s ON p.staffId = s.id AND s.branch = ?
+        WHERE p.staffId = ? AND s.branch = ?`;
 
-      const penaltyParams: any[] = [parseInt(staffId)];
+      const penaltyParams: any[] = [branch, parseInt(staffId), branch];
 
       if (month && year) {
-        penaltyQuery += ` AND YEAR(penaltyDate) = ? AND MONTH(penaltyDate) = ?`;
+        penaltyQuery += ` AND YEAR(p.penaltyDate) = ? AND MONTH(p.penaltyDate) = ?`;
         penaltyParams.push(parseInt(year), parseInt(month));
       }
 
-      penaltyQuery += ` ORDER BY penaltyDate DESC, createdAt DESC LIMIT 20`;
+      penaltyQuery += ` ORDER BY p.penaltyDate DESC, p.createdAt DESC LIMIT 20`;
 
       penaltiesHistory = (await db.$queryRawUnsafe(
         penaltyQuery,
@@ -254,19 +132,92 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Calculate summary for the selected month
-    const salaryForMonth = salaryHistory.length > 0 ? salaryHistory[0] : null;
+    // Get staff baseSalary
+    const staffData = (await db.$queryRawUnsafe(
+      `SELECT baseSalary 
+       FROM Staff 
+       WHERE id = ? AND branch = ?`,
+      parseInt(staffId),
+      branch,
+    )) as any[];
 
-    const totalHours = salaryForMonth?.totalHours || 0;
-    const salary = salaryForMonth?.salaryFromHours || 0;
+    const baseSalary = staffData.length > 0 ? (staffData[0].baseSalary || 0) : 0;
 
-    const bonus = bonusHistory
-      .filter((b) => b.status === "PAID" || b.status === "APPROVED")
-      .reduce((sum, b) => sum + (b.amount || 0), 0);
+    // Calculate actual total hours from StaffTimeTracking for the selected month
+    let totalHours = 0;
+    if (month && year) {
+      const startOfMonth = dayjs(`${year}-${month}-01`)
+        .tz("Asia/Ho_Chi_Minh")
+        .startOf("month")
+        .format("YYYY-MM-DD");
+      const endOfMonth = dayjs(`${year}-${month}-01`)
+        .tz("Asia/Ho_Chi_Minh")
+        .endOf("month")
+        .format("YYYY-MM-DD");
 
-    const penalty = penaltiesHistory
-      .filter((p) => p.status === "PAID" || p.status === "APPROVED")
-      .reduce((sum, p) => sum + (p.amount || 0), 0);
+      const monthRecords = (await db.$queryRawUnsafe(
+        `SELECT 
+          checkInTime,
+          checkOutTime
+        FROM StaffTimeTracking 
+        WHERE staffId = ? AND DATE(checkInTime) >= ? AND DATE(checkInTime) <= ?`,
+        parseInt(staffId),
+        startOfMonth,
+        endOfMonth,
+      )) as any[];
+
+      const nowMonth = dayjs().tz("Asia/Ho_Chi_Minh");
+      monthRecords.forEach((record: any) => {
+        // Parse checkInTime
+        let checkInStr = record.checkInTime;
+        if (checkInStr instanceof Date) {
+          checkInStr = checkInStr.toISOString();
+        }
+        if (typeof checkInStr !== 'string') {
+          checkInStr = String(checkInStr);
+        }
+        const checkInDateStr = checkInStr.split('.')[0];
+        const checkIn = dayjs(checkInDateStr).utcOffset(7, true);
+        
+        // If checkOutTime is null, set it to current time
+        let checkOut = nowMonth;
+        if (record.checkOutTime) {
+          let checkOutStr = record.checkOutTime;
+          if (checkOutStr instanceof Date) {
+            checkOutStr = checkOutStr.toISOString();
+          }
+          if (typeof checkOutStr !== 'string') {
+            checkOutStr = String(checkOutStr);
+          }
+          const checkOutDateStr = checkOutStr.split('.')[0];
+          checkOut = dayjs(checkOutDateStr).utcOffset(7, true);
+        }
+        
+        // Calculate diff
+        const diffHours = checkOut.diff(checkIn, "hour", true);
+        totalHours += Math.abs(diffHours);
+      });
+    }
+
+    // Calculate salary = totalHours * baseSalary, then round up to nearest 1000
+    const salary = Math.ceil((totalHours * baseSalary) / 1000) * 1000;
+
+    // If there's a StaffSalary record for this month, use values from there
+    // Otherwise, calculate from bonusHistory and penaltiesHistory
+    let bonus = 0;
+    let penalty = 0;
+    
+    if (month && year && salaryHistory.length > 0) {
+      // Use values from StaffSalary record if exists
+      const salaryRecord = salaryHistory[0];
+      bonus = salaryRecord.bonus || 0;
+      penalty = salaryRecord.penalty || 0;
+    } else {
+      // Calculate from history - include all statuses (PENDING, APPROVED, PAID)
+      // to show total bonus/penalty for the month
+      bonus = bonusHistory.reduce((sum, b) => sum + (b.amount || 0), 0);
+      penalty = penaltiesHistory.reduce((sum, p) => sum + (p.amount || 0), 0);
+    }
 
     const netSalary = salary + bonus - penalty;
 
@@ -293,11 +244,13 @@ export async function GET(request: NextRequest) {
         data: {
           salaryHistory: [],
           bonusHistory: [],
+          penaltiesHistory: [],
           summary: {
-            totalSalary: 0,
-            totalBonus: 0,
-            pendingSalary: 0,
-            pendingBonus: 0,
+            totalHours: 0,
+            salary: 0,
+            bonus: 0,
+            penalty: 0,
+            netSalary: 0,
           },
         },
       });

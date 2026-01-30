@@ -2,116 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { cookies } from "next/headers";
 import { verifyJWT } from "@/lib/jwt";
+import { getBranchFromCookie } from "@/lib/server-utils";
 import dayjs from "@/lib/dayjs";
 
-// Set to true to use mock data for UI testing
-const USE_MOCK_DATA = true;
-
 export async function GET(request: NextRequest) {
-  // Mock data for UI testing
-  if (USE_MOCK_DATA) {
-    const { searchParams } = new URL(request.url);
-    const month = parseInt(searchParams.get("month") || "12");
-    const year = parseInt(searchParams.get("year") || "2024");
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        salaryHistory: [
-          {
-            id: 1,
-            month: month,
-            year: year,
-            totalHours: month === 12 ? 176.5 : 160.25,
-            hourlySalary: 50000,
-            salaryFromHours: month === 12 ? 8825000 : 8012500,
-            advance: month === 12 ? 2000000 : 1500000,
-            bonus: month === 12 ? 500000 : 1000000,
-            penalty: month === 12 ? 0 : 200000,
-            total: month === 12 ? 7325000 : 7312500,
-            status: "PAID",
-            paidAt: `${year}-${String(month).padStart(2, "0")}-28T10:00:00Z`,
-            note: "Lương tháng " + month + "/" + year,
-          },
-        ],
-        bonusHistory: [
-          {
-            id: 1,
-            amount: 500000,
-            reason: "Thưởng cuối năm",
-            description: "Thưởng cho nhân viên xuất sắc trong tháng",
-            imageUrl: null,
-            note: "Cảm ơn bạn đã làm việc chăm chỉ",
-            rewardDate: `${year}-${String(month).padStart(2, "0")}-25T00:00:00Z`,
-            status: "PAID",
-            createdAt: `${year}-${String(month).padStart(2, "0")}-25T10:00:00Z`,
-          },
-          {
-            id: 2,
-            amount: 300000,
-            reason: "Thưởng năng suất",
-            description: "Hoàn thành vượt chỉ tiêu",
-            imageUrl: null,
-            note: null,
-            rewardDate: `${year}-${String(month).padStart(2, "0")}-15T00:00:00Z`,
-            status: "APPROVED",
-            createdAt: `${year}-${String(month).padStart(2, "0")}-15T10:00:00Z`,
-          },
-        ],
-        penaltiesHistory:
-          month === 12
-            ? [
-                {
-                  id: 1,
-                  amount: 150000,
-                  reason: "Vi phạm quy định",
-                  description: "Không tuân thủ quy trình làm việc",
-                  imageUrl: null,
-                  note: "Cần cải thiện",
-                  penaltyDate: `${year}-${String(month).padStart(2, "0")}-10T00:00:00Z`,
-                  status: "PAID",
-                  createdAt: `${year}-${String(month).padStart(2, "0")}-10T10:00:00Z`,
-                },
-                {
-                  id: 2,
-                  amount: 100000,
-                  reason: "Đi muộn",
-                  description: "Đi muộn 2 lần trong tháng",
-                  imageUrl: null,
-                  note: "Vui lòng đến đúng giờ",
-                  penaltyDate: `${year}-${String(month).padStart(2, "0")}-20T00:00:00Z`,
-                  status: "APPROVED",
-                  createdAt: `${year}-${String(month).padStart(2, "0")}-20T10:00:00Z`,
-                },
-              ]
-            : month === 11
-              ? [
-                  {
-                    id: 3,
-                    amount: 200000,
-                    reason: "Đi muộn",
-                    description: "Đi muộn 3 lần trong tháng",
-                    imageUrl: null,
-                    note: "Vui lòng đến đúng giờ",
-                    penaltyDate: `${year}-${String(month).padStart(2, "0")}-15T00:00:00Z`,
-                    status: "PAID",
-                    createdAt: `${year}-${String(month).padStart(2, "0")}-15T10:00:00Z`,
-                  },
-                ]
-              : [],
-      },
-    });
-  }
-
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value;
+    // Only check staffToken for staff APIs
+    const token = cookieStore.get("staffToken")?.value;
 
     if (!token) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
+      const response = NextResponse.json(
+        { success: false, error: "Unauthorized - Please login again" },
         { status: 401 },
       );
+      response.headers.set("X-Redirect-To", "/staff-login");
+      return response;
     }
 
     const payload = await verifyJWT(token);
@@ -119,6 +25,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 },
+      );
+    }
+
+    // Use branch from token payload first, fallback to cookie
+    const branch = payload.branch || await getBranchFromCookie();
+    if (!branch) {
+      return NextResponse.json(
+        { success: false, error: "Missing branch" },
+        { status: 400 },
       );
     }
 
@@ -178,31 +93,38 @@ export async function GET(request: NextRequest) {
       // Get salary history for the month
       const salaryHistory = (await db.$queryRawUnsafe(
         `SELECT 
-          id, month, year, totalHours, hourlySalary, salaryFromHours,
-          advance, bonus, penalty, total, status, paidAt, note
-        FROM StaffSalary 
-        WHERE staffId = ? AND month = ? AND year = ?
-        ORDER BY createdAt DESC`,
+          ss.id, ss.month, ss.year, ss.totalHours, ss.hourlySalary, ss.salaryFromHours,
+          ss.advance, ss.bonus, ss.penalty, ss.total, ss.status, ss.paidAt, ss.note
+        FROM StaffSalary ss
+        LEFT JOIN Staff s ON ss.staffId = s.id AND s.branch = ?
+        WHERE ss.staffId = ? AND ss.month = ? AND ss.year = ? AND s.branch = ?
+        ORDER BY ss.createdAt DESC`,
+        branch,
         parseInt(staffId),
         requestedMonth,
         requestedYear,
+        branch,
       )) as any[];
 
-      // Get bonus history for the month
+      // Get bonus history for the month - join with Staff to filter by branch
       let bonusHistory: any[] = [];
       try {
         bonusHistory = (await db.$queryRawUnsafe(
           `SELECT 
-            id, amount, reason, description, imageUrl, note,
-            rewardDate, status, createdAt
-          FROM StaffBonus 
-          WHERE staffId = ? 
-            AND YEAR(rewardDate) = ? 
-            AND MONTH(rewardDate) = ?
-          ORDER BY rewardDate DESC, createdAt DESC`,
+            b.id, b.amount, b.reason, b.description, b.imageUrl, b.note,
+            b.rewardDate, b.status, b.createdAt
+          FROM StaffBonus b
+          LEFT JOIN Staff s ON b.staffId = s.id AND s.branch = ?
+          WHERE b.staffId = ? 
+            AND YEAR(b.rewardDate) = ? 
+            AND MONTH(b.rewardDate) = ?
+            AND s.branch = ?
+          ORDER BY b.rewardDate DESC, b.createdAt DESC`,
+          branch,
           parseInt(staffId),
           requestedYear,
           requestedMonth,
+          branch,
         )) as any[];
       } catch (error: any) {
         if (!error.message?.includes("doesn't exist")) {
@@ -210,21 +132,25 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Get penalties history for the month
+      // Get penalties history for the month - join with Staff to filter by branch
       let penaltiesHistory: any[] = [];
       try {
         penaltiesHistory = (await db.$queryRawUnsafe(
           `SELECT 
-            id, amount, reason, description, imageUrl, note,
-            penaltyDate, status, createdAt
-          FROM StaffPenalty 
-          WHERE staffId = ? 
-            AND YEAR(penaltyDate) = ? 
-            AND MONTH(penaltyDate) = ?
-          ORDER BY penaltyDate DESC, createdAt DESC`,
+            p.id, p.amount, p.reason, p.description, p.imageUrl, p.note,
+            p.penaltyDate, p.status, p.createdAt
+          FROM StaffPenalty p
+          LEFT JOIN Staff s ON p.staffId = s.id AND s.branch = ?
+          WHERE p.staffId = ? 
+            AND YEAR(p.penaltyDate) = ? 
+            AND MONTH(p.penaltyDate) = ?
+            AND s.branch = ?
+          ORDER BY p.penaltyDate DESC, p.createdAt DESC`,
+          branch,
           parseInt(staffId),
           requestedYear,
           requestedMonth,
+          branch,
         )) as any[];
       } catch (error: any) {
         if (!error.message?.includes("doesn't exist")) {

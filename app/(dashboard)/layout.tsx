@@ -62,6 +62,23 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
         console.error("No userId found in localStorage");
         return;
       }
+      
+      // Fetch workShifts if not present in localStorage
+      let workShifts = parsedUserData?.workShifts || [];
+      if (!workShifts || workShifts.length === 0) {
+        try {
+          const workShiftsResponse = await fetch("/api/work-shifts");
+          if (workShiftsResponse.ok) {
+            const workShiftsResult = await workShiftsResponse.json();
+            if (workShiftsResult.success && workShiftsResult.data) {
+              workShifts = workShiftsResult.data;
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching work shifts:", error);
+        }
+      }
+      
       const response = await fetch("/api/user-calculator", {
         method: "POST",
         headers: {
@@ -78,12 +95,13 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
           ? freshUserData.data[0]
           : null;
         if (user && parsedUserData) {
-          // Preserve isNewUser và isReturnedUser từ login response
-          // Vì user-calculator API không trả về 2 field này
+          // Preserve isNewUser, isReturnedUser và workShifts từ login response
+          // Vì user-calculator API không trả về các field này
           const updatedUser = {
             ...user,
             isNewUser: parsedUserData.isNewUser,
             isReturnedUser: parsedUserData.isReturnedUser,
+            workShifts: workShifts.length > 0 ? workShifts : (parsedUserData.workShifts || []),
           };
           localStorage.setItem(CURRENT_USER, JSON.stringify(updatedUser));
         }

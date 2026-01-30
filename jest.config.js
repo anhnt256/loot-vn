@@ -7,8 +7,10 @@ module.exports = {
   
   // Test file patterns
   testMatch: [
-    '<rootDir>/tests/**/*.js',
-    '<rootDir>/tests/**/*.ts'
+    '<rootDir>/tests/**/*.test.js',
+    '<rootDir>/tests/**/*.test.ts',
+    '<rootDir>/tests/**/*-tests.js',
+    '<rootDir>/tests/**/*-tests.ts'
   ],
   
   // Coverage configuration
@@ -50,7 +52,7 @@ module.exports = {
   resetModules: true,
   
   // Module name mapping for TypeScript
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1'
   },
   
