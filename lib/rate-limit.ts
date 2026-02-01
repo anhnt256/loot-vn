@@ -124,6 +124,7 @@ export async function checkGameRollRateLimit(
 }
 
 // Rate limit cho check-in
+// Chỉ cho phép 1 lần check-in mỗi giờ vì cần ít nhất 1h chơi mới có điểm
 export async function checkCheckInRateLimit(
   userId: string,
   branch: string,
@@ -132,7 +133,7 @@ export async function checkCheckInRateLimit(
 
   return checkRateLimit(identifier, {
     windowMs: 60 * 60 * 1000, // 1 hour
-    maxRequests: 5, // Tối đa 5 lần check-in mỗi giờ
+    maxRequests: 1, // Chỉ 1 lần check-in mỗi giờ
     keyPrefix: "checkin",
   });
 }

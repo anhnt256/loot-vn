@@ -27,14 +27,14 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     };
   }
 
-  // Rate limiting: Max 5 check-ins per hour per user
+  // Rate limiting: Max 1 check-in per hour per user (in-memory, first line of defense)
   const rateLimitResult = await checkCheckInRateLimit(String(userId), branch);
   if (!rateLimitResult.allowed) {
     const resetTime = new Date(rateLimitResult.resetTime).toLocaleString(
       "vi-VN",
     );
     return {
-      error: `Quá nhiều lần check-in. Vui lòng thử lại sau ${resetTime}`,
+      error: `Bạn chỉ có thể check-in 1 lần mỗi giờ. Vui lòng thử lại sau ${resetTime}`,
     };
   }
 
@@ -44,28 +44,6 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     return {
       error: `Bạn đã check-in ${dailyLimitResult.count}/${dailyLimitResult.maxAllowed} lần hôm nay. Vui lòng thử lại vào ngày mai!`,
     };
-  }
-
-  // Enhanced anti-spam: Prevent check-in if last check-in was less than 30 minutes ago
-  const lastCheckIns = await db.$queryRaw`
-    SELECT * FROM CheckInResult 
-    WHERE userId = ${userId} AND branch = ${branch}
-    ORDER BY createdAt DESC
-    LIMIT 1
-  `;
-  const lastCheckIn = (lastCheckIns as any[])[0];
-
-  if (lastCheckIn) {
-    const now = dayjs(getCurrentTimeVNISO());
-    const last = dayjs(dayjs(lastCheckIn.createdAt).subtract(7, "hours"));
-    const minutesSinceLastCheckIn = now.diff(last, "minute");
-
-    if (minutesSinceLastCheckIn < 30) {
-      const remainingMinutes = 30 - minutesSinceLastCheckIn;
-      return {
-        error: `Bạn vừa check-in xong, vui lòng chờ ${remainingMinutes} phút trước khi check-in tiếp!`,
-      };
-    }
   }
 
   try {
@@ -111,9 +89,31 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     // Giới hạn số điểm có thể claim không vượt quá giới hạn còn lại
     const actualPointsToClaim = Math.min(availableCheckIn, remainingDailyLimit);
 
-    // console.log('getCurrentTimeVNISO', getCurrentTimeVNISO())
-
+    // Transaction với locking để chặn race condition (double click)
     await db.$transaction(async (tx) => {
+      // Anti-spam check TRONG transaction với FOR UPDATE để lock row
+      // Chặn double click và race condition
+      const lastCheckIns = await tx.$queryRaw<any[]>`
+        SELECT * FROM CheckInResult 
+        WHERE userId = ${userId} AND branch = ${branch}
+        ORDER BY createdAt DESC
+        LIMIT 1
+        FOR UPDATE
+      `;
+      const lastCheckIn = lastCheckIns[0];
+
+      if (lastCheckIn) {
+        const now = dayjs(getCurrentTimeVNISO());
+        const last = dayjs(dayjs(lastCheckIn.createdAt).subtract(7, "hours"));
+        const minutesSinceLastCheckIn = now.diff(last, "minute");
+
+        // Yêu cầu ít nhất 55 phút giữa các lần check-in (gần 1h nhưng có buffer nhỏ)
+        if (minutesSinceLastCheckIn < 55) {
+          const remainingMinutes = 55 - minutesSinceLastCheckIn;
+          throw new Error(`Bạn vừa check-in xong, vui lòng chờ ${remainingMinutes} phút trước khi check-in tiếp!`);
+        }
+      }
+
       // Create checkInResult using raw SQL
       await tx.$executeRaw`
         INSERT INTO CheckInResult (userId, branch, createdAt)
@@ -133,11 +133,12 @@ const handler = async (data: InputType): Promise<ReturnType> => {
       if (checkIn) {
         const { id } = checkIn;
 
-        // Find user using raw SQL
+        // Find user với FOR UPDATE để lock row, chặn concurrent update
         const users = await tx.$queryRaw`
           SELECT * FROM User 
           WHERE userId = ${userId} AND branch = ${branch}
           LIMIT 1
+          FOR UPDATE
         `;
         const user = (users as any[])[0];
 

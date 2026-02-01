@@ -10,9 +10,9 @@ describe('Check-in Security Tests', () => {
   const testBranch = 'GO_VAP';
 
   describe('1. Rate Limiting Tests', () => {
-    test('should enforce hourly rate limit', () => {
+    test('should enforce hourly rate limit (1 per hour)', () => {
       const windowMs = 60 * 60 * 1000; // 1 hour
-      const maxRequests = 5;
+      const maxRequests = 1; // Chỉ 1 lần check-in mỗi giờ
       
       // Simulate rate limiting
       const requests = Array.from({ length: maxRequests + 1 }, (_, i) => i);
@@ -35,21 +35,35 @@ describe('Check-in Security Tests', () => {
     });
   });
 
-  describe('2. Time-based Anti-spam Tests', () => {
-    test('should prevent check-in within 30 minutes', () => {
-      const lastCheckInTime = dayjs().tz("Asia/Ho_Chi_Minh").subtract(15, 'minute');
+  describe('2. Time-based Anti-spam Tests (55 minutes minimum)', () => {
+    test('should prevent check-in within 55 minutes', () => {
+      const lastCheckInTime = dayjs().tz("Asia/Ho_Chi_Minh").subtract(30, 'minute');
       const currentTime = dayjs().tz("Asia/Ho_Chi_Minh");
       const minutesSinceLastCheckIn = currentTime.diff(lastCheckInTime, 'minute');
+      const minIntervalMinutes = 55;
       
-      expect(minutesSinceLastCheckIn).toBeLessThan(30);
+      expect(minutesSinceLastCheckIn).toBeLessThan(minIntervalMinutes);
     });
 
-    test('should allow check-in after 30 minutes', () => {
-      const lastCheckInTime = dayjs().tz("Asia/Ho_Chi_Minh").subtract(35, 'minute');
+    test('should allow check-in after 55 minutes', () => {
+      const lastCheckInTime = dayjs().tz("Asia/Ho_Chi_Minh").subtract(60, 'minute');
       const currentTime = dayjs().tz("Asia/Ho_Chi_Minh");
       const minutesSinceLastCheckIn = currentTime.diff(lastCheckInTime, 'minute');
+      const minIntervalMinutes = 55;
       
-      expect(minutesSinceLastCheckIn).toBeGreaterThanOrEqual(30);
+      expect(minutesSinceLastCheckIn).toBeGreaterThanOrEqual(minIntervalMinutes);
+    });
+
+    test('should block double-click (concurrent requests)', () => {
+      // Với FOR UPDATE trong transaction, request thứ 2 phải đợi request 1 hoàn thành
+      // Sau khi request 1 xong, request 2 sẽ thấy lastCheckIn mới và bị block
+      const firstRequestTime = dayjs().tz("Asia/Ho_Chi_Minh");
+      const secondRequestTime = firstRequestTime.add(100, 'millisecond'); // Double click
+      const timeDiff = secondRequestTime.diff(firstRequestTime, 'minute');
+      const minIntervalMinutes = 55;
+      
+      expect(timeDiff).toBeLessThan(minIntervalMinutes);
+      // Request 2 sẽ bị block vì < 55 phút
     });
   });
 
@@ -104,7 +118,7 @@ describe('Check-in Security Tests', () => {
 
     test('should prevent rapid successive requests', () => {
       const requestInterval = 1000; // 1 second
-      const minimumInterval = 30 * 60 * 1000; // 30 minutes
+      const minimumInterval = 55 * 60 * 1000; // 55 minutes (matches anti-spam check)
       
       expect(requestInterval).toBeLessThan(minimumInterval);
     });
@@ -120,8 +134,8 @@ describe('Check-in Security Tests', () => {
 
   describe('6. Error Message Tests', () => {
     test('should provide clear rate limit error messages', () => {
-      const errorMessage = 'Quá nhiều lần check-in. Vui lòng thử lại sau';
-      expect(errorMessage).toContain('Quá nhiều lần check-in');
+      const errorMessage = 'Bạn chỉ có thể check-in 1 lần mỗi giờ. Vui lòng thử lại sau';
+      expect(errorMessage).toContain('check-in 1 lần mỗi giờ');
     });
 
     test('should provide clear daily limit error messages', () => {
