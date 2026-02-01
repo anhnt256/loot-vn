@@ -53,6 +53,7 @@ interface FnetSession {
   status: number;
   UserType: number;
   MachineName: string;
+  TimeUsed: number | null; // Thời gian sử dụng thực tế (phút)
 }
 
 interface UserStarHistory {
@@ -186,8 +187,13 @@ function isUserUsingCombo(
 }
 
 /**
- * Tính thời gian CheckIn trong ngày hiện tại, loại bỏ các khoảng thời gian trùng với combo
+ * Tính thời gian CheckIn trong ngày hiện tại, sử dụng TimeUsed từ DB
+ * Loại bỏ các khoảng thời gian trùng với combo
  * Chỉ tính từ 0h hôm nay đến hiện tại, nếu qua ngày thì reset về 0
+ * 
+ * Logic mới:
+ * - Session bắt đầu hôm nay: dùng TimeUsed trực tiếp
+ * - Session bắt đầu hôm trước, kết thúc hôm nay: tính từ 00:00 đến EndTime (hoặc now nếu chưa kết thúc)
  */
 function calculateCheckInMinutes(
   sessions: FnetSession[],
@@ -200,7 +206,6 @@ function calculateCheckInMinutes(
   const todayDate = now.format("YYYY-MM-DD");
 
   // Kiểm tra có session nào overlap với ngày hôm nay không
-  // (bao gồm session bắt đầu trong ngày hoặc session từ hôm trước kết thúc trong ngày)
   const hasActiveSessionToday = sessions.some((s) => {
     if (!s.EnterDate || !s.EnterTime) return false;
 
@@ -215,11 +220,10 @@ function calculateCheckInMinutes(
           : dayjs(s.EndDate).format("YYYY-MM-DD"))
       : todayDate; // Session đang chạy, coi như kết thúc trong ngày hôm nay
 
-    // Tính session bắt đầu trong ngày hôm nay HOẶC kết thúc trong ngày hôm nay
     return enterDate === todayDate || endDate === todayDate;
   });
 
-  // Nếu không có session nào đang chạy trong ngày hôm nay, reset về 0 (qua ngày reset điểm check-in)
+  // Nếu không có session nào trong ngày hôm nay, reset về 0
   if (!hasActiveSessionToday) {
     return 0;
   }
@@ -230,13 +234,11 @@ function calculateCheckInMinutes(
     const comboStart = combineDateTime(combo.FromDate, combo.FromTime);
     const comboEnd = combineDateTime(combo.ToDate, combo.ToTime);
 
-    // Chỉ lấy phần combo trong ngày hôm nay
     const comboStartInToday = comboStart.isBefore(todayStart)
       ? todayStart
       : comboStart;
     const comboEndInToday = comboEnd.isAfter(now) ? now : comboEnd;
 
-    // Chỉ thêm nếu combo overlap với ngày hôm nay
     if (
       comboEndInToday.isAfter(comboStartInToday) &&
       comboStartInToday.isBefore(now)
@@ -248,7 +250,7 @@ function calculateCheckInMinutes(
     }
   }
 
-  // Sắp xếp combo ranges theo thời gian bắt đầu và merge các ranges overlap
+  // Merge các combo ranges overlap
   comboRanges.sort((a, b) => a.start.diff(b.start));
   const mergedComboRanges: Array<{ start: dayjs.Dayjs; end: dayjs.Dayjs }> = [];
   for (const comboRange of comboRanges) {
@@ -256,7 +258,6 @@ function calculateCheckInMinutes(
       mergedComboRanges.push({ ...comboRange });
     } else {
       const lastRange = mergedComboRanges[mergedComboRanges.length - 1];
-      // Nếu overlap hoặc tiếp giáp, merge
       if (
         comboRange.start.isBefore(lastRange.end) ||
         comboRange.start.isSame(lastRange.end)
@@ -270,25 +271,11 @@ function calculateCheckInMinutes(
     }
   }
 
-  // Tính tổng thời gian session trong ngày hôm nay (từ 0h đến thời điểm hiện tại)
-  // Chỉ tính phần trong ngày hiện tại, không tính phần từ ngày hôm trước
   let totalMinutes = 0;
 
   for (const session of sessions) {
     if (!session.EnterDate || !session.EnterTime) continue;
 
-    const enter = combineDateTime(session.EnterDate, session.EnterTime);
-    let end: dayjs.Dayjs;
-
-    if (session.EndDate && session.EndTime) {
-      end = combineDateTime(session.EndDate, session.EndTime);
-    } else {
-      end = now; // Session đang chạy, kết thúc tại thời điểm hiện tại
-    }
-
-    // QUAN TRỌNG: Tính phần session trong ngày hôm nay
-    // - Nếu session bắt đầu trong ngày: tính từ lúc bắt đầu đến cuối ngày hoặc thời điểm kết thúc
-    // - Nếu session từ hôm trước kết thúc trong ngày: chỉ tính từ 00:00 đến thời điểm kết thúc
     const enterDate =
       typeof session.EnterDate === "string"
         ? session.EnterDate
@@ -298,42 +285,62 @@ function calculateCheckInMinutes(
       ? (typeof session.EndDate === "string"
           ? session.EndDate
           : dayjs(session.EndDate).format("YYYY-MM-DD"))
-      : todayDate; // Session đang chạy, coi như kết thúc trong ngày hôm nay
+      : todayDate;
 
-    // Chỉ tính session bắt đầu trong ngày HOẶC kết thúc trong ngày
+    // Bỏ qua session không liên quan đến ngày hôm nay
     if (enterDate !== todayDate && endDate !== todayDate) {
       continue;
     }
 
-    // Tính phần session trong ngày hôm nay
-    // - Nếu session bắt đầu từ hôm trước: chỉ tính từ 00:00 ngày hôm nay
-    // - Nếu session bắt đầu trong ngày: tính từ lúc bắt đầu
+    let sessionMinutes = 0;
+
+    if (enterDate === todayDate) {
+      // Session bắt đầu trong ngày hôm nay: dùng TimeUsed trực tiếp
+      sessionMinutes = session.TimeUsed ?? 0;
+    } else if (enterDate !== todayDate && endDate === todayDate) {
+      // Session bắt đầu từ hôm trước, kết thúc hôm nay
+      // Chỉ tính từ 00:00 đến EndTime (hoặc now nếu chưa kết thúc)
+      let endTime: dayjs.Dayjs;
+      
+      if (session.EndTime) {
+        // Parse EndTime - có thể là "HH:mm:ss" hoặc Date object
+        const endTimeStr = typeof session.EndTime === "string" 
+          ? session.EndTime 
+          : dayjs(session.EndTime).format("HH:mm:ss");
+        
+        // Tạo datetime từ todayDate + EndTime
+        endTime = dayjs(`${todayDate}T${endTimeStr}`).tz("Asia/Ho_Chi_Minh", true);
+      } else {
+        // Session đang chạy, lấy thời điểm hiện tại
+        endTime = now;
+      }
+
+      // Tính số phút từ 00:00 đến endTime
+      sessionMinutes = endTime.diff(todayStart, "minute");
+    }
+
+    if (sessionMinutes <= 0) {
+      continue;
+    }
+
+    // Loại bỏ thời gian combo (nếu có)
+    // Để tính chính xác combo overlap, cần xác định khoảng thời gian session trong ngày
+    const enter = combineDateTime(session.EnterDate, session.EnterTime);
     const sessionStart = enter.isBefore(todayStart) ? todayStart : enter;
-    // Giới hạn sessionEnd không vượt quá cuối ngày hôm nay hoặc thời điểm hiện tại
-    const todayEnd = now.endOf("day");
-    const sessionEnd = end.isAfter(todayEnd) ? todayEnd : (end.isAfter(now) ? now : end);
-
-    // Nếu session bắt đầu sau thời điểm hiện tại, bỏ qua
-    if (sessionStart.isAfter(now)) {
-      continue;
+    
+    let sessionEnd: dayjs.Dayjs;
+    if (session.EndDate && session.EndTime) {
+      sessionEnd = combineDateTime(session.EndDate, session.EndTime);
+    } else {
+      sessionEnd = now;
+    }
+    // Giới hạn sessionEnd không vượt quá now
+    if (sessionEnd.isAfter(now)) {
+      sessionEnd = now;
     }
 
-    // Nếu session kết thúc trước khi bắt đầu, bỏ qua
-    if (sessionEnd.isBefore(sessionStart)) {
-      continue;
-    }
-
-    // Tính thời gian session trong ngày hôm nay (chỉ tính phần trong ngày, không tính phần qua ngày hôm sau)
-    const sessionDuration = sessionEnd.diff(sessionStart, "minute");
-    if (sessionDuration <= 0) {
-      continue;
-    }
-
-    // Loại bỏ các khoảng thời gian trùng với combo
-    // Sử dụng mergedComboRanges để tránh trừ đi nhiều lần phần overlap
-    let remainingMinutes = sessionDuration;
+    let remainingMinutes = sessionMinutes;
     for (const comboRange of mergedComboRanges) {
-      // Check overlap giữa session và combo
       const overlapStart = sessionStart.isAfter(comboRange.start)
         ? sessionStart
         : comboRange.start;
@@ -341,21 +348,19 @@ function calculateCheckInMinutes(
         ? sessionEnd
         : comboRange.end;
 
-      // Nếu có overlap, trừ đi thời gian overlap
       if (overlapEnd.isAfter(overlapStart)) {
         const overlapMinutes = overlapEnd.diff(overlapStart, "minute");
         remainingMinutes -= overlapMinutes;
       }
     }
 
-    // Đảm bảo không âm
     if (remainingMinutes > 0) {
       totalMinutes += remainingMinutes;
     }
   }
 
-  // Giới hạn tối đa 24 giờ (1440 phút) trong 1 ngày để giảm thiểu rủi ro nếu logic lỗi
-  const maxMinutesPerDay = 24 * 60; // 1440 phút
+  // Giới hạn tối đa 24 giờ (1440 phút)
+  const maxMinutesPerDay = 24 * 60;
   return Math.min(Math.max(0, totalMinutes), maxMinutesPerDay);
 }
 
@@ -409,6 +414,7 @@ export async function calculateActiveUsersInfo(
           s.status,
           u.UserType,
           s.MachineName,
+          s.TimeUsed,
           COALESCE(CAST(SUM(p.AutoAmount) AS DECIMAL(18,2)), 0) AS totalTopUp
         FROM fnet.systemlogtb s
         JOIN usertb u ON s.UserId = u.UserId
@@ -423,7 +429,7 @@ export async function calculateActiveUsersInfo(
             s.EnterDate = '${curDate}'
             OR (s.EndDate = '${curDate}' AND s.EnterDate = DATE_SUB('${curDate}', INTERVAL 1 DAY))
           )
-        GROUP BY s.UserId, s.EnterDate, s.EnterTime, s.EndDate, s.EndTime, s.status, u.UserType, s.MachineName
+        GROUP BY s.UserId, s.EnterDate, s.EnterTime, s.EndDate, s.EndTime, s.status, u.UserType, s.MachineName, s.TimeUsed
         ORDER BY s.UserId, s.EnterDate DESC, s.EnterTime DESC
         `;
 

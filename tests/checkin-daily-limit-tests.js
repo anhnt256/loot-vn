@@ -5,6 +5,57 @@ const timezone = require('dayjs/plugin/timezone');
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+/**
+ * Hàm tính thời gian check-in (mô phỏng logic trong user-calculator.ts)
+ * Logic mới: Sử dụng TimeUsed từ DB
+ * - Session bắt đầu hôm nay: dùng TimeUsed trực tiếp
+ * - Session bắt đầu hôm trước, kết thúc hôm nay: tính từ 00:00 đến EndTime
+ */
+function calculateCheckInMinutes(sessions, todayDate, now) {
+  const todayStart = now.startOf('day');
+  let totalMinutes = 0;
+
+  for (const session of sessions) {
+    if (!session.EnterDate || !session.EnterTime) continue;
+
+    const enterDate = session.EnterDate;
+    const endDate = session.EndDate || todayDate;
+
+    // Bỏ qua session không liên quan đến ngày hôm nay
+    if (enterDate !== todayDate && endDate !== todayDate) {
+      continue;
+    }
+
+    let sessionMinutes = 0;
+
+    if (enterDate === todayDate) {
+      // Session bắt đầu trong ngày hôm nay: dùng TimeUsed trực tiếp
+      sessionMinutes = session.TimeUsed ?? 0;
+    } else if (enterDate !== todayDate && endDate === todayDate) {
+      // Session bắt đầu từ hôm trước, kết thúc hôm nay
+      // Chỉ tính từ 00:00 đến EndTime (hoặc now nếu chưa kết thúc)
+      let endTime;
+      
+      if (session.EndTime) {
+        endTime = dayjs.tz(`${todayDate} ${session.EndTime}`, "Asia/Ho_Chi_Minh");
+      } else {
+        endTime = now;
+      }
+
+      // Tính số phút từ 00:00 đến endTime
+      sessionMinutes = endTime.diff(todayStart, 'minute');
+    }
+
+    if (sessionMinutes > 0) {
+      totalMinutes += sessionMinutes;
+    }
+  }
+
+  // Giới hạn tối đa 24 giờ (1440 phút)
+  const maxMinutesPerDay = 24 * 60;
+  return Math.min(Math.max(0, totalMinutes), maxMinutesPerDay);
+}
+
 describe('Check-in Daily Limit Tests', () => {
   const testUserId = 123;
   const testBranch = 'GO_VAP';
@@ -47,97 +98,202 @@ describe('Check-in Daily Limit Tests', () => {
     });
   });
 
-  describe('2. Session Date Filtering Tests', () => {
-    test('should only count sessions starting today', () => {
-      const today = dayjs().tz("Asia/Ho_Chi_Minh").format("YYYY-MM-DD");
-      const yesterday = dayjs().tz("Asia/Ho_Chi_Minh").subtract(1, 'day').format("YYYY-MM-DD");
+  describe('2. TimeUsed Logic Tests (NEW)', () => {
+    test('should use TimeUsed directly for session starting today', () => {
+      const now = dayjs().tz("Asia/Ho_Chi_Minh");
+      const todayDate = now.format("YYYY-MM-DD");
       
-      const sessionToday = { EnterDate: today, EnterTime: '10:00:00' };
-      const sessionYesterday = { EnterDate: yesterday, EnterTime: '22:00:00' };
+      const sessions = [
+        {
+          EnterDate: todayDate,
+          EnterTime: '10:00:00',
+          EndDate: todayDate,
+          EndTime: '12:30:00',
+          TimeUsed: 150 // 2.5 hours = 150 minutes
+        }
+      ];
       
-      // Should only count session starting today
-      const shouldCountToday = sessionToday.EnterDate === today;
-      const shouldCountYesterday = sessionYesterday.EnterDate === today;
+      const minutes = calculateCheckInMinutes(sessions, todayDate, now);
       
-      expect(shouldCountToday).toBe(true);
-      expect(shouldCountYesterday).toBe(false);
+      expect(minutes).toBe(150); // Should use TimeUsed directly
     });
 
-    test('should count session from day 13 ending in today', () => {
-      const today = dayjs().tz("Asia/Ho_Chi_Minh");
-      const todayDate = today.format("YYYY-MM-DD");
-      const day13 = today.subtract(2, 'day').format("YYYY-MM-DD"); // 2 ngày trước
+    test('should calculate from 00:00 to EndTime for cross-day session', () => {
+      const now = dayjs.tz("2026-01-25 10:00:00", "Asia/Ho_Chi_Minh");
+      const todayDate = "2026-01-25";
+      const yesterday = "2026-01-24";
       
-      // Session bắt đầu ngày 13, kết thúc ngày 15 (hôm nay)
-      const sessionFromDay13 = {
-        EnterDate: day13,
-        EnterTime: '22:00:00',
-        EndDate: todayDate,
-        EndTime: '02:00:00'
-      };
+      // Session: 22:01:08 ngày 24 → 06:49:28 ngày 25
+      // TimeUsed = 528 phút (toàn bộ session)
+      // Nhưng chỉ nên tính 00:00 → 06:49:28 = ~409 phút cho ngày 25
+      const sessions = [
+        {
+          EnterDate: yesterday,
+          EnterTime: '22:01:08',
+          EndDate: todayDate,
+          EndTime: '06:49:28',
+          TimeUsed: 528
+        }
+      ];
       
-      // Khi claim ngày 15, phải tính phần từ 00:00 đến 02:00 ngày 15
-      const enterDate = sessionFromDay13.EnterDate;
-      const endDate = sessionFromDay13.EndDate;
+      const minutes = calculateCheckInMinutes(sessions, todayDate, now);
       
-      // Session này kết thúc trong ngày hôm nay, nên phải được tính
-      const shouldCount = endDate === todayDate;
-      
-      expect(shouldCount).toBe(true);
-      expect(enterDate).not.toBe(todayDate); // Bắt đầu từ ngày khác
-      expect(endDate).toBe(todayDate); // Kết thúc trong ngày hôm nay
+      // 00:00 to 06:49:28 = 6*60 + 49 = 409 minutes
+      expect(minutes).toBe(409);
     });
 
-    test('should not count sessions from previous day that not ending today', () => {
-      const today = dayjs().tz("Asia/Ho_Chi_Minh").format("YYYY-MM-DD");
-      const yesterday = dayjs().tz("Asia/Ho_Chi_Minh").subtract(1, 'day').format("YYYY-MM-DD");
+    test('should handle cross-day session still running (EndTime = null)', () => {
+      const now = dayjs.tz("2026-02-01 11:30:00", "Asia/Ho_Chi_Minh");
+      const todayDate = "2026-02-01";
+      const yesterday = "2026-01-31";
       
-      // Session từ hôm qua, chưa kết thúc (EndDate = null)
-      const sessionFromYesterday = { EnterDate: yesterday, EnterTime: '22:00:00', EndDate: null };
+      // Session bắt đầu từ hôm qua, vẫn đang chạy
+      const sessions = [
+        {
+          EnterDate: yesterday,
+          EnterTime: '23:00:00',
+          EndDate: null,
+          EndTime: null,
+          TimeUsed: 750 // 12.5 hours total
+        }
+      ];
       
-      // Should not count session from yesterday if not ending today
-      const shouldCount = sessionFromYesterday.EnterDate === today || sessionFromYesterday.EndDate === today;
+      const minutes = calculateCheckInMinutes(sessions, todayDate, now);
       
-      expect(shouldCount).toBe(false);
+      // Should calculate from 00:00 to now (11:30) = 11*60 + 30 = 690 minutes
+      expect(minutes).toBe(690);
     });
 
-    test('should calculate time correctly for session starting from day 13', () => {
-      const today = dayjs().tz("Asia/Ho_Chi_Minh");
-      const todayDate = today.format("YYYY-MM-DD");
-      const day13 = today.subtract(2, 'day').format("YYYY-MM-DD");
+    test('should combine TimeUsed for multiple sessions today', () => {
+      const now = dayjs.tz("2026-02-01 15:00:00", "Asia/Ho_Chi_Minh");
+      const todayDate = "2026-02-01";
       
-      // Session: 22:00 ngày 13 → 02:00 ngày 15 (hôm nay)
-      // Khi claim ngày 15, chỉ tính từ 00:00 đến 02:00 = 2 giờ
-      const sessionStart = dayjs.tz(`${day13} 22:00:00`, "Asia/Ho_Chi_Minh");
-      const sessionEnd = dayjs.tz(`${todayDate} 02:00:00`, "Asia/Ho_Chi_Minh");
-      const todayStart = today.startOf('day');
+      const sessions = [
+        {
+          EnterDate: todayDate,
+          EnterTime: '06:59:48',
+          EndDate: null,
+          EndTime: null,
+          TimeUsed: 10
+        },
+        {
+          EnterDate: todayDate,
+          EnterTime: '10:52:24',
+          EndDate: null,
+          EndTime: null,
+          TimeUsed: 59
+        },
+        {
+          EnterDate: todayDate,
+          EnterTime: '10:51:04',
+          EndDate: todayDate,
+          EndTime: '10:51:17',
+          TimeUsed: 0 // 13 seconds = 0 minutes
+        }
+      ];
       
-      // Phần tính cho ngày 15: từ 00:00 đến 02:00
-      const sessionStartInToday = sessionStart.isBefore(todayStart) ? todayStart : sessionStart;
-      const sessionEndInToday = sessionEnd.isAfter(today.endOf('day')) ? today.endOf('day') : sessionEnd;
+      const minutes = calculateCheckInMinutes(sessions, todayDate, now);
       
-      const minutesInToday = sessionEndInToday.diff(sessionStartInToday, 'minute');
-      const hoursInToday = Math.floor(minutesInToday / 60);
-      
-      expect(hoursInToday).toBe(2); // 2 giờ (00:00-02:00)
-      expect(minutesInToday).toBe(120); // 120 phút
+      // 10 + 59 + 0 = 69 minutes
+      expect(minutes).toBe(69);
     });
 
-    test('should calculate time only from session start to now', () => {
-      const today = dayjs().tz("Asia/Ho_Chi_Minh");
-      const sessionStart = today.hour(10).minute(0).second(0);
-      const now = today.hour(14).minute(30).second(0);
+    test('should handle real data example: 528 min session from Jan 24 to Jan 25', () => {
+      // Ví dụ thực tế từ DB
+      const now = dayjs.tz("2026-01-25 10:00:00", "Asia/Ho_Chi_Minh");
+      const todayDate = "2026-01-25";
       
-      // Should only calculate from session start (10:00) to now (14:30)
-      // Not from 0h of the day
-      const minutesFromStart = now.diff(sessionStart, 'minute');
+      const sessions = [
+        {
+          EnterDate: "2026-01-24",
+          EnterTime: '22:01:08',
+          EndDate: "2026-01-25",
+          EndTime: '06:49:28',
+          TimeUsed: 528 // Total session time
+        }
+      ];
       
-      expect(minutesFromStart).toBe(270); // 4.5 hours = 270 minutes
-      expect(minutesFromStart).toBeLessThan(24 * 60); // Less than 24 hours
+      const minutes = calculateCheckInMinutes(sessions, todayDate, now);
+      
+      // Chỉ tính từ 00:00 đến 06:49:28 = 409 phút
+      // KHÔNG dùng TimeUsed (528) vì session bắt đầu từ hôm trước
+      expect(minutes).toBe(409);
+      expect(minutes).toBeLessThan(528); // Phải nhỏ hơn TimeUsed
     });
   });
 
-  describe('3. Available Check-in Calculation Tests', () => {
+  describe('3. Session Date Filtering Tests', () => {
+    test('should only count sessions starting today using TimeUsed', () => {
+      const now = dayjs().tz("Asia/Ho_Chi_Minh");
+      const todayDate = now.format("YYYY-MM-DD");
+      const yesterday = now.subtract(1, 'day').format("YYYY-MM-DD");
+      
+      const sessions = [
+        {
+          EnterDate: todayDate,
+          EnterTime: '10:00:00',
+          EndDate: todayDate,
+          EndTime: '12:00:00',
+          TimeUsed: 120
+        },
+        {
+          EnterDate: yesterday,
+          EnterTime: '22:00:00',
+          EndDate: yesterday,
+          EndTime: '23:00:00',
+          TimeUsed: 60 // Should NOT be counted
+        }
+      ];
+      
+      const minutes = calculateCheckInMinutes(sessions, todayDate, now);
+      
+      expect(minutes).toBe(120); // Only count today's session
+    });
+
+    test('should count session ending today (cross-day)', () => {
+      const now = dayjs.tz("2026-02-01 10:00:00", "Asia/Ho_Chi_Minh");
+      const todayDate = "2026-02-01";
+      const yesterday = "2026-01-31";
+      
+      const sessions = [
+        {
+          EnterDate: yesterday,
+          EnterTime: '22:00:00',
+          EndDate: todayDate,
+          EndTime: '02:00:00',
+          TimeUsed: 240 // 4 hours total
+        }
+      ];
+      
+      const minutes = calculateCheckInMinutes(sessions, todayDate, now);
+      
+      // Only count 00:00 to 02:00 = 120 minutes
+      expect(minutes).toBe(120);
+    });
+
+    test('should not count sessions from previous day not ending today', () => {
+      const now = dayjs().tz("Asia/Ho_Chi_Minh");
+      const todayDate = now.format("YYYY-MM-DD");
+      const yesterday = now.subtract(1, 'day').format("YYYY-MM-DD");
+      const twoDaysAgo = now.subtract(2, 'day').format("YYYY-MM-DD");
+      
+      const sessions = [
+        {
+          EnterDate: twoDaysAgo,
+          EnterTime: '22:00:00',
+          EndDate: yesterday,
+          EndTime: '02:00:00',
+          TimeUsed: 240
+        }
+      ];
+      
+      const minutes = calculateCheckInMinutes(sessions, todayDate, now);
+      
+      expect(minutes).toBe(0); // Should not count - doesn't overlap today
+    });
+  });
+
+  describe('4. Available Check-in Calculation Tests', () => {
     test('should limit availableCheckIn to 24k per day', () => {
       const totalCheckIn = 30000; // User played 30 hours
       const totalClaimed = 0;
@@ -183,7 +339,7 @@ describe('Check-in Daily Limit Tests', () => {
     });
   });
 
-  describe('4. Edge Cases', () => {
+  describe('5. Edge Cases', () => {
     test('should handle multiple check-ins within daily limit', () => {
       let totalClaimed = 0;
       const checkIns = [5000, 8000, 6000, 5000]; // Total: 24000
@@ -220,9 +376,29 @@ describe('Check-in Daily Limit Tests', () => {
       expect(startOfDay.format('HH:mm:ss')).toBe('00:00:00');
       expect(todayDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     });
+
+    test('should cap at 1440 minutes (24 hours) per day', () => {
+      const now = dayjs.tz("2026-02-01 23:00:00", "Asia/Ho_Chi_Minh");
+      const todayDate = "2026-02-01";
+      
+      // Giả sử có nhiều session với tổng > 24 giờ
+      const sessions = [
+        {
+          EnterDate: todayDate,
+          EnterTime: '00:00:00',
+          EndDate: todayDate,
+          EndTime: '23:00:00',
+          TimeUsed: 2000 // Lỗi data: > 24 hours
+        }
+      ];
+      
+      const minutes = calculateCheckInMinutes(sessions, todayDate, now);
+      
+      expect(minutes).toBeLessThanOrEqual(1440); // Max 24 hours
+    });
   });
 
-  describe('5. Integration Tests', () => {
+  describe('6. Integration Tests', () => {
     test('should correctly calculate available points with all constraints', () => {
       // Scenario: User played 30 hours, already claimed 20k today
       const totalPlayTimeHours = 30;
@@ -258,6 +434,30 @@ describe('Check-in Daily Limit Tests', () => {
       
       expect(availableCheckIn).toBe(15000); // All play time can be claimed
       expect(availableCheckIn).toBeLessThanOrEqual(maxDailyCheckInPoints);
+    });
+
+    test('should use TimeUsed for stars calculation', () => {
+      const now = dayjs.tz("2026-02-01 15:00:00", "Asia/Ho_Chi_Minh");
+      const todayDate = "2026-02-01";
+      const starsPerHour = 1000;
+      
+      const sessions = [
+        {
+          EnterDate: todayDate,
+          EnterTime: '10:00:00',
+          EndDate: todayDate,
+          EndTime: '14:00:00',
+          TimeUsed: 240 // 4 hours
+        }
+      ];
+      
+      const minutes = calculateCheckInMinutes(sessions, todayDate, now);
+      const hours = Math.floor(minutes / 60);
+      const totalCheckIn = hours * starsPerHour;
+      
+      expect(minutes).toBe(240);
+      expect(hours).toBe(4);
+      expect(totalCheckIn).toBe(4000);
     });
   });
 });
