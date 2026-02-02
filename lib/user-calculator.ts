@@ -190,7 +190,7 @@ function isUserUsingCombo(
  * Tính thời gian CheckIn trong ngày hiện tại, sử dụng TimeUsed từ DB
  * Loại bỏ các khoảng thời gian trùng với combo
  * Chỉ tính từ 0h hôm nay đến hiện tại, nếu qua ngày thì reset về 0
- * 
+ *
  * Logic mới:
  * - Session bắt đầu hôm nay: dùng TimeUsed trực tiếp
  * - Session bắt đầu hôm trước, kết thúc hôm nay: tính từ 00:00 đến EndTime (hoặc now nếu chưa kết thúc)
@@ -213,11 +213,11 @@ function calculateCheckInMinutes(
       typeof s.EnterDate === "string"
         ? s.EnterDate
         : dayjs(s.EnterDate).format("YYYY-MM-DD");
-    
+
     const endDate = s.EndDate
-      ? (typeof s.EndDate === "string"
-          ? s.EndDate
-          : dayjs(s.EndDate).format("YYYY-MM-DD"))
+      ? typeof s.EndDate === "string"
+        ? s.EndDate
+        : dayjs(s.EndDate).format("YYYY-MM-DD")
       : todayDate; // Session đang chạy, coi như kết thúc trong ngày hôm nay
 
     return enterDate === todayDate || endDate === todayDate;
@@ -280,11 +280,11 @@ function calculateCheckInMinutes(
       typeof session.EnterDate === "string"
         ? session.EnterDate
         : dayjs(session.EnterDate).format("YYYY-MM-DD");
-    
+
     const endDate = session.EndDate
-      ? (typeof session.EndDate === "string"
-          ? session.EndDate
-          : dayjs(session.EndDate).format("YYYY-MM-DD"))
+      ? typeof session.EndDate === "string"
+        ? session.EndDate
+        : dayjs(session.EndDate).format("YYYY-MM-DD")
       : todayDate;
 
     // Bỏ qua session không liên quan đến ngày hôm nay
@@ -301,15 +301,19 @@ function calculateCheckInMinutes(
       // Session bắt đầu từ hôm trước, kết thúc hôm nay
       // Chỉ tính từ 00:00 đến EndTime (hoặc now nếu chưa kết thúc)
       let endTime: dayjs.Dayjs;
-      
+
       if (session.EndTime) {
         // Parse EndTime - có thể là "HH:mm:ss" hoặc Date object
-        const endTimeStr = typeof session.EndTime === "string" 
-          ? session.EndTime 
-          : dayjs(session.EndTime).format("HH:mm:ss");
-        
+        const endTimeStr =
+          typeof session.EndTime === "string"
+            ? session.EndTime
+            : dayjs(session.EndTime).format("HH:mm:ss");
+
         // Tạo datetime từ todayDate + EndTime
-        endTime = dayjs(`${todayDate}T${endTimeStr}`).tz("Asia/Ho_Chi_Minh", true);
+        endTime = dayjs(`${todayDate}T${endTimeStr}`).tz(
+          "Asia/Ho_Chi_Minh",
+          true,
+        );
       } else {
         // Session đang chạy, lấy thời điểm hiện tại
         endTime = now;
@@ -327,7 +331,7 @@ function calculateCheckInMinutes(
     // Để tính chính xác combo overlap, cần xác định khoảng thời gian session trong ngày
     const enter = combineDateTime(session.EnterDate, session.EnterTime);
     const sessionStart = enter.isBefore(todayStart) ? todayStart : enter;
-    
+
     let sessionEnd: dayjs.Dayjs;
     if (session.EndDate && session.EndTime) {
       sessionEnd = combineDateTime(session.EndDate, session.EndTime);
@@ -741,13 +745,16 @@ export async function calculateActiveUsersInfo(
 
         userData = userDataMap.get(userId);
         claimedCheckIn = totalClaimed;
-        
+
         // Giới hạn tối đa 24k điểm/ngày cho check-in
         const maxDailyCheckInPoints = 24000;
-        const remainingDailyLimit = Math.max(0, maxDailyCheckInPoints - totalClaimed);
+        const remainingDailyLimit = Math.max(
+          0,
+          maxDailyCheckInPoints - totalClaimed,
+        );
         availableCheckIn = Math.min(
           Math.max(0, totalCheckIn - totalClaimed),
-          remainingDailyLimit
+          remainingDailyLimit,
         );
 
         if (userData?.id) {

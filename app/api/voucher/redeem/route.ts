@@ -11,7 +11,9 @@ import {
 export async function POST(request: NextRequest) {
   try {
     // Check both token and staffToken
-    const token = request.cookies.get("token")?.value || request.cookies.get("staffToken")?.value;
+    const token =
+      request.cookies.get("token")?.value ||
+      request.cookies.get("staffToken")?.value;
     const branch = request.cookies.get("branch")?.value;
 
     console.log(`[Redeem Voucher] token exists: ${!!token}, branch: ${branch}`);

@@ -16,14 +16,14 @@ export async function POST(req: NextRequest, res: Response): Promise<any> {
     // Xác định logout type:
     // 1. Nếu có cả 2 cookies, ưu tiên referer để xác định
     // 2. Nếu chỉ có 1 cookie, dựa vào cookie đó
-    const isAdminLogout = 
-      referer.includes("/admin") || 
-      (token && !staffToken) || 
+    const isAdminLogout =
+      referer.includes("/admin") ||
+      (token && !staffToken) ||
       (token && staffToken && referer.includes("/admin"));
-    
-    const isStaffLogout = 
-      referer.includes("/staff") || 
-      (staffToken && !token) || 
+
+    const isStaffLogout =
+      referer.includes("/staff") ||
+      (staffToken && !token) ||
       (token && staffToken && referer.includes("/staff"));
 
     if (isAdminLogout) {

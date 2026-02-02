@@ -5,7 +5,9 @@ import { verifyJWT } from "@/lib/jwt";
 export async function GET(request: NextRequest) {
   try {
     // Check both token and staffToken
-    const token = request.cookies.get("token")?.value || request.cookies.get("staffToken")?.value;
+    const token =
+      request.cookies.get("token")?.value ||
+      request.cookies.get("staffToken")?.value;
 
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

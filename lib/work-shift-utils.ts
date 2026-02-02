@@ -51,9 +51,11 @@ export function getCurrentShift(workShifts: WorkShift[]): WorkShift | null {
   const currentTime = currentHour * 60 + currentMinute; // Convert to minutes
 
   for (const shift of workShifts) {
-    const [startHour, startMin, startSec] = shift.startTime.split(":").map(Number);
+    const [startHour, startMin, startSec] = shift.startTime
+      .split(":")
+      .map(Number);
     const [endHour, endMin, endSec] = shift.endTime.split(":").map(Number);
-    
+
     const startTime = startHour * 60 + startMin;
     const endTime = endHour * 60 + endMin;
 

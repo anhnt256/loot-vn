@@ -8,6 +8,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const branch = await getBranchFromCookie();
 
+    if (!branch) {
+      return NextResponse.json(
+        { success: false, error: "Branch not found in cookie" },
+        { status: 401 },
+      );
+    }
+
     const {
       date,
       shift,
@@ -202,24 +209,25 @@ export async function POST(request: NextRequest) {
     });
 
     // Check if revenue + service money meets threshold and create bonuses
-    const totalRevenue = parseFloat(playtimeMoney || 0) + parseFloat(serviceMoney || 0);
-    
+    const totalRevenue =
+      parseFloat(playtimeMoney || 0) + parseFloat(serviceMoney || 0);
+
     // Get threshold from env based on branch and shift
     const shiftUpper = shift.toUpperCase();
     const branchUpper = branch.toUpperCase();
-    
+
     let threshold = 0;
     if (shiftUpper === "SANG") {
       threshold = parseFloat(
-        process.env[`NEXT_PUBLIC_MORNING_TARGET_${branchUpper}`] || "0"
+        process.env[`NEXT_PUBLIC_MORNING_TARGET_${branchUpper}`] || "0",
       );
     } else if (shiftUpper === "CHIEU") {
       threshold = parseFloat(
-        process.env[`NEXT_PUBLIC_AFTERNOON_TARGET_${branchUpper}`] || "0"
+        process.env[`NEXT_PUBLIC_AFTERNOON_TARGET_${branchUpper}`] || "0",
       );
     } else if (shiftUpper === "TOI") {
       threshold = parseFloat(
-        process.env[`NEXT_PUBLIC_EVENING_TARGET_${branchUpper}`] || "0"
+        process.env[`NEXT_PUBLIC_EVENING_TARGET_${branchUpper}`] || "0",
       );
     }
 
@@ -237,7 +245,7 @@ export async function POST(request: NextRequest) {
       const rewardDate = `${dateVN} 23:59:59`;
       const bonusAmount = parseFloat(process.env.NEXT_PUBLIC_BONUS || "0");
       const reason = `Thưởng đạt doanh số ca ${shiftUpper} ngày ${dateVN}`;
-      const description = `Thưởng đạt chỉ tiêu doanh thu ca ${shiftUpper} ngày ${dateVN}. Tổng doanh thu + dịch vụ: ${totalRevenue.toLocaleString('vi-VN')} VNĐ.`;
+      const description = `Thưởng đạt chỉ tiêu doanh thu ca ${shiftUpper} ngày ${dateVN}. Tổng doanh thu + dịch vụ: ${totalRevenue.toLocaleString("vi-VN")} VNĐ.`;
 
       try {
         // Verify staff exists and belongs to branch before creating bonus
@@ -266,9 +274,13 @@ export async function POST(request: NextRequest) {
             nowVN,
             nowVN,
           );
-          console.log(`Created bonus for counter staff ${counterStaffId} with amount ${bonusAmount}`);
+          console.log(
+            `Created bonus for counter staff ${counterStaffId} with amount ${bonusAmount}`,
+          );
         } else {
-          console.warn(`Counter staff ${counterStaffId} not found in branch ${branch}`);
+          console.warn(
+            `Counter staff ${counterStaffId} not found in branch ${branch}`,
+          );
         }
 
         // Create bonus for kitchen staff (Bếp) if exists
@@ -284,9 +296,13 @@ export async function POST(request: NextRequest) {
             nowVN,
             nowVN,
           );
-          console.log(`Created bonus for kitchen staff ${kitchenStaffId} with amount ${bonusAmount}`);
+          console.log(
+            `Created bonus for kitchen staff ${kitchenStaffId} with amount ${bonusAmount}`,
+          );
         } else {
-          console.warn(`Kitchen staff ${kitchenStaffId} not found in branch ${branch}`);
+          console.warn(
+            `Kitchen staff ${kitchenStaffId} not found in branch ${branch}`,
+          );
         }
       } catch (bonusError) {
         console.error("Error creating bonuses:", bonusError);

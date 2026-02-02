@@ -15,7 +15,7 @@ export function AdminHeader() {
       });
       // Xóa thông tin admin khỏi localStorage (cookies đã được API route clear)
       clearAdminData();
-      
+
       router.push("/admin-login");
     } catch (error) {
       console.error("Logout error:", error);

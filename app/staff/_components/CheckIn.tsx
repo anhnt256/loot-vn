@@ -50,19 +50,22 @@ export default function CheckIn({ staffId, month, year }: CheckInProps) {
       const updateTimer = () => {
         // DB stores datetime as UTC+7 string "YYYY-MM-DD HH:mm:ss"
         // Parse it as VN time directly without conversion
-        const checkInTime = dayjs.tz(currentWorkingRecord.checkInTime, "Asia/Ho_Chi_Minh");
-        
+        const checkInTime = dayjs.tz(
+          currentWorkingRecord.checkInTime,
+          "Asia/Ho_Chi_Minh",
+        );
+
         // Current time in Vietnam timezone
         const now = dayjs().tz("Asia/Ho_Chi_Minh");
-        
+
         // Calculate diff: now - checkInTime (hours worked)
         const diffMinutes = now.diff(checkInTime, "minute");
-        
+
         // Ensure positive value
         const absDiffMinutes = Math.max(0, diffMinutes);
         const hours = Math.floor(absDiffMinutes / 60);
         const minutes = absDiffMinutes % 60;
-        
+
         setElapsedTime(
           `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`,
         );
@@ -334,17 +337,19 @@ export default function CheckIn({ staffId, month, year }: CheckInProps) {
               // Extract time parts from string "YYYY-MM-DD HH:mm:ss"
               const checkInTimeStr = record.checkInTime || "";
               const checkInDisplay = checkInTimeStr.substring(11, 19); // HH:mm:ss
-              
+
               const checkOutTimeStr = record.checkOutTime || "";
-              const checkOutDisplay = checkOutTimeStr ? checkOutTimeStr.substring(11, 19) : null; // HH:mm:ss
-              
+              const checkOutDisplay = checkOutTimeStr
+                ? checkOutTimeStr.substring(11, 19)
+                : null; // HH:mm:ss
+
               // For timer calculation, parse datetime (but only for diff calculation)
               const checkIn = dayjs.tz(record.checkInTime, "Asia/Ho_Chi_Minh");
               let checkOut = null;
               if (record.checkOutTime) {
                 checkOut = dayjs.tz(record.checkOutTime, "Asia/Ho_Chi_Minh");
               }
-              
+
               let hours = record.totalHours;
 
               // Calculate hours if not available

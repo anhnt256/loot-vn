@@ -32,7 +32,16 @@ export async function GET(request: NextRequest) {
     // Use branch from token payload first, fallback to cookie
     const branch = payload.branch || cookieStore.get("branch")?.value;
 
-    console.log("my-info API - userName:", userName, "branch from token:", payload.branch, "branch from cookie:", cookieStore.get("branch")?.value, "final branch:", branch);
+    console.log(
+      "my-info API - userName:",
+      userName,
+      "branch from token:",
+      payload.branch,
+      "branch from cookie:",
+      cookieStore.get("branch")?.value,
+      "final branch:",
+      branch,
+    );
 
     if (!userName || !branch) {
       return NextResponse.json(

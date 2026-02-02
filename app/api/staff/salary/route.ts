@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Use branch from token payload first, fallback to cookie
-    const branch = payload.branch || await getBranchFromCookie();
+    const branch = payload.branch || (await getBranchFromCookie());
     if (!branch) {
       return NextResponse.json(
         { success: false, error: "Missing branch" },
@@ -141,7 +141,7 @@ export async function GET(request: NextRequest) {
       branch,
     )) as any[];
 
-    const baseSalary = staffData.length > 0 ? (staffData[0].baseSalary || 0) : 0;
+    const baseSalary = staffData.length > 0 ? staffData[0].baseSalary || 0 : 0;
 
     // Calculate actual total hours from StaffTimeTracking for the selected month
     let totalHours = 0;
@@ -173,12 +173,12 @@ export async function GET(request: NextRequest) {
         if (checkInStr instanceof Date) {
           checkInStr = checkInStr.toISOString();
         }
-        if (typeof checkInStr !== 'string') {
+        if (typeof checkInStr !== "string") {
           checkInStr = String(checkInStr);
         }
-        const checkInDateStr = checkInStr.split('.')[0];
+        const checkInDateStr = checkInStr.split(".")[0];
         const checkIn = dayjs(checkInDateStr).utcOffset(7, true);
-        
+
         // If checkOutTime is null, set it to current time
         let checkOut = nowMonth;
         if (record.checkOutTime) {
@@ -186,13 +186,13 @@ export async function GET(request: NextRequest) {
           if (checkOutStr instanceof Date) {
             checkOutStr = checkOutStr.toISOString();
           }
-          if (typeof checkOutStr !== 'string') {
+          if (typeof checkOutStr !== "string") {
             checkOutStr = String(checkOutStr);
           }
-          const checkOutDateStr = checkOutStr.split('.')[0];
+          const checkOutDateStr = checkOutStr.split(".")[0];
           checkOut = dayjs(checkOutDateStr).utcOffset(7, true);
         }
-        
+
         // Calculate diff
         const diffHours = checkOut.diff(checkIn, "hour", true);
         totalHours += Math.abs(diffHours);
@@ -206,7 +206,7 @@ export async function GET(request: NextRequest) {
     // Otherwise, calculate from bonusHistory and penaltiesHistory
     let bonus = 0;
     let penalty = 0;
-    
+
     if (month && year && salaryHistory.length > 0) {
       // Use values from StaffSalary record if exists
       const salaryRecord = salaryHistory[0];

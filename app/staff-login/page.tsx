@@ -45,7 +45,9 @@ const StaffLogin = () => {
     }
 
     // Get branch value directly from DOM to avoid stale closure issue
-    const branchRadio = document.querySelector('input[name="branch"]:checked') as HTMLInputElement;
+    const branchRadio = document.querySelector(
+      'input[name="branch"]:checked',
+    ) as HTMLInputElement;
     const currentBranch = branchRadio?.value || selectedBranch;
 
     if (

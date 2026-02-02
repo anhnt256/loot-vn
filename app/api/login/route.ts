@@ -451,8 +451,10 @@ export async function POST(req: Request, res: Response): Promise<any> {
         // Don't fail login if work shifts fetch fails
         workShifts = []; // Ensure workShifts is always an array
       }
-      
-      console.log(`[Login] Fetched ${workShifts.length} work shifts for branch ${finalBranch}`);
+
+      console.log(
+        `[Login] Fetched ${workShifts.length} work shifts for branch ${finalBranch}`,
+      );
 
       const adminData: any = {
         userId: userId,
@@ -491,7 +493,11 @@ export async function POST(req: Request, res: Response): Promise<any> {
       // Only use "staffToken" for staff login (role === "staff" and loginMethod === "account")
       // Admin login (role === "admin" or userId === -99) should always use "token"
       const isAdmin = role === "admin" || userId === -99;
-      const tokenCookieName = isAdmin ? "token" : (loginMethod === "account" ? "staffToken" : "token");
+      const tokenCookieName = isAdmin
+        ? "token"
+        : loginMethod === "account"
+          ? "staffToken"
+          : "token";
 
       response.cookies.set({
         name: tokenCookieName,
@@ -980,8 +986,10 @@ export async function POST(req: Request, res: Response): Promise<any> {
       // Don't fail login if work shifts fetch fails
       workShifts = []; // Ensure workShifts is always an array
     }
-    
-    console.log(`[Login] Fetched ${workShifts.length} work shifts for branch ${branchFromCookie || ""}`);
+
+    console.log(
+      `[Login] Fetched ${workShifts.length} work shifts for branch ${branchFromCookie || ""}`,
+    );
 
     const token = await signJWT({ userId: String(userUpdated?.userId ?? "") });
     const responseData = {

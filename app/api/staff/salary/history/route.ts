@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Use branch from token payload first, fallback to cookie
-    const branch = payload.branch || await getBranchFromCookie();
+    const branch = payload.branch || (await getBranchFromCookie());
     if (!branch) {
       return NextResponse.json(
         { success: false, error: "Missing branch" },

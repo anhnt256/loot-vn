@@ -66,10 +66,10 @@ export default function AnomalyPage() {
       // TODO: Replace with actual API call
       // const response = await fetch(`/api/anomaly?date=${selectedDate}`);
       // const data = await response.json();
-      
+
       // Mock data for now
       await new Promise((resolve) => setTimeout(resolve, 500));
-      
+
       const mockData: DailyAnomalyData = {
         date: selectedDate,
         shifts: {
@@ -118,7 +118,7 @@ export default function AnomalyPage() {
           handoverMoney: 1986000,
         },
       };
-      
+
       setAnomalyData(mockData);
     } catch (error) {
       console.error("Error fetching anomaly data:", error);
@@ -241,7 +241,10 @@ export default function AnomalyPage() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
+                    <td
+                      colSpan={9}
+                      className="px-4 py-8 text-center text-gray-500"
+                    >
                       <div className="flex items-center justify-center gap-2">
                         <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
                         <span>Đang tải dữ liệu...</span>
@@ -250,7 +253,10 @@ export default function AnomalyPage() {
                   </tr>
                 ) : !anomalyData ? (
                   <tr>
-                    <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
+                    <td
+                      colSpan={9}
+                      className="px-4 py-8 text-center text-gray-500"
+                    >
                       Không có dữ liệu
                     </td>
                   </tr>
@@ -258,7 +264,10 @@ export default function AnomalyPage() {
                   <>
                     {/* Shift Rows */}
                     {shifts.map((shift) => {
-                      const shiftData = anomalyData.shifts[shift as keyof typeof anomalyData.shifts];
+                      const shiftData =
+                        anomalyData.shifts[
+                          shift as keyof typeof anomalyData.shifts
+                        ];
                       if (!shiftData) return null;
 
                       return (
@@ -288,7 +297,9 @@ export default function AnomalyPage() {
                             {formatNumber(shiftData.momo)}
                           </td>
                           <td className="px-4 py-3 text-right text-sm font-mono text-gray-700">
-                            {shiftData.incidental > 0 ? formatNumber(shiftData.incidental) : ""}
+                            {shiftData.incidental > 0
+                              ? formatNumber(shiftData.incidental)
+                              : ""}
                           </td>
                           <td className="px-4 py-3 text-right text-sm font-mono text-gray-700">
                             {formatNumber(shiftData.handoverMoney)}
@@ -357,8 +368,9 @@ export default function AnomalyPage() {
                 Ghi chú về cảnh báo
               </h3>
               <p className="text-sm text-blue-800">
-                Các giao dịch được đánh dấu là bất thường khi có sự chênh lệch lớn so với
-                mức trung bình hoặc có dấu hiệu không nhất quán giữa các chỉ số.
+                Các giao dịch được đánh dấu là bất thường khi có sự chênh lệch
+                lớn so với mức trung bình hoặc có dấu hiệu không nhất quán giữa
+                các chỉ số.
               </p>
             </div>
           </div>

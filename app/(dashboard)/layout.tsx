@@ -62,7 +62,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
         console.error("No userId found in localStorage");
         return;
       }
-      
+
       // Fetch workShifts if not present in localStorage
       let workShifts = parsedUserData?.workShifts || [];
       if (!workShifts || workShifts.length === 0) {
@@ -78,7 +78,7 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
           console.error("Error fetching work shifts:", error);
         }
       }
-      
+
       const response = await fetch("/api/user-calculator", {
         method: "POST",
         headers: {
@@ -101,7 +101,10 @@ const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
             ...user,
             isNewUser: parsedUserData.isNewUser,
             isReturnedUser: parsedUserData.isReturnedUser,
-            workShifts: workShifts.length > 0 ? workShifts : (parsedUserData.workShifts || []),
+            workShifts:
+              workShifts.length > 0
+                ? workShifts
+                : parsedUserData.workShifts || [],
           };
           localStorage.setItem(CURRENT_USER, JSON.stringify(updatedUser));
         }

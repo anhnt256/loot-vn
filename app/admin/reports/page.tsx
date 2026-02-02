@@ -538,7 +538,9 @@ export default function AdminReportsPage() {
         reportDate.setHours(0, 0, 0, 0);
         return reportDate >= sevenDaysAgo;
       })
-      .filter((r) => r.playtimeFee + r.serviceFee - r.momo - r.expense >= amount)
+      .filter(
+        (r) => r.playtimeFee + r.serviceFee - r.momo - r.expense >= amount,
+      )
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [amountToWithdraw, reports]);
 

@@ -76,28 +76,30 @@ export async function GET(request: NextRequest) {
           parseInt(staffId),
           dateParam,
         )) as any[];
-        
-        console.log(`[DEBUG] Query dateParam: ${dateParam}, Found ${todayRecords.length} records`);
+
+        console.log(
+          `[DEBUG] Query dateParam: ${dateParam}, Found ${todayRecords.length} records`,
+        );
 
         // Calculate today's total hours
         // DB stores datetime as VN time, but MySQL/Prisma returns as ISO UTC string or Date object
         // If checkOutTime is null (still working), set it to current time before calculation
         let todayHours = 0;
         const now = dayjs().tz("Asia/Ho_Chi_Minh");
-        
+
         todayRecords.forEach((record: any) => {
           // Parse checkInTime - handle both string and Date object
           let checkInStr = record.checkInTime;
           if (checkInStr instanceof Date) {
             checkInStr = checkInStr.toISOString();
           }
-          if (typeof checkInStr !== 'string') {
+          if (typeof checkInStr !== "string") {
             checkInStr = String(checkInStr);
           }
           // Extract "YYYY-MM-DDTHH:mm:ss" from ISO string (remove .000Z)
-          const checkInDateStr = checkInStr.split('.')[0]; // "2026-01-12T02:40:55"
+          const checkInDateStr = checkInStr.split(".")[0]; // "2026-01-12T02:40:55"
           const checkIn = dayjs(checkInDateStr).utcOffset(7, true); // Parse as VN time
-          
+
           // If checkOutTime is null, set it to current time
           let checkOut = now;
           if (record.checkOutTime) {
@@ -105,20 +107,24 @@ export async function GET(request: NextRequest) {
             if (checkOutStr instanceof Date) {
               checkOutStr = checkOutStr.toISOString();
             }
-            if (typeof checkOutStr !== 'string') {
+            if (typeof checkOutStr !== "string") {
               checkOutStr = String(checkOutStr);
             }
-            const checkOutDateStr = checkOutStr.split('.')[0];
+            const checkOutDateStr = checkOutStr.split(".")[0];
             checkOut = dayjs(checkOutDateStr).utcOffset(7, true);
           }
-          
+
           // Calculate diff: checkOut - checkIn
           const diffHours = checkOut.diff(checkIn, "hour", true);
           const hours = Math.abs(diffHours);
           todayHours += hours;
-          console.log(`[DEBUG] ${record.checkOutTime ? 'Completed' : 'Working'}: ${checkInStr} -> ${record.checkOutTime || 'now'} = ${hours.toFixed(2)}h (${(hours * 60).toFixed(0)} min)`);
+          console.log(
+            `[DEBUG] ${record.checkOutTime ? "Completed" : "Working"}: ${checkInStr} -> ${record.checkOutTime || "now"} = ${hours.toFixed(2)}h (${(hours * 60).toFixed(0)} min)`,
+          );
         });
-        console.log(`[DEBUG] Total todayHours: ${todayHours.toFixed(2)}h (${(todayHours * 60).toFixed(0)} min), Records: ${todayRecords.length}`);
+        console.log(
+          `[DEBUG] Total todayHours: ${todayHours.toFixed(2)}h (${(todayHours * 60).toFixed(0)} min), Records: ${todayRecords.length}`,
+        );
 
         // Get week's total hours
         const weekRecords = (await db.$queryRawUnsafe(
@@ -140,12 +146,12 @@ export async function GET(request: NextRequest) {
           if (checkInStr instanceof Date) {
             checkInStr = checkInStr.toISOString();
           }
-          if (typeof checkInStr !== 'string') {
+          if (typeof checkInStr !== "string") {
             checkInStr = String(checkInStr);
           }
-          const checkInDateStr = checkInStr.split('.')[0];
+          const checkInDateStr = checkInStr.split(".")[0];
           const checkIn = dayjs(checkInDateStr).utcOffset(7, true);
-          
+
           // If checkOutTime is null, set it to current time
           let checkOut = nowWeek;
           if (record.checkOutTime) {
@@ -153,13 +159,13 @@ export async function GET(request: NextRequest) {
             if (checkOutStr instanceof Date) {
               checkOutStr = checkOutStr.toISOString();
             }
-            if (typeof checkOutStr !== 'string') {
+            if (typeof checkOutStr !== "string") {
               checkOutStr = String(checkOutStr);
             }
-            const checkOutDateStr = checkOutStr.split('.')[0];
+            const checkOutDateStr = checkOutStr.split(".")[0];
             checkOut = dayjs(checkOutDateStr).utcOffset(7, true);
           }
-          
+
           // Calculate diff
           const diffHours = checkOut.diff(checkIn, "hour", true);
           weekHours += Math.abs(diffHours);
@@ -185,12 +191,12 @@ export async function GET(request: NextRequest) {
           if (checkInStr instanceof Date) {
             checkInStr = checkInStr.toISOString();
           }
-          if (typeof checkInStr !== 'string') {
+          if (typeof checkInStr !== "string") {
             checkInStr = String(checkInStr);
           }
-          const checkInDateStr = checkInStr.split('.')[0];
+          const checkInDateStr = checkInStr.split(".")[0];
           const checkIn = dayjs(checkInDateStr).utcOffset(7, true);
-          
+
           // If checkOutTime is null, set it to current time
           let checkOut = nowMonth;
           if (record.checkOutTime) {
@@ -198,13 +204,13 @@ export async function GET(request: NextRequest) {
             if (checkOutStr instanceof Date) {
               checkOutStr = checkOutStr.toISOString();
             }
-            if (typeof checkOutStr !== 'string') {
+            if (typeof checkOutStr !== "string") {
               checkOutStr = String(checkOutStr);
             }
-            const checkOutDateStr = checkOutStr.split('.')[0];
+            const checkOutDateStr = checkOutStr.split(".")[0];
             checkOut = dayjs(checkOutDateStr).utcOffset(7, true);
           }
-          
+
           // Calculate diff
           const diffHours = checkOut.diff(checkIn, "hour", true);
           monthHours += Math.abs(diffHours);
@@ -314,12 +320,12 @@ export async function GET(request: NextRequest) {
         if (checkInStr instanceof Date) {
           checkInStr = checkInStr.toISOString();
         }
-        if (typeof checkInStr !== 'string') {
+        if (typeof checkInStr !== "string") {
           checkInStr = String(checkInStr);
         }
-        const checkInDateStr = checkInStr.split('.')[0];
+        const checkInDateStr = checkInStr.split(".")[0];
         const checkIn = dayjs(checkInDateStr).utcOffset(7, true);
-        
+
         // If checkOutTime is null, set it to current time
         let checkOut = nowMonth;
         if (record.checkOutTime) {
@@ -327,17 +333,17 @@ export async function GET(request: NextRequest) {
           if (checkOutStr instanceof Date) {
             checkOutStr = checkOutStr.toISOString();
           }
-          if (typeof checkOutStr !== 'string') {
+          if (typeof checkOutStr !== "string") {
             checkOutStr = String(checkOutStr);
           }
-          const checkOutDateStr = checkOutStr.split('.')[0];
+          const checkOutDateStr = checkOutStr.split(".")[0];
           checkOut = dayjs(checkOutDateStr).utcOffset(7, true);
         }
-        
+
         // Calculate totalHours
         const diffHours = checkOut.diff(checkIn, "hour", true);
         const totalHours = Math.abs(diffHours);
-        
+
         return {
           ...record,
           totalHours: parseFloat(totalHours.toFixed(2)), // Ensure it's a number
@@ -370,13 +376,13 @@ export async function GET(request: NextRequest) {
     const todayDate = dayjs(getCurrentTimeVNISO()).format("YYYY-MM-DD");
     const nowStats = dayjs().tz("Asia/Ho_Chi_Minh");
     let todayHours = 0;
-    
+
     // Get all records from today
     const todayRecordsFromHistory = history.filter((record: any) => {
       const recordDate = dayjs(record.date).format("YYYY-MM-DD");
       return recordDate === todayDate;
     });
-    
+
     // Calculate total hours from all today's records
     todayRecordsFromHistory.forEach((record: any) => {
       // Parse checkInTime
@@ -384,12 +390,12 @@ export async function GET(request: NextRequest) {
       if (checkInStr instanceof Date) {
         checkInStr = checkInStr.toISOString();
       }
-      if (typeof checkInStr !== 'string') {
+      if (typeof checkInStr !== "string") {
         checkInStr = String(checkInStr);
       }
-      const checkInDateStr = checkInStr.split('.')[0];
+      const checkInDateStr = checkInStr.split(".")[0];
       const checkIn = dayjs(checkInDateStr).utcOffset(7, true);
-      
+
       // If checkOutTime is null, set it to current time
       let checkOut = nowStats;
       if (record.checkOutTime) {
@@ -397,13 +403,13 @@ export async function GET(request: NextRequest) {
         if (checkOutStr instanceof Date) {
           checkOutStr = checkOutStr.toISOString();
         }
-        if (typeof checkOutStr !== 'string') {
+        if (typeof checkOutStr !== "string") {
           checkOutStr = String(checkOutStr);
         }
-        const checkOutDateStr = checkOutStr.split('.')[0];
+        const checkOutDateStr = checkOutStr.split(".")[0];
         checkOut = dayjs(checkOutDateStr).utcOffset(7, true);
       }
-      
+
       // Calculate diff
       const diffHours = checkOut.diff(checkIn, "hour", true);
       todayHours += Math.abs(diffHours);
@@ -486,7 +492,8 @@ export async function POST(request: NextRequest) {
           return NextResponse.json(
             {
               success: false,
-              error: "Bạn đang có ca làm việc chưa check-out. Vui lòng check-out trước khi check-in mới.",
+              error:
+                "Bạn đang có ca làm việc chưa check-out. Vui lòng check-out trước khi check-in mới.",
             },
             { status: 400 },
           );
