@@ -8,6 +8,7 @@ import {
   ReactNode,
 } from "react";
 import Cookies from "js-cookie";
+import { getFfoodTokenCookieName } from "@/lib/ffood-token-utils";
 
 interface BranchContextType {
   branch: string;
@@ -39,6 +40,15 @@ export const BranchProvider = ({ children }: { children: ReactNode }) => {
     }
     setLoginType(loginTypeFromCookie);
   }, []);
+
+  // When branch is set and user is admin: if ffood token cookie for this branch is missing, fetch from API (DB) to set cookie
+  useEffect(() => {
+    if (!branch || loginType !== "username") return;
+    const ffoodCookieName = getFfoodTokenCookieName(branch);
+    if (!Cookies.get(ffoodCookieName)) {
+      fetch("/api/ffood-token", { credentials: "include" }).catch(() => {});
+    }
+  }, [branch, loginType]);
 
   // Hàm set branch và lưu vào cookie
   const setBranch = (newBranch: string) => {

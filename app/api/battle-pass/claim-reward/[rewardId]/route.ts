@@ -86,7 +86,7 @@ export async function POST(
       return NextResponse.json({ error: "Reward not found" }, { status: 404 });
     }
 
-    // Get user progress
+    // Get user progress (userId + branch + seasonId - userId can duplicate across branches)
     const userProgressResult = await db.$queryRaw<any[]>`
       SELECT * FROM UserBattlePass 
       WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id} AND branch = ${branch}
@@ -101,10 +101,10 @@ export async function POST(
       );
     }
 
-    // Check if reward is already claimed
+    // Check if reward is already claimed in THIS season only (seasonId avoids old-season false positive)
     const claimedRewardResult = await db.$queryRaw<any[]>`
       SELECT * FROM UserBattlePassReward 
-      WHERE userId = ${decoded.userId} AND rewardId = ${rewardId} AND branch = ${branch}
+      WHERE userId = ${decoded.userId} AND seasonId = ${currentSeason.id} AND rewardId = ${rewardId} AND branch = ${branch}
       LIMIT 1
     `;
 
@@ -134,6 +134,26 @@ export async function POST(
       );
     }
 
+    // If reward is stars, ensure User row exists for (userId, branch) so we can add stars
+    const userIdNum = Number(decoded.userId);
+    if (reward.rewardType === "stars" && reward.rewardValue) {
+      const userCheck = await db.$queryRaw<any[]>`
+        SELECT id, stars FROM User WHERE userId = ${userIdNum} AND branch = ${branch} LIMIT 1
+      `;
+      if (!userCheck?.length) {
+        console.error(
+          `[claim-reward] No User found for userId=${userIdNum} branch=${branch} - cannot add stars`,
+        );
+        return NextResponse.json(
+          {
+            error:
+              "User record not found for this branch. Cannot add stars. Please ensure you are logged in to the correct branch.",
+          },
+          { status: 400 },
+        );
+      }
+    }
+
     // Use transaction to ensure data consistency
     let promotionCodeData = null;
     await db.$transaction(async (tx) => {
@@ -143,33 +163,45 @@ export async function POST(
         VALUES (${decoded.userId}, ${currentSeason.id}, ${rewardId}, ${branch}, ${getCurrentTimeVNDB()})
       `;
 
-      // Add stars to user and log to UserStarHistory
-      if (reward.rewardType === "stars" && reward.rewardValue) {
-        // Get current user stars
+      // Add stars to user and log to UserStarHistory (User already validated above)
+      const rewardValueNum = Number(reward.rewardValue);
+      if (reward.rewardType === "stars" && rewardValueNum > 0) {
         const userResult = await tx.$queryRaw<any[]>`
           SELECT stars FROM User 
-          WHERE userId = ${decoded.userId} AND branch = ${branch}
+          WHERE userId = ${userIdNum} AND branch = ${branch}
           LIMIT 1
         `;
 
         const currentUser = userResult[0];
-        if (currentUser) {
-          const oldStars = currentUser.stars;
-          const newStars = oldStars + reward.rewardValue;
-
-          // Update user stars
-          await tx.$executeRaw`
-            UPDATE User 
-            SET stars = ${newStars}, updatedAt = ${getCurrentTimeVNDB()}
-            WHERE userId = ${decoded.userId} AND branch = ${branch}
-          `;
-
-          // Log to UserStarHistory
-          await tx.$executeRaw`
-            INSERT INTO UserStarHistory (userId, oldStars, newStars, type, createdAt, branch)
-            VALUES (${decoded.userId}, ${oldStars}, ${newStars}, 'BATTLE_PASS', ${getCurrentTimeVNDB()}, ${branch})
-          `;
+        if (!currentUser) {
+          console.error(
+            `[claim-reward] User not found in tx: userId=${userIdNum} branch=${branch}`,
+          );
+          throw new Error("User record not found - cannot add stars");
         }
+        const oldStars = Number(currentUser.stars) || 0;
+        const newStars = oldStars + rewardValueNum;
+
+        const updateResult = await tx.$executeRaw`
+          UPDATE User 
+          SET stars = ${newStars}, updatedAt = ${getCurrentTimeVNDB()}
+          WHERE userId = ${userIdNum} AND branch = ${branch}
+        `;
+        const rowsAffected =
+          typeof updateResult === "number"
+            ? updateResult
+            : Number((updateResult as { affectedRows?: number })?.affectedRows ?? 0);
+        if (rowsAffected < 1) {
+          console.error(
+            `[claim-reward] UPDATE User.stars affected 0 rows: userId=${userIdNum} branch=${branch} newStars=${newStars}`,
+          );
+          throw new Error("Failed to update User stars - no row updated");
+        }
+
+        await tx.$executeRaw`
+          INSERT INTO UserStarHistory (userId, oldStars, newStars, type, createdAt, branch)
+          VALUES (${userIdNum}, ${oldStars}, ${newStars}, 'BATTLE_PASS', ${getCurrentTimeVNDB()}, ${branch})
+        `;
       }
 
       // Create PromotionCode if reward has eventRewardId
@@ -308,7 +340,8 @@ export async function POST(
       success: true,
       message: "Reward claimed successfully",
       reward,
-      starsAdded: reward.rewardType === "stars" ? reward.rewardValue : 0,
+      starsAdded:
+        reward.rewardType === "stars" ? Number(reward.rewardValue) || 0 : 0,
       promotionCode: promotionCodeData,
     });
   } catch (error) {

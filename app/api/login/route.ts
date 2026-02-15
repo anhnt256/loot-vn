@@ -8,7 +8,13 @@ import {
   checkLoginRateLimit,
   checkDatabaseRateLimit,
 } from "@/lib/rate-limit";
-import { getDebugUserId, logDebugInfo } from "@/lib/debug-utils";
+import {
+  getDebugUserId,
+  logDebugInfo,
+  getDebugConfig,
+  shouldBypassOnlineCheck,
+  getDebugBranch,
+} from "@/lib/debug-utils";
 import { calculateActiveUsersInfo } from "@/lib/user-calculator";
 import { isNewUser } from "@/lib/timezone-utils";
 import { getBranchFromCookie } from "@/lib/server-utils";
@@ -420,13 +426,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
             updatedAt
           FROM WorkShift
           WHERE branch = ${finalBranch}
-          ORDER BY 
-            CASE name
-              WHEN 'CA_SANG' THEN 1
-              WHEN 'CA_CHIEU' THEN 2
-              WHEN 'CA_TOI' THEN 3
-              ELSE 4
-            END
+          ORDER BY startTime, id
         `) as any[];
 
         // Format time fields to HH:mm:ss format
@@ -537,6 +537,16 @@ export async function POST(req: Request, res: Response): Promise<any> {
         });
       }
 
+      // Fire-and-forget: refresh ffood token in background (DB + cookie via next request)
+      if (isAdmin) {
+        const origin = new URL(req.url).origin;
+        const branchForFfood = finalBranch || "GO_VAP";
+        fetch(`${origin}/api/ffood-token`, {
+          headers: { Cookie: `branch=${branchForFfood}` },
+          credentials: "omit",
+        }).catch(() => {});
+      }
+
       return response;
     }
 
@@ -567,7 +577,16 @@ export async function POST(req: Request, res: Response): Promise<any> {
 
     const user: any = await fnetDB.$queryRaw<any>(query);
 
-    const userId = user[0]?.userId ?? null;
+    let userId = user[0]?.userId ?? null;
+
+    // Debug: bypass "user must be online" — use default userId when no systemlogtb record
+    if (userId == null && shouldBypassOnlineCheck()) {
+      const config = getDebugConfig();
+      userId = config.defaultUserId;
+      console.log(
+        `[DEBUG] Bypass online check: no systemlogtb record for machine ${machineName}, using defaultUserId=${userId} (${getDebugBranch()})`,
+      );
+    }
 
     logDebugInfo("login", {
       userName,
@@ -786,13 +805,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
                 updatedAt
               FROM WorkShift
               WHERE branch = ${branchFromCookie || ""}
-              ORDER BY 
-                CASE name
-                  WHEN 'CA_SANG' THEN 1
-                  WHEN 'CA_CHIEU' THEN 2
-                  WHEN 'CA_TOI' THEN 3
-                  ELSE 4
-                END
+              ORDER BY startTime, id
             `) as any[];
 
             // Format time fields to HH:mm:ss format
@@ -921,6 +934,32 @@ export async function POST(req: Request, res: Response): Promise<any> {
       // Không fail login nếu user-calculator lỗi
     }
 
+    // Debug bypass: khi user không có session hôm nay, calculator trả rỗng — dùng payload tối thiểu từ User trong DB
+    if (!userCalculatorData && shouldBypassOnlineCheck() && userUpdated) {
+      const config = getDebugConfig();
+      console.log(
+        `[DEBUG] Login bypass: no session data for userId ${userId}, using minimal payload from User row`,
+      );
+      userCalculatorData = {
+        userId: Number(userUpdated.userId),
+        userName: userUpdated.userName ?? undefined,
+        userType: 0,
+        totalCheckIn: 0,
+        claimedCheckIn: 0,
+        availableCheckIn: 0,
+        round: Number(userUpdated.magicStone ?? 0),
+        stars: Number(userUpdated.stars ?? 0),
+        magicStone: Number(userUpdated.magicStone ?? 0),
+        isUseApp: userUpdated.isUseApp !== false,
+        note: userUpdated.note ?? "",
+        totalPayment: 0,
+        giftRound: 0,
+        machineName: config.defaultMachineName || "",
+        device: null,
+        battlePass: { isUsed: false, isPremium: false, data: null },
+      };
+    }
+
     // Nếu không có userCalculatorData, trả về lỗi
     if (!userCalculatorData) {
       return NextResponse.json(
@@ -955,13 +994,7 @@ export async function POST(req: Request, res: Response): Promise<any> {
           updatedAt
         FROM WorkShift
         WHERE branch = ${branchFromCookie || ""}
-        ORDER BY 
-          CASE name
-            WHEN 'CA_SANG' THEN 1
-            WHEN 'CA_CHIEU' THEN 2
-            WHEN 'CA_TOI' THEN 3
-            ELSE 4
-          END
+        ORDER BY startTime, id
       `) as any[];
 
       // Format time fields to HH:mm:ss format

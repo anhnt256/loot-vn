@@ -23,7 +23,7 @@ export function getDebugConfig(): DebugConfig {
   // Default values for Go Vap branch
   const goVapDefaults = {
     macAddress: "A4-0C-66-0B-E7-49",
-    userId: 13195,
+    userId: 5584,
     machineName: "GO_VAP_01",
   };
 
@@ -123,6 +123,16 @@ export function getDebugMachineName(originalMachineName?: string): string {
  * Check if debug mode is active
  */
 export function isDebugMode(): boolean {
+  const config = getDebugConfig();
+  return config.isDebugGoVap || config.isDebugTanPhu;
+}
+
+/**
+ * When true, login/check-existing can use default userId even if there is no record in systemlogtb
+ * (bypass "user must be online on machine" check for testing).
+ * Only requires debug branch (IS_DEBUG_GO_VAP or IS_DEBUG_TAN_PHU) — no USE_DEFAULT_USER_ID needed.
+ */
+export function shouldBypassOnlineCheck(): boolean {
   const config = getDebugConfig();
   return config.isDebugGoVap || config.isDebugTanPhu;
 }

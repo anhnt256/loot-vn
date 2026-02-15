@@ -1,7 +1,7 @@
 generator client {
   provider      = "prisma-client-js"
   output        = "./generated/fnet-tp-client"
-binaryTargets = ["native", "debian-openssl-3.0.x"]
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -136,40 +136,54 @@ model clientsystb {
 }
 
 model combodetailtb {
-  ComboDetailID Int      @id @default(autoincrement()) @db.UnsignedInt
-  UserID        Int      @default(0) @db.UnsignedInt
-  ComboID       Int      @default(0) @db.UnsignedInt
-  VoucherID     Int      @default(0) @db.UnsignedInt
-  Accept        Int      @default(0) @db.UnsignedTinyInt
-  CreateDate    DateTime @default(dbgenerated("'0000-00-00'")) @db.Date
-  CreateTime    DateTime @default(dbgenerated("'00:00:00'")) @db.Time(0)
-  FromDate      DateTime @default(dbgenerated("'0000-00-00'")) @db.Date
-  FromTime      DateTime @default(dbgenerated("'00:00:00'")) @db.Time(0)
-  ToDate        DateTime @default(dbgenerated("'0000-00-00'")) @db.Date
-  ToTime        DateTime @default(dbgenerated("'00:00:00'")) @db.Time(0)
-  Zone          String?  @default("") @db.VarChar(255)
-  LoginTime     DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
-  Ownerid       BigInt?  @default(0)
+  ComboDetailID Int       @id @default(autoincrement()) @db.UnsignedInt
+  UserID        Int       @default(0) @db.UnsignedInt
+  ComboID       Int       @default(0) @db.UnsignedInt
+  VoucherID     Int       @default(0) @db.UnsignedInt
+  Accept        Int       @default(0) @db.UnsignedTinyInt
+  CreateDate    DateTime  @default(dbgenerated("'0000-00-00'")) @db.Date
+  CreateTime    DateTime  @default(dbgenerated("'00:00:00'")) @db.Time(0)
+  FromDate      DateTime  @default(dbgenerated("'0000-00-00'")) @db.Date
+  FromTime      DateTime  @default(dbgenerated("'00:00:00'")) @db.Time(0)
+  ToDate        DateTime  @default(dbgenerated("'0000-00-00'")) @db.Date
+  ToTime        DateTime  @default(dbgenerated("'00:00:00'")) @db.Time(0)
+  Zone          String?   @default("") @db.VarChar(255)
+  LoginTime     DateTime? @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
+  Ownerid       BigInt?   @default(0)
+  Duration      Int?      @default(0)
+  Weekday       Int?      @default(127) @db.TinyInt
+  type          Int?      @default(1) @db.TinyInt
+
+  @@index([Ownerid], map: "idx_combodetail_ownerid")
+  @@index([UserID], map: "idx_combodetail_userid")
 }
 
 model combodonatetb {
-  ComboDonateID Int @id @default(autoincrement()) @db.UnsignedInt
-  ComboID       Int @default(0) @db.UnsignedInt
-  ServiceID     Int @default(0) @db.UnsignedInt
-  Quantity      Int @default(0) @db.UnsignedTinyInt
+  ComboDonateID Int     @id @default(autoincrement()) @db.UnsignedInt
+  ComboID       Int     @default(0) @db.UnsignedInt
+  ServiceID     Int     @default(0) @db.UnsignedInt
+  Quantity      Int     @default(0) @db.UnsignedTinyInt
+  ProductCode   String? @default("") @db.VarChar(250)
+  ProviderName  String? @default("") @db.VarChar(250)
+  ProductName   String? @default("") @db.VarChar(250)
 }
 
 model combotb {
-  ComboID       Int      @id @default(autoincrement()) @db.UnsignedInt
-  Name          String   @default("") @db.VarChar(45)
-  Price         Decimal  @default(0) @db.Decimal(9, 0)
-  CreateDate    DateTime @default(dbgenerated("'0000-00-00'")) @db.Date
-  CreateTime    DateTime @default(dbgenerated("'00:00:00'")) @db.Time(0)
-  Type          Int      @default(0) @db.UnsignedTinyInt
-  PreAlias      String   @default("") @db.VarChar(45)
-  IsStatus      Int      @default(0) @db.UnsignedTinyInt
-  OrderPosition Int      @default(0) @db.UnsignedTinyInt
-  NumOfDay      Int      @default(1) @db.UnsignedTinyInt
+  ComboID       Int       @id @default(autoincrement()) @db.UnsignedInt
+  Name          String    @default("") @db.VarChar(45)
+  Price         Decimal   @default(0) @db.Decimal(9, 0)
+  CreateDate    DateTime  @default(dbgenerated("'0000-00-00'")) @db.Date
+  CreateTime    DateTime  @default(dbgenerated("'00:00:00'")) @db.Time(0)
+  Type          Int       @default(0) @db.UnsignedTinyInt
+  PreAlias      String    @default("") @db.VarChar(45)
+  IsStatus      Int       @default(0) @db.UnsignedTinyInt
+  OrderPosition Int       @default(0) @db.UnsignedTinyInt
+  NumOfDay      Int       @default(1) @db.UnsignedTinyInt
+  SaleTo        DateTime? @default(dbgenerated("'00:00:00'")) @db.Time(0)
+  Weekday       Int?      @default(127) @db.TinyInt
+  Include       String?   @db.VarChar(200)
+  Duration      Int?      @default(0)
+  SaleFrom      DateTime? @default(dbgenerated("'00:00:00'")) @db.Time(0)
 }
 
 model combousagetb {
@@ -286,28 +300,33 @@ model machinegrouptb {
 }
 
 model paymenttb {
-  VoucherId     Int      @id @default(autoincrement())
+  VoucherId     Int       @id @default(autoincrement())
   UserId        Int
-  VoucherNo     String?  @db.VarChar(50)
-  VoucherDate   DateTime @default(dbgenerated("'0000-00-00'")) @db.Date
-  VoucherTime   DateTime @default(dbgenerated("'00:00:00'")) @db.Time(0)
-  ServeDate     DateTime @default(dbgenerated("'0000-00-00'")) @db.Date
-  ServeTime     DateTime @default(dbgenerated("'00:00:00'")) @db.Time(0)
-  Amount        Decimal  @db.Decimal(9, 0)
-  AutoAmount    Decimal  @default(0) @db.Decimal(9, 0)
+  VoucherNo     String?   @db.VarChar(50)
+  VoucherDate   DateTime  @default(dbgenerated("'0000-00-00'")) @db.Date
+  VoucherTime   DateTime  @default(dbgenerated("'00:00:00'")) @db.Time(0)
+  ServeDate     DateTime  @default(dbgenerated("'0000-00-00'")) @db.Date
+  ServeTime     DateTime  @default(dbgenerated("'00:00:00'")) @db.Time(0)
+  Amount        Decimal   @db.Decimal(9, 0)
+  AutoAmount    Decimal   @default(0) @db.Decimal(9, 0)
   TimeTotal     Int
-  Active        Boolean  @default(true)
-  UserNote      String   @default("") @db.VarChar(255)
-  Note          String   @db.VarChar(100)
-  ServicePaid   Boolean  @default(true)
-  StaffId       Int      @default(2)
-  MachineName   String?  @db.VarChar(100)
-  PaymentType   Int?     @default(0) @db.TinyInt
-  PaymentWaitId Int      @default(0)
-  zOid          String?  @unique(map: "zOidUnique") @db.VarChar(50)
-  zTid          String?  @unique(map: "zTidUnique") @db.VarChar(50)
-  zSig          String?  @db.VarChar(50)
+  Active        Boolean   @default(true)
+  UserNote      String    @default("") @db.VarChar(255)
+  Note          String    @db.VarChar(100)
+  ServicePaid   Boolean   @default(true)
+  StaffId       Int       @default(2)
+  MachineName   String?   @db.VarChar(100)
+  PaymentType   Int?      @default(0) @db.TinyInt
+  PaymentWaitId Int       @default(0)
+  zOid          String?   @unique(map: "zOidUnique") @db.VarChar(50)
+  zTid          String?   @unique(map: "zTidUnique") @db.VarChar(50)
+  zSig          String?   @db.VarChar(50)
+  zVatId        String?   @unique(map: "zVatIdUnix") @db.VarChar(100)
+  zVatDate      DateTime? @db.DateTime(0)
+  zVatHash      String?   @db.VarChar(100)
+  Vat           Int?      @default(0) @db.TinyInt
 
+  @@unique([UserId, VoucherDate, VoucherTime, ServeDate, ServeTime, Amount, AutoAmount, PaymentType], map: "unix_payment")
   @@index([ServicePaid], map: "ServicePaid")
 }
 
@@ -371,6 +390,8 @@ model pricelisttb {
   Price     Decimal @db.Decimal(6, 0)
   Type      Int     @default(0) @db.SmallInt
   Active    Int?    @db.TinyInt
+
+  @@index([PriceId, Type], map: "idx_pricelisttb_price_type")
 }
 
 model pricemachinetb {
@@ -429,6 +450,7 @@ model rechargecardtb {
   Status     Boolean?
   UserId     Int?      @db.UnsignedInt
   Note       String?   @db.VarChar(50)
+  Type       Int?      @default(0) @db.TinyInt
 }
 
 model reportdaily {
@@ -510,6 +532,7 @@ model serverlogtb {
   RecordTime  DateTime @db.Time(0)
   Period      Int      @default(0)
   Note        String?  @db.VarChar(255)
+  Actor       String?  @db.VarChar(100)
 }
 
 model servicedetailtb {
@@ -533,7 +556,7 @@ model servicedetailtb {
 
 model servicegiftsbag {
   recId        BigInt    @default(autoincrement())
-  recUuid      String    @id @db.VarChar(50)
+  recUuid      String    @db.VarChar(50)
   userId       String?   @db.VarChar(50)
   userName     String?   @db.VarChar(150)
   createDate   DateTime? @db.DateTime(0)
@@ -553,8 +576,10 @@ model servicegiftsbag {
   serialId     String?   @db.VarChar(150)
   ymd          Int?
   totalDay     Int?
-  groupId      Int?      @default(0) @db.SmallInt
+  groupId      Int       @default(0) @db.SmallInt
+  limitDate    Int?
 
+  @@id([recUuid, groupId])
   @@index([recId], map: "recId")
 }
 
@@ -582,11 +607,14 @@ model serviceinfologtb {
 model serviceinfotb {
   serviceId  Int       @default(autoincrement())
   prefix     String    @unique(map: "unix_prefix") @db.VarChar(20)
-  info       String?   @db.Text
+  info       String?   @db.MediumText
   status     Int?      @default(1) @db.SmallInt
   createDate DateTime? @db.DateTime(0)
   mode       Int?      @default(0) @db.SmallInt
   hash       String?   @db.VarChar(32)
+  groupId    Int?      @default(1) @db.SmallInt
+  qId        Int?      @default(0)
+  cache      Int?      @default(0) @db.SmallInt
 
   @@index([serviceId], map: "serviceId")
 }
@@ -623,8 +651,9 @@ model servicevisit {
   sign        String?   @db.VarChar(32)
   ssid        String?   @db.VarChar(32)
   reset       Int?      @default(0) @db.SmallInt
+  groupId     Int       @default(1) @db.SmallInt
 
-  @@id([uid, ym])
+  @@id([uid, ym, groupId])
 }
 
 model settingtb {
@@ -847,8 +876,10 @@ model usertb {
   PriceAppRentID   Int       @default(0) @db.UnsignedInt
   EIType           Int?      @default(0) @db.TinyInt
   pc_rptInfo       String?   @db.VarChar(255)
+  IsVat            Int?      @default(0) @db.TinyInt
 
   @@index([UserName], map: "Username")
+  @@index([Status, UserType, UserId], map: "idx_usertb_status_usertype_userid")
 }
 
 model versiontb {
@@ -868,11 +899,13 @@ model wallettb {
   sub    BigInt?
   sub1   BigInt?
   sub2   BigInt?
-  userid BigInt?
+  userid BigInt? @unique(map: "UC_USERID")
   status Int?
   ts     BigInt?
   wsec   BigInt?
   ssec   String? @db.VarChar(255)
+
+  @@index([userid], map: "idx_wallettb_userid")
 }
 
 model webhistorytb {
@@ -894,4 +927,20 @@ model webhistorytb2 {
   RecordDate String @db.VarChar(16)
 
   @@ignore
+}
+
+model ballance {
+  id         BigInt    @id @default(autoincrement())
+  UserId     BigInt?   @unique(map: "UserId")
+  ValueMain  Int?      @default(0)
+  ValueSub   Int?      @default(0)
+  PreMain    Int?      @default(0)
+  PreSub     Int?      @default(0)
+  PostMain   Int?      @default(0)
+  PostSub    Int?      @default(0)
+  PaymentId  BigInt?   @default(0)
+  SystemId   BigInt?   @default(0)
+  Note       String?   @default("") @db.VarChar(250)
+  Recorddate DateTime? @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
+  Sec        String?   @default("") @db.VarChar(250)
 }

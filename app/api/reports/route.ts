@@ -310,6 +310,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Trigger WorkShiftRevenueReport aggregation for this date/branch (fire-and-forget)
+    const baseUrl =
+      request.nextUrl?.origin ??
+      process.env.NEXTAUTH_URL ??
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+    fetch(`${baseUrl}/api/work-shift-revenue-report/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ date: dateVN, branch }),
+    }).catch((err) =>
+      console.error("[Reports] WorkShiftRevenueReport generate trigger failed:", err)
+    );
+
     return NextResponse.json({
       success: true,
       data: {

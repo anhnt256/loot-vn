@@ -98,6 +98,12 @@ const menuItems = [
     icon: "⚠️",
   },
   {
+    title: "Cảnh báo gian lận đăng nhập",
+    href: "/admin/fraud-alerts",
+    icon: "🔐",
+    adminOnly: true,
+  },
+  {
     title: "Quản lý Feedback",
     href: "/admin/feedback",
     icon: "💬",
@@ -119,6 +125,12 @@ const menuItems = [
     title: "Lịch làm việc",
     href: "/admin/work-schedule",
     icon: "📅",
+  },
+  {
+    title: "Quản lý ca làm việc",
+    href: "/admin/work-shifts",
+    icon: "⏰",
+    adminOnly: true,
   },
   {
     title: "Quản lý nhân viên",
@@ -257,6 +269,7 @@ export function AdminSidebar() {
       "/admin/reports", // Báo cáo kết ca
       "/admin/anomaly", // Cảnh báo bất thường
       "/admin/work-schedule", // Lịch làm việc
+      "/admin/work-shifts", // Quản lý ca làm việc
     ];
 
     return allowedMenus.includes(item.href);

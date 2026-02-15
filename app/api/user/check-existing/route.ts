@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { db, getFnetDB, getFnetPrisma } from "@/lib/db";
 import { cookies } from "next/headers";
 import dayjs from "@/lib/dayjs";
-import { getDebugUserId, logDebugInfo } from "@/lib/debug-utils";
+import {
+  getDebugUserId,
+  logDebugInfo,
+  getDebugConfig,
+  shouldBypassOnlineCheck,
+} from "@/lib/debug-utils";
 
 export async function GET(req: Request): Promise<any> {
   const cookieStore = await cookies();
@@ -31,7 +36,18 @@ export async function GET(req: Request): Promise<any> {
 
     const user: any = await fnetDB.$queryRaw<any>(query);
     const originalUserId = user[0]?.userId ?? null;
-    const userId = getDebugUserId(originalUserId);
+
+    // Debug: bypass "user must be online" — use default userId when no systemlogtb record
+    let userId: number | null;
+    if (originalUserId == null && shouldBypassOnlineCheck()) {
+      const config = getDebugConfig();
+      userId = config.defaultUserId;
+      console.log(
+        `[DEBUG] check-existing: bypass online check for machine ${machineName}, using defaultUserId=${userId}`,
+      );
+    } else {
+      userId = getDebugUserId(originalUserId ?? undefined) || null;
+    }
 
     logDebugInfo("user/check-existing", {
       machineName,

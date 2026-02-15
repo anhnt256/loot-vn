@@ -45,6 +45,19 @@ if (process.env.NODE_ENV !== "production") {
   globalThis.fnetTPPrisma = fnetTP;
 }
 
+/** Get Fnet DB by branch string (e.g. GO_VAP, TAN_PHU). Use when branch is from query/param. */
+export function getFnetDBByBranch(branch: string) {
+  const b = (branch || "").trim();
+  switch (b) {
+    case BRANCH.GOVAP:
+      return fnetGV;
+    case BRANCH.TANPHU:
+      return fnetTP;
+    default:
+      return fnetGV;
+  }
+}
+
 // Create a factory function that gets called for each request
 export async function getFnetDB() {
   if (typeof window !== "undefined") {
@@ -58,14 +71,7 @@ export async function getFnetDB() {
     throw new Error("Branch cookie is required but not found");
   }
 
-  switch (branchFromCookie) {
-    case BRANCH.GOVAP:
-      return fnetGV;
-    case BRANCH.TANPHU:
-      return fnetTP;
-    default:
-      return fnetGV;
-  }
+  return getFnetDBByBranch(branchFromCookie);
 }
 
 export async function getFnetPrisma() {
