@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { db, getFnetDBByBranch } from "@/lib/db";
 import { verifyFfoodShifts } from "@/lib/ffood-shift-verify";
-import { getMomoStatisticsByShift, loginAndGetMomoToken } from "@/lib/momo-report";
+import {
+  getMomoStatisticsByShift,
+  loginAndGetMomoToken,
+} from "@/lib/momo-report";
 import { mapWorkShiftNameToShiftEnum, WorkShift } from "@/lib/work-shift-utils";
 
 type WorkShiftRow = {
@@ -27,7 +30,7 @@ type MomoCredentialRow = {
 type ShiftRevenueType = "MORNING" | "AFTERNOON" | "EVENING";
 
 // Helper to delay execution (rate limiting for Momo API)
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const MOMO_RATE_LIMIT_DELAY = 6000; // 6 seconds between Momo API calls
 
 function workShiftNameToShiftRevenueType(name: string): ShiftRevenueType {
@@ -61,7 +64,7 @@ type GenerateResult = {
 /**
  * POST /api/work-shift-revenue-report/generate
  * Body: { date: "YYYY-MM-DD", branch: "GO_VAP" | "TAN_PHU" }
- * 
+ *
  * Generates WorkShiftRevenueReport for all shifts on a given date.
  * - Ffood: totalFood, deduction, actualFfood
  * - Fnet: gamingRevenue (SUM Amount from paymenttb)
@@ -75,7 +78,7 @@ export async function POST(request: Request) {
     if (!date || !branch) {
       return NextResponse.json(
         { success: false, error: "date and branch are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -83,7 +86,7 @@ export async function POST(request: Request) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return NextResponse.json(
         { success: false, error: "date must be in YYYY-MM-DD format" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -93,13 +96,13 @@ export async function POST(request: Request) {
     const workShiftRows = (await db.$queryRawUnsafe(
       `SELECT id, name, startTime, endTime, isOvernight, FnetStaffId 
        FROM WorkShift WHERE branch = ? ORDER BY startTime, id`,
-      branch
+      branch,
     )) as WorkShiftRow[];
 
     if (!workShiftRows.length) {
       return NextResponse.json(
         { success: false, error: "No WorkShift found for branch" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -107,8 +110,11 @@ export async function POST(request: Request) {
 
     // 2. Get Ffood data (values need to be divided by 100)
     const ffoodResult = await verifyFfoodShifts(branch, date);
-    const ffoodByShiftName = new Map<string, { totalFood: number; deduction: number; actualFfood: number }>();
-    
+    const ffoodByShiftName = new Map<
+      string,
+      { totalFood: number; deduction: number; actualFfood: number }
+    >();
+
     if (ffoodResult.success && ffoodResult.verified) {
       for (const v of ffoodResult.verified) {
         ffoodByShiftName.set(v.workShiftName, {
@@ -118,7 +124,12 @@ export async function POST(request: Request) {
         });
       }
     }
-    console.log(`[GenerateReport] Ffood data:`, ffoodResult.success ? `${ffoodResult.verified?.length || 0} shifts` : ffoodResult.error);
+    console.log(
+      `[GenerateReport] Ffood data:`,
+      ffoodResult.success
+        ? `${ffoodResult.verified?.length || 0} shifts`
+        : ffoodResult.error,
+    );
 
     // 2.5. Get incidentalAmount from ReportDetail (type = 'CHI') by shift
     const incidentalRows = (await db.$queryRawUnsafe(
@@ -128,20 +139,23 @@ export async function POST(request: Request) {
        WHERE DATE(r.date) = ? AND r.branch = ?
        GROUP BY r.shift`,
       date,
-      branch
+      branch,
     )) as { shift: string; incidentalAmount: number }[];
 
     const incidentalByShift = new Map<string, number>();
     for (const row of incidentalRows) {
       incidentalByShift.set(row.shift, Number(row.incidentalAmount) || 0);
     }
-    console.log(`[GenerateReport] Incidental data:`, Object.fromEntries(incidentalByShift));
+    console.log(
+      `[GenerateReport] Incidental data:`,
+      Object.fromEntries(incidentalByShift),
+    );
 
     // 3. Get Momo credential and token (refresh if expired)
     const momoRows = (await db.$queryRawUnsafe(
       `SELECT id, store_id, merchant_id, username, password, token, expired, branch 
        FROM MomoCredential WHERE branch = ? LIMIT 1`,
-      branch
+      branch,
     )) as MomoCredentialRow[];
 
     const momoCred = momoRows[0];
@@ -152,15 +166,18 @@ export async function POST(request: Request) {
     // Check if token is expired or missing, then refresh
     if (momoCred && momoMerchantId && momoStoreId) {
       const now = new Date();
-      const isExpired = !momoToken || !momoCred.expired || new Date(momoCred.expired) <= now;
-      
+      const isExpired =
+        !momoToken || !momoCred.expired || new Date(momoCred.expired) <= now;
+
       if (isExpired) {
-        console.log(`[GenerateReport] Momo token expired or missing, refreshing...`);
+        console.log(
+          `[GenerateReport] Momo token expired or missing, refreshing...`,
+        );
         const loginResult = await loginAndGetMomoToken({
           username: momoCred.username,
           password: momoCred.password,
         });
-        
+
         if (loginResult) {
           momoToken = loginResult.token;
           // Update token in DB
@@ -168,7 +185,7 @@ export async function POST(request: Request) {
             `UPDATE MomoCredential SET token = ?, expired = ?, updatedAt = NOW() WHERE id = ?`,
             loginResult.token,
             loginResult.expired,
-            momoCred.id
+            momoCred.id,
           );
           console.log(`[GenerateReport] Momo token refreshed successfully`);
         } else {
@@ -180,7 +197,9 @@ export async function POST(request: Request) {
 
     const hasMomoCred = momoToken && momoMerchantId && momoStoreId;
     if (!hasMomoCred) {
-      console.log(`[GenerateReport] Momo credential incomplete for branch ${branch}`);
+      console.log(
+        `[GenerateReport] Momo credential incomplete for branch ${branch}`,
+      );
     }
 
     // 4. Get Fnet DB
@@ -196,7 +215,11 @@ export async function POST(request: Request) {
       const errors: string[] = [];
 
       // Ffood data
-      const ffoodData = ffoodByShiftName.get(ws.name) || { totalFood: 0, deduction: 0, actualFfood: 0 };
+      const ffoodData = ffoodByShiftName.get(ws.name) || {
+        totalFood: 0,
+        deduction: 0,
+        actualFfood: 0,
+      };
 
       // Incidental amount from ReportDetail (type = 'CHI')
       const incidentalAmount = incidentalByShift.get(reportShift) || 0;
@@ -211,11 +234,14 @@ export async function POST(request: Request) {
           const sumResult = (await fnetDB.$queryRawUnsafe(
             `SELECT COALESCE(SUM(Amount), 0) AS total FROM fnet.paymenttb WHERE StaffId = ? AND ServeDate = ?`,
             Number(ws.FnetStaffId),
-            date
+            date,
           )) as { total: unknown }[];
-          gamingRevenue = sumResult[0]?.total != null ? Number(sumResult[0].total) : 0;
+          gamingRevenue =
+            sumResult[0]?.total != null ? Number(sumResult[0].total) : 0;
         } catch (err) {
-          errors.push(`Fnet error: ${err instanceof Error ? err.message : "unknown"}`);
+          errors.push(
+            `Fnet error: ${err instanceof Error ? err.message : "unknown"}`,
+          );
         }
       }
 
@@ -225,7 +251,9 @@ export async function POST(request: Request) {
         try {
           // Rate limiting: delay before calling Momo API (except first call)
           if (momoCallCount > 0) {
-            console.log(`[GenerateReport] Waiting ${MOMO_RATE_LIMIT_DELAY / 1000}s before next Momo API call...`);
+            console.log(
+              `[GenerateReport] Waiting ${MOMO_RATE_LIMIT_DELAY / 1000}s before next Momo API call...`,
+            );
             await delay(MOMO_RATE_LIMIT_DELAY);
           }
           momoCallCount++;
@@ -260,12 +288,19 @@ export async function POST(request: Request) {
             momoRevenue = momoStats.totalSuccessAmount;
           }
         } catch (err) {
-          errors.push(`Momo error: ${err instanceof Error ? err.message : "unknown"}`);
+          errors.push(
+            `Momo error: ${err instanceof Error ? err.message : "unknown"}`,
+          );
         }
       }
 
       // Calculate handoverAmount = totalFood + gamingRevenue - deduction - incidentalAmount - momoRevenue
-      const handoverAmount = ffoodData.totalFood + gamingRevenue - ffoodData.deduction - incidentalAmount - momoRevenue;
+      const handoverAmount =
+        ffoodData.totalFood +
+        gamingRevenue -
+        ffoodData.deduction -
+        incidentalAmount -
+        momoRevenue;
 
       // 6. Upsert to WorkShiftRevenueReport
       let status: "inserted" | "updated" | "skipped" = "skipped";
@@ -276,7 +311,7 @@ export async function POST(request: Request) {
           `SELECT id FROM WorkShiftRevenueReport WHERE reportDate = ? AND branch = ? AND shift = ?`,
           date,
           branch,
-          shiftType
+          shiftType,
         )) as { id: number }[];
 
         if (existingRows.length > 0) {
@@ -294,7 +329,7 @@ export async function POST(request: Request) {
             handoverAmount,
             date,
             branch,
-            shiftType
+            shiftType,
           );
           status = "updated";
         } else {
@@ -312,12 +347,14 @@ export async function POST(request: Request) {
             gamingRevenue,
             momoRevenue,
             incidentalAmount,
-            handoverAmount
+            handoverAmount,
           );
           status = "inserted";
         }
       } catch (err) {
-        errors.push(`DB error: ${err instanceof Error ? err.message : "unknown"}`);
+        errors.push(
+          `DB error: ${err instanceof Error ? err.message : "unknown"}`,
+        );
         status = "skipped";
       }
 
@@ -337,7 +374,9 @@ export async function POST(request: Request) {
       });
     }
 
-    console.log(`[GenerateReport] Completed for date=${date}, branch=${branch}`);
+    console.log(
+      `[GenerateReport] Completed for date=${date}, branch=${branch}`,
+    );
 
     return NextResponse.json({
       success: true,
@@ -346,10 +385,10 @@ export async function POST(request: Request) {
       results,
       summary: {
         total: results.length,
-        inserted: results.filter(r => r.status === "inserted").length,
-        updated: results.filter(r => r.status === "updated").length,
-        skipped: results.filter(r => r.status === "skipped").length,
-        withErrors: results.filter(r => r.errors?.length).length,
+        inserted: results.filter((r) => r.status === "inserted").length,
+        updated: results.filter((r) => r.status === "updated").length,
+        skipped: results.filter((r) => r.status === "skipped").length,
+        withErrors: results.filter((r) => r.errors?.length).length,
       },
     });
   } catch (error) {
@@ -357,9 +396,10 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to generate report",
+        error:
+          error instanceof Error ? error.message : "Failed to generate report",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

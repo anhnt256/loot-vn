@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { db } from "@/lib/db";
+import { db, getFnetDB } from "@/lib/db";
 import { getBranchFromCookie } from "@/lib/server-utils";
-import { getFnetDB } from "@/lib/db";
+
 import { verifyJWT } from "@/lib/jwt";
 import { isTimeInAnyShift } from "@/lib/work-shift-utils";
 import type { WorkShift } from "@/lib/work-shift-utils";
@@ -11,7 +11,10 @@ import dayjs from "@/lib/dayjs";
 
 const LOGIN_STATUS = "Đăng nhập";
 
-async function checkAdminAccess(): Promise<{ isAdmin: boolean; error?: string }> {
+async function checkAdminAccess(): Promise<{
+  isAdmin: boolean;
+  error?: string;
+}> {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("token")?.value;
@@ -21,7 +24,8 @@ async function checkAdminAccess(): Promise<{ isAdmin: boolean; error?: string }>
     const userId = parseInt(String(decoded.userId));
     const loginType = cookieStore.get("loginType")?.value;
     const role = decoded.role;
-    if (userId === -99 || (role === "admin" && loginType === "username")) return { isAdmin: true };
+    if (userId === -99 || (role === "admin" && loginType === "username"))
+      return { isAdmin: true };
     return { isAdmin: false, error: "Admin access required" };
   } catch {
     return { isAdmin: false, error: "Error checking admin access" };
@@ -29,8 +33,12 @@ async function checkAdminAccess(): Promise<{ isAdmin: boolean; error?: string }>
 }
 
 /** Actor from Fnet serverlogtb.Actor if present, else parse from Note */
-function getActor(log: { Actor?: string | null; Note?: string | null }): string {
-  if (log.Actor != null && String(log.Actor).trim()) return String(log.Actor).trim();
+function getActor(log: {
+  Actor?: string | null;
+  Note?: string | null;
+}): string {
+  if (log.Actor != null && String(log.Actor).trim())
+    return String(log.Actor).trim();
   const note = log.Note;
   if (!note || typeof note !== "string") return "Unknown";
   const parts = note.trim().split(/\s+/);
@@ -38,9 +46,14 @@ function getActor(log: { Actor?: string | null; Note?: string | null }): string 
   return note.trim() || "Unknown";
 }
 
-function isAdminLogin(log: { Actor?: string | null; Note?: string | null }): boolean {
-  if (log.Actor != null && String(log.Actor).toUpperCase() === "ADMIN") return true;
-  if (log.Note != null && String(log.Note).toUpperCase().includes("ADMIN")) return true;
+function isAdminLogin(log: {
+  Actor?: string | null;
+  Note?: string | null;
+}): boolean {
+  if (log.Actor != null && String(log.Actor).toUpperCase() === "ADMIN")
+    return true;
+  if (log.Note != null && String(log.Note).toUpperCase().includes("ADMIN"))
+    return true;
   return false;
 }
 
@@ -58,7 +71,10 @@ function formatTimeToHHmmss(t: Date | string | null): string {
 /** Format RecordDate to YYYY-MM-DD */
 function formatRecordDate(d: Date | string | null): string {
   if (!d) return "";
-  const x = typeof d === "string" ? d : (d as Date).toISOString?.()?.slice(0, 10) ?? "";
+  const x =
+    typeof d === "string"
+      ? d
+      : ((d as Date).toISOString?.()?.slice(0, 10) ?? "");
   return x.slice(0, 10);
 }
 
@@ -66,11 +82,17 @@ export async function GET(request: NextRequest) {
   try {
     const adminCheck = await checkAdminAccess();
     if (!adminCheck.isAdmin) {
-      return NextResponse.json({ success: false, error: adminCheck.error ?? "Admin required" }, { status: 403 });
+      return NextResponse.json(
+        { success: false, error: adminCheck.error ?? "Admin required" },
+        { status: 403 },
+      );
     }
     const branch = await getBranchFromCookie();
     if (!branch) {
-      return NextResponse.json({ success: false, error: "Branch is required" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "Branch is required" },
+        { status: 400 },
+      );
     }
 
     const { searchParams } = new URL(request.url);
@@ -113,7 +135,9 @@ export async function GET(request: NextRequest) {
       "SELECT serverLogId, branch FROM FraudLoginAlert WHERE branch = ?",
       branch,
     )) as { serverLogId: number | null; branch: string }[];
-    const existingSet = new Set(existingAlerts.map((a) => (a.serverLogId ?? -1).toString()));
+    const existingSet = new Set(
+      existingAlerts.map((a) => (a.serverLogId ?? -1).toString()),
+    );
 
     const nowStr = getCurrentTimeVNDB();
     for (const log of loginLogs) {
@@ -183,7 +207,13 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Error in fraud-login-alerts GET:", error);
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : "Failed to fetch fraud login alerts" },
+      {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch fraud login alerts",
+      },
       { status: 500 },
     );
   }

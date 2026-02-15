@@ -120,7 +120,10 @@ export function isTimeInAnyShift(
   const d = dayjs(recordDate).tz("Asia/Ho_Chi_Minh");
   let currentMinutes: number;
   if (typeof recordTime === "string") {
-    const parts = recordTime.trim().split(/[:\s]/).map((p) => parseInt(p, 10) || 0);
+    const parts = recordTime
+      .trim()
+      .split(/[:\s]/)
+      .map((p) => parseInt(p, 10) || 0);
     const [h = 0, m = 0] = parts;
     currentMinutes = h * 60 + m;
   } else {
@@ -144,7 +147,7 @@ export function isTimeInAnyShift(
 
 export type ShiftDateTimeRange = {
   fromDate: string; // ISO format: YYYY-MM-DDTHH:mm:ss
-  toDate: string;   // ISO format: YYYY-MM-DDTHH:mm:ss
+  toDate: string; // ISO format: YYYY-MM-DDTHH:mm:ss
 };
 
 /**
@@ -156,13 +159,15 @@ export type ShiftDateTimeRange = {
  */
 export function getShiftDateTimeRange(
   shift: WorkShift,
-  date?: string
+  date?: string,
 ): ShiftDateTimeRange {
   const baseDate = date
     ? dayjs(date).tz("Asia/Ho_Chi_Minh")
     : dayjs().tz("Asia/Ho_Chi_Minh");
 
-  const [startHour, startMin, startSec = 0] = shift.startTime.split(":").map(Number);
+  const [startHour, startMin, startSec = 0] = shift.startTime
+    .split(":")
+    .map(Number);
   const [endHour, endMin, endSec = 0] = shift.endTime.split(":").map(Number);
 
   // fromDate is always on the base date
@@ -174,11 +179,11 @@ export function getShiftDateTimeRange(
 
   // toDate: if overnight, add 1 day; endTime should be -1 second for range (e.g., 06:59:59)
   let toDateTime = baseDate.hour(endHour).minute(endMin).second(endSec);
-  
+
   if (shift.isOvernight) {
     toDateTime = toDateTime.add(1, "day");
   }
-  
+
   // If endTime is like 07:00:00, convert to 06:59:59 for API range query
   // Subtract 1 second to get the last moment of the shift
   if (endSec === 0 && endMin === 0) {

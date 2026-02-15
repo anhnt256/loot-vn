@@ -42,8 +42,12 @@ interface DayData {
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const year = parseInt(searchParams.get("year") || new Date().getFullYear().toString());
-    const month = parseInt(searchParams.get("month") || (new Date().getMonth() + 1).toString());
+    const year = parseInt(
+      searchParams.get("year") || new Date().getFullYear().toString(),
+    );
+    const month = parseInt(
+      searchParams.get("month") || (new Date().getMonth() + 1).toString(),
+    );
 
     const cookieStore = await cookies();
     const branch = cookieStore.get("branch")?.value || "GO_VAP";
@@ -71,7 +75,7 @@ export async function GET(request: NextRequest) {
        ORDER BY reportDate, shift`,
       branch,
       startDate,
-      endDate
+      endDate,
     )) as RevenueReportRow[];
 
     // Group by date
@@ -102,20 +106,24 @@ export async function GET(request: NextRequest) {
        GROUP BY DATE(transactionDate)`,
       branch,
       startDate,
-      endDate
+      endDate,
     )) as { dt: Date | string; totalAmount: string | number }[];
 
     const managerByDate = new Map<string, number>();
     for (const r of managerRows) {
-      const dateStr = r.dt instanceof Date ? r.dt.toISOString().slice(0, 10) : String(r.dt).slice(0, 10);
+      const dateStr =
+        r.dt instanceof Date
+          ? r.dt.toISOString().slice(0, 10)
+          : String(r.dt).slice(0, 10);
       managerByDate.set(dateStr, Number(r.totalAmount) || 0);
     }
 
     // Process rows
     for (const row of rows) {
-      const dateStr = row.reportDate instanceof Date
-        ? row.reportDate.toISOString().slice(0, 10)
-        : String(row.reportDate).slice(0, 10);
+      const dateStr =
+        row.reportDate instanceof Date
+          ? row.reportDate.toISOString().slice(0, 10)
+          : String(row.reportDate).slice(0, 10);
 
       const dayData = dataByDate.get(dateStr);
       if (!dayData) continue;
@@ -123,8 +131,10 @@ export async function GET(request: NextRequest) {
       const totalFood = Number(row.totalFood) || 0;
       const gamingRevenue = Number(row.gamingRevenue) || 0;
       const deduction = Number(row.deduction) || 0;
-      const incidentalAmount = row.incidentalAmount != null ? Number(row.incidentalAmount) : 0;
-      const actualMoney = totalFood + gamingRevenue - deduction - incidentalAmount;
+      const incidentalAmount =
+        row.incidentalAmount != null ? Number(row.incidentalAmount) : 0;
+      const actualMoney =
+        totalFood + gamingRevenue - deduction - incidentalAmount;
       const handover = Number(row.handoverAmount) || 0;
       const actual = Number(row.actualShiftRevenue) || 0;
       const heldAmount = Number(row.confirmedHeldAmount) || 0;
@@ -162,9 +172,13 @@ export async function GET(request: NextRequest) {
 
     for (const [, dayData] of dataByDate) {
       dayData.managerAmount = managerByDate.get(dayData.date) ?? 0;
-      dayData.difference = dayData.totalHandover - dayData.totalActual - dayData.totalConfirmedHeld;
+      dayData.difference =
+        dayData.totalHandover -
+        dayData.totalActual -
+        dayData.totalConfirmedHeld;
       // Alert when manager recorded amount != report handover total (the comparison user asked for)
-      dayData.hasAlert = Math.abs(dayData.managerAmount - dayData.totalHandover) > TOLERANCE;
+      dayData.hasAlert =
+        Math.abs(dayData.managerAmount - dayData.totalHandover) > TOLERANCE;
       if (dayData.hasAlert) alertCount++;
 
       totalMonthHandover += dayData.totalHandover;
@@ -175,7 +189,7 @@ export async function GET(request: NextRequest) {
 
     // Convert map to array sorted by date
     const calendarData = Array.from(dataByDate.values()).sort((a, b) =>
-      a.date.localeCompare(b.date)
+      a.date.localeCompare(b.date),
     );
 
     return NextResponse.json({
@@ -189,7 +203,7 @@ export async function GET(request: NextRequest) {
         days: calendarData,
         summary: {
           totalDays: lastDay,
-          daysWithData: calendarData.filter(d => d.shifts.length > 0).length,
+          daysWithData: calendarData.filter((d) => d.shifts.length > 0).length,
           alertCount,
           totalMonthHandover,
           totalMonthActualMoney,
@@ -204,9 +218,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch calendar data",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch calendar data",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

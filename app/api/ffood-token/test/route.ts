@@ -26,20 +26,23 @@ export async function GET(request: NextRequest) {
 
     if (!branch) {
       return NextResponse.json(
-        { success: false, error: "Branch is required (query ?branch=xxx or cookie)" },
-        { status: 400 }
+        {
+          success: false,
+          error: "Branch is required (query ?branch=xxx or cookie)",
+        },
+        { status: 400 },
       );
     }
 
     const rows = (await db.$queryRawUnsafe(
       "SELECT id, ffood_url, username, password, token, expired, branch FROM FfoodCredential WHERE branch = ? LIMIT 1",
-      branch
+      branch,
     )) as FfoodCredentialRow[];
 
     if (!rows.length) {
       return NextResponse.json(
         { success: false, error: "FfoodCredential not found for branch" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -52,13 +55,13 @@ export async function GET(request: NextRequest) {
         headless: process.env.NODE_ENV === "production",
         timeout: 60_000,
         keepOpen: process.env.NODE_ENV !== "production",
-      }
+      },
     );
 
     if (!result) {
       return NextResponse.json(
         { success: false, error: "Ffood login failed or token not found" },
-        { status: 502 }
+        { status: 502 },
       );
     }
 
@@ -67,7 +70,7 @@ export async function GET(request: NextRequest) {
       result.token,
       result.expired,
       row.id,
-      branch
+      branch,
     );
 
     return NextResponse.json({
@@ -83,7 +86,7 @@ export async function GET(request: NextRequest) {
         success: false,
         error: error instanceof Error ? error.message : "Test failed",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

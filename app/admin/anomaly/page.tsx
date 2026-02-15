@@ -11,7 +11,9 @@ export default function AnomalyPage() {
           Cảnh báo giao dịch bất thường
         </h1>
         <p className="text-sm text-gray-400">
-          Theo dõi và phát hiện các giao dịch bất thường theo từng tháng. So sánh tiền bàn giao (WorkShiftRevenueReport) với sổ quản lý (ManagerIncomeExpense). Các ngày lệch được tô đỏ.
+          Theo dõi và phát hiện các giao dịch bất thường theo từng tháng. So
+          sánh tiền bàn giao (WorkShiftRevenueReport) với sổ quản lý
+          (ManagerIncomeExpense). Các ngày lệch được tô đỏ.
         </p>
       </div>
       <RevenueCalendar />

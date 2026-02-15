@@ -41,7 +41,8 @@ export default function WorkShiftsManagementPage() {
       setIsLoading(true);
       const res = await fetch("/api/work-shifts");
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || "Failed to fetch");
+      if (!res.ok || !data.success)
+        throw new Error(data.error || "Failed to fetch");
       setList(data.data || []);
     } catch (e: any) {
       toast.error(e.message || "Không tải được danh sách ca");
@@ -138,9 +139,12 @@ export default function WorkShiftsManagementPage() {
       cancelText: "Hủy",
       onOk: async () => {
         try {
-          const res = await fetch(`/api/work-shifts?id=${id}`, { method: "DELETE" });
+          const res = await fetch(`/api/work-shifts?id=${id}`, {
+            method: "DELETE",
+          });
           const data = await res.json();
-          if (!res.ok || !data.success) throw new Error(data.error || "Delete failed");
+          if (!res.ok || !data.success)
+            throw new Error(data.error || "Delete failed");
           toast.success("Đã xóa ca");
           fetchList();
         } catch (e: any) {
@@ -159,8 +163,14 @@ export default function WorkShiftsManagementPage() {
     try {
       const payload = {
         name: values.name,
-        startTime: values.startTime?.length === 5 ? values.startTime + ":00" : values.startTime,
-        endTime: values.endTime?.length === 5 ? values.endTime + ":00" : values.endTime,
+        startTime:
+          values.startTime?.length === 5
+            ? values.startTime + ":00"
+            : values.startTime,
+        endTime:
+          values.endTime?.length === 5
+            ? values.endTime + ":00"
+            : values.endTime,
         isOvernight: values.isOvernight,
       };
       if (selected) {
@@ -170,7 +180,8 @@ export default function WorkShiftsManagementPage() {
           body: JSON.stringify({ ...payload, id: selected.id }),
         });
         const data = await res.json();
-        if (!res.ok || !data.success) throw new Error(data.error || "Update failed");
+        if (!res.ok || !data.success)
+          throw new Error(data.error || "Update failed");
         toast.success("Đã cập nhật ca");
       } else {
         const res = await fetch("/api/work-shifts", {
@@ -179,7 +190,8 @@ export default function WorkShiftsManagementPage() {
           body: JSON.stringify(payload),
         });
         const data = await res.json();
-        if (!res.ok || !data.success) throw new Error(data.error || "Create failed");
+        if (!res.ok || !data.success)
+          throw new Error(data.error || "Create failed");
         toast.success("Đã thêm ca");
       }
       setShowForm(false);

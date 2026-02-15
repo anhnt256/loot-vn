@@ -190,7 +190,9 @@ export async function POST(
         const rowsAffected =
           typeof updateResult === "number"
             ? updateResult
-            : Number((updateResult as { affectedRows?: number })?.affectedRows ?? 0);
+            : Number(
+                (updateResult as { affectedRows?: number })?.affectedRows ?? 0,
+              );
         if (rowsAffected < 1) {
           console.error(
             `[claim-reward] UPDATE User.stars affected 0 rows: userId=${userIdNum} branch=${branch} newStars=${newStars}`,

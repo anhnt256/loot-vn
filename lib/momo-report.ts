@@ -1,7 +1,8 @@
 import { getShiftDateTimeRange, WorkShift } from "@/lib/work-shift-utils";
 
 const MOMO_LOGIN_URL = "https://business.momo.vn/api/authentication/login";
-const MOMO_STATISTICS_URL = "https://business.momo.vn/api/transaction/v2/transactions/statistics";
+const MOMO_STATISTICS_URL =
+  "https://business.momo.vn/api/transaction/v2/transactions/statistics";
 
 export type MomoCredential = {
   username: string;
@@ -26,7 +27,7 @@ export type MomoStatisticsParams = {
   merchantId: string;
   storeId: string;
   fromDate: string; // ISO format: 2026-02-01T00:00:00
-  toDate: string;   // ISO format: 2026-02-01T06:59:59
+  toDate: string; // ISO format: 2026-02-01T06:59:59
 };
 
 export type MomoStatisticsParamsWithShift = {
@@ -70,7 +71,7 @@ export type MomoStatisticsResult = {
  * POST https://business.momo.vn/api/authentication/login
  */
 export async function loginAndGetMomoToken(
-  cred: MomoCredential
+  cred: MomoCredential,
 ): Promise<MomoLoginResult> {
   try {
     const response = await fetch(MOMO_LOGIN_URL, {
@@ -85,7 +86,11 @@ export async function loginAndGetMomoToken(
     });
 
     if (!response.ok) {
-      console.error("[MomoLogin] HTTP error:", response.status, response.statusText);
+      console.error(
+        "[MomoLogin] HTTP error:",
+        response.status,
+        response.statusText,
+      );
       return null;
     }
 
@@ -115,7 +120,7 @@ export async function loginAndGetMomoToken(
  * GET https://business.momo.vn/api/transaction/v2/transactions/statistics
  */
 export async function getMomoTransactionStatistics(
-  params: MomoStatisticsParams
+  params: MomoStatisticsParams,
 ): Promise<MomoStatisticsResult> {
   try {
     const { token, merchantId, storeId, fromDate, toDate } = params;
@@ -138,16 +143,21 @@ export async function getMomoTransactionStatistics(
     const response = await fetch(`${MOMO_STATISTICS_URL}?${searchParams}`, {
       method: "GET",
       headers: {
-        "accept": "application/json, text/plain, */*",
-        "authorization": `Bearer ${token}`,
-        "merchantid": merchantId,
+        accept: "application/json, text/plain, */*",
+        authorization: `Bearer ${token}`,
+        merchantid: merchantId,
         "x-api-request-id": requestId,
       },
     });
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => "");
-      console.error("[MomoStatistics] HTTP error:", response.status, response.statusText, errorText);
+      console.error(
+        "[MomoStatistics] HTTP error:",
+        response.status,
+        response.statusText,
+        errorText,
+      );
       return null;
     }
 
@@ -180,12 +190,19 @@ export async function getMomoTransactionStatistics(
  * Automatically calculates fromDate and toDate based on shift times.
  */
 export async function getMomoStatisticsByShift(
-  params: MomoStatisticsParamsWithShift
+  params: MomoStatisticsParamsWithShift,
 ): Promise<MomoStatisticsResult> {
   const { token, merchantId, storeId, shift, date } = params;
   const { fromDate, toDate } = getShiftDateTimeRange(shift, date);
 
-  console.log("[MomoStatistics] Shift:", shift.name, "Range:", fromDate, "->", toDate);
+  console.log(
+    "[MomoStatistics] Shift:",
+    shift.name,
+    "Range:",
+    fromDate,
+    "->",
+    toDate,
+  );
 
   return getMomoTransactionStatistics({
     token,
@@ -193,5 +210,26 @@ export async function getMomoStatisticsByShift(
     storeId,
     fromDate,
     toDate,
+  });
+}
+
+export type FetchMomoReportInBackgroundParams = {
+  momoUrl: string;
+  username: string;
+  password: string;
+};
+
+/**
+ * Start Momo report fetch in background. Returns immediately.
+ * Runs login (token refresh) in background; momoUrl is for future use.
+ */
+export function fetchMomoReportInBackground(
+  params: FetchMomoReportInBackgroundParams,
+): void {
+  const { username, password } = params;
+  void loginAndGetMomoToken({ username, password }).then((result) => {
+    if (result) {
+      console.log("[MomoReport] Background token refresh OK");
+    }
   });
 }

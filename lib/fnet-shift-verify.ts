@@ -2,7 +2,9 @@ import { db, getFnetDBByBranch } from "@/lib/db";
 import { mapWorkShiftNameToShiftEnum } from "@/lib/work-shift-utils";
 
 // Prisma ShiftRevenueType: MORNING | AFTERNOON | EVENING
-function workShiftNameToShiftRevenueType(name: string): "MORNING" | "AFTERNOON" | "EVENING" {
+function workShiftNameToShiftRevenueType(
+  name: string,
+): "MORNING" | "AFTERNOON" | "EVENING" {
   const s = mapWorkShiftNameToShiftEnum(name).toUpperCase();
   if (s === "SANG") return "MORNING";
   if (s === "CHIEU") return "AFTERNOON";
@@ -37,16 +39,19 @@ type RevenueRow = { shift: string; gamingRevenue: unknown };
  * - For each shift: SUM(Amount) from fnet.paymenttb where StaffId = FnetStaffId and ServeDate = serveDate.
  * - Maps to WorkShiftRevenueReport.gamingRevenue by shift (SANG->MORNING, CHIEU->AFTERNOON, TOI->EVENING).
  */
-export async function verifyFnetShifts(branch: string, serveDate: string): Promise<FnetShiftVerifyResult> {
+export async function verifyFnetShifts(
+  branch: string,
+  serveDate: string,
+): Promise<FnetShiftVerifyResult> {
   const workShiftRows = (await db.$queryRawUnsafe(
     "SELECT id, name, FnetStaffId FROM WorkShift WHERE branch = ? ORDER BY startTime, id",
-    branch
+    branch,
   )) as WorkShiftRow[];
 
   const revenueRows = (await db.$queryRawUnsafe(
     "SELECT shift, gamingRevenue FROM WorkShiftRevenueReport WHERE branch = ? AND reportDate = ?",
     branch,
-    serveDate
+    serveDate,
   )) as RevenueRow[];
 
   const revenueByShift = new Map<string, number>();
@@ -64,10 +69,11 @@ export async function verifyFnetShifts(branch: string, serveDate: string): Promi
     const sumResult = (await fnetDB.$queryRawUnsafe(
       "SELECT COALESCE(SUM(Amount), 0) AS total FROM fnet.paymenttb WHERE StaffId = ? AND ServeDate = ?",
       Number(ws.FnetStaffId),
-      serveDate
+      serveDate,
     )) as { total: unknown }[];
 
-    const fnetSum = sumResult[0]?.total != null ? Number(sumResult[0].total) : 0;
+    const fnetSum =
+      sumResult[0]?.total != null ? Number(sumResult[0].total) : 0;
     const shift = workShiftNameToShiftRevenueType(ws.name);
     const gamingRevenue = revenueByShift.get(shift) ?? 0;
     rows.push({

@@ -29,19 +29,19 @@ export async function GET(request: Request) {
     if (!branch) {
       return NextResponse.json(
         { success: false, error: "Branch is required (query param or cookie)" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const rows = (await db.$queryRawUnsafe(
       "SELECT id, shop_id, momo_url, username, password, token, expired, branch FROM MomoCredential WHERE branch = ? LIMIT 1",
-      branch
+      branch,
     )) as MomoCredentialRow[];
 
     if (!rows.length) {
       return NextResponse.json(
         { success: false, error: "MomoCredential not found for branch" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -68,7 +68,7 @@ export async function GET(request: Request) {
     if (!result) {
       return NextResponse.json(
         { success: false, error: "Momo login failed or token not found" },
-        { status: 502 }
+        { status: 502 },
       );
     }
 
@@ -78,7 +78,7 @@ export async function GET(request: Request) {
       result.token,
       result.expired,
       row.id,
-      branch
+      branch,
     );
 
     console.log("[MomoToken] Token updated in DB for branch:", branch);
@@ -92,9 +92,10 @@ export async function GET(request: Request) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to get Momo token",
+        error:
+          error instanceof Error ? error.message : "Failed to get Momo token",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -113,19 +114,19 @@ export async function POST(request: Request) {
     if (!branch) {
       return NextResponse.json(
         { success: false, error: "Branch is required (query param or cookie)" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const rows = (await db.$queryRawUnsafe(
       "SELECT id, shop_id, momo_url, username, password, branch FROM MomoCredential WHERE branch = ? LIMIT 1",
-      branch
+      branch,
     )) as MomoCredentialRow[];
 
     if (!rows.length) {
       return NextResponse.json(
         { success: false, error: "MomoCredential not found for branch" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -141,7 +142,7 @@ export async function POST(request: Request) {
     if (!result) {
       return NextResponse.json(
         { success: false, error: "Momo login failed or token not found" },
-        { status: 502 }
+        { status: 502 },
       );
     }
 
@@ -151,7 +152,7 @@ export async function POST(request: Request) {
       result.token,
       result.expired,
       row.id,
-      branch
+      branch,
     );
 
     console.log("[MomoToken] Token refreshed and updated for branch:", branch);
@@ -165,9 +166,12 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to refresh Momo token",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to refresh Momo token",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

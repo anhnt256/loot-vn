@@ -33,7 +33,7 @@ interface AdminLoginRow {
 
 function formatDateTime(s: string | Date | null): string {
   if (!s) return "-";
-  const d = typeof s === "string" ? s : (s as Date).toISOString?.() ?? "";
+  const d = typeof s === "string" ? s : ((s as Date).toISOString?.() ?? "");
   if (d.length >= 19) return d.slice(0, 19).replace("T", " ");
   return d;
 }
@@ -42,7 +42,10 @@ const defaultFrom = dayjs().subtract(1, "month").startOf("day");
 const defaultTo = dayjs().endOf("day");
 
 export default function FraudAlertsPage() {
-  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([defaultFrom, defaultTo]);
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
+    defaultFrom,
+    defaultTo,
+  ]);
   const [fraudAlerts, setFraudAlerts] = useState<FraudAlertRow[]>([]);
   const [adminLogins, setAdminLogins] = useState<AdminLoginRow[]>([]);
   const [workShiftNames, setWorkShiftNames] = useState<string[]>([]);
@@ -59,7 +62,8 @@ export default function FraudAlertsPage() {
       setLoading(true);
       const res = await fetch(`/api/fraud-login-alerts?${queryParams}`);
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || "Failed to fetch");
+      if (!res.ok || !data.success)
+        throw new Error(data.error || "Failed to fetch");
       setFraudAlerts(data.data?.fraudAlerts ?? []);
       setAdminLogins(data.data?.adminLogins ?? []);
       setWorkShiftNames(data.data?.workShiftNames ?? []);
@@ -77,13 +81,29 @@ export default function FraudAlertsPage() {
   const fraudColumns: ColumnsType<FraudAlertRow> = [
     { title: "ID", dataIndex: "id", key: "id", width: 70 },
     { title: "Tài khoản", dataIndex: "actor", key: "actor", width: 120 },
-    { title: "Thời gian đăng nhập", dataIndex: "loginAt", key: "loginAt", render: formatDateTime },
+    {
+      title: "Thời gian đăng nhập",
+      dataIndex: "loginAt",
+      key: "loginAt",
+      render: formatDateTime,
+    },
     { title: "Ghi chú", dataIndex: "note", key: "note", ellipsis: true },
-    { title: "Ghi nhận lúc", dataIndex: "createdAt", key: "createdAt", render: formatDateTime, width: 160 },
+    {
+      title: "Ghi nhận lúc",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      render: formatDateTime,
+      width: 160,
+    },
   ];
 
   const adminColumns: ColumnsType<AdminLoginRow> = [
-    { title: "ServerLogId", dataIndex: "serverLogId", key: "serverLogId", width: 100 },
+    {
+      title: "ServerLogId",
+      dataIndex: "serverLogId",
+      key: "serverLogId",
+      width: 100,
+    },
     { title: "Tài khoản", dataIndex: "actor", key: "actor", width: 120 },
     { title: "Ngày", dataIndex: "recordDate", key: "recordDate" },
     { title: "Giờ", dataIndex: "recordTime", key: "recordTime" },
@@ -102,7 +122,8 @@ export default function FraudAlertsPage() {
       children: (
         <div className="space-y-4">
           <p className="text-gray-300 text-sm">
-            So sánh tiền bàn giao (tính toán) với tiền bàn giao thực tế. Các ngày có chênh lệch sẽ được đánh dấu màu đỏ.
+            So sánh tiền bàn giao (tính toán) với tiền bàn giao thực tế. Các
+            ngày có chênh lệch sẽ được đánh dấu màu đỏ.
           </p>
           <RevenueCalendar />
         </div>
@@ -123,7 +144,8 @@ export default function FraudAlertsPage() {
               <RangePicker
                 value={dateRange}
                 onChange={(dates) => {
-                  if (dates && dates[0] && dates[1]) setDateRange([dates[0], dates[1]]);
+                  if (dates && dates[0] && dates[1])
+                    setDateRange([dates[0], dates[1]]);
                 }}
                 format="DD/MM/YYYY"
                 className="[&_.ant-picker-input>input]:!text-gray-900 [&_.ant-picker-separator]:!text-gray-500"
@@ -137,11 +159,16 @@ export default function FraudAlertsPage() {
           <section>
             <div className="flex items-center gap-2 mb-3">
               <ShieldAlert className="h-5 w-5 text-amber-500" />
-              <h3 className="text-lg font-semibold text-white">Đăng nhập ngoài giờ làm việc</h3>
+              <h3 className="text-lg font-semibold text-white">
+                Đăng nhập ngoài giờ làm việc
+              </h3>
             </div>
             <p className="text-gray-300 text-sm mb-4">
-              Các tài khoản đăng nhập không thuộc bất kỳ ca làm việc nào đã cấu hình
-              {workShiftNames.length > 0 ? ` (${workShiftNames.join(", ")})` : "."}
+              Các tài khoản đăng nhập không thuộc bất kỳ ca làm việc nào đã cấu
+              hình
+              {workShiftNames.length > 0
+                ? ` (${workShiftNames.join(", ")})`
+                : "."}
             </p>
             <div className="bg-white rounded-lg shadow overflow-hidden">
               <Table
@@ -149,7 +176,11 @@ export default function FraudAlertsPage() {
                 dataSource={fraudAlerts}
                 rowKey="id"
                 loading={loading}
-                pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (t) => `Tổng ${t} bản ghi` }}
+                pagination={{
+                  pageSize: 10,
+                  showSizeChanger: true,
+                  showTotal: (t) => `Tổng ${t} bản ghi`,
+                }}
                 size="small"
               />
             </div>
@@ -158,16 +189,24 @@ export default function FraudAlertsPage() {
           <section>
             <div className="flex items-center gap-2 mb-3">
               <UserCog className="h-5 w-5 text-blue-400" />
-              <h3 className="text-lg font-semibold text-white">Lịch sử đăng nhập ADMIN</h3>
+              <h3 className="text-lg font-semibold text-white">
+                Lịch sử đăng nhập ADMIN
+              </h3>
             </div>
-            <p className="text-gray-300 text-sm mb-4">Các lần đăng nhập tài khoản ADMIN (từ serverlogtb).</p>
+            <p className="text-gray-300 text-sm mb-4">
+              Các lần đăng nhập tài khoản ADMIN (từ serverlogtb).
+            </p>
             <div className="bg-white rounded-lg shadow overflow-hidden">
               <Table
                 columns={adminColumns}
                 dataSource={adminLogins}
                 rowKey="serverLogId"
                 loading={loading}
-                pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (t) => `Tổng ${t} bản ghi` }}
+                pagination={{
+                  pageSize: 10,
+                  showSizeChanger: true,
+                  showTotal: (t) => `Tổng ${t} bản ghi`,
+                }}
                 size="small"
               />
             </div>
@@ -179,7 +218,9 @@ export default function FraudAlertsPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white">Cảnh báo giao dịch bất thường</h2>
+      <h2 className="text-2xl font-bold text-white">
+        Cảnh báo giao dịch bất thường
+      </h2>
       <Tabs
         defaultActiveKey="revenue"
         items={tabItems}

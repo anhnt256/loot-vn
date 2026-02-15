@@ -21,11 +21,12 @@ function setFfoodTokenCookies(
   res: NextResponse,
   branch: string,
   token: string,
-  expired: Date
+  expired: Date,
 ): void {
   const tokenName = getFfoodTokenCookieName(branch);
   const expiredName = getFfoodExpiredCookieName(branch);
-  const expiredStr = typeof expired === "string" ? expired : expired.toISOString();
+  const expiredStr =
+    typeof expired === "string" ? expired : expired.toISOString();
   const maxAge = 86400; // 24h
   res.cookies.set(tokenName, token, {
     maxAge,
@@ -56,19 +57,19 @@ export async function GET(request: NextRequest) {
     if (!branch) {
       return NextResponse.json(
         { success: false, error: "Branch is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const rows = (await db.$queryRawUnsafe(
       "SELECT id, ffood_url, username, password, token, expired, branch FROM FfoodCredential WHERE branch = ? LIMIT 1",
-      branch
+      branch,
     )) as FfoodCredentialRow[];
 
     if (!rows.length) {
       return NextResponse.json(
         { success: false, error: "FfoodCredential not found for branch" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -87,13 +88,13 @@ export async function GET(request: NextRequest) {
     const result = await loginAndGetToken(
       row.ffood_url,
       row.username,
-      row.password
+      row.password,
     );
 
     if (!result) {
       return NextResponse.json(
         { success: false, error: "Ffood login failed or token not found" },
-        { status: 502 }
+        { status: 502 },
       );
     }
 
@@ -102,7 +103,7 @@ export async function GET(request: NextRequest) {
       result.token,
       result.expired,
       row.id,
-      branch
+      branch,
     );
 
     const res = NextResponse.json({
@@ -117,9 +118,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to get ffood token",
+        error:
+          error instanceof Error ? error.message : "Failed to get ffood token",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

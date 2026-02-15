@@ -14,12 +14,13 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const reportDateParam = searchParams.get("reportDate");
-    let branch = searchParams.get("branch")?.trim() || (await getBranchFromCookie());
+    const branch =
+      searchParams.get("branch")?.trim() || (await getBranchFromCookie());
 
     if (!reportDateParam?.trim()) {
       return NextResponse.json(
         { success: false, error: "reportDate is required (YYYY-MM-DD)" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -27,14 +28,14 @@ export async function GET(request: NextRequest) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(reportDate)) {
       return NextResponse.json(
         { success: false, error: "reportDate must be YYYY-MM-DD" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!branch) {
       return NextResponse.json(
         { success: false, error: "branch is required (query or cookie)" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
         success: false,
         error: error instanceof Error ? error.message : "Verify failed",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

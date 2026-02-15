@@ -12,11 +12,12 @@ export async function loginAndGetToken(
   ffoodUrl: string,
   username: string,
   password: string,
-  options?: { timeout?: number; headless?: boolean; keepOpen?: boolean }
+  options?: { timeout?: number; headless?: boolean; keepOpen?: boolean },
 ): Promise<FfoodLoginResult> {
   const timeout = options?.timeout ?? 30_000;
   // Always headless when deployed (no UI); allow headed only in development
-  const headless = process.env.NODE_ENV === "production" ? true : (options?.headless ?? true);
+  const headless =
+    process.env.NODE_ENV === "production" ? true : (options?.headless ?? true);
   const keepOpen = options?.keepOpen ?? false;
 
   const browser = await chromium.launch({ headless });
@@ -27,11 +28,15 @@ export async function loginAndGetToken(
     await page.goto(ffoodUrl, { waitUntil: "domcontentloaded", timeout });
 
     // Click "Đăng nhập với FFOOD ID" button (Ant Design primary submit button)
-    const ffoodIdBtn = page.getByRole("button", { name: "Đăng nhập với FFOOD ID" });
+    const ffoodIdBtn = page.getByRole("button", {
+      name: "Đăng nhập với FFOOD ID",
+    });
     await ffoodIdBtn.click({ timeout });
 
     // Wait for redirect then for page to finish loading (Keycloak login page)
-    await page.waitForURL(/.*/, { waitUntil: "commit", timeout }).catch(() => {});
+    await page
+      .waitForURL(/.*/, { waitUntil: "commit", timeout })
+      .catch(() => {});
     await page.waitForLoadState("load", { timeout });
     await page.waitForLoadState("networkidle", { timeout }).catch(() => {});
 
@@ -63,11 +68,13 @@ export async function loginAndGetToken(
 
     const cookies = await context.cookies();
     const authCookie = cookies.find(
-      (c) =>
-        /token|auth|access/i.test(c.name) && c.value && c.value.length > 0
+      (c) => /token|auth|access/i.test(c.name) && c.value && c.value.length > 0,
     );
     if (authCookie?.value) {
-      const expired = authCookie.expires === -1 ? new Date(Date.now() + 24 * 60 * 60 * 1000) : new Date(authCookie.expires * 1000);
+      const expired =
+        authCookie.expires === -1
+          ? new Date(Date.now() + 24 * 60 * 60 * 1000)
+          : new Date(authCookie.expires * 1000);
       return { token: authCookie.value, expired };
     }
 

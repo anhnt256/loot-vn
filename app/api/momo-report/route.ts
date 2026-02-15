@@ -14,7 +14,13 @@ export async function GET(request: NextRequest) {
     const branchParam = searchParams.get("branch")?.trim();
     const branch = branchParam ?? (await getBranchFromCookie());
     if (!branch) {
-      return NextResponse.json({ success: false, error: "Branch is required (query ?branch= or cookie)" }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Branch is required (query ?branch= or cookie)",
+        },
+        { status: 400 },
+      );
     }
 
     const cred = await db.momoCredential.findFirst({
@@ -25,7 +31,7 @@ export async function GET(request: NextRequest) {
     if (!cred?.momoUrl) {
       return NextResponse.json(
         { success: false, error: "MomoCredential not found for branch" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -42,6 +48,9 @@ export async function GET(request: NextRequest) {
     });
   } catch (e) {
     console.error("[momo-report] API error:", e);
-    return NextResponse.json({ success: false, error: String(e) }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: String(e) },
+      { status: 500 },
+    );
   }
 }

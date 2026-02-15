@@ -14,12 +14,16 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const dateParam = searchParams.get("date");
-    const branch = searchParams.get("branch")?.trim() || (await getBranchFromCookie());
+    const branch =
+      searchParams.get("branch")?.trim() || (await getBranchFromCookie());
 
     if (!dateParam?.trim()) {
       return NextResponse.json(
-        { success: false, error: "date is required (YYYY-MM-DD, maps to ServeDate)" },
-        { status: 400 }
+        {
+          success: false,
+          error: "date is required (YYYY-MM-DD, maps to ServeDate)",
+        },
+        { status: 400 },
       );
     }
 
@@ -27,14 +31,14 @@ export async function GET(request: NextRequest) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(serveDate)) {
       return NextResponse.json(
         { success: false, error: "date must be YYYY-MM-DD" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!branch) {
       return NextResponse.json(
         { success: false, error: "branch is required (query or cookie)" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -47,7 +51,7 @@ export async function GET(request: NextRequest) {
         success: false,
         error: error instanceof Error ? error.message : "Verify failed",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
