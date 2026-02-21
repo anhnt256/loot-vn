@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import dayjs from "@/lib/dayjs";
+
+// Prevent Next.js from caching this GET (same DB can show different values per env if cached)
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET() {
   try {
@@ -32,7 +35,9 @@ export async function GET() {
     const RATE = 0.015; // 1.5%
 
     const totalAmount = totalRound * ROUND_COST * RATE;
-    return NextResponse.json(totalAmount);
+    const res = NextResponse.json(totalAmount);
+    res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+    return res;
   } catch (error) {
     return new NextResponse("Internal Error", { status: 500 });
   }
