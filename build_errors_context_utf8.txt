@@ -1,0 +1,1706 @@
+﻿
+> build_check_11_utf8.txt:834:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:835:[32m'../../../components/admin/PromotionCodesTab'[39m
+  build_check_11_utf8.txt:836:[0m [90m 21 |[39m } [36mfrom[39m 
+[32m"@ant-design/icons"[39m[33m;[39m
+  build_check_11_utf8.txt:837: [90m 22 |[39m [36mimport[39m [33mRewardsTab[39m 
+[36mfrom[39m 
+  build_check_11_utf8.txt:838:[32m"../../../components/admin/RewardsTab"[39m[33m;[
+39m
+  build_check_11_utf8.txt:839:[31m[1m>[22m[39m[90m 23 |[39m [36mimport[39m 
+[33mPromotionCodesTab[39m 
+> build_check_11_utf8.txt:887:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:888:[32m'../../../components/admin/RewardsTab'[39m
+  build_check_11_utf8.txt:889:[0m [90m 20 |[39m   
+[33mReloadOutlined[39m[33m,[39m
+  build_check_11_utf8.txt:890: [90m 21 |[39m } [36mfrom[39m 
+[32m"@ant-design/icons"[39m[33m;[39m
+  build_check_11_utf8.txt:891:[31m[1m>[22m[39m[90m 22 |[39m [36mimport[39m 
+[33mRewardsTab[39m 
+  build_check_11_utf8.txt:892:[36mfrom[39m 
+[32m"../../../components/admin/RewardsTab"[39m[33m;[39m
+> build_check_11_utf8.txt:937:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:938:[32m'../create-game-appointment'[39m
+  build_check_11_utf8.txt:939:[0m [90m  8 |[39m   
+[33mCreateGameAppointmentInput[39m[33m,[39m
+  build_check_11_utf8.txt:940: [90m  9 |[39m } [36mfrom[39m 
+  build_check_11_utf8.txt:941:[32m"../create-game-appointment/schema"[39m[33m;[39m
+  build_check_11_utf8.txt:942:[31m[1m>[22m[39m[90m 10 |[39m [36mimport[39m { 
+createGameAppointmentAction } 
+> build_check_11_utf8.txt:1005:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:1006:[32m'../create-game-appointment/schema'[39m
+  build_check_11_utf8.txt:1007:[0m [90m  4 |[39m [36mimport[39m { useForm } 
+[36mfrom[39m 
+  build_check_11_utf8.txt:1008:[32m"react-hook-form"[39m[33m;[39m
+  build_check_11_utf8.txt:1009: [90m  5 |[39m [36mimport[39m { zodResolver } 
+[36mfrom[39m 
+  build_check_11_utf8.txt:1010:[32m"@hookform/resolvers/zod"[39m[33m;[39m
+> build_check_11_utf8.txt:1088:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'../dayjs'[39m
+  build_check_11_utf8.txt:1089:[0m [90m 2 |[39m
+  build_check_11_utf8.txt:1090: [90m 3 |[39m [36mimport[39m 
+[33mReact[39m[33m,[39m { useEffect[33m,[39m 
+  build_check_11_utf8.txt:1091:useRef[33m,[39m useState } [36mfrom[39m 
+[32m"react"[39m[33m;[39m
+  build_check_11_utf8.txt:1092:[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m 
+dayjs [36mfrom[39m 
+  build_check_11_utf8.txt:1093:[32m"../dayjs"[39m[33m;[39m
+> build_check_11_utf8.txt:1136:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'../ffood-token-utils'[39m
+  build_check_11_utf8.txt:1137:[0m [90m  9 |[39m } [36mfrom[39m 
+[32m"react"[39m[33m;[39m
+  build_check_11_utf8.txt:1138: [90m 10 |[39m [36mimport[39m [33mCookies[39m 
+[36mfrom[39m 
+  build_check_11_utf8.txt:1139:[32m"js-cookie"[39m[33m;[39m
+  build_check_11_utf8.txt:1140:[31m[1m>[22m[39m[90m 11 |[39m [36mimport[39m { 
+getFfoodTokenCookieName } 
+  build_check_11_utf8.txt:1141:[36mfrom[39m 
+[32m"../ffood-token-utils"[39m[33m;[39m
+> build_check_11_utf8.txt:1187:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'../machine-utils'[39m
+  build_check_11_utf8.txt:1188:[0m [90m 24 |[39m   [33mCheckCircle[39m[33m,[39m
+  build_check_11_utf8.txt:1189: [90m 25 |[39m } [36mfrom[39m 
+[32m"lucide-react"[39m[33m;[39m
+  build_check_11_utf8.txt:1190:[31m[1m>[22m[39m[90m 26 |[39m [36mimport[39m {
+  build_check_11_utf8.txt:1191: [90m    |[39m 
+[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m
+  build_check_11_utf8.txt:1192:^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^[22m
+> build_check_11_utf8.txt:1267:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'../timezone-utils'[39m
+  build_check_11_utf8.txt:1268:[0m [90m  7 |[39m [36mimport[39m { usePolling } 
+[36mfrom[39m 
+  build_check_11_utf8.txt:1269:[32m"@gateway-workspace/shared/hooksusePolling"[39m[
+33m;[39m
+  build_check_11_utf8.txt:1270: [90m  8 |[39m [36mimport[39m { 
+useSoundNotification } [36mfrom[39m 
+  build_check_11_utf8.txt:1271:[32m"@gateway-workspace/shared/hooksuseSoundNotificati
+on"[39m[33m;[39m
+  build_check_11_utf8.txt:1272:[31m[1m>[22m[39m[90m  9 |[39m [36mimport[39m { 
+getCurrentDateVNString } 
+> build_check_11_utf8.txt:1320:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'../utils'[39m
+  build_check_11_utf8.txt:1321:[0m [90m 2 |[39m
+  build_check_11_utf8.txt:1322: [90m 3 |[39m [36mimport[39m { useRouter } 
+[36mfrom[39m 
+  build_check_11_utf8.txt:1323:[32m"next/navigation"[39m[33m;[39m
+  build_check_11_utf8.txt:1324:[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { 
+clearAdminData } [36mfrom[39m 
+  build_check_11_utf8.txt:1325:[32m"../utils"[39m[33m;[39m
+> build_check_11_utf8.txt:1376:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'../utils'[39m
+  build_check_11_utf8.txt:1377:[0m [90m 2 |[39m [36mimport[39m { cva[33m,[39m 
+type [33mVariantProps[39m } 
+  build_check_11_utf8.txt:1378:[36mfrom[39m 
+[32m"class-variance-authority"[39m[33m;[39m
+  build_check_11_utf8.txt:1379: [90m 3 |[39m
+  build_check_11_utf8.txt:1380:[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { 
+cn } [36mfrom[39m 
+  build_check_11_utf8.txt:1381:[32m"../utils"[39m[33m;[39m
+> build_check_11_utf8.txt:1430:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'../utils'[39m
+  build_check_11_utf8.txt:1431:[0m [90m 2 |[39m [36mimport[39m { cva[33m,[39m 
+type [33mVariantProps[39m } 
+  build_check_11_utf8.txt:1432:[36mfrom[39m 
+[32m"class-variance-authority"[39m[33m;[39m
+  build_check_11_utf8.txt:1433: [90m 3 |[39m
+  build_check_11_utf8.txt:1434:[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { 
+cn } [36mfrom[39m 
+  build_check_11_utf8.txt:1435:[32m"../utils"[39m[33m;[39m
+> build_check_11_utf8.txt:1487:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'../utils'[39m
+  build_check_11_utf8.txt:1488:[0m [90m 3 |[39m [36mimport[39m { cva[33m,[39m 
+type [33mVariantProps[39m } 
+  build_check_11_utf8.txt:1489:[36mfrom[39m 
+[32m"class-variance-authority"[39m[33m;[39m
+  build_check_11_utf8.txt:1490: [90m 4 |[39m
+  build_check_11_utf8.txt:1491:[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { 
+cn } [36mfrom[39m 
+  build_check_11_utf8.txt:1492:[32m"../utils"[39m[33m;[39m
+> build_check_11_utf8.txt:1539:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'../utils'[39m
+  build_check_11_utf8.txt:1540:[0m [90m 1 |[39m [36mimport[39m [33m*[39m 
+[36mas[39m [33mReact[39m 
+  build_check_11_utf8.txt:1541:[36mfrom[39m [32m"react"[39m[33m;[39m
+  build_check_11_utf8.txt:1542: [90m 2 |[39m
+  build_check_11_utf8.txt:1543:[31m[1m>[22m[39m[90m 3 |[39m [36mimport[39m { 
+cn } [36mfrom[39m 
+  build_check_11_utf8.txt:1544:[32m"../utils"[39m[33m;[39m
+> build_check_11_utf8.txt:1589:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'../utils'[39m
+  build_check_11_utf8.txt:1590:[0m [90m  5 |[39m [36mimport[39m { [33mX[39m } 
+[36mfrom[39m 
+  build_check_11_utf8.txt:1591:[32m"lucide-react"[39m[33m;[39m
+  build_check_11_utf8.txt:1592: [90m  6 |[39m
+  build_check_11_utf8.txt:1593:[31m[1m>[22m[39m[90m  7 |[39m [36mimport[39m { 
+cn } [36mfrom[39m 
+  build_check_11_utf8.txt:1594:[32m"../utils"[39m[33m;[39m
+> build_check_11_utf8.txt:1642:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'../utils'[39m
+  build_check_11_utf8.txt:1643:[0m [90m 2 |[39m
+  build_check_11_utf8.txt:1644: [90m 3 |[39m [36mimport[39m 
+[33mReact[39m[33m,[39m { useState } 
+  build_check_11_utf8.txt:1645:[36mfrom[39m [32m"react"[39m[33m;[39m
+  build_check_11_utf8.txt:1646:[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { 
+cn } [36mfrom[39m 
+  build_check_11_utf8.txt:1647:[32m"../utils"[39m[33m;[39m
+> build_check_11_utf8.txt:1689:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'../utils'[39m
+  build_check_11_utf8.txt:1690:[0m [90m 1 |[39m [36mimport[39m [33m*[39m 
+[36mas[39m [33mReact[39m 
+  build_check_11_utf8.txt:1691:[36mfrom[39m [32m"react"[39m[33m;[39m
+  build_check_11_utf8.txt:1692: [90m 2 |[39m
+  build_check_11_utf8.txt:1693:[31m[1m>[22m[39m[90m 3 |[39m [36mimport[39m { 
+cn } [36mfrom[39m 
+  build_check_11_utf8.txt:1694:[32m"../utils"[39m[33m;[39m
+> build_check_11_utf8.txt:1744:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'../utils'[39m
+  build_check_11_utf8.txt:1745:[0m [90m  5 |[39m [36mimport[39m { cva[33m,[39m 
+type [33mVariantProps[39m } 
+  build_check_11_utf8.txt:1746:[36mfrom[39m 
+[32m"class-variance-authority"[39m[33m;[39m
+  build_check_11_utf8.txt:1747: [90m  6 |[39m
+  build_check_11_utf8.txt:1748:[31m[1m>[22m[39m[90m  7 |[39m [36mimport[39m { 
+cn } [36mfrom[39m 
+  build_check_11_utf8.txt:1749:[32m"../utils"[39m[33m;[39m
+> build_check_11_utf8.txt:1800:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'../utils'[39m
+  build_check_11_utf8.txt:1801:[0m [90m 4 |[39m [36mimport[39m [33m*[39m 
+[36mas[39m 
+  build_check_11_utf8.txt:1802:[33mProgressPrimitive[39m [36mfrom[39m 
+  build_check_11_utf8.txt:1803:[32m"@radix-ui/react-progress"[39m[33m;[39m
+  build_check_11_utf8.txt:1804: [90m 5 |[39m
+  build_check_11_utf8.txt:1805:[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { 
+cn } [36mfrom[39m 
+> build_check_11_utf8.txt:1850:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'../utils'[39m
+  build_check_11_utf8.txt:1851:[0m [90m  5 |[39m [36mimport[39m { 
+[33mCheck[39m[33m,[39m 
+  build_check_11_utf8.txt:1852:[33mChevronDown[39m } [36mfrom[39m 
+[32m"lucide-react"[39m[33m;[39m
+  build_check_11_utf8.txt:1853: [90m  6 |[39m
+  build_check_11_utf8.txt:1854:[31m[1m>[22m[39m[90m  7 |[39m [36mimport[39m { 
+cn } [36mfrom[39m 
+  build_check_11_utf8.txt:1855:[32m"../utils"[39m[33m;[39m
+> build_check_11_utf8.txt:1900:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'../utils'[39m
+  build_check_11_utf8.txt:1901:[0m[31m[1m>[22m[39m[90m 1 |[39m 
+[36mimport[39m { cn } [36mfrom[39m 
+  build_check_11_utf8.txt:1902:[32m"../utils"[39m[33m;[39m
+  build_check_11_utf8.txt:1903: [90m   |[39m 
+[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^
+  build_check_11_utf8.txt:1904:[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[22m
+  build_check_11_utf8.txt:1905:[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[39m[
+> build_check_11_utf8.txt:1949:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'../utils'[39m
+  build_check_11_utf8.txt:1950:[0m [90m 1 |[39m [36mimport[39m [33m*[39m 
+[36mas[39m [33mReact[39m 
+  build_check_11_utf8.txt:1951:[36mfrom[39m [32m"react"[39m[33m;[39m
+  build_check_11_utf8.txt:1952: [90m 2 |[39m
+  build_check_11_utf8.txt:1953:[31m[1m>[22m[39m[90m 3 |[39m [36mimport[39m { 
+cn } [36mfrom[39m 
+  build_check_11_utf8.txt:1954:[32m"../utils"[39m[33m;[39m
+> build_check_11_utf8.txt:2009:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'./chat'[39m
+  build_check_11_utf8.txt:2010:[0m [90m 13 |[39m [36mexport[39m { 
+[36mdefault[39m [36mas[39m 
+  build_check_11_utf8.txt:2011:[33mWelcomeTour[39m } [36mfrom[39m 
+[32m"./WelcomeTour"[39m[33m;[39m
+  build_check_11_utf8.txt:2012: [90m 14 |[39m [36mexport[39m [33m*[39m 
+[36mfrom[39m 
+  build_check_11_utf8.txt:2013:[32m"./admin"[39m[33m;[39m
+  build_check_11_utf8.txt:2014:[31m[1m>[22m[39m[90m 15 |[39m [36mexport[39m 
+[33m*[39m [36mfrom[39m 
+> build_check_11_utf8.txt:2081:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'./dayjs'[39m
+  build_check_11_utf8.txt:2082:[0m [90m 15 |[39m   [33mImage[39m [36mas[39m 
+[33mImageIcon[39m[33m,[39m
+  build_check_11_utf8.txt:2083: [90m 16 |[39m } [36mfrom[39m 
+[32m"lucide-react"[39m[33m;[39m
+  build_check_11_utf8.txt:2084:[31m[1m>[22m[39m[90m 17 |[39m [36mimport[39m 
+dayjs [36mfrom[39m 
+  build_check_11_utf8.txt:2085:[32m"./dayjs"[39m[33m;[39m
+  build_check_11_utf8.txt:2086: [90m    |[39m 
+[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m
+> build_check_11_utf8.txt:2125:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'./lib/chat'[39m
+  build_check_11_utf8.txt:2126:[0m [90m 1 |[39m [36mexport[39m [33m*[39m 
+[36mfrom[39m 
+  build_check_11_utf8.txt:2127:[32m'./lib'[39m[33m;[39m
+  build_check_11_utf8.txt:2128: [90m 2 |[39m [36mexport[39m [33m*[39m 
+[36mfrom[39m 
+  build_check_11_utf8.txt:2129:[32m'./lib/admin'[39m[33m;[39m
+  build_check_11_utf8.txt:2130:[31m[1m>[22m[39m[90m 3 |[39m [36mexport[39m 
+[33m*[39m [36mfrom[39m 
+> build_check_11_utf8.txt:2177:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'./work-shift-utils'[39m
+  build_check_11_utf8.txt:2178:[0m [90m  2 |[39m [36mimport[39m { 
+useLocalStorageValue } [36mfrom[39m 
+  build_check_11_utf8.txt:2179:[32m"./useLocalStorageValue"[39m[33m;[39m
+  build_check_11_utf8.txt:2180: [90m  3 |[39m [36mimport[39m { 
+[33mCURRENT_USER[39m } [36mfrom[39m 
+  build_check_11_utf8.txt:2181:[32m"@gateway-workspace/shared/utilstoken.constant"[3
+9m[33m;[39m
+  build_check_11_utf8.txt:2182:[31m[1m>[22m[39m[90m  4 |[39m [36mimport[39m {
+> build_check_11_utf8.txt:2254:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:2255:[32m'@/app/(dashboard)/dashboard/_component/CheckInCar
+d/CheckInCard'[39m
+  build_check_11_utf8.txt:2256:[0m [90m 1 |[39m [32m"use client"[39m[33m;[39m
+  build_check_11_utf8.txt:2257: [90m 2 |[39m
+  build_check_11_utf8.txt:2258:[31m[1m>[22m[39m[90m 3 |[39m [36mimport[39m 
+[33mCheckInCard[39m 
+  build_check_11_utf8.txt:2259:[36mfrom[39m 
+> build_check_11_utf8.txt:2312:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:2313:[32m'@/app/(dashboard)/game/_component/CirclePrize/Cir
+clePrize'[39m
+  build_check_11_utf8.txt:2314:[0m [90m  7 |[39m
+  build_check_11_utf8.txt:2315: [90m  8 |[39m [36mimport[39m { [33mRules[39m } 
+[36mfrom[39m 
+  build_check_11_utf8.txt:2316:[32m"@/app/(dashboard)/game/_component/Rules/Rules"[3
+9m[33m;[39m
+  build_check_11_utf8.txt:2317:[31m[1m>[22m[39m[90m  9 |[39m [36mimport[39m 
+[33mCircleSegments[39m 
+> build_check_11_utf8.txt:2371:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:2372:[32m'@/app/(dashboard)/game/_component/MeteorEffect/Me
+teorEffect'[39m
+  build_check_11_utf8.txt:2373:[0m [90m 3 |[39m [36mimport[39m 
+[33mReact[39m[33m,[39m { 
+  build_check_11_utf8.txt:2374:useEffect[33m,[39m useState } [36mfrom[39m 
+[32m"react"[39m[33m;[39m
+  build_check_11_utf8.txt:2375: [90m 4 |[39m [36mimport[39m [33mImage[39m 
+[36mfrom[39m 
+  build_check_11_utf8.txt:2376:[32m"next/image"[39m[33m;[39m
+> build_check_11_utf8.txt:2430:[1m[31mModule not found[39m[22m: Can't resolve 
+  
+build_check_11_utf8.txt:2431:[32m'@/app/(dashboard)/game/_component/Rules/Rules'[39m
+  build_check_11_utf8.txt:2432:[0m [90m  6 |[39m [36mimport[39m { 
+[33mWishResult[39m } [36mfrom[39m 
+  build_check_11_utf8.txt:2433:[32m"@/app/(dashboard)/game/_component/WishResult/Wish
+Result"[39m[33m;[39m
+  build_check_11_utf8.txt:2434: [90m  7 |[39m
+  build_check_11_utf8.txt:2435:[31m[1m>[22m[39m[90m  8 |[39m [36mimport[39m { 
+[33mRules[39m } 
+> build_check_11_utf8.txt:2484:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:2485:[32m'@/app/(dashboard)/game/_component/WishResult/Wish
+Result'[39m
+  build_check_11_utf8.txt:2486:[0m [90m 4 |[39m [36mimport[39m [33mImage[39m 
+[36mfrom[39m 
+  build_check_11_utf8.txt:2487:[32m"next/image"[39m[33m;[39m
+  build_check_11_utf8.txt:2488: [90m 5 |[39m [36mimport[39m 
+[33mMeteorEffect[39m [36mfrom[39m 
+  build_check_11_utf8.txt:2489:[32m"@/app/(dashboard)/game/_component/MeteorEffect/Me
+teorEffect"[39m[33m;[39m
+> build_check_11_utf8.txt:2542:[1m[31mModule not found[39m[22m: Can't resolve 
+  
+build_check_11_utf8.txt:2543:[32m'@/app/(dashboard)/store/RewardCard/RewardCard'[39m
+  build_check_11_utf8.txt:2544:[0m [90m 2 |[39m
+  build_check_11_utf8.txt:2545: [90m 3 |[39m [36mimport[39m 
+[33mReact[39m[33m,[39m { useEffect[33m,[39m 
+  build_check_11_utf8.txt:2546:useMemo[33m,[39m useState } [36mfrom[39m 
+[32m"react"[39m[33m;[39m
+  build_check_11_utf8.txt:2547:[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m 
+[33mRewardCard[39m 
+> build_check_11_utf8.txt:2597:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:2598:[32m'@/app/components/battle-pass/BattlePassProgress'
+[39m
+  build_check_11_utf8.txt:2599:[0m [90m 4 |[39m [36mimport[39m { 
+useQuery[33m,[39m useMutation[33m,[39m 
+  build_check_11_utf8.txt:2600:useQueryClient } [36mfrom[39m 
+[32m"@tanstack/react-query"[39m[33m;[39m
+  build_check_11_utf8.txt:2601: [90m 5 |[39m [36mimport[39m { useRouter } 
+[36mfrom[39m 
+  build_check_11_utf8.txt:2602:[32m"next/navigation"[39m[33m;[39m
+> build_check_11_utf8.txt:2654:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:2655:[32m'@angular-devkit/architect'[39m
+  build_check_11_utf8.txt:2656:[0m [90m 49 |[39m         [36mreturn[39m 
+toObservable(promise())[33m;[39m
+  build_check_11_utf8.txt:2657: [90m 50 |[39m     }[33m;[39m
+  build_check_11_utf8.txt:2658:[31m[1m>[22m[39m[90m 51 |[39m     
+[36mreturn[39m require([32m'@angular-devkit
+  build_check_11_utf8.txt:2659:/architect'[39m)[33m.[39mcreateBuilder(builderFuncti
+on)[33m;[39m
+> build_check_11_utf8.txt:2681:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:2682:[32m'@angular-devkit/architect'[39m
+  build_check_11_utf8.txt:2683:[0m [90m 52 |[39m         [36mreturn[39m 
+[][33m;[39m
+  build_check_11_utf8.txt:2684: [90m 53 |[39m     })[33m;[39m
+  build_check_11_utf8.txt:2685:[31m[1m>[22m[39m[90m 54 |[39m     
+[36mconst[39m { [33mArchitect[39m } 
+  build_check_11_utf8.txt:2686:[33m=[39m 
+require([32m'@angular-devkit/architect'[39m)[33m;[39m
+> build_check_11_utf8.txt:2710:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:2711:[32m'@angular-devkit/architect'[39m
+  build_check_11_utf8.txt:2712:[0m [90m 122 |[39m }
+  build_check_11_utf8.txt:2713: [90m 123 |[39m [36masync[39m [36mfunction[39m 
+scheduleTarget(root[33m,[39m 
+  build_check_11_utf8.txt:2714:opts[33m,[39m verbose) {
+  build_check_11_utf8.txt:2715:[31m[1m>[22m[39m[90m 124 |[39m     
+[36mconst[39m { [33mArchitect[39m } 
+> build_check_11_utf8.txt:2740:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:2741:[32m'@angular-devkit/architect/node'[39m
+  build_check_11_utf8.txt:2742:[0m [90m 843 |[39m }
+  build_check_11_utf8.txt:2743: [90m 844 |[39m [36masync[39m [36mfunction[39m 
+  build_check_11_utf8.txt:2744:getWrappedWorkspaceNodeModulesArchitectHost(workspace[
+33m,[39m root[33m,[39m 
+  build_check_11_utf8.txt:2745:projects) {
+> build_check_11_utf8.txt:2776:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'@angular-devkit/core'[39m
+  build_check_11_utf8.txt:2777:[0m [90m 10 |[39m 
+exports[33m.[39mwrapAngularDevkitSchematic [33m=[39m 
+  build_check_11_utf8.txt:2778:wrapAngularDevkitSchematic[33m;[39m
+  build_check_11_utf8.txt:2779: [90m 11 |[39m 
+exports[33m.[39mrestoreNxTokensInOptions [33m=[39m 
+  build_check_11_utf8.txt:2780:restoreNxTokensInOptions[33m;[39m
+  build_check_11_utf8.txt:2781:[31m[1m>[22m[39m[90m 12 |[39m [36mconst[39m 
+core_1 [33m=[39m 
+> build_check_11_utf8.txt:2804:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'@angular-devkit/core'[39m
+  build_check_11_utf8.txt:2805:[0m [90m 36 |[39m     [90m// the top level import 
+is not patched because it is 
+  build_check_11_utf8.txt:2806:imported before the[39m
+  build_check_11_utf8.txt:2807: [90m 37 |[39m     [90m// patching happens so we 
+require it here to use the 
+  build_check_11_utf8.txt:2808:patched version below[39m
+  build_check_11_utf8.txt:2809:[31m[1m>[22m[39m[90m 38 |[39m     
+[36mconst[39m { workspaces } [33m=[39m 
+> build_check_11_utf8.txt:2835:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:2836:[32m'@angular-devkit/core/node'[39m
+  build_check_11_utf8.txt:2837:[0m [90m 11 |[39m 
+exports[33m.[39mrestoreNxTokensInOptions [33m=[39m 
+  build_check_11_utf8.txt:2838:restoreNxTokensInOptions[33m;[39m
+  build_check_11_utf8.txt:2839: [90m 12 |[39m [36mconst[39m core_1 [33m=[39m 
+  build_check_11_utf8.txt:2840:require([32m"@angular-devkit/core"[39m)[33m;[39m
+> build_check_11_utf8.txt:2865:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:2866:[32m'@gateway-workspace/shared/hooksuse-action'[39m
+  build_check_11_utf8.txt:2867:[0m [90m 10 |[39m [36mimport[39m { 
+useQuery[33m,[39m useQueryClient } 
+  build_check_11_utf8.txt:2868:[36mfrom[39m 
+[32m"@tanstack/react-query"[39m[33m;[39m
+  build_check_11_utf8.txt:2869: [90m 11 |[39m [36mimport[39m { fetcher } 
+[36mfrom[39m 
+  build_check_11_utf8.txt:2870:[32m"@gateway-workspace/shared/utils"[39m[33m;[39m
+> build_check_11_utf8.txt:2920:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:2921:[32m'@gateway-workspace/shared/hooksuseChat'[39m
+  build_check_11_utf8.txt:2922:[0m [90m  5 |[39m [36mimport[39m { 
+[33mMessageInput[39m } [36mfrom[39m 
+  build_check_11_utf8.txt:2923:[32m"./MessageInput"[39m[33m;[39m
+  build_check_11_utf8.txt:2924: [90m  6 |[39m [36mimport[39m { 
+[33mChatStatus[39m } [36mfrom[39m 
+  build_check_11_utf8.txt:2925:[32m"./ChatStatus"[39m[33m;[39m
+> build_check_11_utf8.txt:2976:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:2977:[32m'@gateway-workspace/shared/hooksuseLocalStorageVal
+ue'[39m
+  build_check_11_utf8.txt:2978:[0m [90m 4 |[39m [36mimport[39m { 
+[33mCard[39m[33m,[39m 
+  build_check_11_utf8.txt:2979:[33mCardContent[39m[33m,[39m 
+[33mCardHeader[39m[33m,[39m [33mCardTitle[39m 
+  build_check_11_utf8.txt:2980:} [36mfrom[39m 
+[32m"@gateway-workspace/shared/ui"[39m[33m;[39m
+  build_check_11_utf8.txt:2981: [90m 5 |[39m [36mimport[39m { [33mButton[39m } 
+[36mfrom[39m 
+> build_check_11_utf8.txt:3039:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:3040:[32m'@gateway-workspace/shared/hooksuseLocalStorageVal
+ue'[39m
+  build_check_11_utf8.txt:3041:[0m [90m 14 |[39m [36mimport[39m { 
+createGameResult } [36mfrom[39m 
+  build_check_11_utf8.txt:3042:[32m"@gateway-workspace/shared/utils"[39m[33m;[39m
+  build_check_11_utf8.txt:3043: [90m 15 |[39m [36mimport[39m { 
+[33mCURRENT_USER[39m } [36mfrom[39m 
+  build_check_11_utf8.txt:3044:[32m"@gateway-workspace/shared/utils"[39m[33m;[39m
+> build_check_11_utf8.txt:3098:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:3099:[32m'@gateway-workspace/shared/hooksuseLocalStorageVal
+ue'[39m
+  build_check_11_utf8.txt:3100:[0m [90m 10 |[39m [36mimport[39m { dayjs } 
+[36mfrom[39m 
+  build_check_11_utf8.txt:3101:[32m"@gateway-workspace/shared/utils"[39m[33m;[39m
+  build_check_11_utf8.txt:3102: [90m 11 |[39m [36mimport[39m { 
+[33mCURRENT_USER[39m } [36mfrom[39m 
+  build_check_11_utf8.txt:3103:[32m"@gateway-workspace/shared/utils"[39m[33m;[39m
+> build_check_11_utf8.txt:3157:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:3158:[32m'@gateway-workspace/shared/hooksuseLocalStorageVal
+ue'[39m
+  build_check_11_utf8.txt:3159:[0m [90m 10 |[39m [36mimport[39m { getCookie } 
+[36mfrom[39m 
+  build_check_11_utf8.txt:3160:[32m"cookies-next"[39m[33m;[39m
+  build_check_11_utf8.txt:3161: [90m 11 |[39m [36mimport[39m { [33mBRANCH[39m } 
+[36mfrom[39m 
+  build_check_11_utf8.txt:3162:[32m"@gateway-workspace/shared/utils"[39m[33m;[39m
+> build_check_11_utf8.txt:3216:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:3217:[32m'@gateway-workspace/shared/hooksuseLocalStorageVal
+ue'[39m
+  build_check_11_utf8.txt:3218:[0m [90m 26 |[39m   [33mChevronDown[39m[33m,[39m
+  build_check_11_utf8.txt:3219: [90m 27 |[39m } [36mfrom[39m 
+[32m"lucide-react"[39m[33m;[39m
+  build_check_11_utf8.txt:3220:[31m[1m>[22m[39m[90m 28 |[39m [36mimport[39m { 
+useLocalStorageValue } 
+  build_check_11_utf8.txt:3221:[36mfrom[39m 
+> build_check_11_utf8.txt:3279:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:3280:[32m'@gateway-workspace/shared/hooksuseLocalStorageVal
+ue'[39m
+  build_check_11_utf8.txt:3281:[0m [90m 3 |[39m [36mimport[39m 
+[33mReact[39m[33m,[39m { useState[33m,[39m 
+  build_check_11_utf8.txt:3282:useEffect } [36mfrom[39m [32m"react"[39m[33m;[39m
+  build_check_11_utf8.txt:3283: [90m 4 |[39m [36mimport[39m { 
+[33mChatWindow[39m } [36mfrom[39m 
+  build_check_11_utf8.txt:3284:[32m"@gateway-workspace/shared/uichat/ChatWindow"[39m
+[33m;[39m
+> build_check_11_utf8.txt:3348:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:3349:[32m'@gateway-workspace/shared/hooksusePolling'[39m
+  build_check_11_utf8.txt:3350:[0m [90m 4 |[39m [36mimport[39m { fetcher } 
+[36mfrom[39m 
+  build_check_11_utf8.txt:3351:[32m"@gateway-workspace/shared/utils"[39m[33m;[39m
+  build_check_11_utf8.txt:3352: [90m 5 |[39m [36mimport[39m { dayjs } 
+[36mfrom[39m 
+  build_check_11_utf8.txt:3353:[32m"@gateway-workspace/shared/utils"[39m[33m;[39m
+> build_check_11_utf8.txt:3407:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:3408:[32m'@gateway-workspace/shared/hooksusePolling'[39m
+  build_check_11_utf8.txt:3409:[0m [90m 4 |[39m [36mimport[39m { 
+useQuery[33m,[39m useMutation[33m,[39m 
+  build_check_11_utf8.txt:3410:useQueryClient } [36mfrom[39m 
+[32m"@tanstack/react-query"[39m[33m;[39m
+  build_check_11_utf8.txt:3411: [90m 5 |[39m [36mimport[39m { toast } 
+[36mfrom[39m 
+  build_check_11_utf8.txt:3412:[32m"sonner"[39m[33m;[39m
+> build_check_11_utf8.txt:3464:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:3465:[32m'@gateway-workspace/shared/hooksusePolling'[39m
+  build_check_11_utf8.txt:3466:[0m [90m 16 |[39m [36mimport[39m _[33m,[39m { 
+isEmpty } [36mfrom[39m 
+  build_check_11_utf8.txt:3467:[32m"lodash"[39m[33m;[39m
+  build_check_11_utf8.txt:3468: [90m 17 |[39m [36mimport[39m { 
+[33mEnumComputerStatus[39m } [36mfrom[39m 
+  build_check_11_utf8.txt:3469:[32m"@gateway-workspace/shared/utils"[39m[33m;[39m
+> build_check_11_utf8.txt:3516:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:3517:[32m'@gateway-workspace/shared/hooksusePolling'[39m
+  build_check_11_utf8.txt:3518:[0m [90m 27 |[39m [36mimport[39m { 
+[33mDatePicker[39m } [36mfrom[39m 
+  build_check_11_utf8.txt:3519:[32m"antd"[39m[33m;[39m
+  build_check_11_utf8.txt:3520: [90m 28 |[39m [36mconst[39m { 
+[33mRangePicker[39m } [33m=[39m 
+  build_check_11_utf8.txt:3521:[33mDatePicker[39m[33m;[39m
+> build_check_11_utf8.txt:3573:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:3574:[32m'@gateway-workspace/shared/hooksusePolling'[39m
+  build_check_11_utf8.txt:3575:[0m [90m  5 |[39m [36mimport[39m 
+[33mCookies[39m [36mfrom[39m 
+  build_check_11_utf8.txt:3576:[32m"js-cookie"[39m[33m;[39m
+  build_check_11_utf8.txt:3577: [90m  6 |[39m [36mimport[39m { 
+useEffect[33m,[39m useState[33m,[39m 
+  build_check_11_utf8.txt:3578:createContext[33m,[39m useContext[33m,[39m useRef 
+} [36mfrom[39m 
+> build_check_11_utf8.txt:3633:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:3634:[32m'@gateway-workspace/shared/hooksuseSoundNotificati
+on'[39m
+  build_check_11_utf8.txt:3635:[0m [90m  5 |[39m [36mimport[39m { toast } 
+[36mfrom[39m 
+  build_check_11_utf8.txt:3636:[32m"sonner"[39m[33m;[39m
+  build_check_11_utf8.txt:3637: [90m  6 |[39m [36mimport[39m { usePolling } 
+[36mfrom[39m 
+  build_check_11_utf8.txt:3638:[32m"@gateway-workspace/shared/hooksusePolling"[39m[
+33m;[39m
+> build_check_11_utf8.txt:3695:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:3696:[32m'@gateway-workspace/shared/hooksuseSoundNotificati
+on'[39m
+  build_check_11_utf8.txt:3697:[0m [90m 29 |[39m [36mimport[39m { usePolling } 
+[36mfrom[39m 
+  build_check_11_utf8.txt:3698:[32m"@gateway-workspace/shared/hooksusePolling"[39m[
+33m;[39m
+  build_check_11_utf8.txt:3699: [90m 30 |[39m [36mimport[39m { usePendingCount } 
+[36mfrom[39m 
+  build_check_11_utf8.txt:3700:[32m"@gateway-workspace/shared/ui"[39m[33m;[39m
+> build_check_11_utf8.txt:3756:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:3757:[32m'@gateway-workspace/shared/hooksuseSoundNotificati
+on'[39m
+  build_check_11_utf8.txt:3758:[0m [90m  6 |[39m [36mimport[39m { 
+useEffect[33m,[39m useState[33m,[39m 
+  build_check_11_utf8.txt:3759:createContext[33m,[39m useContext[33m,[39m useRef 
+} [36mfrom[39m 
+  build_check_11_utf8.txt:3760:[32m"react"[39m[33m;[39m
+  build_check_11_utf8.txt:3761: [90m  7 |[39m [36mimport[39m { usePolling } 
+[36mfrom[39m 
+> build_check_11_utf8.txt:3821:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:3822:[32m'@gateway-workspace/shared/hooksuseStaff'[39m
+  build_check_11_utf8.txt:3823:[0m [90m 2 |[39m
+  build_check_11_utf8.txt:3824: [90m 3 |[39m [36mimport[39m 
+[33mReact[39m[33m,[39m { 
+  build_check_11_utf8.txt:3825:createContext[33m,[39m useContext[33m,[39m 
+useEffect } [36mfrom[39m 
+  build_check_11_utf8.txt:3826:[32m"react"[39m[33m;[39m
+> build_check_11_utf8.txt:3885:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:3886:[32m'@gateway-workspace/shared/uiFeedback'[39m
+  build_check_11_utf8.txt:3887:[0m [90m 11 |[39m [36mimport[39m { 
+[33mCURRENT_USER[39m } [36mfrom[39m 
+  build_check_11_utf8.txt:3888:[32m"@gateway-workspace/shared/utils"[39m[33m;[39m
+  build_check_11_utf8.txt:3889: [90m 12 |[39m [36mimport[39m { 
+useLocalStorageValue } [36mfrom[39m 
+  build_check_11_utf8.txt:3890:[32m"@gateway-workspace/shared/hooksuseLocalStorageVal
+ue"[39m[33m;[39m
+> build_check_11_utf8.txt:3937:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:3938:[32m'@gateway-workspace/shared/uiFeedbackHistory'[39m
+  build_check_11_utf8.txt:3939:[0m [90m 1 |[39m [36mimport[39m [33mReact[39m 
+[36mfrom[39m 
+  build_check_11_utf8.txt:3940:[32m"react"[39m[33m;[39m
+  build_check_11_utf8.txt:3941:[31m[1m>[22m[39m[90m 2 |[39m [36mimport[39m 
+[33mFeedbackHistory[39m 
+  build_check_11_utf8.txt:3942:[36mfrom[39m 
+[32m"@gateway-workspace/shared/uiFeedbackHistory"[39m[33m;[39m
+> build_check_11_utf8.txt:3978:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:3979:[32m'@gateway-workspace/shared/uiWelcomeTour'[39m
+  build_check_11_utf8.txt:3980:[0m [90m 3 |[39m [36mimport[39m 
+[33mReact[39m[33m,[39m { useState[33m,[39m 
+  build_check_11_utf8.txt:3981:useEffect } [36mfrom[39m [32m"react"[39m[33m;[39m
+  build_check_11_utf8.txt:3982: [90m 4 |[39m [36mimport[39m { useRouter } 
+[36mfrom[39m 
+  build_check_11_utf8.txt:3983:[32m"next/navigation"[39m[33m;[39m
+> build_check_11_utf8.txt:4030:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:4031:[32m'@gateway-workspace/shared/uichat/ChatPanel'[39m
+  build_check_11_utf8.txt:4032:[0m [90m 12 |[39m [36mimport[39m { 
+useLocalStorageValue } [36mfrom[39m 
+  build_check_11_utf8.txt:4033:[32m"@gateway-workspace/shared/hooksuseLocalStorageVal
+ue"[39m[33m;[39m
+  build_check_11_utf8.txt:4034: [90m 13 |[39m [36mimport[39m [33mFeedback[39m 
+[36mfrom[39m 
+  build_check_11_utf8.txt:4035:[32m"@gateway-workspace/shared/uiFeedback"[39m[33m;
+[39m
+> build_check_11_utf8.txt:4084:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:4085:[32m'@gateway-workspace/shared/uichat/ChatWindow'[39m
+  build_check_11_utf8.txt:4086:[0m [90m 2 |[39m
+  build_check_11_utf8.txt:4087: [90m 3 |[39m [36mimport[39m 
+[33mReact[39m[33m,[39m { useState[33m,[39m 
+  build_check_11_utf8.txt:4088:useEffect } [36mfrom[39m [32m"react"[39m[33m;[39m
+  build_check_11_utf8.txt:4089:[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { 
+[33mChatWindow[39m } 
+> build_check_11_utf8.txt:4146:[1m[31mModule not found[39m[22m: Can't resolve 
+  
+build_check_11_utf8.txt:4147:[32m'@gateway-workspace/shared/utilstoken.constant'[39m
+  build_check_11_utf8.txt:4148:[0m [90m 1 |[39m [36mimport[39m { 
+useState[33m,[39m useEffect[33m,[39m 
+  build_check_11_utf8.txt:4149:useCallback } [36mfrom[39m 
+[32m"react"[39m[33m;[39m
+  build_check_11_utf8.txt:4150: [90m 2 |[39m [36mimport[39m { 
+useLocalStorageValue } [36mfrom[39m 
+  build_check_11_utf8.txt:4151:[32m"./useLocalStorageValue"[39m[33m;[39m
+> build_check_11_utf8.txt:4205:[1m[31mModule not found[39m[22m: Can't resolve 
+  
+build_check_11_utf8.txt:4206:[32m'@gateway-workspace/shared/utilstoken.constant'[39m
+  build_check_11_utf8.txt:4207:[0m [90m 27 |[39m } [36mfrom[39m 
+[32m"lucide-react"[39m[33m;[39m
+  build_check_11_utf8.txt:4208: [90m 28 |[39m [36mimport[39m { 
+useLocalStorageValue } [36mfrom[39m 
+  build_check_11_utf8.txt:4209:[32m"@gateway-workspace/shared/hooksuseLocalStorageVal
+ue"[39m[33m;[39m
+  build_check_11_utf8.txt:4210:[31m[1m>[22m[39m[90m 29 |[39m [36mimport[39m { 
+[33mCURRENT_USER[39m } 
+> build_check_11_utf8.txt:4264:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'@nx/key'[39m
+  build_check_11_utf8.txt:4265:[0m [90m 34 |[39m     [36mcatch[39m (e) {
+  build_check_11_utf8.txt:4266: [90m 35 |[39m         [36mtry[39m {
+  build_check_11_utf8.txt:4267:[31m[1m>[22m[39m[90m 36 |[39m             
+[36mconst[39m { 
+  build_check_11_utf8.txt:4268:getNxKeyInformationAsync } [33m=[39m 
+([36mawait[39m 
+  
+build_check_11_utf8.txt:4269:[33mPromise[39m[33m.[39mresolve()[33m.[39mthen(() 
+[33m=>[39m 
+> build_check_11_utf8.txt:4288:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'@nx/powerpack-license'[39m
+  build_check_11_utf8.txt:4289:[0m [90m 29 |[39m [36masync[39m 
+[36mfunction[39m getNxKeyInformation() {
+  build_check_11_utf8.txt:4290: [90m 30 |[39m     [36mtry[39m {
+  build_check_11_utf8.txt:4291:[31m[1m>[22m[39m[90m 31 |[39m         
+[36mconst[39m { 
+  build_check_11_utf8.txt:4292:getPowerpackLicenseInformation[33m,[39m 
+  build_check_11_utf8.txt:4293:getPowerpackLicenseInformationAsync[33m,[39m } 
+[33m=[39m ([36mawait[39m 
+> build_check_11_utf8.txt:4318:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'@swc/wasm'[39m
+  build_check_11_utf8.txt:4319:[0m [90m 69 |[39m     [36mcatch[39m (_) {
+  build_check_11_utf8.txt:4320: [90m 70 |[39m         [90m// postinstall supposed 
+to install `@swc/wasm` 
+  build_check_11_utf8.txt:4321:already[39m
+  build_check_11_utf8.txt:4322:[31m[1m>[22m[39m[90m 71 |[39m         
+fallbackBindings [33m=[39m 
+  build_check_11_utf8.txt:4323:require([32m"@swc/wasm"[39m)[33m;[39m
+> build_check_11_utf8.txt:4340:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'async_hooks'[39m
+  build_check_11_utf8.txt:4341:[0m [90m 24 |[39m })[33m;[39m
+  build_check_11_utf8.txt:4342: [90m 25 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:4343:__toCommonJS(zones_exports)[33m;[39m
+  build_check_11_utf8.txt:4344:[31m[1m>[22m[39m[90m 26 |[39m [36mvar[39m 
+import_async_hooks [33m=[39m 
+  build_check_11_utf8.txt:4345:require([32m"async_hooks"[39m)[33m;[39m
+> build_check_11_utf8.txt:4389:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'child_process'[39m
+  build_check_11_utf8.txt:4390:[0m [90m 15 |[39m 
+[33mObject[39m[33m.[39mdefineProperty(exports[33m,[39m 
+  build_check_11_utf8.txt:4391:[32m"__esModule"[39m[33m,[39m { value[33m:[39m 
+[36mtrue[39m })[33m;[39m
+  build_check_11_utf8.txt:4392: [90m 16 |[39m 
+exports[33m.[39m[33mGoogleAuth[39m [33m=[39m 
+  
+build_check_11_utf8.txt:4393:exports[33m.[39m[33mGoogleAuthExceptionMessages[39m 
+[33m=[39m [36mvoid[39m 
+  build_check_11_utf8.txt:4394:[35m0[39m[33m;[39m
+> build_check_11_utf8.txt:4458:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'child_process'[39m
+  build_check_11_utf8.txt:4459:[0m [90m 16 |[39m 
+exports[33m.[39m[33mPluggableAuthHandler[39m [33m=[39m 
+  build_check_11_utf8.txt:4460:exports[33m.[39m[33mExecutableError[39m 
+[33m=[39m [36mvoid[39m 
+  build_check_11_utf8.txt:4461:[35m0[39m[33m;[39m
+  build_check_11_utf8.txt:4462: [90m 17 |[39m [36mconst[39m executable_response_1 
+[33m=[39m 
+  build_check_11_utf8.txt:4463:require([32m"./executable-response"[39m)[33m;[39m
+> build_check_11_utf8.txt:4551:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'child_process'[39m
+  build_check_11_utf8.txt:4552:[0m [90m  6 |[39m [32m    missingProperty: 
+${o},[39m
+  build_check_11_utf8.txt:4553: [90m  7 |[39m [32m    depsCount: ${e},[39m
+  build_check_11_utf8.txt:4554:[31m[1m>[22m[39m[90m  8 |[39m [32m    deps: 
+  build_check_11_utf8.txt:4555:${r}}`[39m}[33m;[39m[36mvar[39m 
+s4[33m=[39m{keyword[33m:[39m[32m"dependencie
+  build_check_11_utf8.txt:4556:s"[39m[33m,[39mtype[33m:[39m[32m"object"[39m[33
+m,[39mschemaType[33m:[39m[3
+> build_check_11_utf8.txt:6409:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'child_process'[39m
+  build_check_11_utf8.txt:6410:[0m [90m 33 |[39m })[33m;[39m
+  build_check_11_utf8.txt:6411: [90m 34 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:6412:__toCommonJS(browserFetcher_exports)[33m;[39m
+  build_check_11_utf8.txt:6413:[31m[1m>[22m[39m[90m 35 |[39m [36mvar[39m 
+childProcess [33m=[39m 
+  build_check_11_utf8.txt:6414:__toESM(require([32m"child_process"[39m))[33m;[39m
+> build_check_11_utf8.txt:6462:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'child_process'[39m
+  build_check_11_utf8.txt:6463:[0m [90m 39 |[39m })[33m;[39m
+  build_check_11_utf8.txt:6464: [90m 40 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:6465:__toCommonJS(dependencies_exports)[33m;[39m
+  build_check_11_utf8.txt:6466:[31m[1m>[22m[39m[90m 41 |[39m [36mvar[39m 
+childProcess [33m=[39m 
+  build_check_11_utf8.txt:6467:__toESM(require([32m"child_process"[39m))[33m;[39m
+> build_check_11_utf8.txt:6515:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'child_process'[39m
+  build_check_11_utf8.txt:6516:[0m [90m 35 |[39m })[33m;[39m
+  build_check_11_utf8.txt:6517: [90m 36 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:6518:__toCommonJS(hostPlatform_exports)[33m;[39m
+  build_check_11_utf8.txt:6519:[31m[1m>[22m[39m[90m 37 |[39m [36mvar[39m 
+import_child_process [33m=[39m 
+  build_check_11_utf8.txt:6520:require([32m"child_process"[39m)[33m;[39m
+> build_check_11_utf8.txt:6560:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'child_process'[39m
+  build_check_11_utf8.txt:6561:[0m [90m 36 |[39m })[33m;[39m
+  build_check_11_utf8.txt:6562: [90m 37 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:6563:__toCommonJS(processLauncher_exports)[33m;[39m
+  build_check_11_utf8.txt:6564:[31m[1m>[22m[39m[90m 38 |[39m [36mvar[39m 
+childProcess [33m=[39m 
+  build_check_11_utf8.txt:6565:__toESM(require([32m"child_process"[39m))[33m;[39m
+> build_check_11_utf8.txt:6610:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'child_process'[39m
+  build_check_11_utf8.txt:6611:[0m [90m 22 |[39m })[33m;[39m
+  build_check_11_utf8.txt:6612: [90m 23 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:6613:__toCommonJS(spawnAsync_exports)[33m;[39m
+  build_check_11_utf8.txt:6614:[31m[1m>[22m[39m[90m 24 |[39m [36mvar[39m 
+import_child_process [33m=[39m 
+  build_check_11_utf8.txt:6615:require([32m"child_process"[39m)[33m;[39m
+> build_check_11_utf8.txt:6667:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'child_process'[39m
+  build_check_11_utf8.txt:6668:[0m [90m 34 |[39m })[33m;[39m
+  build_check_11_utf8.txt:6669: [90m 35 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:6670:__toCommonJS(userAgent_exports)[33m;[39m
+  build_check_11_utf8.txt:6671:[31m[1m>[22m[39m[90m 36 |[39m [36mvar[39m 
+import_child_process [33m=[39m 
+  build_check_11_utf8.txt:6672:require([32m"child_process"[39m)[33m;[39m
+> build_check_11_utf8.txt:6711:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'child_process'[39m
+  build_check_11_utf8.txt:6712:[0m [90m 16 |[39m [32m   
+%s`[39m[33m,[39m[33mE[39m[33m,[39m[33mE[39m[33m
+  build_check_11_utf8.txt:6713:,[39m[33mS[39m[33m,[39mr)[33m;[39m[36mvar[39m 
+[33mR[39m[33m=[39m[33mS[3
+  build_check_11_utf8.txt:6714:9m[33m.[39mtype[33m===[39m[32m"*"[39m[33m?[39mz
+a[33m:[39m[33mS[39m[33m.[
+  build_check_11_utf8.txt:6715:39mtype[33m===[39m[32m"?"[39m[33m?[39m[33mKa[39
+m[33m:[39m[32m"\\"[39m[33m
+  build_check_11_utf8.txt:6716:+[39m[33mS[39m[33m.[39mtype[33m;[39mn[33m=[39m
+[33m![39m[35m0[39m[33m,[3
+> build_check_11_utf8.txt:8376:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:8377:[32m'chromium-bidi/lib/cjs/bidiMapper/BidiMapper'[39m
+  build_check_11_utf8.txt:8378:[0m [90m 32 |[39m })[33m;[39m
+  build_check_11_utf8.txt:8379: [90m 33 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:8380:__toCommonJS(bidiOverCdp_exports)[33m;[39m
+  build_check_11_utf8.txt:8381:[31m[1m>[22m[39m[90m 34 |[39m [36mvar[39m 
+bidiMapper [33m=[39m 
+> build_check_11_utf8.txt:8439:[1m[31mModule not found[39m[22m: Can't resolve 
+  build_check_11_utf8.txt:8440:[32m'chromium-bidi/lib/cjs/cdp/CdpConnection'[39m
+  build_check_11_utf8.txt:8441:[0m [90m 33 |[39m module[33m.[39mexports 
+[33m=[39m 
+  build_check_11_utf8.txt:8442:__toCommonJS(bidiOverCdp_exports)[33m;[39m
+  build_check_11_utf8.txt:8443: [90m 34 |[39m [36mvar[39m bidiMapper [33m=[39m 
+  build_check_11_utf8.txt:8444:__toESM(require([32m"chromium-bidi/lib/cjs/bidiMapper/
+BidiMapper"[39m))[33m;[39m
+> build_check_11_utf8.txt:8503:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'dns'[39m
+  build_check_11_utf8.txt:8504:[0m [90m 2 |[39m 
+[33mObject[39m[33m.[39mdefineProperty(exports[33m,[39m 
+  build_check_11_utf8.txt:8505:[32m"__esModule"[39m[33m,[39m { value[33m:[39m 
+[36mtrue[39m })[33m;[39m
+  build_check_11_utf8.txt:8506: [90m 3 |[39m 
+exports[33m.[39m[33mDEFAULT_CLUSTER_OPTIONS[39m [33m=[39m 
+  build_check_11_utf8.txt:8507:[36mvoid[39m [35m0[39m[33m;[39m
+  build_check_11_utf8.txt:8508:[31m[1m>[22m[39m[90m 4 |[39m [36mconst[39m 
+dns_1 [33m=[39m 
+> build_check_11_utf8.txt:8568:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'dns'[39m
+  build_check_11_utf8.txt:8569:[0m [90m 37 |[39m })[33m;[39m
+  build_check_11_utf8.txt:8570: [90m 38 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:8571:__toCommonJS(happyEyeballs_exports)[33m;[39m
+  build_check_11_utf8.txt:8572:[31m[1m>[22m[39m[90m 39 |[39m [36mvar[39m 
+import_dns [33m=[39m 
+  build_check_11_utf8.txt:8573:__toESM(require([32m"dns"[39m))[33m;[39m
+> build_check_11_utf8.txt:8612:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'dns'[39m
+  build_check_11_utf8.txt:8613:[0m [90m 43 |[39m 
+  build_check_11_utf8.txt:8614:[32m`[39m)})[33m,[39m[36mthis[39m}_outputHelpIfRe
+quested(e){[36mlet[39m t[33m
+  build_check_11_utf8.txt:8615:=[39m[36mthis[39m[33m.[39m_getHelpOption()[33m;[
+39mt[33m&&[39me[33m.[39mfin
+  build_check_11_utf8.txt:8616:d(n[33m=>[39mt[33m.[39mis(n))[33m&&[39m([36mthis
+[39m[33m.[39moutputHelp()[3
+  build_check_11_utf8.txt:8617:3m,[39m[36mthis[39m[33m.[39m_exit([35m0[39m[33m
+,[39m[32m"commander.helpDispl
+> build_check_11_utf8.txt:14338:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'electron'[39m
+  build_check_11_utf8.txt:14339:[0m [90m 1 |[39m [32m"use strict"[39m[33m;[39m
+  build_check_11_utf8.txt:14340:[31m[1m>[22m[39m[90m 2 |[39m [36mconst[39m { 
+app } [33m=[39m 
+  build_check_11_utf8.txt:14341:require([32m"electron"[39m)[33m;[39m
+  build_check_11_utf8.txt:14342: [90m   |[39m                 
+[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22
+  build_check_11_utf8.txt:14343:m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m[39m
+> build_check_11_utf8.txt:14385:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:14386:[0m [90m 22 |[39m 
+exports[33m.[39misGoogleComputeEngine [33m=[39m 
+  build_check_11_utf8.txt:14387:isGoogleComputeEngine[33m;[39m
+  build_check_11_utf8.txt:14388: [90m 23 |[39m exports[33m.[39mdetectGCPResidency 
+[33m=[39m 
+  build_check_11_utf8.txt:14389:detectGCPResidency[33m;[39m
+  build_check_11_utf8.txt:14390:[31m[1m>[22m[39m[90m 24 |[39m [36mconst[39m 
+fs_1 [33m=[39m 
+> build_check_11_utf8.txt:14454:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:14455:[0m [90m 16 |[39m 
+exports[33m.[39m[33mCertificateSubjectTokenSupplier[39m 
+  build_check_11_utf8.txt:14456:[33m=[39m 
+exports[33m.[39m[33mInvalidConfigurationError[39m [33m=[39m 
+  build_check_11_utf8.txt:14457:exports[33m.[39m[33mCertificateSourceUnavailableErr
+or[39m [33m=[39m 
+  build_check_11_utf8.txt:14458:exports[33m.[39m[33mCERTIFICATE_CONFIGURATION_ENV_V
+ARIABLE[39m [33m=[39m 
+  build_check_11_utf8.txt:14459:[36mvoid[39m [35m0[39m[33m;[39m
+> build_check_11_utf8.txt:14551:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:14552:[0m [90m 16 |[39m 
+exports[33m.[39m[33mFileSubjectTokenSupplier[39m [33m=[39m 
+  build_check_11_utf8.txt:14553:[36mvoid[39m [35m0[39m[33m;[39m
+  build_check_11_utf8.txt:14554: [90m 17 |[39m [36mconst[39m util_1 [33m=[39m 
+  build_check_11_utf8.txt:14555:require([32m"util"[39m)[33m;[39m
+  build_check_11_utf8.txt:14556:[31m[1m>[22m[39m[90m 18 |[39m [36mconst[39m 
+fs [33m=[39m 
+> build_check_11_utf8.txt:14642:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:14643:[0m [90m 16 |[39m 
+exports[33m.[39m[33mGoogleAuth[39m [33m=[39m 
+  
+build_check_11_utf8.txt:14644:exports[33m.[39m[33mGoogleAuthExceptionMessages[39m 
+[33m=[39m [36mvoid[39m 
+  build_check_11_utf8.txt:14645:[35m0[39m[33m;[39m
+  build_check_11_utf8.txt:14646: [90m 17 |[39m [36mconst[39m child_process_1 
+[33m=[39m 
+  build_check_11_utf8.txt:14647:require([32m"child_process"[39m)[33m;[39m
+> build_check_11_utf8.txt:14708:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:14709:[0m [90m 17 |[39m [36mconst[39m 
+executable_response_1 [33m=[39m 
+  build_check_11_utf8.txt:14710:require([32m"./executable-response"[39m)[33m;[39m
+  build_check_11_utf8.txt:14711: [90m 18 |[39m [36mconst[39m childProcess 
+[33m=[39m 
+  build_check_11_utf8.txt:14712:require([32m"child_process"[39m)[33m;[39m
+  build_check_11_utf8.txt:14713:[31m[1m>[22m[39m[90m 19 |[39m [36mconst[39m 
+fs [33m=[39m 
+> build_check_11_utf8.txt:14798:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:14799:[0m [90m 16 |[39m exports[33m.[39mgetCredentials 
+[33m=[39m 
+  build_check_11_utf8.txt:14800:getCredentials[33m;[39m
+  build_check_11_utf8.txt:14801: [90m 17 |[39m [36mconst[39m path [33m=[39m 
+require([32m"path"[39m)[33m;[39m
+  build_check_11_utf8.txt:14802:[31m[1m>[22m[39m[90m 18 |[39m [36mconst[39m 
+fs [33m=[39m 
+  build_check_11_utf8.txt:14803:require([32m"fs"[39m)[33m;[39m
+> build_check_11_utf8.txt:14867:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:14868:[0m [90m 20 |[39m exports[33m.[39misValidFile 
+[33m=[39m isValidFile[33m;[39m
+  build_check_11_utf8.txt:14869: [90m 21 |[39m 
+exports[33m.[39mgetWellKnownCertificateConfigFileLocation 
+  build_check_11_utf8.txt:14870:[33m=[39m 
+getWellKnownCertificateConfigFileLocation[33m;[39m
+  build_check_11_utf8.txt:14871:[31m[1m>[22m[39m[90m 22 |[39m [36mconst[39m 
+fs [33m=[39m 
+  build_check_11_utf8.txt:14872:require([32m"fs"[39m)[33m;[39m
+> build_check_11_utf8.txt:14939:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:14940:[0m [90m 14 |[39m 
+[33mObject[39m[33m.[39mdefineProperty(exports[33m,[39m 
+  build_check_11_utf8.txt:14941:[32m"__esModule"[39m[33m,[39m { value[33m:[39m 
+[36mtrue[39m })[33m;[39m
+  build_check_11_utf8.txt:14942: [90m 15 |[39m 
+exports[33m.[39m[33mDiscovery[39m [33m=[39m [36mvoid[39m 
+  build_check_11_utf8.txt:14943:[35m0[39m[33m;[39m
+  build_check_11_utf8.txt:14944:[31m[1m>[22m[39m[90m 16 |[39m [36mconst[39m 
+fs [33m=[39m 
+> build_check_11_utf8.txt:15004:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:15005:[0m [90m 2 |[39m 
+[33mObject[39m[33m.[39mdefineProperty(exports[33m,[39m 
+  build_check_11_utf8.txt:15006:[32m"__esModule"[39m[33m,[39m { value[33m:[39m 
+[36mtrue[39m })[33m;[39m
+  build_check_11_utf8.txt:15007: [90m 3 |[39m exports[33m.[39mnoop [33m=[39m 
+exports[33m.[39mdefaults 
+  build_check_11_utf8.txt:15008:[33m=[39m exports[33m.[39m[33mDebug[39m 
+[33m=[39m 
+  build_check_11_utf8.txt:15009:exports[33m.[39mgetPackageMeta [33m=[39m 
+exports[33m.[39mzipMap [33m=[39m 
+> build_check_11_utf8.txt:15076:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:15077:[0m [90m  6 |[39m [32m    missingProperty: 
+${o},[39m
+  build_check_11_utf8.txt:15078: [90m  7 |[39m [32m    depsCount: ${e},[39m
+  build_check_11_utf8.txt:15079:[31m[1m>[22m[39m[90m  8 |[39m [32m    deps: 
+  build_check_11_utf8.txt:15080:${r}}`[39m}[33m;[39m[36mvar[39m 
+s4[33m=[39m{keyword[33m:[39m[32m"dependencie
+  build_check_11_utf8.txt:15081:s"[39m[33m,[39mtype[33m:[39m[32m"object"[39m[3
+3m,[39mschemaType[33m:[39m[3
+> build_check_11_utf8.txt:16862:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:16863:[0m [90m  6 |[39m [32m    missingProperty: 
+${o},[39m
+  build_check_11_utf8.txt:16864: [90m  7 |[39m [32m    depsCount: ${e},[39m
+  build_check_11_utf8.txt:16865:[31m[1m>[22m[39m[90m  8 |[39m [32m    deps: 
+  build_check_11_utf8.txt:16866:${r}}`[39m}[33m;[39m[36mvar[39m 
+s4[33m=[39m{keyword[33m:[39m[32m"dependencie
+  build_check_11_utf8.txt:16867:s"[39m[33m,[39mtype[33m:[39m[32m"object"[39m[3
+3m,[39mschemaType[33m:[39m[3
+> build_check_11_utf8.txt:18653:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:18654:[0m [90m  6 |[39m [32m    missingProperty: 
+${o},[39m
+  build_check_11_utf8.txt:18655: [90m  7 |[39m [32m    depsCount: ${e},[39m
+  build_check_11_utf8.txt:18656:[31m[1m>[22m[39m[90m  8 |[39m [32m    deps: 
+  build_check_11_utf8.txt:18657:${r}}`[39m}[33m;[39m[36mvar[39m 
+s4[33m=[39m{keyword[33m:[39m[32m"dependencie
+  build_check_11_utf8.txt:18658:s"[39m[33m,[39mtype[33m:[39m[32m"object"[39m[3
+3m,[39mschemaType[33m:[39m[3
+> build_check_11_utf8.txt:20450:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:20451:[0m [90m  6 |[39m [32m    missingProperty: 
+${o},[39m
+  build_check_11_utf8.txt:20452: [90m  7 |[39m [32m    depsCount: ${e},[39m
+  build_check_11_utf8.txt:20453:[31m[1m>[22m[39m[90m  8 |[39m [32m    deps: 
+  build_check_11_utf8.txt:20454:${r}}`[39m}[33m;[39m[36mvar[39m 
+s4[33m=[39m{keyword[33m:[39m[32m"dependencie
+  build_check_11_utf8.txt:20455:s"[39m[33m,[39mtype[33m:[39m[32m"object"[39m[3
+3m,[39mschemaType[33m:[39m[3
+> build_check_11_utf8.txt:22286:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:22287:[0m [90m 34 |[39m })[33m;[39m
+  build_check_11_utf8.txt:22288: [90m 35 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:22289:__toCommonJS(pageAgent_exports)[33m;[39m
+  build_check_11_utf8.txt:22290:[31m[1m>[22m[39m[90m 36 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:22291:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:22341:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:22342:[0m [90m 34 |[39m module[33m.[39mexports 
+[33m=[39m 
+  build_check_11_utf8.txt:22343:__toCommonJS(android_exports)[33m;[39m
+  build_check_11_utf8.txt:22344: [90m 35 |[39m [36mvar[39m import_events 
+[33m=[39m 
+  build_check_11_utf8.txt:22345:require([32m"events"[39m)[33m;[39m
+  build_check_11_utf8.txt:22346:[31m[1m>[22m[39m[90m 36 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+> build_check_11_utf8.txt:22392:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:22393:[0m [90m 32 |[39m })[33m;[39m
+  build_check_11_utf8.txt:22394: [90m 33 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:22395:__toCommonJS(artifact_exports)[33m;[39m
+  build_check_11_utf8.txt:22396:[31m[1m>[22m[39m[90m 34 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:22397:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:22441:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:22442:[0m [90m 32 |[39m })[33m;[39m
+  build_check_11_utf8.txt:22443: [90m 33 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:22444:__toCommonJS(firefoxPrefs_exports)[33m;[39m
+  build_check_11_utf8.txt:22445:[31m[1m>[22m[39m[90m 34 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:22446:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:22489:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:22490:[0m [90m 36 |[39m })[33m;[39m
+  build_check_11_utf8.txt:22491: [90m 37 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:22492:__toCommonJS(browserContext_exports)[33m;[39m
+  build_check_11_utf8.txt:22493:[31m[1m>[22m[39m[90m 38 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:22494:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:22533:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:22534:[0m [90m 33 |[39m })[33m;[39m
+  build_check_11_utf8.txt:22535: [90m 34 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:22536:__toCommonJS(browserType_exports)[33m;[39m
+  build_check_11_utf8.txt:22537:[31m[1m>[22m[39m[90m 35 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:22538:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:22585:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:22586:[0m [90m 33 |[39m })[33m;[39m
+  build_check_11_utf8.txt:22587: [90m 34 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:22588:__toCommonJS(chromium_exports)[33m;[39m
+  build_check_11_utf8.txt:22589:[31m[1m>[22m[39m[90m 35 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:22590:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:22635:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:22636:[0m [90m 32 |[39m })[33m;[39m
+  build_check_11_utf8.txt:22637: [90m 33 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:22638:__toCommonJS(crDevTools_exports)[33m;[39m
+  build_check_11_utf8.txt:22639:[31m[1m>[22m[39m[90m 34 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:22640:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:22686:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:22687:[0m [90m 39 |[39m })[33m;[39m
+  build_check_11_utf8.txt:22688: [90m 40 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:22689:__toCommonJS(crProtocolHelper_exports)[33m;[39m
+  build_check_11_utf8.txt:22690:[31m[1m>[22m[39m[90m 41 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:22691:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:22732:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:22733:[0m [90m 32 |[39m })[33m;[39m
+  build_check_11_utf8.txt:22734: [90m 33 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:22735:__toCommonJS(artifactDispatcher_exports)[33m;[39m
+  build_check_11_utf8.txt:22736:[31m[1m>[22m[39m[90m 34 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:22737:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:22781:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:22782:[0m [90m 32 |[39m })[33m;[39m
+  build_check_11_utf8.txt:22783: [90m 33 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:22784:__toCommonJS(browserContextDispatcher_exports)[33m;[
+39m
+  build_check_11_utf8.txt:22785:[31m[1m>[22m[39m[90m 34 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:22786:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:22830:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:22831:[0m [90m 32 |[39m })[33m;[39m
+  build_check_11_utf8.txt:22832: [90m 33 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:22833:__toCommonJS(writableStreamDispatcher_exports)[33m;[
+39m
+  build_check_11_utf8.txt:22834:[31m[1m>[22m[39m[90m 34 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:22835:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:22880:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:22881:[0m [90m 39 |[39m })[33m;[39m
+  build_check_11_utf8.txt:22882: [90m 40 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:22883:__toCommonJS(dom_exports)[33m;[39m
+  build_check_11_utf8.txt:22884:[31m[1m>[22m[39m[90m 41 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:22885:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:22931:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:22932:[0m [90m 33 |[39m })[33m;[39m
+  build_check_11_utf8.txt:22933: [90m 34 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:22934:__toCommonJS(electron_exports)[33m;[39m
+  build_check_11_utf8.txt:22935:[31m[1m>[22m[39m[90m 35 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:22936:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:22977:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:22978:[0m [90m 33 |[39m })[33m;[39m
+  build_check_11_utf8.txt:22979: [90m 34 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:22980:__toCommonJS(fileUploadUtils_exports)[33m;[39m
+  build_check_11_utf8.txt:22981:[31m[1m>[22m[39m[90m 35 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:22982:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:23033:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:23034:[0m [90m 32 |[39m })[33m;[39m
+  build_check_11_utf8.txt:23035: [90m 33 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:23036:__toCommonJS(harRecorder_exports)[33m;[39m
+  build_check_11_utf8.txt:23037:[31m[1m>[22m[39m[90m 34 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:23038:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:23081:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:23082:[0m [90m 32 |[39m })[33m;[39m
+  build_check_11_utf8.txt:23083: [90m 33 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:23084:__toCommonJS(harBackend_exports)[33m;[39m
+  build_check_11_utf8.txt:23085:[31m[1m>[22m[39m[90m 34 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:23086:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:23132:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:23133:[0m [90m 33 |[39m })[33m;[39m
+  build_check_11_utf8.txt:23134: [90m 34 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:23135:__toCommonJS(launchApp_exports)[33m;[39m
+  build_check_11_utf8.txt:23136:[31m[1m>[22m[39m[90m 35 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:23137:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:23182:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:23183:[0m [90m 39 |[39m })[33m;[39m
+  build_check_11_utf8.txt:23184: [90m 40 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:23185:__toCommonJS(localUtils_exports)[33m;[39m
+  build_check_11_utf8.txt:23186:[31m[1m>[22m[39m[90m 41 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:23187:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:23230:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:23231:[0m [90m 34 |[39m module[33m.[39mexports 
+[33m=[39m 
+  build_check_11_utf8.txt:23232:__toCommonJS(recorder_exports)[33m;[39m
+  build_check_11_utf8.txt:23233: [90m 35 |[39m [36mvar[39m import_events 
+[33m=[39m 
+  build_check_11_utf8.txt:23234:__toESM(require([32m"events"[39m))[33m;[39m
+  build_check_11_utf8.txt:23235:[31m[1m>[22m[39m[90m 36 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+> build_check_11_utf8.txt:23283:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:23284:[0m [90m 33 |[39m })[33m;[39m
+  build_check_11_utf8.txt:23285: [90m 34 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:23286:__toCommonJS(recorderApp_exports)[33m;[39m
+  build_check_11_utf8.txt:23287:[31m[1m>[22m[39m[90m 35 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:23288:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:23337:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:23338:[0m [90m 32 |[39m })[33m;[39m
+  build_check_11_utf8.txt:23339: [90m 33 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:23340:__toCommonJS(throttledFile_exports)[33m;[39m
+  build_check_11_utf8.txt:23341:[31m[1m>[22m[39m[90m 34 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:23342:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:23390:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:23391:[0m [90m 34 |[39m module[33m.[39mexports 
+[33m=[39m 
+  build_check_11_utf8.txt:23392:__toCommonJS(browserFetcher_exports)[33m;[39m
+  build_check_11_utf8.txt:23393: [90m 35 |[39m [36mvar[39m childProcess 
+[33m=[39m 
+  build_check_11_utf8.txt:23394:__toESM(require([32m"child_process"[39m))[33m;[39m
+  build_check_11_utf8.txt:23395:[31m[1m>[22m[39m[90m 36 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+> build_check_11_utf8.txt:23441:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:23442:[0m [90m 40 |[39m module[33m.[39mexports 
+[33m=[39m 
+  build_check_11_utf8.txt:23443:__toCommonJS(dependencies_exports)[33m;[39m
+  build_check_11_utf8.txt:23444: [90m 41 |[39m [36mvar[39m childProcess 
+[33m=[39m 
+  build_check_11_utf8.txt:23445:__toESM(require([32m"child_process"[39m))[33m;[39m
+  build_check_11_utf8.txt:23446:[31m[1m>[22m[39m[90m 42 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+> build_check_11_utf8.txt:23492:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:23493:[0m [90m 39 |[39m })[33m;[39m
+  build_check_11_utf8.txt:23494: [90m 40 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:23495:__toCommonJS(registry_exports)[33m;[39m
+  build_check_11_utf8.txt:23496:[31m[1m>[22m[39m[90m 41 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:23497:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:23534:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:23535:[0m [90m 32 |[39m })[33m;[39m
+  build_check_11_utf8.txt:23536: [90m 33 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:23537:__toCommonJS(tracing_exports)[33m;[39m
+  build_check_11_utf8.txt:23538:[31m[1m>[22m[39m[90m 34 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:23539:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:23587:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:23588:[0m [90m 37 |[39m })[33m;[39m
+  build_check_11_utf8.txt:23589: [90m 38 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:23590:__toCommonJS(traceViewer_exports)[33m;[39m
+  build_check_11_utf8.txt:23591:[31m[1m>[22m[39m[90m 39 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:23592:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:23631:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:23632:[0m [90m 33 |[39m })[33m;[39m
+  build_check_11_utf8.txt:23633: [90m 34 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:23634:__toCommonJS(debugLogger_exports)[33m;[39m
+  build_check_11_utf8.txt:23635:[31m[1m>[22m[39m[90m 35 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:23636:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:23677:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:23678:[0m [90m 39 |[39m })[33m;[39m
+  build_check_11_utf8.txt:23679: [90m 40 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:23680:__toCommonJS(fileUtils_exports)[33m;[39m
+  build_check_11_utf8.txt:23681:[31m[1m>[22m[39m[90m 41 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:23682:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:23727:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:23728:[0m [90m 32 |[39m })[33m;[39m
+  build_check_11_utf8.txt:23729: [90m 33 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:23730:__toCommonJS(httpServer_exports)[33m;[39m
+  build_check_11_utf8.txt:23731:[31m[1m>[22m[39m[90m 34 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:23732:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:23774:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:23775:[0m [90m 32 |[39m })[33m;[39m
+  build_check_11_utf8.txt:23776: [90m 33 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:23777:__toCommonJS(linuxUtils_exports)[33m;[39m
+  build_check_11_utf8.txt:23778:[31m[1m>[22m[39m[90m 34 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:23779:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:23817:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:23818:[0m [90m 34 |[39m module[33m.[39mexports 
+[33m=[39m 
+  build_check_11_utf8.txt:23819:__toCommonJS(nodePlatform_exports)[33m;[39m
+  build_check_11_utf8.txt:23820: [90m 35 |[39m [36mvar[39m import_crypto 
+[33m=[39m 
+  build_check_11_utf8.txt:23821:__toESM(require([32m"crypto"[39m))[33m;[39m
+  build_check_11_utf8.txt:23822:[31m[1m>[22m[39m[90m 36 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+> build_check_11_utf8.txt:23865:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:23866:[0m [90m 37 |[39m module[33m.[39mexports 
+[33m=[39m 
+  build_check_11_utf8.txt:23867:__toCommonJS(processLauncher_exports)[33m;[39m
+  build_check_11_utf8.txt:23868: [90m 38 |[39m [36mvar[39m childProcess 
+[33m=[39m 
+  build_check_11_utf8.txt:23869:__toESM(require([32m"child_process"[39m))[33m;[39m
+  build_check_11_utf8.txt:23870:[31m[1m>[22m[39m[90m 39 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+> build_check_11_utf8.txt:23913:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:23914:[0m [90m 33 |[39m })[33m;[39m
+  build_check_11_utf8.txt:23915: [90m 34 |[39m module[33m.[39mexports [33m=[39m 
+  build_check_11_utf8.txt:23916:__toCommonJS(profiler_exports)[33m;[39m
+  build_check_11_utf8.txt:23917:[31m[1m>[22m[39m[90m 35 |[39m [36mvar[39m 
+import_fs [33m=[39m 
+  build_check_11_utf8.txt:23918:__toESM(require([32m"fs"[39m))[33m;[39m
+> build_check_11_utf8.txt:23960:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:23961:[0m [90m 4 |[39m 
+[32m`[39m[33m+[39ms)[33m,[39mi[33m.[39mpush(n[33m+[39m[
+  build_check_11_utf8.txt:23962:32m"m+"[39m[33m+[39m_s[33m.[39mexports[33m.[39m
+humanize([36mthis[39m[33m.[3
+  build_check_11_utf8.txt:23963:9mdiff)[33m+[39m[32m"\x1B[0m"[39m)}[36melse[39m 
+  build_check_11_utf8.txt:23964:i[[35m0[39m][33m=[39mw_()[33m+[39me[33m+[39m[
+32m" 
+  build_check_11_utf8.txt:23965:"[39m[33m+[39mi[[35m0[39m]}[36mfunction[39m 
+w_(){[36mreturn[39m [33mXe[39m
+> build_check_11_utf8.txt:24439:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:24440:[0m [90m 16 |[39m [32m   
+%s`[39m[33m,[39m[33mE[39m[33m,[39m[33mE[39m[33m
+  
+build_check_11_utf8.txt:24441:,[39m[33mS[39m[33m,[39mr)[33m;[39m[36mvar[39m 
+[33mR[39m[33m=[39m[33mS[3
+  build_check_11_utf8.txt:24442:9m[33m.[39mtype[33m===[39m[32m"*"[39m[33m?[39m
+za[33m:[39m[33mS[39m[33m.[
+  build_check_11_utf8.txt:24443:39mtype[33m===[39m[32m"?"[39m[33m?[39m[33mKa[3
+9m[33m:[39m[32m"\\"[39m[33m
+  build_check_11_utf8.txt:24444:+[39m[33mS[39m[33m.[39mtype[33m;[39mn[33m=[39
+m[33m![39m[35m0[39m[33m,[3
+> build_check_11_utf8.txt:26091:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:26092:[0m [90m 16 |[39m [32m   
+%s`[39m[33m,[39m[33mE[39m[33m,[39m[33mE[39m[33m
+  
+build_check_11_utf8.txt:26093:,[39m[33mS[39m[33m,[39mr)[33m;[39m[36mvar[39m 
+[33mR[39m[33m=[39m[33mS[3
+  build_check_11_utf8.txt:26094:9m[33m.[39mtype[33m===[39m[32m"*"[39m[33m?[39m
+za[33m:[39m[33mS[39m[33m.[
+  build_check_11_utf8.txt:26095:39mtype[33m===[39m[32m"?"[39m[33m?[39m[33mKa[3
+9m[33m:[39m[32m"\\"[39m[33m
+  build_check_11_utf8.txt:26096:+[39m[33mS[39m[33m.[39mtype[33m;[39mn[33m=[39
+m[33m![39m[35m0[39m[33m,[3
+> build_check_11_utf8.txt:27746:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:27747:[0m [90m 16 |[39m [32m   
+%s`[39m[33m,[39m[33mE[39m[33m,[39m[33mE[39m[33m
+  
+build_check_11_utf8.txt:27748:,[39m[33mS[39m[33m,[39mr)[33m;[39m[36mvar[39m 
+[33mR[39m[33m=[39m[33mS[3
+  build_check_11_utf8.txt:27749:9m[33m.[39mtype[33m===[39m[32m"*"[39m[33m?[39m
+za[33m:[39m[33mS[39m[33m.[
+  build_check_11_utf8.txt:27750:39mtype[33m===[39m[32m"?"[39m[33m?[39m[33mKa[3
+9m[33m:[39m[32m"\\"[39m[33m
+  build_check_11_utf8.txt:27751:+[39m[33mS[39m[33m.[39mtype[33m;[39mn[33m=[39
+m[33m![39m[35m0[39m[33m,[3
+> build_check_11_utf8.txt:29409:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:29410:[0m [90m 187 |[39m 
+[32m`[39m[33m,[39mt)[33m+[39m[35m1[39m}[36myield[39m[
+  build_check_11_utf8.txt:29411:33m*[39m[36mthis[39m[33m.[39mpop()[33m;[39m[36
+mbreak[39m[33m;[39m[36mdefau
+  build_check_11_utf8.txt:29412:lt[39m[33m:[39m[36myield[39m[33m*[39m[36mthis
+[39m[33m.[39mpop()[33m,[39m
+  build_check_11_utf8.txt:29413:[36myield[39m[33m*[39m[36mthis[39m[33m.[39mstep
+()}}[33m*[39mblockMap(e){[36m
+  build_check_11_utf8.txt:29414:var[39m r[33m;[39m[36mlet[39m 
+t[33m=[39me[33m.[39mitems[e[33m.[39mitems[33
+> build_check_11_utf8.txt:30875:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:30876:[0m[31m[1m>[22m[39m[90m 1 |[39m [32m"use 
+strict"[39m[33m;[39m[36mvar[39m 
+  build_check_11_utf8.txt:30877:[33mEt[39m[33m=[39m[33mObject[39m[33m.[39mcrea
+te[33m;[39m[36mvar[39m 
+  build_check_11_utf8.txt:30878:oe[33m=[39m[33mObject[39m[33m.[39mdefineProperty
+[33m;[39m[36mvar[39m vt[33m
+  build_check_11_utf8.txt:30879:=[39m[33mObject[39m[33m.[39mgetOwnPropertyDescrip
+tor[33m;[39m[36mvar[39m 
+  build_check_11_utf8.txt:30880:wt[33m=[39m[33mObject[39m[33m.[39mgetOwnProperty
+Names[33m;[39m[36mvar[39m yt
+> build_check_11_utf8.txt:32559:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:32560:[0m[31m[1m>[22m[39m[90m 1 |[39m [32m"use 
+strict"[39m[33m;[39m[36mvar[39m 
+  build_check_11_utf8.txt:32561:[33mEt[39m[33m=[39m[33mObject[39m[33m.[39mcrea
+te[33m;[39m[36mvar[39m 
+  build_check_11_utf8.txt:32562:oe[33m=[39m[33mObject[39m[33m.[39mdefineProperty
+[33m;[39m[36mvar[39m vt[33m
+  build_check_11_utf8.txt:32563:=[39m[33mObject[39m[33m.[39mgetOwnPropertyDescrip
+tor[33m;[39m[36mvar[39m 
+  build_check_11_utf8.txt:32564:wt[33m=[39m[33mObject[39m[33m.[39mgetOwnProperty
+Names[33m;[39m[36mvar[39m yt
+> build_check_11_utf8.txt:34390:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:34391:[0m[31m[1m>[22m[39m[90m 1 |[39m [32m"use 
+strict"[39m[33m;[39m[36mvar[39m 
+  build_check_11_utf8.txt:34392:[33mEt[39m[33m=[39m[33mObject[39m[33m.[39mcrea
+te[33m;[39m[36mvar[39m 
+  build_check_11_utf8.txt:34393:oe[33m=[39m[33mObject[39m[33m.[39mdefineProperty
+[33m;[39m[36mvar[39m vt[33m
+  build_check_11_utf8.txt:34394:=[39m[33mObject[39m[33m.[39mgetOwnPropertyDescrip
+tor[33m;[39m[36mvar[39m 
+  build_check_11_utf8.txt:34395:wt[33m=[39m[33mObject[39m[33m.[39mgetOwnProperty
+Names[33m;[39m[36mvar[39m yt
+> build_check_11_utf8.txt:36270:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'fs'[39m
+  build_check_11_utf8.txt:36271:[0m [90m 3 |[39m 
+[32m`[39m[33m+[39ms)[33m,[39me[33m.[39mpush(i[33m+[39m[
+  build_check_11_utf8.txt:36272:32m"m+"[39m[33m+[39m[33mLe[39m[33m.[39mexports
+[33m.[39mhumanize([36mthis[39
+  build_check_11_utf8.txt:36273:m[33m.[39mdiff)[33m+[39m[32m"\x1B[0m"[39m)}[36m
+else[39m 
+  build_check_11_utf8.txt:36274:e[[35m0[39m][33m=[39msn()[33m+[39mr[33m+[39m[
+32m" 
+  build_check_11_utf8.txt:36275:"[39m[33m+[39me[[35m0[39m]}[36mfunction[39m 
+sn(){[36mreturn[39m y[33m.[39mi
+> build_check_11_utf8.txt:36668:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'http2'[39m
+  build_check_11_utf8.txt:36669:[0m [90m 16 |[39m exports[33m.[39mrequest 
+[33m=[39m request[33m;[39m
+  build_check_11_utf8.txt:36670: [90m 17 |[39m exports[33m.[39mcloseSession 
+[33m=[39m closeSession[33m;[39m
+  build_check_11_utf8.txt:36671:[31m[1m>[22m[39m[90m 18 |[39m [36mconst[39m 
+http2 [33m=[39m 
+  build_check_11_utf8.txt:36672:require([32m"http2"[39m)[33m;[39m
+  build_check_11_utf8.txt:36673: [90m    |[39m               
+[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m
+> build_check_11_utf8.txt:36735:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'http2'[39m
+  build_check_11_utf8.txt:36736:[0m [90m 117 |[39m [32m`[39m)}[36mget[39m 
+sessionId(){[36mreturn[39m 
+  build_check_11_utf8.txt:36737:[36mthis[39m[33m.[39m_sessionId}}[33m;[39m[36mv
+ar[39m jz[33m=[39mer([33mOz
+  build_check_11_utf8.txt:36738:[39m()[33m,[39m[35m1[39m)[33m,[39m[33mVc[39m[
+33m=[39mer(require([32m"node:p
+  build_check_11_utf8.txt:36739:rocess"[39m)[33m,[39m[35m1[39m)[33m,[39m[33mRz
+[39m[33m=[39mrequire([32m"no
+  build_check_11_utf8.txt:36740:de:stream"[39m)[33m;[39m[36mvar[39m 
+[33mMi[39m[33m=[39m[36mclass[39m{append
+> build_check_11_utf8.txt:37314:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'http2'[39m
+  build_check_11_utf8.txt:37315:[0m [90m 117 |[39m [32m`[39m)}[36mget[39m 
+sessionId(){[36mreturn[39m 
+  build_check_11_utf8.txt:37316:[36mthis[39m[33m.[39m_sessionId}}[33m;[39m[36mv
+ar[39m jz[33m=[39mer([33mOz
+  build_check_11_utf8.txt:37317:[39m()[33m,[39m[35m1[39m)[33m,[39m[33mVc[39m[
+33m=[39mer(require([32m"node:p
+  build_check_11_utf8.txt:37318:rocess"[39m)[33m,[39m[35m1[39m)[33m,[39m[33mRz
+[39m[33m=[39mrequire([32m"no
+  build_check_11_utf8.txt:37319:de:stream"[39m)[33m;[39m[36mvar[39m 
+[33mMi[39m[33m=[39m[36mclass[39m{append
+> build_check_11_utf8.txt:37894:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'http2'[39m
+  build_check_11_utf8.txt:37895:[0m [90m 35 |[39m module[33m.[39mexports 
+[33m=[39m 
+  build_check_11_utf8.txt:37896:__toCommonJS(socksClientCertificatesInterceptor_export
+s)[33m;[39m
+  build_check_11_utf8.txt:37897: [90m 36 |[39m [36mvar[39m import_events 
+[33m=[39m 
+  build_check_11_utf8.txt:37898:require([32m"events"[39m)[33m;[39m
+  build_check_11_utf8.txt:37899:[31m[1m>[22m[39m[90m 37 |[39m [36mvar[39m 
+import_http2 [33m=[39m 
+> build_check_11_utf8.txt:37948:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'http2'[39m
+  build_check_11_utf8.txt:37949:[0m [90m 41 |[39m module[33m.[39mexports 
+[33m=[39m 
+  build_check_11_utf8.txt:37950:__toCommonJS(network_exports)[33m;[39m
+  build_check_11_utf8.txt:37951: [90m 42 |[39m [36mvar[39m import_http 
+[33m=[39m 
+  build_check_11_utf8.txt:37952:__toESM(require([32m"http"[39m))[33m;[39m
+  build_check_11_utf8.txt:37953:[31m[1m>[22m[39m[90m 43 |[39m [36mvar[39m 
+import_http2 [33m=[39m 
+> build_check_11_utf8.txt:37998:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'inspector'[39m
+  build_check_11_utf8.txt:37999:[0m [90m 87 |[39m   inspectCustom[33m:[39m 
+  build_check_11_utf8.txt:38000:util[33m.[39minspect[33m.[39mcustom[33m,[39m
+  build_check_11_utf8.txt:38001: [90m 88 |[39m   isDebugMode[33m:[39m () 
+[33m=>[39m ([35m0[39m[33m,[39m 
+  build_check_11_utf8.txt:38002:import_debug[33m.[39mdebugMode)() [33m===[39m 
+[32m"inspector"[39m[33m,[39m
+  build_check_11_utf8.txt:38003:[31m[1m>[22m[39m[90m 89 |[39m   
+isJSDebuggerAttached[33m:[39m () [33m=>[39m 
+> build_check_11_utf8.txt:38046:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'inspector'[39m
+  build_check_11_utf8.txt:38047:[0m [90m 40 |[39m   [36mif[39m 
+([33m![39mprofileDir)
+  build_check_11_utf8.txt:38048: [90m 41 |[39m     [36mreturn[39m[33m;[39m
+  build_check_11_utf8.txt:38049:[31m[1m>[22m[39m[90m 42 |[39m   session 
+[33m=[39m [36mnew[39m 
+  build_check_11_utf8.txt:38050:(require([32m"inspector"[39m))[33m.[39m[33mSessio
+n[39m()[33m;[39m
+  build_check_11_utf8.txt:38051: [90m    |[39m                  
+[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[
+> build_check_11_utf8.txt:38092:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'net'[39m
+  build_check_11_utf8.txt:38093:[0m [90m 28 |[39m 
+[33mObject[39m[33m.[39mdefineProperty(exports[33m,[39m 
+  build_check_11_utf8.txt:38094:[32m"__esModule"[39m[33m,[39m { value[33m:[39m 
+[36mtrue[39m })[33m;[39m
+  build_check_11_utf8.txt:38095: [90m 29 |[39m exports[33m.[39m[33mAgent[39m 
+[33m=[39m [36mvoid[39m 
+  build_check_11_utf8.txt:38096:[35m0[39m[33m;[39m
+  build_check_11_utf8.txt:38097:[31m[1m>[22m[39m[90m 30 |[39m [36mconst[39m 
+net [33m=[39m 
+> build_check_11_utf8.txt:38171:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'net'[39m
+  build_check_11_utf8.txt:38172:[0m [90m 28 |[39m 
+[33mObject[39m[33m.[39mdefineProperty(exports[33m,[39m 
+  build_check_11_utf8.txt:38173:[32m"__esModule"[39m[33m,[39m { value[33m:[39m 
+[36mtrue[39m })[33m;[39m
+  build_check_11_utf8.txt:38174: [90m 29 |[39m 
+exports[33m.[39m[33mHttpsProxyAgent[39m [33m=[39m 
+  build_check_11_utf8.txt:38175:[36mvoid[39m [35m0[39m[33m;[39m
+  build_check_11_utf8.txt:38176:[31m[1m>[22m[39m[90m 30 |[39m [36mconst[39m 
+net [33m=[39m 
+> build_check_11_utf8.txt:38246:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'net'[39m
+  build_check_11_utf8.txt:38247:[0m [90m 3 |[39m 
+exports[33m.[39mgetConnectionName [33m=[39m 
+  build_check_11_utf8.txt:38248:exports[33m.[39mweightSrvRecords [33m=[39m 
+exports[33m.[39mgroupSrvRecords 
+  build_check_11_utf8.txt:38249:[33m=[39m 
+exports[33m.[39mgetUniqueHostnamesFromOptions [33m=[39m 
+  build_check_11_utf8.txt:38250:exports[33m.[39mnormalizeNodeOptions [33m=[39m 
+  build_check_11_utf8.txt:38251:exports[33m.[39mnodeKeyToRedisOptions [33m=[39m 
+exports[33m.[39mgetNodeKey 
+> build_check_11_utf8.txt:38318:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'net'[39m
+  build_check_11_utf8.txt:38319:[0m [90m 2 |[39m 
+[33mObject[39m[33m.[39mdefineProperty(exports[33m,[39m 
+  build_check_11_utf8.txt:38320:[32m"__esModule"[39m[33m,[39m { value[33m:[39m 
+[36mtrue[39m })[33m;[39m
+  build_check_11_utf8.txt:38321: [90m 3 |[39m 
+exports[33m.[39m[33mSentinelIterator[39m [33m=[39m 
+  build_check_11_utf8.txt:38322:[36mvoid[39m [35m0[39m[33m;[39m
+  build_check_11_utf8.txt:38323:[31m[1m>[22m[39m[90m 4 |[39m [36mconst[39m 
+net_1 [33m=[39m 
+> build_check_11_utf8.txt:38389:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'net'[39m
+  build_check_11_utf8.txt:38390:[0m [90m 1 |[39m [32m"use strict"[39m[33m;[39m
+  build_check_11_utf8.txt:38391: [90m 2 |[39m 
+[33mObject[39m[33m.[39mdefineProperty(exports[33m,[39m 
+  build_check_11_utf8.txt:38392:[32m"__esModule"[39m[33m,[39m { value[33m:[39m 
+[36mtrue[39m })[33m;[39m
+  build_check_11_utf8.txt:38393:[31m[1m>[22m[39m[90m 3 |[39m [36mconst[39m 
+net_1 [33m=[39m 
+  build_check_11_utf8.txt:38394:require([32m"net"[39m)[33m;[39m
+> build_check_11_utf8.txt:38464:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'net'[39m
+  build_check_11_utf8.txt:38465:[0m [90m 33 |[39m module[33m.[39mexports 
+[33m=[39m 
+  build_check_11_utf8.txt:38466:__toCommonJS(backendAdb_exports)[33m;[39m
+  build_check_11_utf8.txt:38467: [90m 34 |[39m [36mvar[39m import_events 
+[33m=[39m 
+  build_check_11_utf8.txt:38468:require([32m"events"[39m)[33m;[39m
+  build_check_11_utf8.txt:38469:[31m[1m>[22m[39m[90m 35 |[39m [36mvar[39m 
+import_net [33m=[39m 
+> build_check_11_utf8.txt:38513:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'net'[39m
+  build_check_11_utf8.txt:38514:[0m [90m 36 |[39m [36mvar[39m import_events 
+[33m=[39m 
+  build_check_11_utf8.txt:38515:require([32m"events"[39m)[33m;[39m
+  build_check_11_utf8.txt:38516: [90m 37 |[39m [36mvar[39m import_http2 
+[33m=[39m 
+  build_check_11_utf8.txt:38517:__toESM(require([32m"http2"[39m))[33m;[39m
+  build_check_11_utf8.txt:38518:[31m[1m>[22m[39m[90m 38 |[39m [36mvar[39m 
+import_net [33m=[39m 
+> build_check_11_utf8.txt:38566:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'net'[39m
+  build_check_11_utf8.txt:38567:[0m [90m 40 |[39m [36mvar[39m import_http 
+[33m=[39m 
+  build_check_11_utf8.txt:38568:__toESM(require([32m"http"[39m))[33m;[39m
+  build_check_11_utf8.txt:38569: [90m 41 |[39m [36mvar[39m import_https 
+[33m=[39m 
+  build_check_11_utf8.txt:38570:__toESM(require([32m"https"[39m))[33m;[39m
+  build_check_11_utf8.txt:38571:[31m[1m>[22m[39m[90m 42 |[39m [36mvar[39m 
+import_net [33m=[39m 
+> build_check_11_utf8.txt:38611:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'net'[39m
+  build_check_11_utf8.txt:38612:[0m [90m 35 |[39m module[33m.[39mexports 
+[33m=[39m 
+  build_check_11_utf8.txt:38613:__toCommonJS(socksProxy_exports)[33m;[39m
+  build_check_11_utf8.txt:38614: [90m 36 |[39m [36mvar[39m import_events 
+[33m=[39m 
+  build_check_11_utf8.txt:38615:__toESM(require([32m"events"[39m))[33m;[39m
+  build_check_11_utf8.txt:38616:[31m[1m>[22m[39m[90m 37 |[39m [36mvar[39m 
+import_net [33m=[39m 
+> build_check_11_utf8.txt:38655:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'net'[39m
+  build_check_11_utf8.txt:38656:[0m [90m  6 |[39m 
+  build_check_11_utf8.txt:38657:[32m`[39m)[33m.[39mmap(e[33m=>[39me[33m.[39mtr
+im())[33m.[39mjoin([32m" "[3
+  build_check_11_utf8.txt:38658:9m)}[33m;[39moh[33m.[39m[33mO[39m[33m=[39m[36
+mfunction[39m(i){[36mreturn[3
+  build_check_11_utf8.txt:38659:9m 
+[36mthis[39m[33m.[39minspectOpts[33m.[39mcolors[33m=[39m[36mthis[39m[33m
+  build_check_11_utf8.txt:38660:.[39museColors[33m,[39mbs[33m.[39minspect(i[33m,
+[39m[36mthis[39m[33m.[39min
+> build_check_11_utf8.txt:39184:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'net'[39m
+  build_check_11_utf8.txt:39185:[0m [90m 10 |[39m [32m\r[39m
+  build_check_11_utf8.txt:39186: [90m 11 |[39m 
+[32m`[39m)[33m;[39m[36mif[39m(d[33m===[39m[33m-[39m[35m1[
+  build_check_11_utf8.txt:39187:39m){[33mIs[39m([32m"have not received end of HTTP 
+headers 
+  build_check_11_utf8.txt:39188:yet..."[39m)[33m,[39ms()[33m;[39m[36mreturn[39m
+}[36mlet[39m m[33m=[39mf[33
+  build_check_11_utf8.txt:39189:m.[39mslice([35m0[39m[33m,[39md)[33m.[39mtoStri
+ng([32m"ascii"[39m)[33m.[39m
+> build_check_11_utf8.txt:41820:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'net'[39m
+  build_check_11_utf8.txt:41821:[0m [90m 43 |[39m 
+  build_check_11_utf8.txt:41822:[32m`[39m)})[33m,[39m[36mthis[39m}_outputHelpIfR
+equested(e){[36mlet[39m t[33m
+  build_check_11_utf8.txt:41823:=[39m[36mthis[39m[33m.[39m_getHelpOption()[33m;
+[39mt[33m&&[39me[33m.[39mfin
+  build_check_11_utf8.txt:41824:d(n[33m=>[39mt[33m.[39mis(n))[33m&&[39m([36mthi
+s[39m[33m.[39moutputHelp()[3
+  build_check_11_utf8.txt:41825:3m,[39m[36mthis[39m[33m.[39m_exit([35m0[39m[33
+m,[39m[32m"commander.helpDispl
+> build_check_11_utf8.txt:47313:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'net'[39m
+  build_check_11_utf8.txt:47314:[0m [90m 43 |[39m 
+  build_check_11_utf8.txt:47315:[32m`[39m)})[33m,[39m[36mthis[39m}_outputHelpIfR
+equested(e){[36mlet[39m t[33m
+  build_check_11_utf8.txt:47316:=[39m[36mthis[39m[33m.[39m_getHelpOption()[33m;
+[39mt[33m&&[39me[33m.[39mfin
+  build_check_11_utf8.txt:47317:d(n[33m=>[39mt[33m.[39mis(n))[33m&&[39m([36mthi
+s[39m[33m.[39moutputHelp()[3
+  build_check_11_utf8.txt:47318:3m,[39m[36mthis[39m[33m.[39m_exit([35m0[39m[33
+m,[39m[32m"commander.helpDispl
+> build_check_11_utf8.txt:52856:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'net'[39m
+  build_check_11_utf8.txt:52857:[0m [90m 43 |[39m 
+  build_check_11_utf8.txt:52858:[32m`[39m)})[33m,[39m[36mthis[39m}_outputHelpIfR
+equested(e){[36mlet[39m t[33m
+  build_check_11_utf8.txt:52859:=[39m[36mthis[39m[33m.[39m_getHelpOption()[33m;
+[39mt[33m&&[39me[33m.[39mfin
+  build_check_11_utf8.txt:52860:d(n[33m=>[39mt[33m.[39mis(n))[33m&&[39m([36mthi
+s[39m[33m.[39moutputHelp()[3
+  build_check_11_utf8.txt:52861:3m,[39m[36mthis[39m[33m.[39m_exit([35m0[39m[33
+m,[39m[32m"commander.helpDispl
+> build_check_11_utf8.txt:58583:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'net'[39m
+  build_check_11_utf8.txt:58584:[0m [90m 43 |[39m 
+  build_check_11_utf8.txt:58585:[32m`[39m)})[33m,[39m[36mthis[39m}_outputHelpIfR
+equested(e){[36mlet[39m t[33m
+  build_check_11_utf8.txt:58586:=[39m[36mthis[39m[33m.[39m_getHelpOption()[33m;
+[39mt[33m&&[39me[33m.[39mfin
+  build_check_11_utf8.txt:58587:d(n[33m=>[39mt[33m.[39mis(n))[33m&&[39m([36mthi
+s[39m[33m.[39moutputHelp()[3
+  build_check_11_utf8.txt:58588:3m,[39m[36mthis[39m[33m.[39m_exit([35m0[39m[33
+m,[39m[32m"commander.helpDispl
+> build_check_11_utf8.txt:64637:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'readline'[39m
+  build_check_11_utf8.txt:64638:[0m [90m 36 |[39m [36mvar[39m import_os 
+[33m=[39m 
+  build_check_11_utf8.txt:64639:__toESM(require([32m"os"[39m))[33m;[39m
+  build_check_11_utf8.txt:64640: [90m 37 |[39m [36mvar[39m import_path 
+[33m=[39m 
+  build_check_11_utf8.txt:64641:__toESM(require([32m"path"[39m))[33m;[39m
+  build_check_11_utf8.txt:64642:[31m[1m>[22m[39m[90m 38 |[39m [36mvar[39m 
+readline [33m=[39m 
+> build_check_11_utf8.txt:64685:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'readline'[39m
+  build_check_11_utf8.txt:64686:[0m [90m 38 |[39m [36mvar[39m childProcess 
+[33m=[39m 
+  build_check_11_utf8.txt:64687:__toESM(require([32m"child_process"[39m))[33m;[39m
+  build_check_11_utf8.txt:64688: [90m 39 |[39m [36mvar[39m import_fs [33m=[39m 
+  build_check_11_utf8.txt:64689:__toESM(require([32m"fs"[39m))[33m;[39m
+  build_check_11_utf8.txt:64690:[31m[1m>[22m[39m[90m 40 |[39m [36mvar[39m 
+readline [33m=[39m 
+> build_check_11_utf8.txt:64734:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'tls'[39m
+  build_check_11_utf8.txt:64735:[0m [90m 29 |[39m 
+exports[33m.[39m[33mHttpsProxyAgent[39m [33m=[39m 
+  build_check_11_utf8.txt:64736:[36mvoid[39m [35m0[39m[33m;[39m
+  build_check_11_utf8.txt:64737: [90m 30 |[39m [36mconst[39m net [33m=[39m 
+  build_check_11_utf8.txt:64738:__importStar(require([32m"net"[39m))[33m;[39m
+  build_check_11_utf8.txt:64739:[31m[1m>[22m[39m[90m 31 |[39m [36mconst[39m 
+tls [33m=[39m 
+> build_check_11_utf8.txt:64809:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'tls'[39m
+  build_check_11_utf8.txt:64810:[0m [90m 4 |[39m [36mconst[39m net_1 [33m=[39m 
+  build_check_11_utf8.txt:64811:require([32m"net"[39m)[33m;[39m
+  build_check_11_utf8.txt:64812: [90m 5 |[39m [36mconst[39m utils_1 [33m=[39m 
+  build_check_11_utf8.txt:64813:require([32m"../../utils"[39m)[33m;[39m
+  build_check_11_utf8.txt:64814:[31m[1m>[22m[39m[90m 6 |[39m [36mconst[39m 
+tls_1 [33m=[39m 
+> build_check_11_utf8.txt:64881:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'tls'[39m
+  build_check_11_utf8.txt:64882:[0m [90m 2 |[39m 
+[33mObject[39m[33m.[39mdefineProperty(exports[33m,[39m 
+  build_check_11_utf8.txt:64883:[32m"__esModule"[39m[33m,[39m { value[33m:[39m 
+[36mtrue[39m })[33m;[39m
+  build_check_11_utf8.txt:64884: [90m 3 |[39m [36mconst[39m net_1 [33m=[39m 
+require([32m"net"[39m)[33m;[39m
+  build_check_11_utf8.txt:64885:[31m[1m>[22m[39m[90m 4 |[39m [36mconst[39m 
+tls_1 [33m=[39m 
+  build_check_11_utf8.txt:64886:require([32m"tls"[39m)[33m;[39m
+> build_check_11_utf8.txt:64957:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'tls'[39m
+  build_check_11_utf8.txt:64958:[0m [90m 37 |[39m [36mvar[39m import_https 
+[33m=[39m 
+  build_check_11_utf8.txt:64959:__toESM(require([32m"https"[39m))[33m;[39m
+  build_check_11_utf8.txt:64960: [90m 38 |[39m [36mvar[39m import_stream 
+[33m=[39m 
+  build_check_11_utf8.txt:64961:require([32m"stream"[39m)[33m;[39m
+  build_check_11_utf8.txt:64962:[31m[1m>[22m[39m[90m 39 |[39m [36mvar[39m 
+import_tls [33m=[39m 
+> build_check_11_utf8.txt:65004:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'tls'[39m
+  build_check_11_utf8.txt:65005:[0m [90m 38 |[39m [36mvar[39m import_net 
+[33m=[39m 
+  build_check_11_utf8.txt:65006:__toESM(require([32m"net"[39m))[33m;[39m
+  build_check_11_utf8.txt:65007: [90m 39 |[39m [36mvar[39m import_stream 
+[33m=[39m 
+  build_check_11_utf8.txt:65008:__toESM(require([32m"stream"[39m))[33m;[39m
+  build_check_11_utf8.txt:65009:[31m[1m>[22m[39m[90m 40 |[39m [36mvar[39m 
+import_tls [33m=[39m 
+> build_check_11_utf8.txt:65057:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'tls'[39m
+  build_check_11_utf8.txt:65058:[0m [90m 41 |[39m [36mvar[39m import_https 
+[33m=[39m 
+  build_check_11_utf8.txt:65059:__toESM(require([32m"https"[39m))[33m;[39m
+  build_check_11_utf8.txt:65060: [90m 42 |[39m [36mvar[39m import_net [33m=[39m 
+  build_check_11_utf8.txt:65061:__toESM(require([32m"net"[39m))[33m;[39m
+  build_check_11_utf8.txt:65062:[31m[1m>[22m[39m[90m 43 |[39m [36mvar[39m 
+import_tls [33m=[39m 
+> build_check_11_utf8.txt:65102:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'tls'[39m
+  build_check_11_utf8.txt:65103:[0m [90m 10 |[39m [32m\r[39m
+  build_check_11_utf8.txt:65104: [90m 11 |[39m 
+[32m`[39m)[33m;[39m[36mif[39m(d[33m===[39m[33m-[39m[35m1[
+  build_check_11_utf8.txt:65105:39m){[33mIs[39m([32m"have not received end of HTTP 
+headers 
+  build_check_11_utf8.txt:65106:yet..."[39m)[33m,[39ms()[33m;[39m[36mreturn[39m
+}[36mlet[39m m[33m=[39mf[33
+  build_check_11_utf8.txt:65107:m.[39mslice([35m0[39m[33m,[39md)[33m.[39mtoStri
+ng([32m"ascii"[39m)[33m.[39m
+> build_check_11_utf8.txt:67738:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'tls'[39m
+  build_check_11_utf8.txt:67739:[0m [90m 43 |[39m 
+  build_check_11_utf8.txt:67740:[32m`[39m)})[33m,[39m[36mthis[39m}_outputHelpIfR
+equested(e){[36mlet[39m t[33m
+  build_check_11_utf8.txt:67741:=[39m[36mthis[39m[33m.[39m_getHelpOption()[33m;
+[39mt[33m&&[39me[33m.[39mfin
+  build_check_11_utf8.txt:67742:d(n[33m=>[39mt[33m.[39mis(n))[33m&&[39m([36mthi
+s[39m[33m.[39moutputHelp()[3
+  build_check_11_utf8.txt:67743:3m,[39m[36mthis[39m[33m.[39m_exit([35m0[39m[33
+m,[39m[32m"commander.helpDispl
+> build_check_11_utf8.txt:73465:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'tls'[39m
+  build_check_11_utf8.txt:73466:[0m [90m 43 |[39m 
+  build_check_11_utf8.txt:73467:[32m`[39m)})[33m,[39m[36mthis[39m}_outputHelpIfR
+equested(e){[36mlet[39m t[33m
+  build_check_11_utf8.txt:73468:=[39m[36mthis[39m[33m.[39m_getHelpOption()[33m;
+[39mt[33m&&[39me[33m.[39mfin
+  build_check_11_utf8.txt:73469:d(n[33m=>[39mt[33m.[39mis(n))[33m&&[39m([36mthi
+s[39m[33m.[39moutputHelp()[3
+  build_check_11_utf8.txt:73470:3m,[39m[36mthis[39m[33m.[39m_exit([35m0[39m[33
+m,[39m[32m"commander.helpDispl
+> build_check_11_utf8.txt:79519:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'ts-node'[39m
+  build_check_11_utf8.txt:79520:[0m [90m 120 |[39m }
+  build_check_11_utf8.txt:79521: [90m 121 |[39m [36mfunction[39m 
+getTsNodeTranspiler(compilerOptions[33m,[39m 
+  build_check_11_utf8.txt:79522:tsNodeOptions[33m,[39m preferTsNode) {
+  build_check_11_utf8.txt:79523:[31m[1m>[22m[39m[90m 122 |[39m     
+[36mconst[39m { register } [33m=[39m 
+  build_check_11_utf8.txt:79524:require([32m'ts-node'[39m)[33m;[39m
+> build_check_11_utf8.txt:79540:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m'ts-node/esm'[39m
+  build_check_11_utf8.txt:79541:[0m [90m  99 |[39m         [36mif[39m 
+(module[33m.[39mregister [33m&&[39m 
+  build_check_11_utf8.txt:79542:packageIsInstalled([32m'ts-node/esm'[39m)) {
+  build_check_11_utf8.txt:79543: [90m 100 |[39m             [36mconst[39m url 
+[33m=[39m 
+  build_check_11_utf8.txt:79544:require([32m'node:url'[39m)[33m;[39m
+  build_check_11_utf8.txt:79545:[31m[1m>[22m[39m[90m 101 |[39m             
+module[33m.[39mregister(url[33m.[
+> build_check_11_utf8.txt:79566:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m('null' | <dynamic> | 
+  build_check_11_utf8.txt:79567:'undefined')[39m
+  build_check_11_utf8.txt:79568:[0m [90m 23 |[39m             
+([35m0[39m[33m,[39m 
+  build_check_11_utf8.txt:79569:plugins_1[33m.[39mregisterPluginTSTranspiler)()[33m
+;[39m
+  build_check_11_utf8.txt:79570: [90m 24 |[39m         }
+  build_check_11_utf8.txt:79571:[31m[1m>[22m[39m[90m 25 |[39m         
+[36mconst[39m module [33m=[39m 
+> build_check_11_utf8.txt:79589:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m<dynamic>[39m
+  build_check_11_utf8.txt:79590:[0m [90m 496 |[39m }
+  build_check_11_utf8.txt:79591: [90m 497 |[39m [36mfunction[39m 
+getInstalledPackageModuleVersion(pkg) {
+  build_check_11_utf8.txt:79592:[31m[1m>[22m[39m[90m 498 |[39m     
+[36mreturn[39m 
+  build_check_11_utf8.txt:79593:require(([35m0[39m[33m,[39m 
+path_1[33m.[39mjoin)(pkg[33m,[39m 
+  
+build_check_11_utf8.txt:79594:[32m'package.json'[39m))[33m.[39mversion[33m;[39m
+> build_check_11_utf8.txt:79618:[1m[31mModule not found[39m[22m: Can't resolve 
+[32m<dynamic>[39m
+  build_check_11_utf8.txt:79619:[0m [90m 153 |[39m [90m */[39m
+  build_check_11_utf8.txt:79620: [90m 154 |[39m [36mfunction[39m 
+  build_check_11_utf8.txt:79621:readModulePackageJsonWithoutFallbacks(moduleSpecifier
+[33m,[39m requirePaths 
+  build_check_11_utf8.txt:79622:[33m=[39m ([35m0[39m[33m,[39m 
+  build_check_11_utf8.txt:79623:installation_directory_1[33m.[39mgetNxRequirePaths)(
+)) {
+
+

@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ],
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/lib/*": ["src/app/lib/*"],
+      "@/constants/*": ["src/app/constants/*"],
+      "@gateway-workspace/database": ["../../libs/database/src/index.ts"]
+    }
+  }
+}

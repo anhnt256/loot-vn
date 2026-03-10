@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "allowJs": true,
+    "checkJs": false,
+    "paths": {
+      "@gateway-workspace/shared/constants": ["../../dist/libs/shared/constants/src/index.d.ts"],
+      "@fnet-gv-client": ["../prisma/generated/fnet-gv-client/index.d.ts"],
+      "@fnet-tp-client": ["../prisma/generated/fnet-tp-client/index.d.ts"]
+    }
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    }
+  ]
+}

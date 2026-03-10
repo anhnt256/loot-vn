@@ -1,0 +1,20 @@
+{
+  "name": "constants",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/constants/src",
+  "projectType": "library",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project constants --web",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/shared/constants",
+        "main": "libs/shared/constants/src/index.ts",
+        "tsConfig": "libs/shared/constants/tsconfig.lib.json",
+        "assets": ["libs/shared/constants/*.md"]
+      }
+    }
+  }
+}
