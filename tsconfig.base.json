@@ -36,6 +36,9 @@
       "@gateway-workspace/shared/utils": [
         "libs/shared/utils/src/index.ts"
       ],
+      "@gateway-workspace/shared/utils/*": [
+        "libs/shared/utils/src/*"
+      ],
       "@gateway-workspace/shared/constants": [
         "libs/shared/constants/src/index.ts"
       ]

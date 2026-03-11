@@ -46,6 +46,7 @@ export type {
   PromotionReward
 } from './lib/generated/prisma-client';
 
+export { PrismaClient, Prisma } from './lib/generated/prisma-client';
 export { PrismaClient as MainPrismaClient, Prisma as MainPrisma } from './lib/generated/prisma-client';
 export { PrismaClient as FnetGVPrismaClient, Prisma as FnetGVPrisma } from './lib/generated/fnet-gv-client';
 export { PrismaClient as FnetTPPrismaClient, Prisma as FnetTPPrisma } from './lib/generated/fnet-tp-client';

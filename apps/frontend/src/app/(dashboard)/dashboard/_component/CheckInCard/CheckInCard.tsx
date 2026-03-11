@@ -4,7 +4,7 @@ import { dayjs } from "@gateway-workspace/shared/utils";
 import { toast } from "sonner";
 import { StarFilled, StarOutlined } from "@ant-design/icons";
 import { Spin } from "antd";
-import { useAction } from "@gateway-workspace/shared/hooksuse-action";
+import { useAction } from "@gateway-workspace/shared/hooks";
 import { createCheckInResult } from "@gateway-workspace/shared/utils";
 import { CURRENT_USER } from "@gateway-workspace/shared/utils";
 

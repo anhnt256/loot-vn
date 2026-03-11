@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ChatWindow } from "@gateway-workspace/shared/uichat/ChatWindow";
+import { ChatWindow } from "@gateway-workspace/shared/ui";
 import { useLocalStorageValue } from "@gateway-workspace/shared/hooks";
 import { X, MessageCircle } from "lucide-react";
 import { useAdminChat } from "./AdminChatProvider";

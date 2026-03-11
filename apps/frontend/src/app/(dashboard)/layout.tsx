@@ -10,8 +10,8 @@ import { toast } from "sonner";
 import { dayjs } from "@gateway-workspace/shared/utils";
 import { CURRENT_USER } from "@gateway-workspace/shared/utils";
 import { useLocalStorageValue } from "@gateway-workspace/shared/hooks";
-import Feedback from "@gateway-workspace/shared/uiFeedback";
-import { ChatPanel } from "@gateway-workspace/shared/uichat/ChatPanel";
+import Feedback from "@gateway-workspace/shared/ui";
+import { ChatPanel } from "@gateway-workspace/shared/ui";
 
 const DashBoardLayout = ({ children }: { children: React.ReactNode }) => {
   const loginMutation = useLogout();

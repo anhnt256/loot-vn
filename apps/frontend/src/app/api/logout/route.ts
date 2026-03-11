@@ -1,4 +1,3 @@
-import apiClient from "@gateway-workspace/shared/utils";
 import { NextRequest, NextResponse } from "next/server";
 import { getCookie } from "cookies-next";
 import { ACCESS_TOKEN_KEY } from "@gateway-workspace/shared/utils";

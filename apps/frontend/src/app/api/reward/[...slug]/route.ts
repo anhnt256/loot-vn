@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 
-import apiClient from "@gateway-workspace/shared/utils";
 import { db } from "@gateway-workspace/database";
 import { cookies } from "next/headers";
 

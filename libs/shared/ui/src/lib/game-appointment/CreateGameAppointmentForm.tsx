@@ -6,8 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   CreateGameAppointmentSchema,
   CreateGameAppointmentInput,
-} from "../create-game-appointment/schema";
-import { createGameAppointmentAction } from "../create-game-appointment";
+} from "@gateway-workspace/shared/ui/schema";
+import { createGameAppointmentAction } from "@gateway-workspace/shared/ui";
 import { Button } from "@gateway-workspace/shared/ui";
 import { Input } from "@gateway-workspace/shared/ui";
 import { Label } from "@gateway-workspace/shared/ui";

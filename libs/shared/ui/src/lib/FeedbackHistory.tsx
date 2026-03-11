@@ -14,7 +14,7 @@ import {
   Star,
   Image as ImageIcon,
 } from "lucide-react";
-import dayjs from "@gateway-workspace/shared/utils";
+import { dayjs } from "@gateway-workspace/shared/utils";
 
 interface FeedbackItem {
   id: number;

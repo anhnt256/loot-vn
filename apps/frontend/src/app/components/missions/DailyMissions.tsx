@@ -108,7 +108,7 @@ export function DailyMissions({ className }: DailyMissionsProps) {
 
       // Demo token if none exists
       if (!token) {
-        const { signJWT } = await import("@/lib/jwt");
+        const { signJWT } = await import("@gateway-workspace/shared/utils");
         token = await signJWT({ userId: 2969, userName: "demo_user" });
         localStorage.setItem("token", token);
       }
@@ -363,7 +363,7 @@ export function DailyMissions({ className }: DailyMissionsProps) {
       let token = localStorage.getItem("token");
 
       if (!token) {
-        const { signJWT } = await import("@/lib/jwt");
+        const { signJWT } = await import("@gateway-workspace/shared/utils");
         token = await signJWT({ userId: 2969, userName: "demo_user" });
         localStorage.setItem("token", token);
       }

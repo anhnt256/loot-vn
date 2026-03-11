@@ -14,7 +14,6 @@ export * from './lib/electron';
 export * from './lib/event-reward-calculator';
 export * from './lib/event-reward-utils';
 export * from './lib/fetcher';
-export * from './lib/ffood-login';
 export * from './lib/ffood-shift-verify';
 export * from './lib/ffood-token-utils';
 export * from './lib/fnet-money-utils';

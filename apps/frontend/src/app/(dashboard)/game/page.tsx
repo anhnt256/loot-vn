@@ -9,7 +9,7 @@ import { Rules } from "./_component/Rules/Rules";
 import CircleSegments from "./_component/CirclePrize/CirclePrize";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetcher } from "@gateway-workspace/shared/utils";
-import { useAction } from "@gateway-workspace/shared/hooksuse-action";
+import { useAction } from "@gateway-workspace/shared/hooks";
 import { toast } from "sonner";
 import { createGameResult } from "@gateway-workspace/shared/utils";
 import { CURRENT_USER } from "@gateway-workspace/shared/utils";

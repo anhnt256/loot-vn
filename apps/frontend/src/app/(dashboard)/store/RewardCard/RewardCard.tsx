@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "@gateway-workspace/shared/ui";
 import { CURRENT_USER } from "@gateway-workspace/shared/utils";
-import { useAction } from "@gateway-workspace/shared/hooksuse-action";
+import { useAction } from "@gateway-workspace/shared/hooks";
 import { useLocalStorageValue } from "@gateway-workspace/shared/hooks";
 import { toast } from "sonner";
 import { createUserRewardMap } from "@gateway-workspace/shared/utils";

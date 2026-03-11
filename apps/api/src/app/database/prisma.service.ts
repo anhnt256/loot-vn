@@ -1,9 +1,13 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import {
   PrismaClient,
-  FnetGVPrismaClient,
-  FnetTPPrismaClient,
-} from '@gateway-workspace/database';
+} from '@gateway-workspace/database/prisma/prisma-client/index';
+import {
+  PrismaClient as FnetGVPrismaClient,
+} from '@gateway-workspace/database/prisma/fnet-gv-client/index';
+import {
+  PrismaClient as FnetTPPrismaClient,
+} from '@gateway-workspace/database/prisma/fnet-tp-client/index';
 
 @Injectable()
 // @ts-ignore: PrismaClient missing index signature

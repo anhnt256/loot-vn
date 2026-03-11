@@ -19,8 +19,8 @@ import {
   DownloadOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
-import RewardsTab from "../../../components/admin/RewardsTab";
-import PromotionCodesTab from "../../../components/admin/PromotionCodesTab";
+import RewardsTab from "@gateway-workspace/shared/ui";
+import PromotionCodesTab from "@gateway-workspace/shared/ui";
 import { useBranch } from "@gateway-workspace/shared/ui";
 
 const { TextArea } = Input;

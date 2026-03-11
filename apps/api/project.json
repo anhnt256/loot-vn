@@ -10,7 +10,10 @@
       "options": {
         "command": "webpack-cli build",
         "args": ["--node-env=production"],
-        "cwd": "apps/api"
+        "cwd": "apps/api",
+        "env": {
+          "NODE_OPTIONS": "--max-old-space-size=8192"
+        }
       },
       "configurations": {
         "development": {

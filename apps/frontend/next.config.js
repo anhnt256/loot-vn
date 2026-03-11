@@ -11,6 +11,17 @@ const nextConfig = {
   // Use this to set Nx-specific options
   // See: https://nx.dev/recipes/next/next-config-setup
   nx: {},
+  // Webpack config for fallback and general aliases
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        'playwright-core': false,
+        'playwright': false,
+      };
+    }
+    return config;
+  },
 };
 
 const plugins = [

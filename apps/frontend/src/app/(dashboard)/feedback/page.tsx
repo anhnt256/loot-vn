@@ -1,5 +1,5 @@
 import React from "react";
-import FeedbackHistory from "@gateway-workspace/shared/uiFeedbackHistory";
+import FeedbackHistory from "@gateway-workspace/shared/uiHistory";
 
 const FeedbackPage = () => {
   return (

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import dayjs from "@gateway-workspace/shared/utils";
+import { dayjs } from "@gateway-workspace/shared/utils";
 import { ChatMessage } from "@gateway-workspace/shared/hooks";
 
 interface MessageListProps {

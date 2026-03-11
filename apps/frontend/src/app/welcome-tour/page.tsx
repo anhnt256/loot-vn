@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import WelcomeTour from "@gateway-workspace/shared/uiWelcomeTour";
+import WelcomeTour from "@gateway-workspace/shared/ui";
 import { CURRENT_USER } from "@gateway-workspace/shared/utils";
 import { dayjs } from "@gateway-workspace/shared/utils";
 

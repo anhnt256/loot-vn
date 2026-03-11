@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@gateway-workspace/database";
 import { getBranchFromCookie } from "@gateway-workspace/shared/utils";
-import { loginAndGetToken } from "@gateway-workspace/shared/utils";
+import { loginAndGetToken } from "@gateway-workspace/shared/utils/lib/ffood-login";
 import {
   getFfoodTokenCookieName,
   getFfoodExpiredCookieName,
