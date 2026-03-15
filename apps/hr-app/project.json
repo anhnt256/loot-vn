@@ -1,0 +1,32 @@
+{
+  "name": "hr-app",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/hr-app/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/vite:build",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/apps/hr-app"
+      }
+    },
+    "serve": {
+      "executor": "@nx/vite:dev-server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "hr-app:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "hr-app:build:development"
+        },
+        "production": {
+          "buildTarget": "hr-app:build:production"
+        }
+      }
+    }
+  }
+}

@@ -13,10 +13,9 @@ interface LoginParams {
   machineName?: string;
   isAdmin?: boolean;
   password?: string;
-  loginMethod?: "mac" | "account";
+  loginMethod?: "mac" | "account" | "staff";
   macAddress?: string;
   currentMacAddress?: string;
-  branch?: string;
 }
 
 export const postLogin = async ({
@@ -27,7 +26,6 @@ export const postLogin = async ({
   loginMethod,
   macAddress,
   currentMacAddress,
-  branch,
 }: LoginParams): Promise<any> => {
   const result = await fetch("api/login", {
     method: "POST",
@@ -35,7 +33,7 @@ export const postLogin = async ({
       "Content-Type": "application/json",
     },
     credentials: "include",
-    body: JSON.stringify({ userName, machineName, isAdmin, password, loginMethod, macAddress, currentMacAddress, branch }),
+    body: JSON.stringify({ userName, machineName, isAdmin, password, loginMethod, macAddress, currentMacAddress }),
   });
 
   const resultText = await result.text();
@@ -94,7 +92,7 @@ export const postLogin = async ({
     return {
       statusCode: statusCode,
       data: null,
-      message: "Thông tin tài khoản hoặc chi nhánh không đúng. Vui lòng kiểm tra và thử lại!",
+      message: "Thông tin tài khoản không đúng. Vui lòng kiểm tra và thử lại!",
     };
   }
 };
@@ -141,33 +139,23 @@ export const postLogout = async (): Promise<any> => {
 
     // Clear cookies và data tương ứng
     if (isAdminLogout) {
-      // Admin logout: chỉ clear token và các thông tin liên quan
       deleteCookie(ACCESS_TOKEN_KEY);
       const loginType = getCookie("loginType");
       if (loginType === "username") {
         deleteCookie("loginType");
-        deleteCookie("branch");
-      } else {
-        deleteCookie("loginType");
       }
       clearAdminData();
     } else if (isStaffLogout) {
-      // Staff logout: chỉ clear staffToken và các thông tin liên quan
       deleteCookie("staffToken");
       const loginType = getCookie("loginType");
       if (loginType === "account") {
         deleteCookie("loginType");
-        deleteCookie("branch");
-      } else {
-        deleteCookie("loginType");
       }
       clearStaffData();
     } else {
-      // Fallback: clear tất cả (backward compatibility)
       deleteCookie(ACCESS_TOKEN_KEY);
       deleteCookie("staffToken");
       deleteCookie("loginType");
-      deleteCookie("branch");
       clearUserData();
     }
     
@@ -190,14 +178,14 @@ export const postLogout = async (): Promise<any> => {
   }
 };
 
-export const verifyStaffUsername = async (userName: string, branch: string): Promise<any> => {
+export const verifyStaffUsername = async (userName: string): Promise<any> => {
   const result = await fetch("api/staff/verify-username", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     credentials: "include",
-    body: JSON.stringify({ userName, branch }),
+    body: JSON.stringify({ userName }),
   });
 
   const resultText = await result.text();
@@ -232,14 +220,14 @@ export const verifyStaffUsername = async (userName: string, branch: string): Pro
   }
 };
 
-export const updateStaffPassword = async (staffId: number, newPassword: string, branch: string): Promise<any> => {
+export const updateStaffPassword = async (staffId: number, newPassword: string): Promise<any> => {
   const result = await fetch("api/staff/update-password", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     credentials: "include",
-    body: JSON.stringify({ staffId, newPassword, branch }),
+    body: JSON.stringify({ staffId, newPassword }),
   });
 
   const resultText = await result.text();

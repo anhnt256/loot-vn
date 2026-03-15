@@ -1,7 +1,7 @@
 generator client {
   provider      = "prisma-client-js"
-  output        = "./generated/prisma-client"
-  binaryTargets = ["native", "debian-openssl-3.0.x"]
+  output        = "../../src/lib/generated/prisma-client"
+  binaryTargets = ["native"]
 }
 
 datasource db {
@@ -39,7 +39,6 @@ model CheckInResult {
   id        Int      @id @default(autoincrement())
   userId    Int
   createdAt DateTime @default(now())
-  branch    String?  @default("GO_VAP")
 }
 
 model CheckInItem {
@@ -102,7 +101,6 @@ model User {
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   magicStone        Int                @default(0)
-  branch            String
   totalPayment      Float?             @db.Float
   note              String?            @default("") @db.VarChar(1000)
   isUseApp          Boolean            @default(true)
@@ -129,7 +127,6 @@ model UserMissionCompletion {
   id          Int      @id @default(autoincrement())
   userId      Int
   missionId   Int
-  branch      String   @default("GO_VAP")
   completedAt DateTime @default(now())
   actualValue Float    @default(0)
   createdAt   DateTime @default(now())
@@ -137,7 +134,6 @@ model UserMissionCompletion {
   mission     Mission  @relation(fields: [missionId], references: [id])
 
   @@index([userId])
-  @@index([branch])
 }
 
 model UserRewardMap {
@@ -149,7 +145,6 @@ model UserRewardMap {
   createdAt       DateTime?            @default(now())
   updatedAt       DateTime?            @updatedAt
   isUsed          Boolean              @default(false)
-  branch          String?              @default("GO_VAP")
   note            String?              @db.Text
   status          UserRewardMapStatus? @default(INITIAL)
   type            UserRewardMap_type   @default(STARS)
@@ -179,7 +174,6 @@ model PromotionCode {
   name               String?           @db.VarChar(45)
   code               String?           @db.VarChar(45)
   value              Int?
-  branch             String?           @db.VarChar(45)
   isUsed             Boolean?          @default(false)
   createdAt          DateTime?         @default(now())
   updatedAt          DateTime?         @updatedAt
@@ -200,7 +194,6 @@ model UserStarHistory {
   type         UserStarHistoryType?
   createdAt    DateTime?            @default(now())
   targetId     Int?
-  branch       String?              @db.VarChar(45)
   gameResultId Int?
   gameResult   GameResult?          @relation(fields: [gameResultId], references: [id])
 
@@ -222,7 +215,6 @@ model Computer {
   fingerprintId String
   ip            String?
   name          String          @db.VarChar(45)
-  branch        String          @db.VarChar(45)
   status        Int
   localIp       String?
   devices       Device[]
@@ -238,7 +230,6 @@ model Staff {
   isAdmin                  Boolean          @default(false)
   createdAt                DateTime         @default(now())
   updatedAt                DateTime
-  branch                   String           @default("GO_VAP")
   address                  String?          @db.Text
   dateOfBirth              DateTime?
   email                    String?          @db.VarChar(255)
@@ -263,6 +254,9 @@ model Staff {
   morningHandoverReports   HandoverReport[] @relation("MorningStaff")
   afternoonHandoverReports HandoverReport[] @relation("AfternoonStaff")
   eveningHandoverReports   HandoverReport[] @relation("EveningStaff")
+  staffViolations          StaffViolation[]
+  workShiftId              Int?             @map("work_shift_id")
+  workShift                WorkShift?       @relation(fields: [workShiftId], references: [id])
 }
 
 model StaffTimeTracking {
@@ -282,14 +276,13 @@ model WorkShift {
   name        String   @db.VarChar(255)
   startTime   DateTime @db.Time(0)
   endTime     DateTime @db.Time(0)
-  branch      String   @default("GO_VAP") @db.VarChar(50)
   FnetStaffId Int?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   isOvernight Boolean  @default(false)
   ffoodId     String?  @map("ffood_id") @db.Char(36)
+  staffs      Staff[]
 
-  @@index([branch])
   @@index([name])
   @@map("WorkShift")
 }
@@ -297,7 +290,6 @@ model WorkShift {
 model WorkShiftRevenueReport {
   id                  Int              @id @default(autoincrement())
   reportDate          DateTime         @db.Date
-  branch              String           @db.VarChar(50)
   shift               ShiftRevenueType
   totalFood           Decimal          @default(0) @db.Decimal(12, 0)
   deduction           Decimal          @default(0) @db.Decimal(12, 0)
@@ -311,24 +303,19 @@ model WorkShiftRevenueReport {
   createdAt           DateTime         @default(now())
   updatedAt           DateTime         @updatedAt
 
-  @@unique([reportDate, branch, shift])
-  @@index([branch])
   @@index([reportDate])
   @@map("WorkShiftRevenueReport")
 }
 
 model FraudLoginAlert {
   id          Int      @id @default(autoincrement())
-  branch      String   @db.VarChar(50)
   serverLogId Int?
   actor       String   @db.VarChar(100)
   loginAt     DateTime
   note        String?  @db.VarChar(500)
   createdAt   DateTime @default(now())
 
-  @@index([branch])
   @@index([loginAt])
-  @@index([branch, serverLogId])
   @@map("FraudLoginAlert")
 }
 
@@ -397,11 +384,9 @@ model ManagerIncomeExpense {
   reason          String   @db.VarChar(255)
   description     String?  @db.Text
   transactionDate DateTime
-  branch          String   @default("GO_VAP") @db.VarChar(50)
   createdBy       Int
   createdAt       DateTime @default(now())
 
-  @@index([branch])
   @@index([transactionDate])
   @@index([type])
   @@index([createdBy])
@@ -418,7 +403,6 @@ model GiftRound {
   expiredAt  DateTime?
   isUsed     Boolean   @default(false)
   updatedAt  DateTime  @default(now())
-  branch     String    @default("GO_VAP")
   usedAmount Int       @default(0)
 }
 
@@ -509,7 +493,6 @@ model UserBattlePass {
   totalSpent Float            @default(0)
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @updatedAt
-  branch     String
   season     BattlePassSeason @relation(fields: [seasonId], references: [id])
 
   @@index([userId])
@@ -523,11 +506,9 @@ model UserBattlePassReward {
   seasonId  Int
   rewardId  Int
   claimedAt DateTime @default(now())
-  branch    String   @default("GO_VAP")
 
   @@index([seasonId])
   @@index([userId])
-  @@index([branch])
 }
 
 model BattlePassPremiumPackage {
@@ -576,7 +557,6 @@ model BattlePassPremiumOrder {
   approvedAt DateTime?
   approvedBy Int?
   note       String?
-  branch     String      @db.VarChar(45)
 
   @@map("BattlePassPremiumOrder")
 }
@@ -586,7 +566,6 @@ model ChatMessage {
   content     String   @db.Text
   userId      Int?
   machineName String   @db.VarChar(255)
-  branch      String   @db.VarChar(45)
   createdAt   DateTime @default(now())
   staffId     Int?
 
@@ -615,7 +594,6 @@ model UserBirthdayProgress {
   id         Int          @id @default(autoincrement())
   userId     Int
   tierId     Int
-  branch     String       @db.VarChar(45)
   isClaimed  Boolean      @default(false)
   claimedAt  DateTime?
   totalSpent Int          @default(0)
@@ -623,16 +601,13 @@ model UserBirthdayProgress {
   updatedAt  DateTime     @updatedAt
   tier       BirthdayTier @relation(fields: [tierId], references: [id])
 
-  @@unique([userId, tierId, branch])
   @@index([userId])
-  @@index([branch])
   @@map("UserBirthdayProgress")
 }
 
 model BirthdayTransaction {
   id              Int                     @id @default(autoincrement())
   userId          Int
-  branch          String                  @db.VarChar(45)
   amount          Int
   tierId          Int?
   transactionType BirthdayTransactionType
@@ -640,7 +615,6 @@ model BirthdayTransaction {
   createdAt       DateTime                @default(now())
 
   @@index([userId])
-  @@index([branch])
   @@index([createdAt])
   @@map("BirthdayTransaction")
 }
@@ -657,7 +631,6 @@ model Report {
   id              Int            @id @default(autoincrement())
   date            DateTime
   shift           Shift
-  branch          String
   fileUrl         String         @db.LongText
   note            String?
   counterStaffId  Int
@@ -675,7 +648,6 @@ model HandoverReport {
   id                       Int                @id @default(autoincrement())
   date                     DateTime
   reportType               HandoverReportType
-  branch                   String             @default("GO_VAP")
   note                     String?
   createdAt                DateTime           @default(now())
   updatedAt                DateTime           @updatedAt
@@ -748,7 +720,6 @@ model Feedback {
   status      FeedbackStatus @default(SUBMITTED)
   response    String?        @db.Text
   stars       Int?           @default(0)
-  branch      String         @default("GO_VAP")
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
   computerId  Int?
@@ -757,7 +728,6 @@ model Feedback {
 
   @@index([userId])
   @@index([computerId])
-  @@index([branch])
   @@index([status])
   @@index([createdAt])
   @@index([category])
@@ -767,7 +737,6 @@ model Feedback {
 model FnetHistory {
   id           Int      @id @default(autoincrement())
   userId       Int
-  branch       String
   oldSubMoney  Float
   newSubMoney  Float
   createdAt    DateTime @default(now())
@@ -779,7 +748,6 @@ model FnetHistory {
   newMainMoney Float?
 
   @@index([userId])
-  @@index([branch])
   @@index([targetId])
   @@index([type])
   @@index([createdAt])
@@ -790,14 +758,12 @@ model PromotionReward {
   id         Int      @id @default(autoincrement())
   name       String
   value      Int
-  branch     String
   quantity   Int
   isActive   Boolean  @default(true)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   starsValue Int
 
-  @@index([branch])
   @@index([isActive])
 }
 
@@ -822,7 +788,6 @@ model GameAppointmentTier {
 model GameAppointment {
   id                String                  @id @default(cuid())
   creatorId         Int
-  branch            String                  @db.VarChar(50)
   title             String                  @db.VarChar(255)
   description       String?                 @db.Text
   game              String                  @db.VarChar(100)
@@ -844,7 +809,6 @@ model GameAppointment {
   rewards           GameAppointmentReward[]
 
   @@index([creatorId])
-  @@index([branch])
   @@index([status])
   @@index([startTime])
   @@map("GameAppointment")
@@ -854,7 +818,6 @@ model GameAppointmentMember {
   id             String          @id @default(cuid())
   appointmentId  String
   userId         Int
-  branch         String          @db.VarChar(50)
   lockedAmount   Decimal         @db.Decimal(10, 2)
   status         String          @default("joined") @db.VarChar(20)
   joinedAt       DateTime        @default(now())
@@ -872,7 +835,6 @@ model GameAppointmentReward {
   id            String          @id @default(cuid())
   appointmentId String
   userId        Int
-  branch        String          @db.VarChar(50)
   status        String          @default("pending") @db.VarChar(20)
   distributedAt DateTime?
   createdAt     DateTime        @default(now())
@@ -909,7 +871,6 @@ model Event {
   createdBy               Int?
   approvedBy              Int?
   approvedAt              DateTime?
-  branch                  String             @default("GO_VAP")
   isActive                Boolean            @default(true)
   createdAt               DateTime           @default(now())
   updatedAt               DateTime           @updatedAt
@@ -920,7 +881,6 @@ model Event {
 
   @@index([status])
   @@index([type])
-  @@index([branch])
   @@index([startDate])
   @@index([endDate])
   @@map("Event")
@@ -930,7 +890,6 @@ model EventParticipant {
   id                Int               @id @default(autoincrement())
   eventId           String
   userId            Int
-  branch            String
   status            ParticipantStatus @default(REGISTERED)
   registeredAt      DateTime          @default(now())
   participatedAt    DateTime?
@@ -941,7 +900,6 @@ model EventParticipant {
   event             Event             @relation(fields: [eventId], references: [id])
   user              User?             @relation(fields: [userId], references: [id])
 
-  @@unique([eventId, userId, branch])
   @@index([eventId])
   @@index([userId])
   @@index([status])
@@ -996,12 +954,9 @@ model FfoodCredential {
   password  String    @db.VarChar(500)
   token     String?   @db.Text
   expired   DateTime? @db.DateTime(0)
-  branch    String    @db.VarChar(50)
   createdAt DateTime  @default(now()) @db.DateTime(0)
   updatedAt DateTime  @updatedAt @db.DateTime(0)
   shopId    String?   @map("shop_id") @db.VarChar(100)
-
-  @@index([branch])
 }
 
 model MomoCredential {
@@ -1012,12 +967,9 @@ model MomoCredential {
   password    String    @db.VarChar(500)
   token       String?   @db.Text
   expired     DateTime? @db.DateTime(0)
-  branch      String    @db.VarChar(50)
   createdAt   DateTime  @default(now()) @db.DateTime(0)
   updatedAt   DateTime  @updatedAt @db.DateTime(0)
   merchant_id Int?
-
-  @@index([branch])
 }
 
 enum ShiftRevenueType {
@@ -1173,4 +1125,72 @@ enum RewardType {
 enum UserRewardMap_type {
   STARS
   EVENT
+}
+
+model RewardPunishRule {
+  id            Int              @id @default(autoincrement())
+  name          String           @db.VarChar(255)
+  type          RewardPunishType
+  workShift     String?          @map("work_shift") @db.VarChar(50)
+  maxViolations Int              @default(5) @map("max_violations")
+  isActive      Boolean          @default(true) @map("is_active")
+  resetCycle    ResetCycle       @default(MONTHLY) @map("reset_cycle")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  severities RuleSeverity[]
+  violations StaffViolation[]
+
+  @@map("reward_punish_rules")
+}
+
+model RuleSeverity {
+  id               Int            @id @default(autoincrement())
+  ruleId           Int            @map("rule_id")
+  occurrenceNumber Int            @map("occurrence_number")
+  actionType       RuleActionType @map("action_type")
+  amount           Decimal?       @db.Decimal(12, 0)
+
+  rule RewardPunishRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+
+  @@index([ruleId])
+  @@map("rule_severities")
+}
+
+model StaffViolation {
+  id               Int      @id @default(autoincrement())
+  staffId          Int      @map("staff_id")
+  ruleId           Int      @map("rule_id")
+  violationDate    DateTime @default(now()) @map("violation_date")
+  occurrenceNumber Int      @map("occurrence_number")
+  amount           Decimal? @db.Decimal(12, 0)
+  note             String?  @db.Text
+
+  rule  RewardPunishRule @relation(fields: [ruleId], references: [id])
+  staff Staff            @relation(fields: [staffId], references: [id])
+
+  @@index([staffId])
+  @@index([ruleId])
+  @@index([violationDate])
+  @@map("staff_violations")
+}
+
+enum RewardPunishType {
+  REWARD
+  PUNISH
+}
+
+enum RuleActionType {
+  WARNING
+  MONEY
+  DISMISSAL
+}
+
+enum ResetCycle {
+  DAILY
+  MONTHLY
+  QUARTERLY
+  YEARLY
+  NEVER
 }

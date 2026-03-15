@@ -1,5 +1,11 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "parallel": 1,
+  "useDaemonProcess": true,
+  "tui": {
+    "enabled": false
+  },
+  "terminalOutput": "full",
   "defaultBase": "master",
   "namedInputs": {
     "default": [

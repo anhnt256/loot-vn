@@ -53,7 +53,8 @@
       "dependsOn": ["build"],
       "options": {
         "buildTarget": "api:build",
-        "runBuildTargetDependencies": false
+        "runBuildTargetDependencies": false,
+        "runtimeArgs": ["--max-old-space-size=8192"]
       },
       "configurations": {
         "development": {

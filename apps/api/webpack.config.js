@@ -9,6 +9,7 @@ module.exports = {
       devtoolModuleFilenameTemplate: '[absolute-resource-path]',
     }),
   },
+  ignoreWarnings: [/Failed to parse source map/],
   plugins: [
     new NxAppWebpackPlugin({
       target: 'node',
@@ -20,6 +21,17 @@ module.exports = {
       outputHashing: 'none',
       generatePackageJson: true,
       sourceMap: true,
+      memoryLimit: 8192,
     }),
+  ],
+  externals: [
+    function ({ context, request }, callback) {
+      if (request && request.startsWith('@gateway-workspace/')) {
+        // Bundle our workspace libraries instead of ignoring them
+        return callback();
+      }
+      // Let Nx handle the rest
+      callback(null, undefined);
+    },
   ],
 };

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLocalStorageValue } from "./useLocalStorageValue";
-import { CURRENT_USER } from "@gateway-workspace/shared/utilstoken.constant";
+import { CURRENT_USER } from "@gateway-workspace/shared/utils";
 import {
   WorkShift,
   getCurrentShift,

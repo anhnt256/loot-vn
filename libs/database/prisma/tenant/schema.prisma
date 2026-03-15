@@ -1,0 +1,185 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../../src/lib/generated/tenant-client"
+  binaryTargets = ["native"]
+}
+
+datasource db {
+  provider     = "mysql"
+  url          = env("DATABASE_GMS_URL")
+  relationMode = "prisma"
+}
+
+model User {
+  id        String    @id @default(uuid()) @db.Char(36)
+  username  String    @unique @db.VarChar(255)
+  password  String    @db.VarChar(255)
+  email     String?   @db.VarChar(255)
+  isActive  Boolean   @default(true) @map("is_active")
+  
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(0)
+  createdBy String?   @map("created_by") @db.Char(36)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamp(0)
+  updatedBy String?   @map("updated_by") @db.Char(36)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamp(0)
+  deletedBy String?   @map("deleted_by") @db.Char(36)
+
+  @@index([username])
+  @@map("users")
+}
+
+model ApiKey {
+  id           String    @id @default(uuid()) @db.Char(36)
+  name         String?   @db.VarChar(255)
+  keyId        String    @unique @map("key_id") @db.VarChar(255)
+  secretHash   String    @map("secret_hash") @db.VarChar(255)
+  userId       String?   @map("user_id") @db.Char(36)
+  tenantId     String    @map("tenant_id") @db.Char(36)
+  scopes       Json?
+  services     Json?
+  expiresAt    DateTime? @map("expires_at") @db.Timestamp(0)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp(0)
+  createdBy    String?   @map("created_by") @db.Char(36)
+  updatedBy    String?   @map("updated_by") @db.Char(36)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamp(0)
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamp(0)
+  deletedBy    String?   @map("deleted_by") @db.Char(36)
+  revokedBy    String?   @map("revoked_by") @db.Char(36)
+  revokedAt    DateTime? @map("revoked_at") @db.Timestamp(0)
+
+  @@map("api_keys")
+}
+
+model FeatureFlag {
+  id          String    @id @default(uuid()) @db.Char(36)
+  key         String    @db.VarChar(255)
+  description String?   @db.Text
+  tenantId    String    @map("tenant_id") @db.VarChar(255)
+  enabled     Boolean   @default(true)
+  target      Json?
+  metadata    Json?
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamp(0)
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamp(0)
+  created_by  String?   @db.VarChar(255)
+  updated_by  String?   @db.VarChar(255)
+
+  @@map("feature_flags")
+}
+
+model TenantApiKey {
+  id         String    @id @default(uuid()) @db.Char(36)
+  name       String    @db.VarChar(255)
+  apiKey     String    @map("api_key") @db.VarChar(255)
+  tenantId   String    @map("tenant_id") @db.Char(36)
+  entryCode  String    @map("entry_code") @db.VarChar(255)
+  passCode   String    @map("pass_code") @db.VarChar(255)
+  attributes Json?
+  createdBy  String?   @map("created_by") @db.VarChar(255)
+  updatedBy  String?   @map("updated_by") @db.VarChar(255)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamp(0)
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamp(0)
+
+  @@map("tenant_api_keys")
+}
+
+model TenantConfiguration {
+  id             String    @id @default(uuid()) @db.Char(36)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamp(0)
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamp(0)
+  createdBy      String?   @map("created_by") @db.VarChar(255)
+  updatedBy      String?   @map("updated_by") @db.VarChar(255)
+  name           String    @db.VarChar(100)
+  description    String?   @db.VarChar(500)
+  tenantId       String    @map("tenant_id") @db.Char(36)
+  serviceType    String?   @map("service_type") @db.VarChar(255)
+  metadata       Json?
+  isDefault      Boolean   @default(false) @map("is_default")
+  isActive       Boolean   @default(true) @map("is_active")
+  altName        String?   @map("alt_name") @db.VarChar(100)
+  altDescription String?   @map("alt_description") @db.VarChar(500)
+
+  @@map("tenant_configurations")
+}
+
+// Organization (Chủ sở hữu)
+model Organization {
+  id          String   @id @default(uuid()) @db.Char(36)
+  name        String   @db.VarChar(255) // VD: Tập đoàn A
+  description String? @db.VarChar(500)
+  status      String   @default("Active") @db.VarChar(50)
+  rootDomain  String?  @db.VarChar(255) // Domain gốc, VD: loot.vn
+
+  // Relations
+  tenants     Tenant[]
+  
+  createdAt DateTime @default(now()) @map("createdAt") @db.Timestamp(0)
+  updatedAt DateTime @updatedAt @map("updatedAt") @db.Timestamp(0)
+  deletedAt DateTime? @map("deletedAt") @db.Timestamp(0)
+
+  @@map("Organization")
+}
+
+model Tenant {
+  id                 String    @id @default(uuid()) @db.Char(36)
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamp(0)
+  deletedAt          DateTime? @map("deleted_at") @db.Timestamp(0)
+  createdBy          String?   @map("created_by") @db.VarChar(255)
+  updatedBy          String?   @map("updated_by") @db.VarChar(255)
+  name               String    @db.VarChar(100)
+  description        String?   @db.VarChar(500)
+  domain             String?   @db.VarChar(200)
+  tenantId           String    @map("tenant_id") @db.VarChar(100)
+  clients            Json?
+  logo               Json?
+  altName            String?   @map("alt_name") @db.VarChar(100)
+  altDescription     String?   @map("alt_description") @db.VarChar(500)
+  isWorkflowEnabled Boolean   @default(false) @map("is_workflow_enabled")
+  apiKey            String?   @map("api_key") @db.VarChar(255)
+
+  // Cập nhật thêm cột Org
+  domainPrefix       String?   @map("domainPrefix") @db.VarChar(50) // VD: q1, q7
+  organizationId     String?   @map("organizationId") @db.Char(36)
+  
+  // Relations
+  organization       Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+  @@map("tenants")
+}
+
+model Request {
+  id        String    @id @default(uuid()) @db.Char(36)
+  tenantId  String    @map("tenant_id") @db.Char(36)
+  userId    String    @map("user_id") @db.Char(36)
+  managerId String?   @map("manager_id") @db.Char(36)
+  
+  type      String    @db.VarChar(50) // e.g., 'late_arrival', 'shift_change', 'salary_advance'
+  status    RequestStatus @default(PENDING)
+  
+  // Dynamic metadata based on 'type'
+  metadata  Json?
+  
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamp(0)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamp(0)
+  
+  createdBy String?   @map("created_by") @db.Char(36)
+  updatedBy String?   @map("updated_by") @db.Char(36)
+  deletedBy String?   @map("deleted_by") @db.Char(36)
+
+  @@index([tenantId])
+  @@index([userId])
+  @@map("requests")
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  
+  @@map("request_status")
+}

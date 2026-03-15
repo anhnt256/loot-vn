@@ -1,0 +1,63 @@
+# Build Stage
+FROM node:20-bookworm AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    openssl \
+    tzdata \
+    && ln -fs /usr/share/zoneinfo/Asia/Ho_Chi_Minh /etc/localtime \
+    && dpkg-reconfigure -f noninteractive tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy workspace configuration
+COPY package*.json ./
+COPY nx.json ./
+COPY tsconfig.base.json ./
+
+# Copy Prisma schema
+COPY libs/database/prisma ./libs/database/prisma
+
+# Install dependencies (using --legacy-peer-deps if needed, or just npm ci)
+RUN npm ci
+
+# Copy the rest of the source code
+COPY . .
+
+# Argument for the app name to build
+ARG APP_NAME
+ARG TENANT_PREFIX=""
+ENV APP_NAME=${APP_NAME}
+ENV TENANT_PREFIX=${TENANT_PREFIX}
+
+# Build the specified application
+# Use TENANT_PREFIX in build commands if necessary (e.g. for environment variables)
+RUN npx nx build ${APP_NAME} --production
+
+# Production Stage for Node apps (API / Next.js)
+FROM node:20-bookworm AS runner
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    openssl \
+    tzdata \
+    && ln -fs /usr/share/zoneinfo/Asia/Ho_Chi_Minh /etc/localtime \
+    && dpkg-reconfigure -f noninteractive tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+ARG APP_NAME
+ENV APP_NAME=${APP_NAME}
+ENV NODE_ENV=production
+
+# Copy results from builder
+COPY --from=builder /app/dist/apps/${APP_NAME} ./dist/apps/${APP_NAME}
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package*.json ./
+
+# For Next.js apps, we might need public and other files
+# For simplicity, we can copy them if they exist or handle per-app
+
+CMD ["sh", "-c", "if [ -f \"dist/apps/${APP_NAME}/main.js\" ]; then node dist/apps/${APP_NAME}/main.js; else npm start; fi"]

@@ -27,14 +27,14 @@
       "@gateway-workspace/database/prisma/*": [
         "libs/database/src/lib/generated/*"
       ],
-      "@gateway-workspace/shared/ui": [
-        "libs/shared/ui/src/index.ts"
-      ],
       "@gateway-workspace/shared/hooks": [
         "libs/shared/hooks/src/index.ts"
       ],
       "@gateway-workspace/shared/utils": [
         "libs/shared/utils/src/index.ts"
+      ],
+      "@gateway-workspace/shared/utils/actions": [
+        "libs/shared/utils/src/actions.ts"
       ],
       "@gateway-workspace/shared/utils/*": [
         "libs/shared/utils/src/*"

@@ -46,7 +46,31 @@ export type {
   PromotionReward
 } from './lib/generated/prisma-client';
 
+export { 
+  Shift,
+  ReportDetailType,
+  ShiftRevenueType,
+  HandoverReportType,
+  Staff_gender,
+  Staff_staffType,
+  MissionType,
+  UserRewardMapStatus,
+  UserRewardMap_type,
+  UserStarHistoryType,
+  DeviceStatus,
+  OrderStatus,
+  PromotionType,
+  DiscountType,
+  BirthdayTransactionType,
+  FeedbackType,
+  FeedbackStatus,
+  ResetCycle,
+  RewardPunishType,
+  RuleActionType
+} from './lib/generated/prisma-client';
+
 export { PrismaClient, Prisma } from './lib/generated/prisma-client';
 export { PrismaClient as MainPrismaClient, Prisma as MainPrisma } from './lib/generated/prisma-client';
 export { PrismaClient as FnetGVPrismaClient, Prisma as FnetGVPrisma } from './lib/generated/fnet-gv-client';
 export { PrismaClient as FnetTPPrismaClient, Prisma as FnetTPPrisma } from './lib/generated/fnet-tp-client';
+export { PrismaClient as TenantPrismaClient, Prisma as TenantPrisma } from './lib/generated/tenant-client';

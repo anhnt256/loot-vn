@@ -9,11 +9,54 @@
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/libs/database",
+        "outputPath": "libs/database/dist",
         "tsConfig": "libs/database/tsconfig.lib.json",
         "packageJson": "libs/database/package.json",
         "main": "libs/database/src/index.ts",
-        "assets": ["libs/database/*.md"]
+        "assets": [
+          "libs/database/*.md",
+          {
+            "input": "libs/database/src/lib",
+            "glob": "generated/**/*",
+            "output": "src/lib"
+          }
+        ]
+      }
+    },
+    "generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "npx prisma generate --schema libs/database/prisma/main/schema.prisma",
+          "npx prisma generate --schema libs/database/prisma/tenant/schema.prisma",
+          "npx prisma generate --schema libs/database/prisma/fnet/schema.prisma",
+          "npx prisma generate --schema libs/database/prisma/fnet/schemaTP.prisma"
+        ],
+        "parallel": false
+      }
+    },
+    "generate-tenant": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx prisma generate --schema libs/database/prisma/tenant/schema.prisma"
+      }
+    },
+    "migrate-tenant": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx prisma migrate dev --name init --schema libs/database/prisma/tenant/schema.prisma"
+      }
+    },
+    "generate-new": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx prisma generate --schema libs/database/prisma/new/schema.prisma"
+      }
+    },
+    "migrate-new": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx prisma migrate dev --name init --schema libs/database/prisma/new/schema.prisma"
       }
     }
   }

@@ -1,3 +1,5 @@
+"use server";
+
 import { PrismaClient as MainPrismaClient } from "./generated/prisma-client";
 import {
   PrismaClient as FnetGVPrismaClient,

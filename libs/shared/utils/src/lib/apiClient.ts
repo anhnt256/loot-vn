@@ -1,4 +1,4 @@
-import { ACCESS_TOKEN_KEY } from "@gateway-workspace/shared/utils";
+import { ACCESS_TOKEN_KEY } from "./constants/token.constant";
 import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,

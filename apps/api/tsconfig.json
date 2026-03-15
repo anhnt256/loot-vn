@@ -13,7 +13,12 @@
     "paths": {
       "@/lib/*": ["src/app/lib/*"],
       "@/constants/*": ["src/app/constants/*"],
-      "@gateway-workspace/database": ["../../libs/database/src/index.ts"]
+      "@gateway-workspace/database": ["../../libs/database/src/index.ts"],
+      "@gateway-workspace/database/prisma/*": [
+        "../../libs/database/src/lib/generated/*"
+      ],
+      "@gateway-workspace/shared/*": ["../../libs/shared/*/src/index.ts"],
+      "@gateway-workspace/shared/utils/*": ["../../libs/shared/utils/src/*"]
     }
   }
 }

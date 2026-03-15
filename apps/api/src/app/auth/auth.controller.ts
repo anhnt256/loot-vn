@@ -15,8 +15,7 @@ export class AuthController {
 
   @Post('login')
   async login(@Body() body: any, @Req() req: any, @Res() res: Response) {
-    const branchFromCookie = req.cookies['branch'] || 'GoVap';
-    const result: any = await this.authService.login(body, branchFromCookie);
+    const result: any = await this.authService.login(body);
 
     if (result.requirePasswordReset) {
       return res.status(403).json({
@@ -26,12 +25,8 @@ export class AuthController {
       });
     }
 
-    const isAdmin = result.role === 'admin' || result.userId === -99;
-    const tokenCookieName = isAdmin
-      ? 'token'
-      : body.loginMethod === 'account'
-        ? 'staffToken'
-        : 'token';
+    const isAdmin = result.role === 'admin' || result.isAdmin === true;
+    const tokenCookieName = isAdmin ? 'token' : 'staffToken';
 
     res.cookie(tokenCookieName, result.token, {
       maxAge: 86400 * 1000,
@@ -48,10 +43,9 @@ export class AuthController {
       });
     }
 
-    res.cookie('branch', result.branch, { maxAge: 86400 * 1000, path: '/' });
-
     return res.json({
       ...result,
+      success: true,
       statusCode: 200,
       message: 'Login Success',
     });
@@ -77,19 +71,16 @@ export class AuthController {
       res.clearCookie('token');
       if (loginType === 'username') {
         res.clearCookie('loginType');
-        res.clearCookie('branch');
       }
     } else if (isStaffLogout) {
       res.clearCookie('staffToken');
       if (loginType === 'account') {
         res.clearCookie('loginType');
-        res.clearCookie('branch');
       }
     } else {
       res.clearCookie('token');
       res.clearCookie('staffToken');
       res.clearCookie('loginType');
-      res.clearCookie('branch');
     }
 
     return res.json({ success: true });

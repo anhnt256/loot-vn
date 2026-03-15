@@ -1,0 +1,1199 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../../src/lib/generated/prisma-client"
+  binaryTargets = ["native"]
+}
+
+datasource db {
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model Rank {
+  id           Int      @id @default(autoincrement())
+  name         String
+  fromValue    Float
+  toValue      Float
+  discount     Float?
+  foodVoucher  Int?
+  drinkVoucher Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Game {
+  id            Int      @id @default(autoincrement())
+  name          String
+  startDate     DateTime
+  endDate       DateTime
+  starsPerRound Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  balance_rate  Float?   @db.Float
+  play_rate     Float?   @db.Float
+  jackpot       Float?   @db.Float
+}
+
+model CheckInResult {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  createdAt DateTime @default(now())
+}
+
+model CheckInItem {
+  id        Int      @id @default(autoincrement())
+  dayName   String
+  stars     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CheckInPromotion {
+  id            Int      @id @default(autoincrement())
+  checkInItemId Int
+  coefficient   Float
+  startDate     DateTime
+  endDate       DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Item {
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(255)
+  image_url  String    @db.VarChar(255)
+  rating     Float     @db.Float
+  value      Float     @db.Float
+  createdAt  DateTime? @default(now()) @db.DateTime(0)
+  updatedAt  DateTime? @default(now()) @updatedAt @db.DateTime(0)
+  title      String    @db.VarChar(500)
+  background String?   @db.VarChar(7)
+  textColor  String?   @db.VarChar(7)
+}
+
+model GameItemMap {
+  id        Int      @id @default(autoincrement())
+  gameId    Int      @unique
+  itemId    Int      @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GameResult {
+  id              Int               @id @default(autoincrement())
+  userId          Int
+  itemId          Int
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  userStarHistory UserStarHistory[]
+  users           User              @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model User {
+  id                Int                @id @default(autoincrement())
+  userName          String?            @db.VarChar(45)
+  userId            Int
+  rankId            Int
+  stars             Int
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  magicStone        Int                @default(0)
+  totalPayment      Float?             @db.Float
+  note              String?            @default("") @db.VarChar(1000)
+  isUseApp          Boolean            @default(true)
+  UserRewardMap     UserRewardMap[]
+  GameResults       GameResult[]
+  feedbacks         Feedback[]
+  eventParticipants EventParticipant[]
+}
+
+model Mission {
+  id          Int                     @id @default(autoincrement())
+  name        String
+  description String
+  reward      Float
+  startHours  Int
+  endHours    Int
+  createdAt   DateTime                @default(now())
+  quantity    Int
+  type        MissionType
+  completions UserMissionCompletion[]
+}
+
+model UserMissionCompletion {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  missionId   Int
+  completedAt DateTime @default(now())
+  actualValue Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  mission     Mission  @relation(fields: [missionId], references: [id])
+
+  @@index([userId])
+}
+
+model UserRewardMap {
+  id              Int                  @id @default(autoincrement())
+  userId          Int?
+  rewardId        Int?
+  promotionCodeId Int?
+  duration        Int?
+  createdAt       DateTime?            @default(now())
+  updatedAt       DateTime?            @updatedAt
+  isUsed          Boolean              @default(false)
+  note            String?              @db.Text
+  status          UserRewardMapStatus? @default(INITIAL)
+  type            UserRewardMap_type   @default(STARS)
+  promotionCode   PromotionCode?       @relation(fields: [promotionCodeId], references: [id])
+  user            User?                @relation(fields: [userId], references: [id])
+  reward          Reward?              @relation(fields: [rewardId], references: [id])
+
+  @@index([promotionCodeId])
+  @@index([userId])
+  @@index([rewardId])
+}
+
+model Reward {
+  id            Int             @id @default(autoincrement())
+  name          String?         @db.VarChar(45)
+  stars         Int?
+  value         Int?
+  startDate     DateTime?
+  endDate       DateTime?
+  createdAt     DateTime?       @default(now())
+  updateAt      DateTime?       @updatedAt
+  UserRewardMap UserRewardMap[]
+}
+
+model PromotionCode {
+  id                 Int               @id @default(autoincrement())
+  name               String?           @db.VarChar(45)
+  code               String?           @db.VarChar(45)
+  value              Int?
+  isUsed             Boolean?          @default(false)
+  createdAt          DateTime?         @default(now())
+  updatedAt          DateTime?         @updatedAt
+  eventId            String?
+  expirationDate     DateTime?
+  promotionSettingId Int?
+  rewardType         String?
+  rewardValue        Int?
+  UserRewardMap      UserRewardMap[]
+  promotionSetting   PromotionSetting? @relation(fields: [promotionSettingId], references: [id])
+}
+
+model UserStarHistory {
+  id           Int                  @id @default(autoincrement())
+  userId       Int?
+  oldStars     Int?
+  newStars     Int?
+  type         UserStarHistoryType?
+  createdAt    DateTime?            @default(now())
+  targetId     Int?
+  gameResultId Int?
+  gameResult   GameResult?          @relation(fields: [gameResultId], references: [id])
+
+  @@index([userId])
+  @@index([gameResultId])
+}
+
+model SavingPlan {
+  id          Int      @id @default(autoincrement())
+  uuid        String   @db.Text
+  name        String   @db.Text
+  price       Int
+  description String?  @db.LongText
+  isDelete    Boolean? @db.Bit(1)
+}
+
+model Computer {
+  id            Int             @id @default(autoincrement())
+  fingerprintId String
+  ip            String?
+  name          String          @db.VarChar(45)
+  status        Int
+  localIp       String?
+  devices       Device[]
+  histories     DeviceHistory[]
+  feedbacks     Feedback[]
+}
+
+model Staff {
+  id                       Int              @id @default(autoincrement())
+  userName                 String           @unique
+  password                 String
+  isDeleted                Boolean          @default(false)
+  isAdmin                  Boolean          @default(false)
+  createdAt                DateTime         @default(now())
+  updatedAt                DateTime
+  address                  String?          @db.Text
+  dateOfBirth              DateTime?
+  email                    String?          @db.VarChar(255)
+  fullName                 String           @db.VarChar(255)
+  gender                   Staff_gender     @default(OTHER)
+  hireDate                 DateTime?
+  idCard                   String?          @db.VarChar(20)
+  idCardExpiryDate         DateTime?
+  idCardIssueDate          DateTime?
+  note                     String?          @db.Text
+  phone                    String?          @db.VarChar(15)
+  resignDate               DateTime?
+  staffType                Staff_staffType  @default(STAFF)
+  needCheckMacAddress      Boolean          @default(true)
+  bankAccountName          String?          @db.VarChar(255)
+  bankAccountNumber        String?          @db.VarChar(50)
+  bankName                 String?          @db.VarChar(255)
+  baseSalary               Float            @default(0)
+  counterStaffReports      Report[]         @relation("CounterStaff")
+  kitchenStaffReports      Report[]         @relation("KitchenStaff")
+  securityStaffReports     Report[]         @relation("SecurityStaff")
+  morningHandoverReports   HandoverReport[] @relation("MorningStaff")
+  afternoonHandoverReports HandoverReport[] @relation("AfternoonStaff")
+  eveningHandoverReports   HandoverReport[] @relation("EveningStaff")
+  workShiftId              Int?
+  workShift                WorkShift?       @relation(fields: [workShiftId], references: [id])
+  staffViolations          StaffViolation[]
+  staffTimeTrackings       StaffTimeTracking[]
+}
+
+model StaffTimeTracking {
+  id           Int       @id @default(autoincrement())
+  staffId      Int
+  checkInTime  DateTime  @default(now())
+  checkOutTime DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  staff        Staff     @relation(fields: [staffId], references: [id])
+
+  @@index([staffId])
+  @@index([checkInTime])
+}
+
+model WorkShift {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(255)
+  startTime   DateTime @db.Time(0)
+  endTime     DateTime @db.Time(0)
+  FnetStaffId Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isOvernight Boolean  @default(false)
+  ffoodId     String?  @map("ffood_id") @db.Char(36)
+  gcpId       String?  @map("gcp_id") @db.VarChar(255)
+  staffs      Staff[]
+
+  @@index([name])
+  @@map("WorkShift")
+}
+
+model WorkShiftRevenueReport {
+  id                  Int              @id @default(autoincrement())
+  reportDate          DateTime         @db.Date
+  shift               ShiftRevenueType
+  totalFood           Decimal          @default(0) @db.Decimal(12, 0)
+  deduction           Decimal          @default(0) @db.Decimal(12, 0)
+  actualFfood         Decimal          @default(0) @db.Decimal(12, 0)
+  gamingRevenue       Decimal          @default(0) @db.Decimal(12, 0)
+  actualShiftRevenue  Decimal          @default(0) @db.Decimal(12, 0)
+  momoRevenue         Decimal          @default(0) @db.Decimal(12, 0)
+  incidentalAmount    Decimal?         @db.Decimal(12, 0)
+  handoverAmount      Decimal          @default(0) @db.Decimal(12, 0)
+  confirmedHeldAmount Decimal          @default(0) @db.Decimal(12, 0)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  @@unique([reportDate, shift])
+  @@index([reportDate])
+  @@map("WorkShiftRevenueReport")
+}
+
+model FraudLoginAlert {
+  id          Int      @id @default(autoincrement())
+  serverLogId Int?
+  actor       String   @db.VarChar(100)
+  loginAt     DateTime
+  note        String?  @db.VarChar(500)
+  createdAt   DateTime @default(now())
+
+  @@index([loginAt])
+  @@index([serverLogId])
+  @@map("FraudLoginAlert")
+}
+
+model StaffSalary {
+  id              Int       @id @default(autoincrement())
+  staffId         Int
+  month           Int
+  year            Int
+  totalHours      Float     @default(0)
+  hourlySalary    Float     @default(0)
+  salaryFromHours Float     @default(0)
+  advance         Float     @default(0)
+  bonus           Float     @default(0)
+  penalty         Float     @default(0)
+  total           Float     @default(0)
+  status          String    @default("PENDING") @db.VarChar(20)
+  paidAt          DateTime?
+  note            String?   @db.Text
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([staffId])
+  @@index([year, month])
+}
+
+model StaffBonus {
+  id          Int      @id @default(autoincrement())
+  staffId     Int
+  amount      Float
+  reason      String   @db.VarChar(255)
+  description String?  @db.Text
+  imageUrl    String?  @db.VarChar(500)
+  note        String?  @db.Text
+  rewardDate  DateTime @default(now())
+  status      String   @default("PENDING") @db.VarChar(20)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([staffId])
+  @@index([rewardDate])
+  @@index([status])
+}
+
+model StaffPenalty {
+  id          Int      @id @default(autoincrement())
+  staffId     Int
+  amount      Float
+  reason      String   @db.VarChar(255)
+  description String?  @db.Text
+  imageUrl    String?  @db.VarChar(500)
+  note        String?  @db.Text
+  penaltyDate DateTime @default(now())
+  status      String   @default("PENDING") @db.VarChar(20)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([staffId])
+  @@index([penaltyDate])
+  @@index([status])
+}
+
+model ManagerIncomeExpense {
+  id              Int      @id @default(autoincrement())
+  type            String   @db.VarChar(20)
+  amount          Float
+  reason          String   @db.VarChar(255)
+  description     String?  @db.Text
+  transactionDate DateTime
+  createdBy       Int
+  createdAt       DateTime @default(now())
+
+  @@index([transactionDate])
+  @@index([type])
+  @@index([createdBy])
+  @@map("ManagerIncomeExpense")
+}
+
+model GiftRound {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  amount     Int
+  reason     String    @db.VarChar(255)
+  staffId    Int
+  createdAt  DateTime  @default(now())
+  expiredAt  DateTime?
+  isUsed     Boolean   @default(false)
+  updatedAt  DateTime  @default(now())
+  usedAmount Int       @default(0)
+}
+
+model Device {
+  id              Int             @id @default(autoincrement())
+  computerId      Int
+  monitorStatus   DeviceStatus    @default(GOOD)
+  keyboardStatus  DeviceStatus    @default(GOOD)
+  mouseStatus     DeviceStatus    @default(GOOD)
+  headphoneStatus DeviceStatus    @default(GOOD)
+  chairStatus     DeviceStatus    @default(GOOD)
+  networkStatus   DeviceStatus    @default(GOOD)
+  computerStatus  DeviceStatus    @default(GOOD)
+  note            String?         @db.Text
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  computer        Computer        @relation(fields: [computerId], references: [id])
+  histories       DeviceHistory[]
+
+  @@index([computerId])
+}
+
+model DeviceHistory {
+  id              Int          @id @default(autoincrement())
+  computerId      Int
+  type            String
+  issue           String?
+  status          String
+  createdAt       DateTime     @default(now())
+  monitorStatus   DeviceStatus @default(GOOD)
+  keyboardStatus  DeviceStatus @default(GOOD)
+  mouseStatus     DeviceStatus @default(GOOD)
+  headphoneStatus DeviceStatus @default(GOOD)
+  chairStatus     DeviceStatus @default(GOOD)
+  networkStatus   DeviceStatus @default(GOOD)
+  deviceId        Int?
+  updatedAt       DateTime     @default(now()) @updatedAt
+  computer        Computer     @relation(fields: [computerId], references: [id])
+  Device          Device?      @relation(fields: [deviceId], references: [id])
+
+  @@index([computerId])
+}
+
+model BattlePassSeason {
+  id             Int                @id @default(autoincrement())
+  name           String
+  description    String?
+  startDate      DateTime
+  endDate        DateTime
+  isActive       Boolean            @default(false)
+  maxLevel       Int                @default(100)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  rewards        BattlePassReward[]
+  userBattlePass UserBattlePass[]
+
+  @@map("BattlePassSeason")
+}
+
+model BattlePassReward {
+  id            Int              @id @default(autoincrement())
+  seasonId      Int
+  level         Int
+  name          String
+  description   String?
+  type          String
+  rewardType    String
+  rewardValue   Int?
+  imageUrl      String?
+  isBonus       Boolean          @default(false)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  experience    Int              @default(0)
+  eventRewardId Int?
+  season        BattlePassSeason @relation(fields: [seasonId], references: [id])
+
+  @@index([seasonId])
+  @@map("BattlePassReward")
+}
+
+model UserBattlePass {
+  id         Int              @id @default(autoincrement())
+  userId     Int
+  seasonId   Int
+  level      Int              @default(0)
+  experience Int              @default(0)
+  isPremium  Boolean          @default(false)
+  totalSpent Float            @default(0)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  season     BattlePassSeason @relation(fields: [seasonId], references: [id])
+
+  @@index([userId])
+  @@index([seasonId])
+  @@map("UserBattlePass")
+}
+
+model UserBattlePassReward {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  seasonId  Int
+  rewardId  Int
+  claimedAt DateTime @default(now())
+
+  @@index([seasonId])
+  @@index([userId])
+}
+
+model BattlePassPremiumPackage {
+  id          Int      @id @default(autoincrement())
+  seasonId    Int
+  name        String
+  basePrice   Int
+  description String?
+  benefits    String?
+  maxQuantity Int?
+  sold        Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("BattlePassPremiumPackage")
+}
+
+model PromotionSetting {
+  id             Int             @id @default(autoincrement())
+  name           String
+  type           PromotionType
+  targetId       Int?
+  discountType   DiscountType
+  discountValue  Float
+  startDate      DateTime
+  endDate        DateTime
+  maxQuantity    Int?
+  used           Int             @default(0)
+  isActive       Boolean         @default(true)
+  rule           String?         @db.LongText
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  eventId        String?
+  promotionCodes PromotionCode[]
+
+  @@map("PromotionSetting")
+}
+
+model BattlePassPremiumOrder {
+  id         Int         @id @default(autoincrement())
+  userId     Int
+  packageId  Int
+  price      Int
+  status     OrderStatus @default(PENDING)
+  createdAt  DateTime    @default(now())
+  approvedAt DateTime?
+  approvedBy Int?
+  note       String?
+
+  @@map("BattlePassPremiumOrder")
+}
+
+model ChatMessage {
+  id          Int      @id @default(autoincrement())
+  content     String   @db.Text
+  userId      Int?
+  machineName String   @db.VarChar(255)
+  createdAt   DateTime @default(now())
+  staffId     Int?
+
+  @@index([createdAt])
+}
+
+model BirthdayTier {
+  id                   Int                    @id @default(autoincrement())
+  tierName             String                 @db.VarChar(100)
+  discountPercent      Int
+  milestoneAmount      Int
+  additionalAmount     Int
+  bonusAmount          Int
+  totalAtTier          Int
+  totalReceived        Int
+  freeSpins            Int
+  isActive             Boolean                @default(true)
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  userBirthdayProgress UserBirthdayProgress[]
+
+  @@map("BirthdayTier")
+}
+
+model UserBirthdayProgress {
+  id         Int          @id @default(autoincrement())
+  userId     Int
+  tierId     Int
+  isClaimed  Boolean      @default(false)
+  claimedAt  DateTime?
+  totalSpent Int          @default(0)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  tier       BirthdayTier @relation(fields: [tierId], references: [id])
+
+  @@unique([userId, tierId])
+  @@index([userId])
+  @@map("UserBirthdayProgress")
+}
+
+model BirthdayTransaction {
+  id              Int                     @id @default(autoincrement())
+  userId          Int
+  amount          Int
+  tierId          Int?
+  transactionType BirthdayTransactionType
+  description     String?                 @db.VarChar(500)
+  createdAt       DateTime                @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("BirthdayTransaction")
+}
+
+model ReportDetail {
+  id       Int              @id @default(autoincrement())
+  reportId Int
+  type     ReportDetailType
+  value    Float
+  report   Report           @relation(fields: [reportId], references: [id])
+}
+
+model Report {
+  id              Int            @id @default(autoincrement())
+  date            DateTime
+  shift           Shift
+  fileUrl         String         @db.LongText
+  note            String?
+  counterStaffId  Int
+  kitchenStaffId  Int
+  securityStaffId Int
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  details         ReportDetail[]
+  counterStaff    Staff          @relation("CounterStaff", fields: [counterStaffId], references: [id])
+  kitchenStaff    Staff          @relation("KitchenStaff", fields: [kitchenStaffId], references: [id])
+  securityStaff   Staff          @relation("SecurityStaff", fields: [securityStaffId], references: [id])
+}
+
+model HandoverReport {
+  id                       Int                @id @default(autoincrement())
+  date                     DateTime
+  reportType               HandoverReportType
+  note                     String?
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
+  afternoonStaffId         Int?
+  eveningStaffId           Int?
+  morningStaffId           Int?
+  afternoonSubmissionCount Int                @default(0)
+  eveningSubmissionCount   Int                @default(0)
+  isAfternoonComplete      Boolean            @default(false)
+  isEveningComplete        Boolean            @default(false)
+  isMorningComplete        Boolean            @default(false)
+  morningSubmissionCount   Int                @default(0)
+  materials                HandoverMaterial[]
+  morningStaff             Staff?             @relation("MorningStaff", fields: [morningStaffId], references: [id])
+  afternoonStaff           Staff?             @relation("AfternoonStaff", fields: [afternoonStaffId], references: [id])
+  eveningStaff             Staff?             @relation("EveningStaff", fields: [eveningStaffId], references: [id])
+
+  @@index([date, reportType], map: "HandoverReport_date_shift_reportType_idx")
+}
+
+model HandoverMaterial {
+  id                 Int            @id @default(autoincrement())
+  handoverReportId   Int
+  morningBeginning   Float?
+  morningReceived    Float?
+  morningIssued      Float?
+  morningEnding      Float?
+  afternoonBeginning Float?
+  afternoonReceived  Float?
+  afternoonIssued    Float?
+  afternoonEnding    Float?
+  eveningBeginning   Float?
+  eveningReceived    Float?
+  eveningIssued      Float?
+  eveningEnding      Float?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  materialId         Int?
+  handoverReport     HandoverReport @relation(fields: [handoverReportId], references: [id], onDelete: Cascade)
+  material           Material?      @relation(fields: [materialId], references: [id])
+
+  @@index([handoverReportId])
+}
+
+model Material {
+  id                Int                @id @default(autoincrement())
+  name              String             @unique
+  isActive          Boolean            @default(true)
+  isOnFood          Boolean            @default(false)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  reportType        HandoverReportType
+  handoverMaterials HandoverMaterial[]
+
+  @@index([name])
+}
+
+model Feedback {
+  id          Int            @id @default(autoincrement())
+  userId      Int?
+  type        FeedbackType
+  title       String         @db.VarChar(255)
+  description String         @db.Text
+  priority    String         @db.VarChar(20)
+  category    String?        @db.VarChar(50)
+  rating      Int?           @default(0)
+  image       String?        @db.Text
+  note        String?        @db.Text
+  isAnonymous Boolean        @default(false)
+  status      FeedbackStatus @default(SUBMITTED)
+  response    String?        @db.Text
+  stars       Int?           @default(0)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  computerId  Int?
+  user        User?          @relation(fields: [userId], references: [id])
+  computer    Computer?      @relation(fields: [computerId], references: [id])
+
+  @@index([userId])
+  @@index([computerId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([category])
+  @@index([priority])
+}
+
+model FnetHistory {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  oldSubMoney  Float
+  newSubMoney  Float
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  targetId     Int?
+  type         String?
+  moneyType    String?  @default("SUB")
+  oldMainMoney Float?
+  newMainMoney Float?
+
+  @@index([userId])
+  @@index([targetId])
+  @@index([type])
+  @@index([createdAt])
+  @@index([moneyType])
+}
+
+model PromotionReward {
+  id         Int      @id @default(autoincrement())
+  name       String
+  value      Int
+  quantity   Int
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  starsValue Int
+
+  @@index([isActive])
+}
+
+model GameAppointmentTier {
+  id           Int               @id @default(autoincrement())
+  tierName     String            @db.VarChar(100)
+  minMembers   Int
+  minHours     Int
+  isActive     Boolean           @default(true)
+  createdAt    DateTime          @default(now())
+  lockedAmount Int
+  maxMembers   Int?
+  questName    String            @db.VarChar(100)
+  tasks        String            @db.LongText
+  updatedAt    DateTime          @updatedAt
+  appointments GameAppointment[]
+
+  @@index([isActive])
+  @@map("GameAppointmentTier")
+}
+
+model GameAppointment {
+  id                String                  @id @default(cuid())
+  creatorId         Int
+  title             String                  @db.VarChar(255)
+  description       String?                 @db.Text
+  game              String                  @db.VarChar(100)
+  gameType          String                  @db.VarChar(50)
+  rankLevel         String?                 @db.VarChar(50)
+  startTime         DateTime
+  endTime           DateTime
+  minMembers        Int                     @default(1)
+  maxMembers        Int
+  minCost           Decimal                 @db.Decimal(10, 2)
+  currentMembers    Int                     @default(0)
+  status            String                  @default("active") @db.VarChar(20)
+  totalLockedAmount Decimal                 @default(0.00) @db.Decimal(10, 2)
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  tierId            Int?
+  tier              GameAppointmentTier?    @relation(fields: [tierId], references: [id])
+  members           GameAppointmentMember[]
+  rewards           GameAppointmentReward[]
+
+  @@index([creatorId])
+  @@index([status])
+  @@index([startTime])
+  @@map("GameAppointment")
+}
+
+model GameAppointmentMember {
+  id             String          @id @default(cuid())
+  appointmentId  String
+  userId         Int
+  lockedAmount   Decimal         @db.Decimal(10, 2)
+  status         String          @default("joined") @db.VarChar(20)
+  joinedAt       DateTime        @default(now())
+  completedAt    DateTime?
+  machineGroupId Int?
+  machineName    String?         @db.VarChar(100)
+  appointment    GameAppointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([appointmentId])
+  @@map("GameAppointmentMember")
+}
+
+model GameAppointmentReward {
+  id            String          @id @default(cuid())
+  appointmentId String
+  userId        Int
+  status        String          @default("pending") @db.VarChar(20)
+  distributedAt DateTime?
+  createdAt     DateTime        @default(now())
+  rewardAmount  Int
+  taskId        String          @db.VarChar(50)
+  taskName      String          @db.VarChar(100)
+  appointment   GameAppointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([appointmentId])
+  @@index([status])
+  @@map("GameAppointmentReward")
+}
+
+model Event {
+  id                      String             @id @default(cuid())
+  name                    String
+  description             String?            @db.Text
+  type                    EventType
+  status                  EventStatus
+  startDate               DateTime
+  endDate                 DateTime
+  registrationStart       DateTime?
+  registrationEnd         DateTime?
+  targetAudience          String?            @db.LongText
+  conditions              String?            @db.LongText
+  rules                   String?            @db.LongText
+  budget                  Int?
+  expectedParticipants    Int?
+  totalParticipants       Int                @default(0)
+  totalCodesGenerated     Int                @default(0)
+  totalCodesUsed          Int                @default(0)
+  totalRewardsDistributed Int                @default(0)
+  createdBy               Int?
+  approvedBy              Int?
+  approvedAt              DateTime?
+  isActive                Boolean            @default(true)
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+  generateCodesAhead      Boolean            @default(false)
+  participants            EventParticipant[]
+  rewards                 EventReward[]
+  reports                 EventReport[]
+
+  @@index([status])
+  @@index([type])
+  @@index([startDate])
+  @@index([endDate])
+  @@map("Event")
+}
+
+model EventParticipant {
+  id                Int               @id @default(autoincrement())
+  eventId           String
+  userId            Int
+  status            ParticipantStatus @default(REGISTERED)
+  registeredAt      DateTime          @default(now())
+  participatedAt    DateTime?
+  completedAt       DateTime?
+  participationData String?           @db.LongText
+  rewardsReceived   String?           @db.LongText
+  totalSpent        Int               @default(0)
+  event             Event             @relation(fields: [eventId], references: [id])
+  user              User?             @relation(fields: [userId], references: [id])
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
+  @@index([status])
+  @@map("EventParticipant")
+}
+
+model EventReward {
+  id           Int        @id @default(autoincrement())
+  eventId      String
+  name         String
+  description  String?    @db.Text
+  rewardType   RewardType
+  rewardConfig String     @db.LongText
+  conditions   String?    @db.LongText
+  eligibility  String?    @db.LongText
+  maxQuantity  Int?
+  used         Int        @default(0)
+  maxPerUser   Int?
+  maxPerDay    Int?
+  validFrom    DateTime?
+  validTo      DateTime?
+  priority     Int        @default(1)
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  event        Event      @relation(fields: [eventId], references: [id])
+
+  @@index([eventId])
+  @@index([rewardType])
+  @@index([isActive])
+  @@map("EventReward")
+}
+
+model EventReport {
+  id         Int      @id @default(autoincrement())
+  eventId    String
+  reportType String
+  reportDate DateTime
+  data       String   @db.LongText
+  createdAt  DateTime @default(now())
+  event      Event    @relation(fields: [eventId], references: [id])
+
+  @@index([eventId])
+  @@index([reportDate])
+  @@map("EventReport")
+}
+
+model FfoodCredential {
+  id        Int       @id @default(autoincrement())
+  ffoodUrl  String    @map("ffood_url") @db.VarChar(500)
+  username  String    @db.VarChar(255)
+  password  String    @db.VarChar(500)
+  token     String?   @db.Text
+  expired   DateTime? @db.DateTime(0)
+  createdAt DateTime  @default(now()) @db.DateTime(0)
+  updatedAt DateTime  @updatedAt @db.DateTime(0)
+  shopId    String?   @map("shop_id") @db.VarChar(100)
+}
+
+model MomoCredential {
+  id          Int       @id @default(autoincrement())
+  store_id    String?   @db.VarChar(100)
+  momoUrl     String    @map("momo_url") @db.VarChar(500)
+  username    String    @db.VarChar(255)
+  password    String    @db.VarChar(500)
+  token       String?   @db.Text
+  expired     DateTime? @db.DateTime(0)
+  createdAt   DateTime  @default(now()) @db.DateTime(0)
+  updatedAt   DateTime  @updatedAt @db.DateTime(0)
+  merchant_id Int?
+}
+
+enum ShiftRevenueType {
+  MORNING
+  AFTERNOON
+  EVENING
+}
+
+enum BirthdayTransactionType {
+  TOPUP
+  BONUS
+  FREE_SPIN
+}
+
+enum MissionType {
+  HOURS
+  ORDER
+  TOPUP
+}
+
+enum DeviceStatus {
+  GOOD
+  DAMAGED_BUT_USABLE
+  COMPLETELY_DAMAGED
+}
+
+enum UserStarHistoryType {
+  CHECK_IN
+  MISSION
+  REWARD
+  GAME
+  RETURN_GIFT
+  GIFT_ROUND
+  FEEDBACK
+  BATTLE_PASS
+}
+
+enum PromotionType {
+  BATTLE_PASS
+  VOUCHER
+  TOPUP
+}
+
+enum DiscountType {
+  PERCENT
+  FIXED
+}
+
+enum OrderStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum Shift {
+  SANG
+  CHIEU
+  TOI
+}
+
+enum ReportDetailType {
+  GIO
+  DICH_VU
+  MOMO
+  CHI
+  TONG
+}
+
+enum HandoverReportType {
+  BAO_CAO_BEP
+  BAO_CAO_NUOC
+}
+
+enum Staff_gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum Staff_staffType {
+  STAFF
+  KITCHEN
+  SECURITY
+  CASHIER
+  MANAGER
+  SUPER_ADMIN
+  BRANCH_ADMIN
+}
+
+enum UserRewardMapStatus {
+  INITIAL
+  APPROVE
+  REJECT
+}
+
+enum FeedbackType {
+  IMPROVEMENT
+  BUG_REPORT
+  FEATURE_REQUEST
+  GENERAL
+}
+
+enum FeedbackStatus {
+  SUBMITTED
+  RECEIVED
+  PROCESSING
+  COMPLETED
+}
+
+enum EventType {
+  NEW_USER_WELCOME
+  BIRTHDAY_EVENT
+  HOLIDAY_EVENT
+  SEASONAL_EVENT
+  BATTLE_PASS_EVENT
+  LUCKY_WHEEL_EVENT
+  GAME_TOURNAMENT
+  REFERRAL_PROGRAM
+  LOYALTY_PROGRAM
+  PROMOTIONAL_CAMPAIGN
+}
+
+enum EventStatus {
+  DRAFT
+  PENDING_APPROVAL
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum ParticipantStatus {
+  REGISTERED
+  PARTICIPATING
+  COMPLETED
+  DISQUALIFIED
+  WITHDRAWN
+}
+
+enum RewardType {
+  PERCENTAGE_DISCOUNT
+  FIXED_DISCOUNT
+  FREE_ITEM
+  BONUS_ITEM
+  CASH_BACK
+  MULTIPLIER
+  CONDITIONAL_REWARD
+  MAIN_ACCOUNT_TOPUP
+  TOPUP_BONUS_PERCENTAGE
+}
+
+enum UserRewardMap_type {
+  STARS
+  EVENT
+}
+
+model RewardPunishRule {
+  id            Int            @id @default(autoincrement())
+  name          String         @db.VarChar(255)
+  type          RewardPunishType
+  workShift     String?        @db.VarChar(50)
+  maxViolations Int            @default(5)
+  isActive      Boolean        @default(true)
+  resetCycle    ResetCycle     @default(MONTHLY)
+  
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  severities    RuleSeverity[]
+  violations    StaffViolation[]
+}
+
+model RuleSeverity {
+  id               Int            @id @default(autoincrement())
+  ruleId           Int
+  occurrenceNumber Int
+  actionType       RuleActionType
+  amount           Decimal?       @db.Decimal(12, 0)
+  
+  rule             RewardPunishRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+
+  @@index([ruleId])
+}
+
+model StaffViolation {
+  id               Int      @id @default(autoincrement())
+  staffId          Int
+  ruleId           Int
+  violationDate    DateTime @default(now())
+  occurrenceNumber Int
+  amount           Decimal? @db.Decimal(12, 0)
+  note             String?  @db.Text
+  
+  rule             RewardPunishRule @relation(fields: [ruleId], references: [id])
+  staff            Staff            @relation(fields: [staffId], references: [id])
+
+  @@index([staffId])
+  @@index([ruleId])
+  @@index([violationDate])
+}
+
+enum RewardPunishType {
+  REWARD
+  PUNISH
+}
+
+enum RuleActionType {
+  WARNING
+  MONEY
+  DISMISSAL
+}
+
+enum ResetCycle {
+  DAILY
+  MONTHLY
+  QUARTERLY
+  YEARLY
+  NEVER
+}

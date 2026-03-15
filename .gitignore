@@ -44,3 +44,17 @@ Thumbs.db
 # Next.js
 .next
 out
+
+# Sensitive / secrets (do not commit)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+credentials/
+*.secret
+*.credentials
+config.local.*
