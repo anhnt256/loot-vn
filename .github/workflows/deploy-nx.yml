@@ -27,10 +27,20 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /var/www/gateway-app/gms
-            git fetch --all
-            git checkout change-to-nx
-            git reset --hard origin/change-to-nx
+            mkdir -p /var/www/gateway-app
+            if [ ! -d "/var/www/gateway-app/gms/.git" ]; then
+              echo "Directory does not exist or is not a git repository. Cloning..."
+              rm -rf /var/www/gateway-app/gms
+              cd /var/www/gateway-app
+              git clone -b refactor/change-to-nx git@github.com:anhnt256/loot-vn.git gms
+              cd gms
+            else
+              echo "Directory exists. Fetching updates..."
+              cd /var/www/gateway-app/gms
+              git fetch --all
+              git checkout refactor/change-to-nx
+              git reset --hard origin/refactor/change-to-nx
+            fi
 
             # Determine tenant prefix
             TENANT_PREFIX="${{ github.event.inputs.tenant_prefix }}"
