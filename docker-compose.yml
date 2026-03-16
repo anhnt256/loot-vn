@@ -42,22 +42,6 @@ services:
     networks:
       - loot-vn-network
 
-  # User App (Vite)
-  user-app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        APP_NAME: user-app
-        TENANT_PREFIX: ${TENANT_PREFIX:-}
-    container_name: ${TENANT_PREFIX:-}user-app
-    ports:
-      - "${USER_APP_PORT:-7100}:3000"
-    env_file:
-      - .env
-    restart: always
-    networks:
-      - loot-vn-network
 
   # Master App (Vite)
   master-app:
