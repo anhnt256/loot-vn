@@ -25,9 +25,20 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /var/www/gateway-app/loot-vn
-            git fetch --all
-            git reset --hard origin/main
+            mkdir -p /var/www/gateway-app
+            if [ ! -d "/var/www/gateway-app/loot-vn/.git" ]; then
+              echo "Directory does not exist or is not a git repository. Cloning..."
+              rm -rf /var/www/gateway-app/loot-vn
+              cd /var/www/gateway-app
+              git clone -b main git@github.com:anhnt256/loot-vn.git loot-vn
+              cd loot-vn
+            else
+              echo "Directory exists. Fetching updates..."
+              cd /var/www/gateway-app/loot-vn
+              git fetch --all
+              git checkout main
+              git reset --hard origin/main
+            fi
 
             # Tạo file .env từ GitHub Secrets
             cat > .env << EOF
