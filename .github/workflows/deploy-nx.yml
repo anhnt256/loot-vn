@@ -34,7 +34,7 @@ jobs:
 
             # Determine tenant prefix
             TENANT_PREFIX="${{ github.event.inputs.tenant_prefix }}"
-            
+
             # Ensure .env is updated from secrets
             cat > .env << EOF
             DATABASE_URL=${{ secrets.DATABASE_URL }}
