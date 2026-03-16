@@ -1,0 +1,73 @@
+name: Deploy to VPS v2
+
+on:
+  workflow_dispatch:
+    inputs:
+      tenant_prefix:
+        description: "Tenant prefix for this deployment (e.g. tenant-a-). MUST BE PROVIDED."
+        required: true
+        default: ""
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: CI-CD
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            mkdir -p /var/www/gateway-app
+            if [ ! -d "/var/www/gateway-app/gms/.git" ]; then
+              echo "Directory does not exist or is not a git repository. Cloning..."
+              rm -rf /var/www/gateway-app/gms
+              cd /var/www/gateway-app
+              git clone -b refactor/change-to-nx git@github.com:anhnt256/loot-vn.git gms
+              cd gms
+            else
+              echo "Directory exists. Fetching updates..."
+              cd /var/www/gateway-app/gms
+              git fetch --all
+              git checkout refactor/change-to-nx
+              git reset --hard origin/refactor/change-to-nx
+            fi
+
+            # Determine tenant prefix
+            TENANT_PREFIX="${{ github.event.inputs.tenant_prefix }}"
+
+            # Ensure .env is updated from secrets
+            cat > .env << EOF
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            FNET_GV_DATABASE_URL=${{ secrets.FNET_GV_DATABASE_URL }}
+            FNET_TP_DATABASE_URL=${{ secrets.FNET_TP_DATABASE_URL }}
+            GATEWAY_BONUS_DEADLINE=${{ secrets.GATEWAY_BONUS_DEADLINE }}
+            IS_DEBUG_GO_VAP=${{ secrets.IS_DEBUG_GO_VAP }}
+            IS_DEBUG_TAN_PHU=${{ secrets.IS_DEBUG_TAN_PHU }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            NEXT_PUBLIC_GATEWAY_BIRTHDAY_ENABLE=${{ secrets.NEXT_PUBLIC_GATEWAY_BIRTHDAY_ENABLE }}
+            NEXT_PUBLIC_IS_MAINTENANCE=${{ secrets.NEXT_PUBLIC_IS_MAINTENANCE }}
+            NEXT_PUBLIC_SPEND_PER_ROUND=${{ secrets.NEXT_PUBLIC_SPEND_PER_ROUND }}
+            NEXT_PUBLIC_STORE_DISABLED=${{ secrets.NEXT_PUBLIC_STORE_DISABLED }}
+            NEXT_PUBLIC_UP_RATE_AMOUNT=${{ secrets.NEXT_PUBLIC_UP_RATE_AMOUNT }}
+            NEXT_PUBLIC_GATEWAY_BATTLE_PASS_ENABLE=${{ secrets.NEXT_PUBLIC_GATEWAY_BATTLE_PASS_ENABLE }}
+            NEXT_PUBLIC_GATEWAY_BATTLE_PASS_PREMIUM_ENABLE=${{ secrets.NEXT_PUBLIC_GATEWAY_BATTLE_PASS_PREMIUM_ENABLE }}
+            USE_DEFAULT_USER_ID=${{ secrets.USE_DEFAULT_USER_ID }}
+            REDIS_HOST=${{ secrets.REDIS_HOST }}
+            REDIS_PORT=${{ secrets.REDIS_PORT }}
+            REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+            NEXT_PUBLIC_CALENDAR_GV=${{ secrets.NEXT_PUBLIC_CALENDAR_GV }}
+            NEXT_PUBLIC_CALENDAR_TP=${{ secrets.NEXT_PUBLIC_CALENDAR_TP }}
+            NODE_ENV=production
+            TENANT_PREFIX=$TENANT_PREFIX
+            VITE_TENANT_PREFIX=$TENANT_PREFIX
+            EOF
+
+            # Build and deploy all services using docker-compose
+            docker compose -p ${TENANT_PREFIX}gateway-refactor up -d --build --remove-orphans
