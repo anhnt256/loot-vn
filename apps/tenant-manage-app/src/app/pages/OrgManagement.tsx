@@ -25,7 +25,8 @@ interface Organization {
   status: 'Active' | 'Inactive';
   _count?: {
      tenants: number;
-  }
+  };
+  tenants?: any[];
 }
 
 const OrgManagement: React.FC = () => {

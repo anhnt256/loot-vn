@@ -46,7 +46,7 @@ const initialTenants: Tenant[] = [
     domain: 'admin-ai.dev.asia.covergo.cloud',
     description: 'Admin tenant',
     status: 'Active',
-    clients: 1,
+    clients: [],
   },
   {
     id: '2',
@@ -55,7 +55,7 @@ const initialTenants: Tenant[] = [
     domain: 'ktaxa-ai.dev.asia.covergo.cloud',
     description: 'Tenant of Ktaxa',
     status: 'Active',
-    clients: 1,
+    clients: [],
   },
   {
     id: '3',
@@ -64,7 +64,7 @@ const initialTenants: Tenant[] = [
     domain: 'ai-workbench.dev.asia.covergo.cloud',
     description: 'Apeiron Dev tenant',
     status: 'Active',
-    clients: 1,
+    clients: [],
   },
 ];
 
