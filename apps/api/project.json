@@ -9,15 +9,22 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "webpack-cli build",
-        "args": ["--node-env=production"],
         "cwd": "apps/api",
         "env": {
-          "NODE_OPTIONS": "--max-old-space-size=8192"
+          "NODE_OPTIONS": "--max-old-space-size=8192",
+          "NODE_ENV": "production"
         }
       },
       "configurations": {
         "development": {
-          "args": ["--node-env=development"]
+          "env": {
+            "NODE_ENV": "development"
+          }
+        },
+        "production": {
+           "env": {
+             "NODE_ENV": "production"
+           }
         }
       }
     },

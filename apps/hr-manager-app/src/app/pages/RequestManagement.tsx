@@ -13,7 +13,8 @@ import {
   Input,
   Select,
   Row,
-  Col
+  Col,
+  Badge
 } from 'antd';
 import { 
   CheckCircleOutlined, 
@@ -126,8 +127,8 @@ const RequestManagement: React.FC = () => {
     if (type === 'late_arrival') {
       return (
         <Space direction="vertical" size={0}>
-          <Text size="small">Giờ dự kiến: <Badge status="processing" text={metadata.expected_time} /></Text>
-          <Text size="small" type="secondary">Lý do: {metadata.reason}</Text>
+          <Text className="text-sm">Giờ dự kiến: <Badge status="processing" text={metadata.expected_time} /></Text>
+          <Text type="secondary" className="text-sm">Lý do: {metadata.reason}</Text>
         </Space>
       );
     }
@@ -135,8 +136,8 @@ const RequestManagement: React.FC = () => {
     if (type === 'salary_advance') {
       return (
         <Space direction="vertical" size={0}>
-          <Text size="small" strong>Số tiền: {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(metadata.amount)}</Text>
-          <Text size="small" type="secondary">Hình thức: {metadata.payment_method === 'transfer' ? 'Chuyển khoản' : 'Tiền mặt'}</Text>
+          <Text strong className="text-sm">Số tiền: {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(metadata.amount)}</Text>
+          <Text type="secondary" className="text-sm">Hình thức: {metadata.payment_method === 'transfer' ? 'Chuyển khoản' : 'Tiền mặt'}</Text>
         </Space>
       );
     }
@@ -144,8 +145,8 @@ const RequestManagement: React.FC = () => {
     if (type === 'leave') {
       return (
         <Space direction="vertical" size={0}>
-          <Text size="small">Từ: {metadata.startDate} đến {metadata.endDate}</Text>
-          <Text size="small" type="secondary">Lý do: {metadata.reason}</Text>
+          <Text className="text-sm">Từ: {metadata.startDate} đến {metadata.endDate}</Text>
+          <Text type="secondary" className="text-sm">Lý do: {metadata.reason}</Text>
         </Space>
       );
     }

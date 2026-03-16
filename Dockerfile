@@ -34,7 +34,11 @@ ENV TENANT_PREFIX=${TENANT_PREFIX}
 
 # Build the specified application
 # Use TENANT_PREFIX in build commands if necessary (e.g. for environment variables)
-RUN npx nx build ${APP_NAME} --production
+RUN if [ "$APP_NAME" = "gateway-gaming" ] || [ "$APP_NAME" = "api" ]; then \
+      npx nx build ${APP_NAME}; \
+    else \
+      npx nx build ${APP_NAME} --production; \
+    fi
 
 # Production Stage for Node apps (API / Next.js)
 FROM node:20-bookworm AS runner
