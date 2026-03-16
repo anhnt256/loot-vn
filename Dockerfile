@@ -48,6 +48,8 @@ RUN apt-get update && apt-get install -y \
     && dpkg-reconfigure -f noninteractive tzdata \
     && rm -rf /var/lib/apt/lists/*
 
+RUN npm install -g serve
+
 ARG APP_NAME
 ENV APP_NAME=${APP_NAME}
 ENV NODE_ENV=production
@@ -60,4 +62,4 @@ COPY --from=builder /app/package*.json ./
 # For Next.js apps, we might need public and other files
 # For simplicity, we can copy them if they exist or handle per-app
 
-CMD ["sh", "-c", "if [ -f \"dist/apps/${APP_NAME}/main.js\" ]; then node dist/apps/${APP_NAME}/main.js; else npm start; fi"]
+CMD ["sh", "-c", "if [ -f \"dist/apps/${APP_NAME}/main.js\" ]; then node dist/apps/${APP_NAME}/main.js; else serve -s dist/apps/${APP_NAME} -p ${PORT:-3000}; fi"]

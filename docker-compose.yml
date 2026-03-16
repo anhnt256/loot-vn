@@ -23,23 +23,8 @@ services:
     networks:
       - loot-vn-network
 
-  # Frontend Service (Next.js)
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        APP_NAME: frontend
-        TENANT_PREFIX: ${TENANT_PREFIX:-}
-    container_name: ${TENANT_PREFIX:-}gateway-frontend
-    ports:
-      - "${FRONTEND_PORT:-4000}:3000"
-    env_file:
-      - .env
-    restart: always
-    networks:
-      - loot-vn-network
-
+  # Frontend Service (Next.js) - Removed as Next JS frontend is not in project.json list
+  # frontend and fraud detection were removed from docker-compose.yml
   # Tenant Manage App (Vite)
   tenant-manage-app:
     build:
@@ -50,7 +35,7 @@ services:
         TENANT_PREFIX: ${TENANT_PREFIX:-}
     container_name: ${TENANT_PREFIX:-}tenant-manage-app
     ports:
-      - "${TENANT_MANAGE_PORT:-7500}:7500"
+      - "${TENANT_MANAGE_PORT:-7500}:3000"
     env_file:
       - .env
     restart: always
@@ -67,24 +52,24 @@ services:
         TENANT_PREFIX: ${TENANT_PREFIX:-}
     container_name: ${TENANT_PREFIX:-}user-app
     ports:
-      - "${USER_APP_PORT:-7100}:7100"
+      - "${USER_APP_PORT:-7100}:3000"
     env_file:
       - .env
     restart: always
     networks:
       - loot-vn-network
 
-  # Admin App (Vite)
-  admin-app:
+  # Master App (Vite)
+  master-app:
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        APP_NAME: admin-app
+        APP_NAME: master-app
         TENANT_PREFIX: ${TENANT_PREFIX:-}
-    container_name: ${TENANT_PREFIX:-}admin-app
+    container_name: ${TENANT_PREFIX:-}master-app
     ports:
-      - "${ADMIN_APP_PORT:-7200}:7200"
+      - "${MASTER_APP_PORT:-7700}:3000"
     env_file:
       - .env
     restart: always
@@ -101,7 +86,7 @@ services:
         TENANT_PREFIX: ${TENANT_PREFIX:-}
     container_name: ${TENANT_PREFIX:-}hr-app
     ports:
-      - "${HR_APP_PORT:-7600}:7600"
+      - "${HR_APP_PORT:-7600}:3000"
     env_file:
       - .env
     restart: always
@@ -118,31 +103,13 @@ services:
         TENANT_PREFIX: ${TENANT_PREFIX:-}
     container_name: ${TENANT_PREFIX:-}hr-manager-app
     ports:
-      - "${MANAGER_APP_PORT:-7400}:7400"
+      - "${MANAGER_APP_PORT:-7400}:3000"
     env_file:
       - .env
     restart: always
     networks:
       - loot-vn-network
 
-  # Fraud Detection Service (Node)
-  fraud-detection:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        APP_NAME: fraud-detection
-        TENANT_PREFIX: ${TENANT_PREFIX:-}
-    container_name: ${TENANT_PREFIX:-}fraud-detection
-    environment:
-      - TZ=Asia/Ho_Chi_Minh
-    ports:
-      - "${FRAUD_DETECTION_PORT:-3001}:3001"
-    env_file:
-      - .env
-    restart: always
-    networks:
-      - loot-vn-network
 
   redis:
     image: redis:latest

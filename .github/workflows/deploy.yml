@@ -1,9 +1,9 @@
-name: Deploy to VPS
+name: Deploy to VPS v2
 
 on:
   push:
     branches:
-      - master
+      - change-to-nx
   workflow_dispatch:
     inputs:
       tenant_prefix:
@@ -27,9 +27,10 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /var/www/gateway-app/loot-vn
+            cd /var/www/gateway-app/gms
             git fetch --all
-            git reset --hard origin/master
+            git checkout change-to-nx
+            git reset --hard origin/change-to-nx
 
             # Determine tenant prefix
             TENANT_PREFIX="${{ github.event.inputs.tenant_prefix }}"
@@ -62,5 +63,4 @@ jobs:
             EOF
 
             # Build and deploy all services using docker-compose
-            docker compose down --remove-orphans
-            docker compose up -d --build
+            docker compose -p gateway-refactor up -d --build --remove-orphans
