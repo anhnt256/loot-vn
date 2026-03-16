@@ -3,7 +3,7 @@ name: Deploy to VPS v2
 on:
   push:
     branches:
-      - change-to-nx
+      - 'refactor/change-to-nx'
   workflow_dispatch:
     inputs:
       tenant_prefix:
