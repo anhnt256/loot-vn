@@ -13,8 +13,6 @@ services:
     environment:
       - TZ=Asia/Ho_Chi_Minh
       - PORT=3000
-    ports:
-      - "${API_PORT:-3000}:3000"
     env_file:
       - .env
     restart: always
@@ -32,8 +30,6 @@ services:
         APP_NAME: tenant-manage-app
         TENANT_PREFIX: ${TENANT_PREFIX:-}
     container_name: ${TENANT_PREFIX:-}tenant-manage-app
-    ports:
-      - "${TENANT_MANAGE_PORT:-7500}:3000"
     env_file:
       - .env
     restart: always
@@ -50,8 +46,6 @@ services:
         APP_NAME: master-app
         TENANT_PREFIX: ${TENANT_PREFIX:-}
     container_name: ${TENANT_PREFIX:-}master-app
-    ports:
-      - "${MASTER_APP_PORT:-7700}:3000"
     env_file:
       - .env
     restart: always
@@ -67,8 +61,6 @@ services:
         APP_NAME: hr-app
         TENANT_PREFIX: ${TENANT_PREFIX:-}
     container_name: ${TENANT_PREFIX:-}hr-app
-    ports:
-      - "${HR_APP_PORT:-7600}:3000"
     env_file:
       - .env
     restart: always
@@ -84,8 +76,6 @@ services:
         APP_NAME: hr-manager-app
         TENANT_PREFIX: ${TENANT_PREFIX:-}
     container_name: ${TENANT_PREFIX:-}hr-manager-app
-    ports:
-      - "${MANAGER_APP_PORT:-7400}:3000"
     env_file:
       - .env
     restart: always

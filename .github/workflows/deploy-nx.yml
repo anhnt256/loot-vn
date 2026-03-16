@@ -1,14 +1,11 @@
 name: Deploy to VPS v2
 
 on:
-  push:
-    branches:
-      - 'refactor/change-to-nx'
   workflow_dispatch:
     inputs:
       tenant_prefix:
-        description: 'Tenant prefix for this deployment (e.g. tenant-a-)'
-        required: false
+        description: 'Tenant prefix for this deployment (e.g. tenant-a-). MUST BE PROVIDED.'
+        required: true
         default: ''
 
 jobs:
@@ -73,4 +70,4 @@ jobs:
             EOF
 
             # Build and deploy all services using docker-compose
-            docker compose -p gateway-refactor up -d --build --remove-orphans
+            docker compose -p ${TENANT_PREFIX}gateway-refactor up -d --build --remove-orphans
