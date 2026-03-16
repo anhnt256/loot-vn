@@ -213,7 +213,7 @@ export default function RequestTab({ staffId }: RequestTabProps) {
                 <Input placeholder="YYYY-MM-DD" />
               </Form.Item>
               <Form.Item label="Từ ca (ID)" name="from_shift_id" rules={[{ required: true }]}>
-                <InputNumber prefiex="ID" className="w-full" />
+                <InputNumber prefix="ID" className="w-full" />
               </Form.Item>
               <Form.Item label="Sang ca (ID)" name="to_shift_id" rules={[{ required: true }]}>
                 <InputNumber className="w-full" />
