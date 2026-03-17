@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Form, Input, Select } from 'antd';
-import axios from 'axios';
+import axios from '@gateway-workspace/shared/utils/apiClient';
 
 const { TextArea } = Input;
 

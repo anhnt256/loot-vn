@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLocalStorageValue } from "./useLocalStorageValue";
-import { CURRENT_USER } from "@gateway-workspace/shared/utils";
+import { CURRENT_USER, apiClient } from "@gateway-workspace/shared/utils";
 import {
   WorkShift,
   getCurrentShift,
@@ -22,11 +22,8 @@ export const useWorkShift = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/work-shifts");
-      if (!response.ok) {
-        throw new Error("Failed to fetch work shifts");
-      }
-      const result = await response.json();
+      const response = await apiClient.get("/api/work-shifts");
+      const result = response.data;
       if (result.success && result.data && result.data.length > 0) {
         setWorkShifts(result.data);
         const shift = getCurrentShift(result.data);

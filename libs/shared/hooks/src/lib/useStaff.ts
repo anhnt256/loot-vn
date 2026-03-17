@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { apiClient } from '@gateway-workspace/shared/utils';
 
 interface Staff {
   id: number;
@@ -66,11 +67,10 @@ export const useStaff = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch('/api/staff', {
+      const response = await apiClient.get('/api/staff', {
         headers: tenantId ? { 'x-tenant-id': tenantId } : undefined,
       });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const result = await response.json();
+      const result = response.data;
       const staffList: Staff[] = result?.data ?? [];
       const staffData: StaffData = {
         cashiers: staffList,

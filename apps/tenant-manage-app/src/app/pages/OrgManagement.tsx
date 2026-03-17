@@ -9,7 +9,7 @@ import {
   Modal, 
   message 
 } from 'antd';
-import axios from 'axios';
+import axios from '@gateway-workspace/shared/utils/apiClient';
 import { 
   SearchOutlined, 
   PlusOutlined, 

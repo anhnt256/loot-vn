@@ -27,7 +27,6 @@ import {
 } from '@ant-design/icons';
 import { Users, Filter, LayoutGrid, List } from 'lucide-react';
 import dayjs from 'dayjs';
-import axios from 'axios';
 import { apiClient } from '@gateway-workspace/shared/utils';
 
 const { Title, Text } = Typography;

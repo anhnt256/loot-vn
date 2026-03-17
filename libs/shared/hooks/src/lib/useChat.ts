@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSSE } from './useSSE';
+import { apiClient } from '@gateway-workspace/shared/utils';
 
 export interface ChatMessage {
   id: number;
@@ -30,7 +31,7 @@ export function useChat({ machineName, onError }: UseChatOptions) {
   const actualMachineName = machineName;
 
   // SSE URL for real-time updates (group chat - no machineName needed)
-  const sseUrl = `/api/chat/subscribe?machineName=${encodeURIComponent(actualMachineName)}`;
+  const sseUrl = `${apiClient.defaults.baseURL || ''}/api/chat/subscribe?machineName=${encodeURIComponent(actualMachineName)}`;
 
   // Handle incoming real-time messages
   const handleMessage = useCallback((data: any) => {
@@ -65,8 +66,8 @@ export function useChat({ machineName, onError }: UseChatOptions) {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/chat/messages?page=${page}&limit=50`);
-      const result = await response.json();
+      const response = await apiClient.get(`/api/chat/messages?page=${page}&limit=50`);
+      const result = response.data;
 
       if (result.statusCode === 200) {
         const newMessages = result.data.messages;
@@ -94,19 +95,13 @@ export function useChat({ machineName, onError }: UseChatOptions) {
 
     setIsSending(true);
     try {
-      const response = await fetch('/api/chat/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          content: content.trim(),
-          machineName: actualMachineName,
-          staffId,
-        }),
+      const response = await apiClient.post('/api/chat/send', {
+        content: content.trim(),
+        machineName: actualMachineName,
+        staffId,
       });
 
-      const result = await response.json();
+      const result = response.data;
 
       if (result.statusCode === 200) {
         // Message will be added via SSE, no need to add manually
