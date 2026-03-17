@@ -117,7 +117,7 @@ export class HrAppService {
     if (!userName) {
       throw new BadRequestException('Missing user information');
     }
-    const gateway = await this.this.tenantGateway.getGatewayClient(tenantId);
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
 
     const staff = (await gateway.$queryRawUnsafe(
       `SELECT 
@@ -149,7 +149,7 @@ export class HrAppService {
     if (!staffId) {
       throw new BadRequestException('staffId is required');
     }
-    const gateway = await this.this.tenantGateway.getGatewayClient(tenantId);
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
 
     // Today's records with stats
     if (date) {
@@ -262,7 +262,7 @@ export class HrAppService {
     if (!staffId || !action) {
       throw new BadRequestException('staffId and action are required');
     }
-    const gateway = await this.this.tenantGateway.getGatewayClient(tenantId);
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
     const nowVN = getCurrentTimeVNDB();
 
     if (action === 'checkin') {
@@ -305,7 +305,7 @@ export class HrAppService {
   async getSalary(params: { staffId: number; month?: string; year?: string }, tenantId: string) {
     const { staffId, month, year } = params;
     if (!staffId) throw new BadRequestException('staffId is required');
-    const gateway = await this.this.tenantGateway.getGatewayClient(tenantId);
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
 
     const m = month ? parseInt(month) : null;
     const y = year ? parseInt(year) : null;
@@ -396,7 +396,7 @@ export class HrAppService {
   }
 
   async getRequests(userName: string, tenantId: string) {
-    const gateway = await this.this.tenantGateway.getGatewayClient(tenantId);
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
     const staff = await gateway.staff.findFirst({
       where: { userName, isDeleted: false },
       select: { id: true },
@@ -418,7 +418,7 @@ export class HrAppService {
   }
 
   async getAllRequests(tenantId: string) {
-    const gateway = await this.this.tenantGateway.getGatewayClient(tenantId);
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
     const list = await gateway.staffRequest.findMany({
       include: { request: true, staff: { select: { fullName: true, userName: true } } },
       orderBy: { request: { createdAt: 'desc' } },
@@ -436,7 +436,7 @@ export class HrAppService {
   }
 
   async createRequest(userName: string, body: { type: string; metadata?: Record<string, unknown> }, tenantId: string) {
-    const gateway = await this.this.tenantGateway.getGatewayClient(tenantId);
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
     const staff = await gateway.staff.findFirst({
       where: { userName, isDeleted: false },
       select: { id: true },
@@ -466,7 +466,7 @@ export class HrAppService {
   async deleteRequest(userName: string, id: string, tenantId: string) {
     const requestId = parseInt(id, 10);
     if (Number.isNaN(requestId)) throw new BadRequestException('Invalid request id');
-    const gateway = await this.this.tenantGateway.getGatewayClient(tenantId);
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
     const staff = await gateway.staff.findFirst({
       where: { userName, isDeleted: false },
       select: { id: true },
@@ -485,7 +485,7 @@ export class HrAppService {
   async updateRequestStatus(id: string, status: 'APPROVED' | 'REJECTED', tenantId: string) {
     const requestId = parseInt(id, 10);
     if (Number.isNaN(requestId)) throw new BadRequestException('Invalid request id');
-    const gateway = await this.this.tenantGateway.getGatewayClient(tenantId);
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
     const request = await gateway.request.findUnique({
       where: { id: requestId },
     });
