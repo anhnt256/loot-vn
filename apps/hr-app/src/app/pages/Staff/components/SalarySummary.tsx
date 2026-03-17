@@ -31,7 +31,7 @@ export default function SalarySummary({ staffId, month, year }: SalarySummaryPro
 
     try {
       setLoading(true);
-      const result = await apiClient.post(`/api/hr-app/salary`, { staffId, month, year });
+      const result = await apiClient.post(`/hr-app/salary`, { staffId, month, year });
 
       if (result.data.success) {
         const summaryData = result.data.data.summary;

@@ -35,7 +35,7 @@ const AttendanceModal: React.FC<AttendanceModalProps> = ({ open, onClose, onSucc
 
   const fetchStaff = async () => {
     try {
-      const response = await apiClient.get('/api/staff'); // Adjust path if needed
+      const response = await apiClient.get('/staff'); // Adjust path if needed
       setStaffList(response.data || []);
     } catch (error) {
       console.error('Error fetching staff:', error);
@@ -54,10 +54,10 @@ const AttendanceModal: React.FC<AttendanceModalProps> = ({ open, onClose, onSucc
       };
 
       if (initialData) {
-        await apiClient.patch(`/api/hr-manager/attendance/${initialData.id}`, payload);
+        await apiClient.patch(`/hr-manager/attendance/${initialData.id}`, payload);
         message.success('Cập nhật bản ghi thành công');
       } else {
-        await apiClient.post('/api/hr-manager/attendance', payload);
+        await apiClient.post('/hr-manager/attendance', payload);
         message.success('Thêm bản ghi chấm công thành công');
       }
 

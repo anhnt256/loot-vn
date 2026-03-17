@@ -41,7 +41,7 @@ export default function TimeTracking({ staffId, month, year }: TimeTrackingProps
 
     try {
       setLoading(true);
-      const result = await apiClient.post(`/api/hr-app/time-tracking`, { staffId, month, year });
+      const result = await apiClient.post(`/hr-app/time-tracking`, { staffId, month, year });
 
       if (result.data.success) {
         setHistory(result.data.data.history || []);

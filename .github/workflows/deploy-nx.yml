@@ -55,6 +55,10 @@ jobs:
             # Ensure prefix for containers has a trailing dash
             TENANT_PREFIX="${PROJECT_NAME}-"
 
+            # Base domain must not be empty (else VITE_API_URL becomes https://api-xxx./ )
+            BASE_DOMAIN="${{ github.event.inputs.base_domain }}"
+            if [ -z "$BASE_DOMAIN" ]; then BASE_DOMAIN="loot.vn"; fi
+
             # Ensure .env is updated from secrets
             cat > .env << EOF
             DATABASE_URL=${{ secrets.DATABASE_URL }}
@@ -69,7 +73,7 @@ jobs:
             NODE_ENV=production
             TENANT_PREFIX=$TENANT_PREFIX
             VITE_TENANT_PREFIX=$TENANT_PREFIX
-            BASE_DOMAIN=${{ github.event.inputs.base_domain }}
+            BASE_DOMAIN=$BASE_DOMAIN
             API_PATH=api-${PROJECT_NAME}.${BASE_DOMAIN}
             HR_PATH=hr-${PROJECT_NAME}.${BASE_DOMAIN}
             HR_MANAGER_PATH=hr-manager-${PROJECT_NAME}.${BASE_DOMAIN}

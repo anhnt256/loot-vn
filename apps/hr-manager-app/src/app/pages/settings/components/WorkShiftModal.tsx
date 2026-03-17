@@ -38,10 +38,10 @@ const WorkShiftModal: React.FC<WorkShiftModalProps> = ({ open, onClose, onSucces
       };
 
       if (initialData) {
-        await apiClient.patch(`/api/hr-manager/work-shifts/${initialData.id}`, payload);
+        await apiClient.patch(`/hr-manager/work-shifts/${initialData.id}`, payload);
         message.success('Cập nhật ca làm việc thành công');
       } else {
-        await apiClient.post('/api/hr-manager/work-shifts', payload);
+        await apiClient.post('/hr-manager/work-shifts', payload);
         message.success('Thêm ca làm việc thành công');
       }
 

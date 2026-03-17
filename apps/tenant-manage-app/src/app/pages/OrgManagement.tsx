@@ -39,7 +39,7 @@ const OrgManagement: React.FC = () => {
   const fetchOrgs = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/api/tenant-admin/org-management/organizations');
+      const response = await axios.get('/tenant-admin/org-management/organizations');
       if (Array.isArray(response.data)) {
         setOrgs(response.data);
       } else if (response.data && Array.isArray(response.data.data)) {
@@ -73,7 +73,7 @@ const OrgManagement: React.FC = () => {
       content: 'This action will soft-delete the org.',
       async onOk() {
         try {
-          await axios.delete(`/api/tenant-admin/org-management/organizations/${id}`);
+          await axios.delete(`/tenant-admin/org-management/organizations/${id}`);
           message.success('Organization deleted successfully');
           fetchOrgs();
         } catch (error) {
@@ -90,10 +90,10 @@ const OrgManagement: React.FC = () => {
   const handleCreateOrUpdate = async (values: any) => {
     try {
       if (editingOrg) {
-        await axios.patch(`/api/tenant-admin/org-management/organizations/${editingOrg.id}`, values);
+        await axios.patch(`/tenant-admin/org-management/organizations/${editingOrg.id}`, values);
         message.success('Organization updated successfully');
       } else {
-        await axios.post('/api/tenant-admin/org-management/organizations', values);
+        await axios.post('/tenant-admin/org-management/organizations', values);
         message.success('Organization created successfully');
       }
       fetchOrgs();
@@ -107,7 +107,7 @@ const OrgManagement: React.FC = () => {
 
   const openLinkTenantsModal = async (record: Organization) => {
     try {
-      const { data } = await axios.get(`/api/tenant-admin/org-management/organizations/${record.id}`);
+      const { data } = await axios.get(`/tenant-admin/org-management/organizations/${record.id}`);
       setEditingOrg({ ...record, tenants: data.tenants ?? [] });
       setIsModalVisible(true);
     } catch (e) {
@@ -162,7 +162,7 @@ const OrgManagement: React.FC = () => {
             className="text-[#003594] hover:text-[#002870] font-medium p-0"
             onClick={async () => {
               try {
-                const { data } = await axios.get(`/api/tenant-admin/org-management/organizations/${record.id}`);
+                const { data } = await axios.get(`/tenant-admin/org-management/organizations/${record.id}`);
                 setEditingOrg(data);
                 setIsModalVisible(true);
               } catch (e) {

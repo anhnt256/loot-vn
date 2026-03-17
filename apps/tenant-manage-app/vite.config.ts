@@ -19,12 +19,6 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 7500,
       host: 'localhost',
-      proxy: {
-        '/api': {
-          target: apiUrl || 'http://localhost:7300',
-          changeOrigin: true,
-        },
-      },
     },
 
     preview: {

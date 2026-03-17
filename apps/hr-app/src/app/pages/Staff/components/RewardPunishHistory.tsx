@@ -36,7 +36,7 @@ export default function RewardPunishHistory({ staffId, month, year }: RewardPuni
   const fetchHistory = async () => {
     try {
       setLoading(true);
-      const result = await apiClient.post(`/api/hr-app/salary/history`, { staffId, month, year });
+      const result = await apiClient.post(`/hr-app/salary/history`, { staffId, month, year });
       
       if (result.data.success) {
         const rewards = (result.data.data.bonusHistory || []).map((item: any) => ({

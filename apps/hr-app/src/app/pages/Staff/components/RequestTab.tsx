@@ -31,7 +31,7 @@ export default function RequestTab({ staffId }: RequestTabProps) {
   const fetchRequests = async () => {
     try {
       setLoading(true);
-      const result = await apiClient.get(`/api/hr-app/requests`);
+      const result = await apiClient.get(`/hr-app/requests`);
       if (result.data.success) {
         setRequests(result.data.data);
       }
@@ -49,7 +49,7 @@ export default function RequestTab({ staffId }: RequestTabProps) {
         metadata: values
       };
       
-      const result = await apiClient.post(`/api/hr-app/requests`, payload);
+      const result = await apiClient.post(`/hr-app/requests`, payload);
       if (result.data.success) {
         toast.success("Gửi yêu cầu thành công");
         setIsModalOpen(false);
@@ -65,7 +65,7 @@ export default function RequestTab({ staffId }: RequestTabProps) {
 
   const handleCancelRequest = async (id: string) => {
     try {
-      const result = await apiClient.delete(`/api/hr-app/requests/${id}`);
+      const result = await apiClient.delete(`/hr-app/requests/${id}`);
       if (result.data.success) {
         toast.success("Đã hủy yêu cầu");
         fetchRequests();

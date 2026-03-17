@@ -56,7 +56,7 @@ const RequestManagement: React.FC = () => {
   const fetchRequests = async () => {
     try {
       setIsLoading(true);
-      const response = await apiClient.get('/api/hr-app/all-requests');
+      const response = await apiClient.get('/hr-app/all-requests');
       setRequests(response.data.data || []);
     } catch (error: any) {
       console.error('Error fetching requests:', error);
@@ -88,7 +88,7 @@ const RequestManagement: React.FC = () => {
       cancelText: 'Hủy',
       onOk: async () => {
         try {
-          await apiClient.patch(`/api/hr-app/requests/${id}/status`, { status });
+          await apiClient.patch(`/hr-app/requests/${id}/status`, { status });
           message.success(`Đã ${actionText} yêu cầu thành công`);
           fetchRequests();
           if (selectedRequest?.id === id) {

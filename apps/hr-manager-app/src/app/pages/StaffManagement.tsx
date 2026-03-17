@@ -81,7 +81,7 @@ const StaffManagement: React.FC = () => {
   const fetchStaff = async () => {
     try {
       setIsLoading(true);
-      const response = await apiClient.get(`/api/hr-manager/staff`, {
+      const response = await apiClient.get(`/hr-manager/staff`, {
         params: {
           includeDeleted,
         }
@@ -97,7 +97,7 @@ const StaffManagement: React.FC = () => {
 
   const fetchWorkShifts = async () => {
     try {
-      const response = await apiClient.get('/api/hr-manager/work-shifts');
+      const response = await apiClient.get('/hr-manager/work-shifts');
       setWorkShifts(response.data);
     } catch (error) {
       console.error('Error fetching work shifts:', error);
@@ -118,7 +118,7 @@ const StaffManagement: React.FC = () => {
       cancelText: 'Hủy',
       onOk: async () => {
         try {
-          await apiClient.delete(`/api/hr-manager/staff/${id}`);
+          await apiClient.delete(`/hr-manager/staff/${id}`);
           message.success('Đã cho nhân viên thôi việc thành công');
           fetchStaff();
         } catch (error: any) {
@@ -136,7 +136,7 @@ const StaffManagement: React.FC = () => {
       cancelText: 'Hủy',
       onOk: async () => {
         try {
-          await apiClient.post(`/api/hr-manager/staff/${id}/reset-password`);
+          await apiClient.post(`/hr-manager/staff/${id}/reset-password`);
           message.success('Mật khẩu đã được đặt lại');
         } catch (error: any) {
           message.error(error.response?.data?.message || 'Không thể đặt lại mật khẩu');
@@ -177,10 +177,10 @@ const StaffManagement: React.FC = () => {
       };
 
       if (selectedStaff) {
-        await apiClient.put(`/api/hr-manager/staff/${selectedStaff.id}`, payload);
+        await apiClient.put(`/hr-manager/staff/${selectedStaff.id}`, payload);
         message.success('Cập nhật thông tin nhân viên thành công');
       } else {
-        await apiClient.post('/api/hr-manager/staff', payload);
+        await apiClient.post('/hr-manager/staff', payload);
         message.success('Thêm nhân viên thành công');
       }
       setShowDrawer(false);

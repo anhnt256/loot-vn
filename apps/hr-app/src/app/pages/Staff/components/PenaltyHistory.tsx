@@ -38,7 +38,7 @@ export default function PenaltyHistory({ staffId, month, year }: PenaltyHistoryP
 
     try {
       setLoading(true);
-      const result = await apiClient.post(`/api/hr-app/salary/history`, { staffId, month, year });
+      const result = await apiClient.post(`/hr-app/salary/history`, { staffId, month, year });
 
       if (result.data.success) {
         setPenaltiesHistory(result.data.data.penaltiesHistory || []);

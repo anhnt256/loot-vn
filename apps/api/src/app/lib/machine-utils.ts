@@ -55,7 +55,7 @@ export interface NetInfo {
  */
 export async function fetchMachineDetails(): Promise<MachineDetail[]> {
   try {
-    const response = await fetch('/api/machine-details');
+    const response = await fetch('/machine-details');
     const result = await response.json();
 
     if (!result.success) {
@@ -77,8 +77,8 @@ export async function fetchMachineDetailsByGroup(
 ): Promise<MachineDetail[]> {
   try {
     const url = machineGroupId
-      ? `/api/machine-details/by-group?machineGroupId=${machineGroupId}`
-      : '/api/machine-details/by-group';
+      ? `/machine-details/by-group?machineGroupId=${machineGroupId}`
+      : '/machine-details/by-group';
 
     const response = await fetch(url);
     const result = await response.json();
@@ -101,7 +101,7 @@ export async function fetchMachineDetailsByGroup(
  */
 export async function fetchMachineGroups(): Promise<MachineGroup[]> {
   try {
-    const response = await fetch('/api/machine-groups');
+    const response = await fetch('/machine-groups');
     const result = await response.json();
 
     if (!result.success) {

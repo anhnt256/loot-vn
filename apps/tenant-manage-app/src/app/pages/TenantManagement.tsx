@@ -80,7 +80,7 @@ const TenantManagement: React.FC = () => {
   const fetchTenants = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/api/tenant-admin/tenant-management/tenants');
+      const response = await axios.get('/tenant-admin/tenant-management/tenants');
       if (Array.isArray(response.data)) {
         setTenants(response.data);
       } else if (response.data && Array.isArray(response.data.data)) {
@@ -118,7 +118,7 @@ const TenantManagement: React.FC = () => {
       content: 'This action cannot be undone.',
       async onOk() {
         try {
-          await axios.delete(`/api/tenant-admin/tenant-management/tenants/${id}`);
+          await axios.delete(`/tenant-admin/tenant-management/tenants/${id}`);
           message.success('Tenant deleted successfully');
           fetchTenants();
         } catch (error) {
@@ -135,10 +135,10 @@ const TenantManagement: React.FC = () => {
   const handleCreateOrUpdate = async (values: any) => {
     try {
       if (editingTenant) {
-        await axios.patch(`/api/tenant-admin/tenant-management/tenants/${editingTenant.id}`, values);
+        await axios.patch(`/tenant-admin/tenant-management/tenants/${editingTenant.id}`, values);
         message.success('Tenant updated successfully');
       } else {
-        await axios.post('/api/tenant-admin/tenant-management/tenants', values);
+        await axios.post('/tenant-admin/tenant-management/tenants', values);
         message.success('Tenant created successfully');
       }
       fetchTenants();
@@ -153,7 +153,7 @@ const TenantManagement: React.FC = () => {
   const handleSaveClients = async (updatedClients: any[]) => {
     if (!selectedTenantForClients) return;
     try {
-      await axios.patch(`/api/tenant-admin/tenant-management/tenants/${selectedTenantForClients.id}`, {
+      await axios.patch(`/tenant-admin/tenant-management/tenants/${selectedTenantForClients.id}`, {
         clients: updatedClients
       });
       fetchTenants();
@@ -165,7 +165,7 @@ const TenantManagement: React.FC = () => {
 
   const handleGenerateKey = async (id: string) => {
     try {
-      await axios.post(`/api/tenant-admin/tenant-management/tenants/${id}/generate-key`);
+      await axios.post(`/tenant-admin/tenant-management/tenants/${id}/generate-key`);
       message.success('API Key generated successfully');
       fetchTenants();
     } catch (error) {

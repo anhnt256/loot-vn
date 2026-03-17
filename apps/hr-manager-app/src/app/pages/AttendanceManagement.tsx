@@ -59,7 +59,7 @@ const AttendanceManagement: React.FC = () => {
         params.startDate = dateRange[0].format('YYYY-MM-DD HH:mm:ss');
         params.endDate = dateRange[1].format('YYYY-MM-DD HH:mm:ss');
       }
-      const response = await apiClient.get('/api/hr-manager/attendance/aggregated', { params });
+      const response = await apiClient.get('/hr-manager/attendance/aggregated', { params });
       setAggregatedRecords(response.data);
     } catch (error: any) {
       console.error('Error fetching aggregated attendance:', error);
@@ -77,7 +77,7 @@ const AttendanceManagement: React.FC = () => {
         params.startDate = dateRange[0].format('YYYY-MM-DD HH:mm:ss');
         params.endDate = dateRange[1].format('YYYY-MM-DD HH:mm:ss');
       }
-      const response = await apiClient.get('/api/hr-manager/attendance', { params });
+      const response = await apiClient.get('/hr-manager/attendance', { params });
       setDetailRecords(response.data);
     } catch (error) {
       message.error('Không thể tải chi tiết chấm công');
@@ -105,7 +105,7 @@ const AttendanceManagement: React.FC = () => {
       cancelText: 'Hủy',
       onOk: async () => {
         try {
-          await apiClient.delete(`/api/hr-manager/attendance/${id}`);
+          await apiClient.delete(`/hr-manager/attendance/${id}`);
           message.success('Đã xóa bản ghi');
           if (selectedStaff) fetchDetailRecords(selectedStaff.staffId);
           fetchAggregatedRecords();
@@ -125,7 +125,7 @@ const AttendanceManagement: React.FC = () => {
     if (staffId) {
       params.append('staffId', staffId.toString());
     }
-    window.open(`${import.meta.env.VITE_API_URL || ''}/api/hr-manager/attendance/export?${params.toString()}`, '_blank');
+    window.open(`${import.meta.env.VITE_API_URL || ''}/hr-manager/attendance/export?${params.toString()}`, '_blank');
   };
 
   const mainColumns = [

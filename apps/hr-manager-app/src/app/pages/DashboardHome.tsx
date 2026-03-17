@@ -48,7 +48,7 @@ const DashboardHome = () => {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get('/api/hr-manager/dashboard/stats');
+      const response = await apiClient.get('/hr-manager/dashboard/stats');
       console.log('[DashboardHome] API Response:', response.data);
       if (response.data) {
         setStats(response.data);

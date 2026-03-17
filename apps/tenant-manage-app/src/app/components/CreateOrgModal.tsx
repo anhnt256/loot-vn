@@ -48,7 +48,7 @@ const CreateOrgModal: React.FC<CreateOrgModalProps> = ({
     if (!visible) return;
     setLoadingTenants(true);
     axios
-      .get('/api/tenant-admin/tenant-management/tenants')
+      .get('/tenant-admin/tenant-management/tenants')
       .then((res: any) => {
         const data = Array.isArray(res.data) ? res.data : res.data?.data ?? [];
         setTenantList(data);

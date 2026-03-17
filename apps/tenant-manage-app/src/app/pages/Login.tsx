@@ -23,7 +23,7 @@ const Login: React.FC = () => {
   const handleLogin = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await apiClient.post('/api/auth/login', {
+      const result = await apiClient.post('/auth/login', {
         userName: username,
         password: password,
         loginMethod: 'staff',

@@ -44,7 +44,7 @@ export default function StaffPage() {
   const fetchStaffInfo = async () => {
     try {
       setLoading(true);
-      const result = await apiClient.get(`/api/hr-app/my-info`);
+      const result = await apiClient.get(`/hr-app/my-info`);
       
       if (result.data.success) {
         setStaffData(result.data.data);

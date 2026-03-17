@@ -70,7 +70,7 @@ export default function CheckInComponent({ staffId, month, year }: CheckInProps)
     try {
       setLoading(true);
       const today = dayjs().tz("Asia/Ho_Chi_Minh").format("YYYY-MM-DD");
-      const result = await apiClient.post(`/api/hr-app/time-tracking`, { staffId, date: today });
+      const result = await apiClient.post(`/hr-app/time-tracking`, { staffId, date: today });
 
       if (result.data.success) {
         const records = result.data.data.todayRecords || [];
@@ -93,7 +93,7 @@ export default function CheckInComponent({ staffId, month, year }: CheckInProps)
   const handleCheckIn = async () => {
     try {
       setLoading(true);
-      const result = await apiClient.post(`/api/hr-app/time-tracking`, { staffId, action: "checkin" });
+      const result = await apiClient.post(`/hr-app/time-tracking`, { staffId, action: "checkin" });
       
       if (!result.data.success) {
         throw new Error(result.data.error || "Lỗi check-in");
@@ -114,7 +114,7 @@ export default function CheckInComponent({ staffId, month, year }: CheckInProps)
 
     try {
       setLoading(true);
-      const result = await apiClient.post(`/api/hr-app/time-tracking`, { staffId, action: "checkout", recordId: targetRecordId });
+      const result = await apiClient.post(`/hr-app/time-tracking`, { staffId, action: "checkout", recordId: targetRecordId });
 
       if (!result.data.success) {
         throw new Error(result.data.error || "Lỗi check-out");

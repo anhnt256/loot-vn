@@ -66,7 +66,7 @@ export default function AppsPage() {
     setLoading(true);
     setError(null);
     fetch(
-      `${API_URL}/api/tenant-admin/org-management/organizations/by-domain?rootDomain=${encodeURIComponent(rootDomain)}`
+      `${API_URL}/tenant-admin/org-management/organizations/by-domain?rootDomain=${encodeURIComponent(rootDomain)}`
     )
       .then((res) => {
         if (!res.ok) {

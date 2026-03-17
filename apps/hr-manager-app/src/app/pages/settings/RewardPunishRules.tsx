@@ -57,7 +57,7 @@ const RewardPunishRules: React.FC = () => {
   const fetchRules = async () => {
     try {
       setIsLoading(true);
-      const response = await apiClient.get('/api/hr-manager/reward-punish-rules');
+      const response = await apiClient.get('/hr-manager/reward-punish-rules');
       setRules(response.data);
     } catch (error) {
       console.error('Error fetching rules:', error);
@@ -99,7 +99,7 @@ const RewardPunishRules: React.FC = () => {
       cancelText: 'Hủy',
       onOk: async () => {
         try {
-          await apiClient.delete(`/api/hr-manager/reward-punish-rules/${id}`);
+          await apiClient.delete(`/hr-manager/reward-punish-rules/${id}`);
           message.success('Đã xóa quy tắc thành công');
           fetchRules();
         } catch (error) {
@@ -112,10 +112,10 @@ const RewardPunishRules: React.FC = () => {
   const onFinish = async (values: any) => {
     try {
       if (selectedRule?.id) {
-        await apiClient.put(`/api/hr-manager/reward-punish-rules/${selectedRule.id}`, values);
+        await apiClient.put(`/hr-manager/reward-punish-rules/${selectedRule.id}`, values);
         message.success('Cập nhật quy tắc thành success');
       } else {
-        await apiClient.post('/api/hr-manager/reward-punish-rules', values);
+        await apiClient.post('/hr-manager/reward-punish-rules', values);
         message.success('Tạo quy tắc mới thành công');
       }
       setShowDrawer(false);

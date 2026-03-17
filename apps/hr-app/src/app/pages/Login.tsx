@@ -37,7 +37,7 @@ const Login: React.FC = () => {
     setLoading(true);
     try {
       console.log('Login attempt:', { username });
-      const result = await apiClient.post('/api/hr-app/login', {
+      const result = await apiClient.post('/hr-app/login', {
         userName: username,
         password: password,
         loginMethod: 'staff',

@@ -29,7 +29,7 @@ const WorkShiftManagement: React.FC = () => {
   const fetchShifts = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get('/api/hr-manager/work-shifts');
+      const response = await apiClient.get('/hr-manager/work-shifts');
       setShifts(response.data);
     } catch (error: any) {
       console.error('Error fetching work shifts:', error);
@@ -52,7 +52,7 @@ const WorkShiftManagement: React.FC = () => {
       cancelText: 'Hủy',
       onOk: async () => {
         try {
-          await apiClient.delete(`/api/hr-manager/work-shifts/${id}`);
+          await apiClient.delete(`/hr-manager/work-shifts/${id}`);
           message.success('Đã xóa ca làm việc');
           fetchShifts();
         } catch (error: any) {
