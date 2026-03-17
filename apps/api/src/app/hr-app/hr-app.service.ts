@@ -1,5 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException, InternalServerErrorException, UnauthorizedException, Logger } from '@nestjs/common';
-import { PrismaService, TenantPrismaService } from '../database/prisma.service';
+import { PrismaService, TenantPrismaService, GatewayPrismaService } from '../database/prisma.service';
+import { TenantGatewayService } from '../database/tenant-gateway.service';
+import { getTenantDbUrl } from '../database/tenant-gateway.service';
 import { dayjs, getCurrentTimeVNISO, getCurrentTimeVNDB, signJWT } from '@gateway-workspace/shared/utils';
 import * as crypto from 'crypto';
 
@@ -9,6 +11,8 @@ export class HrAppService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly tenantPrisma: TenantPrismaService,
+    private readonly gatewayPrisma: GatewayPrismaService,
+    private readonly tenantGateway: TenantGatewayService,
   ) {}
 
   async login(userName: string, password?: string, tenantId?: string) {
@@ -42,10 +46,12 @@ export class HrAppService {
     });
 
     if (!apiKey) {
+      this.logger.warn(`Tenant ${tenant.id} has no API key`);
       throw new UnauthorizedException('Tenant chưa cấu hình API key');
     }
 
     if (apiKey.expiresAt && new Date() > new Date(apiKey.expiresAt)) {
+      this.logger.warn(`Tenant ${tenant.id} API key expired`);
       throw new UnauthorizedException('Hệ thống đã hết hạn, vui lòng gia hạn để sử dụng');
     }
 
@@ -53,15 +59,23 @@ export class HrAppService {
       throw new BadRequestException('Vui lòng nhập tên đăng nhập và mật khẩu');
     }
 
+    const dbUrl = getTenantDbUrl(tenant);
+    if (!dbUrl) {
+      this.logger.warn(`Tenant ${tenant.id} has no dbUrl configured`);
+      throw new BadRequestException('Tenant chưa cấu hình DB URL. Vui lòng cập nhật trong quản lý tenant.');
+    }
+    const gateway = await this.gatewayPrisma.getClient(dbUrl);
+
     const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
 
-    const staff = (await this.prisma.$queryRawUnsafe(
+    const staff = (await gateway.$queryRawUnsafe(
       `SELECT id, userName, fullName, staffType, password, isAdmin FROM Staff 
        WHERE userName = ? AND isDeleted = false`,
       userName,
     )) as any[];
 
     if (staff.length === 0) {
+      this.logger.warn(`Staff not found in gateway DB for userName: ${userName}`);
       throw new BadRequestException('Tên đăng nhập hoặc mật khẩu không đúng');
     }
 
@@ -74,9 +88,11 @@ export class HrAppService {
     }
 
     if (staffData.password !== hashedPassword) {
+      this.logger.warn(`Password mismatch for userName: ${userName}`);
       throw new BadRequestException('Tên đăng nhập hoặc mật khẩu không đúng');
     }
 
+    this.logger.log(`Login success for userName: ${userName}`);
     const payload = {
       userId: staffData.id,
       userName: staffData.userName,
@@ -97,12 +113,13 @@ export class HrAppService {
     };
   }
 
-  async getMyInfo(userName: string) {
+  async getMyInfo(userName: string, tenantId: string) {
     if (!userName) {
       throw new BadRequestException('Missing user information');
     }
+    const gateway = await this.this.tenantGateway.getGatewayClient(tenantId);
 
-    const staff = (await this.prisma.$queryRawUnsafe(
+    const staff = (await gateway.$queryRawUnsafe(
       `SELECT 
         id, fullName, userName, staffType, phone, email,
         address, dateOfBirth, gender, hireDate, idCard,
@@ -127,11 +144,12 @@ export class HrAppService {
     return staffData;
   }
 
-  async getTimeTracking(params: { staffId: number; month?: string; year?: string; date?: string }) {
+  async getTimeTracking(params: { staffId: number; month?: string; year?: string; date?: string }, tenantId: string) {
     const { staffId, month, year, date } = params;
     if (!staffId) {
       throw new BadRequestException('staffId is required');
     }
+    const gateway = await this.this.tenantGateway.getGatewayClient(tenantId);
 
     // Today's records with stats
     if (date) {
@@ -141,7 +159,7 @@ export class HrAppService {
       const startOfMonth = dayjs(getCurrentTimeVNISO()).startOf('month').format('YYYY-MM-DD');
       const endOfMonth = dayjs(getCurrentTimeVNISO()).endOf('month').format('YYYY-MM-DD');
 
-      const todayRecords = (await this.prisma.$queryRawUnsafe(
+      const todayRecords = (await gateway.$queryRawUnsafe(
         `SELECT 
           id, checkInTime, checkOutTime,
           CASE 
@@ -166,13 +184,13 @@ export class HrAppService {
         return parseFloat(hours.toFixed(2));
       };
 
-      const weekRecords = (await this.prisma.$queryRawUnsafe(
+      const weekRecords = (await gateway.$queryRawUnsafe(
         `SELECT checkInTime, checkOutTime FROM StaffTimeTracking 
         WHERE staffId = ? AND DATE(checkInTime) >= ? AND DATE(checkInTime) <= ?`,
         staffId, startOfWeek, endOfWeek,
       )) as any[];
 
-      const monthRecords = (await this.prisma.$queryRawUnsafe(
+      const monthRecords = (await gateway.$queryRawUnsafe(
         `SELECT checkInTime, checkOutTime FROM StaffTimeTracking 
         WHERE staffId = ? AND DATE(checkInTime) >= ? AND DATE(checkInTime) <= ?`,
         staffId, startOfMonth, endOfMonth,
@@ -200,12 +218,12 @@ export class HrAppService {
     }
 
     const todayDate = dayjs(getCurrentTimeVNISO()).format('YYYY-MM-DD');
-    const todayRecord = (await this.prisma.$queryRawUnsafe(
+    const todayRecord = (await gateway.$queryRawUnsafe(
       `SELECT * FROM StaffTimeTracking WHERE staffId = ? AND DATE(checkInTime) = ? ORDER BY checkInTime DESC LIMIT 1`,
       staffId, todayDate,
     )) as any[];
 
-    const rawHistory = (await this.prisma.$queryRawUnsafe(
+    const rawHistory = (await gateway.$queryRawUnsafe(
       `SELECT id, DATE(checkInTime) as date, checkInTime, checkOutTime,
         CASE WHEN checkOutTime IS NULL THEN 'WORKING' ELSE 'COMPLETED' END as status
       FROM StaffTimeTracking 
@@ -240,15 +258,15 @@ export class HrAppService {
     };
   }
 
-  async postTimeTracking(staffId: number, action: string, recordId?: number) {
+  async postTimeTracking(staffId: number, action: string, recordId: number | undefined, tenantId: string) {
     if (!staffId || !action) {
       throw new BadRequestException('staffId and action are required');
     }
-
+    const gateway = await this.this.tenantGateway.getGatewayClient(tenantId);
     const nowVN = getCurrentTimeVNDB();
 
     if (action === 'checkin') {
-      const existingWorking = (await this.prisma.$queryRawUnsafe(
+      const existingWorking = (await gateway.$queryRawUnsafe(
         `SELECT id FROM StaffTimeTracking WHERE staffId = ? AND checkOutTime IS NULL LIMIT 1`,
         staffId,
       )) as any[];
@@ -257,7 +275,7 @@ export class HrAppService {
         throw new BadRequestException('Bạn đang có ca làm việc chưa check-out.');
       }
 
-      await this.prisma.$executeRawUnsafe(
+      await gateway.$executeRawUnsafe(
         `INSERT INTO StaffTimeTracking (staffId, checkInTime, createdAt, updatedAt) VALUES (?, ?, ?, ?)`,
         staffId, nowVN, nowVN, nowVN,
       );
@@ -265,7 +283,7 @@ export class HrAppService {
     } else if (action === 'checkout') {
       if (!recordId) throw new BadRequestException('recordId is required for checkout');
 
-      const existing = (await this.prisma.$queryRawUnsafe(
+      const existing = (await gateway.$queryRawUnsafe(
         `SELECT id FROM StaffTimeTracking WHERE id = ? AND staffId = ? AND checkOutTime IS NULL LIMIT 1`,
         recordId, staffId,
       )) as any[];
@@ -274,7 +292,7 @@ export class HrAppService {
         throw new BadRequestException('Không tìm thấy record check-in hoặc đã checkout');
       }
 
-      await this.prisma.$executeRawUnsafe(
+      await gateway.$executeRawUnsafe(
         `UPDATE StaffTimeTracking SET checkOutTime = ?, updatedAt = ? WHERE id = ?`,
         nowVN, nowVN, recordId,
       );
@@ -284,9 +302,10 @@ export class HrAppService {
     }
   }
 
-  async getSalary(params: { staffId: number; month?: string; year?: string }) {
+  async getSalary(params: { staffId: number; month?: string; year?: string }, tenantId: string) {
     const { staffId, month, year } = params;
     if (!staffId) throw new BadRequestException('staffId is required');
+    const gateway = await this.this.tenantGateway.getGatewayClient(tenantId);
 
     const m = month ? parseInt(month) : null;
     const y = year ? parseInt(year) : null;
@@ -303,9 +322,8 @@ export class HrAppService {
       salaryQuery += ` ORDER BY ss.year DESC, ss.month DESC LIMIT 12`;
     }
 
-    const salaryHistory = (await this.prisma.$queryRawUnsafe(salaryQuery, ...queryParams)) as any[];
+    const salaryHistory = (await gateway.$queryRawUnsafe(salaryQuery, ...queryParams)) as any[];
 
-    // Simplified bonus/penalty fetch (shared logic)
     const getExtra = async (table: string, dateCol: string) => {
       let q = `SELECT t.* FROM ${table} t 
         LEFT JOIN Staff s ON t.staffId = s.id
@@ -317,14 +335,14 @@ export class HrAppService {
       }
       q += ` ORDER BY t.${dateCol} DESC LIMIT 20`;
       try {
-        return (await this.prisma.$queryRawUnsafe(q, ...p)) as any[];
+        return (await gateway.$queryRawUnsafe(q, ...p)) as any[];
       } catch (e) { return []; }
     };
 
     const bonusHistory = await getExtra('StaffBonus', 'rewardDate');
     const penaltiesHistory = await getExtra('StaffPenalty', 'penaltyDate');
 
-    const staffData = (await this.prisma.$queryRawUnsafe(
+    const staffData = (await gateway.$queryRawUnsafe(
       `SELECT baseSalary FROM Staff WHERE id = ?`,
       staffId,
     )) as any[];
@@ -334,7 +352,7 @@ export class HrAppService {
     if (m && y) {
       const start = dayjs(`${y}-${m}-01`).utcOffset(7).startOf('month').format('YYYY-MM-DD');
       const end = dayjs(start).endOf('month').format('YYYY-MM-DD');
-      const records = (await this.prisma.$queryRawUnsafe(
+      const records = (await gateway.$queryRawUnsafe(
         `SELECT checkInTime, checkOutTime FROM StaffTimeTracking WHERE staffId = ? AND DATE(checkInTime) >= ? AND DATE(checkInTime) <= ?`,
         staffId, start, end,
       )) as any[];
@@ -362,7 +380,7 @@ export class HrAppService {
     };
   }
 
-  async getSalaryHistory(params: { staffId: number; month: string; year: string }) {
+  async getSalaryHistory(params: { staffId: number; month: string; year: string }, tenantId: string) {
     const { staffId, month, year } = params;
     if (!staffId || !month || !year) throw new BadRequestException('Missing parameters');
     const m = parseInt(month), y = parseInt(year);
@@ -374,16 +392,17 @@ export class HrAppService {
       throw new BadRequestException('Chỉ được xem lịch sử của tháng hiện tại hoặc tháng trước');
     }
 
-    return this.getSalary({ staffId, month, year });
+    return this.getSalary({ staffId, month, year }, tenantId);
   }
 
-  async getRequests(userName: string) {
-    const staff = await this.prisma.staff.findFirst({
+  async getRequests(userName: string, tenantId: string) {
+    const gateway = await this.this.tenantGateway.getGatewayClient(tenantId);
+    const staff = await gateway.staff.findFirst({
       where: { userName, isDeleted: false },
       select: { id: true },
     });
     if (!staff) return [];
-    const list = await this.prisma.staffRequest.findMany({
+    const list = await gateway.staffRequest.findMany({
       where: { staffId: staff.id },
       include: { request: true, staff: { select: { userName: true } } },
       orderBy: { request: { createdAt: 'desc' } },
@@ -398,8 +417,9 @@ export class HrAppService {
     }));
   }
 
-  async getAllRequests() {
-    const list = await this.prisma.staffRequest.findMany({
+  async getAllRequests(tenantId: string) {
+    const gateway = await this.this.tenantGateway.getGatewayClient(tenantId);
+    const list = await gateway.staffRequest.findMany({
       include: { request: true, staff: { select: { fullName: true, userName: true } } },
       orderBy: { request: { createdAt: 'desc' } },
     });
@@ -415,20 +435,21 @@ export class HrAppService {
     }));
   }
 
-  async createRequest(userName: string, body: { type: string; metadata?: Record<string, unknown> }) {
-    const staff = await this.prisma.staff.findFirst({
+  async createRequest(userName: string, body: { type: string; metadata?: Record<string, unknown> }, tenantId: string) {
+    const gateway = await this.this.tenantGateway.getGatewayClient(tenantId);
+    const staff = await gateway.staff.findFirst({
       where: { userName, isDeleted: false },
       select: { id: true },
     });
     if (!staff) throw new BadRequestException('Staff not found');
-    const request = await this.prisma.request.create({
+    const request = await gateway.request.create({
       data: {
         type: body.type ?? 'late_arrival',
         status: 'PENDING',
         metadata: (body.metadata ?? {}) as any,
       },
     });
-    await this.prisma.staffRequest.create({
+    await gateway.staffRequest.create({
       data: { requestId: request.id, staffId: staff.id },
     });
     return {
@@ -442,32 +463,34 @@ export class HrAppService {
     };
   }
 
-  async deleteRequest(userName: string, id: string) {
+  async deleteRequest(userName: string, id: string, tenantId: string) {
     const requestId = parseInt(id, 10);
     if (Number.isNaN(requestId)) throw new BadRequestException('Invalid request id');
-    const staff = await this.prisma.staff.findFirst({
+    const gateway = await this.this.tenantGateway.getGatewayClient(tenantId);
+    const staff = await gateway.staff.findFirst({
       where: { userName, isDeleted: false },
       select: { id: true },
     });
     if (!staff) throw new BadRequestException('Staff not found');
-    const sr = await this.prisma.staffRequest.findFirst({
+    const sr = await gateway.staffRequest.findFirst({
       where: { requestId, staffId: staff.id },
       select: { id: true },
     });
     if (!sr) throw new NotFoundException('Request not found');
-    await this.prisma.staffRequest.delete({ where: { id: sr.id } });
-    await this.prisma.request.delete({ where: { id: requestId } });
+    await gateway.staffRequest.delete({ where: { id: sr.id } });
+    await gateway.request.delete({ where: { id: requestId } });
     return { success: true };
   }
 
-  async updateRequestStatus(id: string, status: 'APPROVED' | 'REJECTED') {
+  async updateRequestStatus(id: string, status: 'APPROVED' | 'REJECTED', tenantId: string) {
     const requestId = parseInt(id, 10);
     if (Number.isNaN(requestId)) throw new BadRequestException('Invalid request id');
-    const request = await this.prisma.request.findUnique({
+    const gateway = await this.this.tenantGateway.getGatewayClient(tenantId);
+    const request = await gateway.request.findUnique({
       where: { id: requestId },
     });
     if (!request) throw new NotFoundException('Request not found');
-    await this.prisma.request.update({
+    await gateway.request.update({
       where: { id: requestId },
       data: { status },
     });

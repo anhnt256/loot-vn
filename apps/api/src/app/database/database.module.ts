@@ -3,11 +3,13 @@ import {
   PrismaService,
   TenantPrismaService,
   FnetPrismaService,
+  GatewayPrismaService,
 } from './prisma.service';
+import { TenantGatewayService } from './tenant-gateway.service';
 
 @Global()
 @Module({
-  providers: [PrismaService, TenantPrismaService, FnetPrismaService],
-  exports: [PrismaService, TenantPrismaService, FnetPrismaService],
+  providers: [PrismaService, TenantPrismaService, FnetPrismaService, GatewayPrismaService, TenantGatewayService],
+  exports: [PrismaService, TenantPrismaService, FnetPrismaService, GatewayPrismaService, TenantGatewayService],
 })
 export class DatabaseModule {}

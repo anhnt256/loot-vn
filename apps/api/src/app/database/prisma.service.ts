@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnApplicationShutdown } from '@nestjs/common';
 import {
   PrismaClient,
   FnetPrismaClient,
@@ -21,6 +21,35 @@ export class TenantPrismaService
 export class PrismaService extends PrismaClient implements OnModuleInit {
   async onModuleInit() {
     await this.$connect();
+  }
+}
+
+/** Gateway DB client by tenant dbUrl (from tenant table, not env). */
+@Injectable()
+export class GatewayPrismaService implements OnApplicationShutdown {
+  private clientCache: Record<string, PrismaClient> = {};
+
+  async getClient(dbUrl: string): Promise<PrismaClient> {
+    if (!dbUrl || dbUrl.trim() === '') {
+      throw new Error('Gateway dbUrl is required (use tenant.dbUrl from tenant table)');
+    }
+    const key = dbUrl.trim();
+    if (!this.clientCache[key]) {
+      const client = new PrismaClient({
+        datasources: {
+          db: { url: key },
+        },
+      });
+      await client.$connect();
+      this.clientCache[key] = client;
+    }
+    return this.clientCache[key];
+  }
+
+  async onApplicationShutdown() {
+    await Promise.all(
+      Object.values(this.clientCache).map((c) => c.$disconnect()),
+    );
   }
 }
 

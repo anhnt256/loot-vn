@@ -1,19 +1,20 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../../database/prisma.service';
+import { TenantGatewayService } from '../../database/tenant-gateway.service';
 import { CreateStaffDto } from './dto/create-staff.dto';
 import { UpdateStaffDto } from './dto/update-staff.dto';
 import * as crypto from 'crypto';
 
 @Injectable()
 export class StaffManagementService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly tenantGateway: TenantGatewayService) {}
 
   private hashPassword(password: string): string {
     return crypto.createHash('sha256').update(password).digest('hex');
   }
 
-  async findAll(includeDeleted = false, type?: string) {
-    return this.prisma.staff.findMany({
+  async findAll(tenantId: string, includeDeleted = false, type?: string) {
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
+    return gateway.staff.findMany({
       where: {
         ...(includeDeleted ? {} : { isDeleted: false }),
         ...(type ? { staffType: type as any } : {}),
@@ -28,8 +29,9 @@ export class StaffManagementService {
     });
   }
 
-  async findOne(id: number) {
-    const staff = await this.prisma.staff.findUnique({
+  async findOne(tenantId: string, id: number) {
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
+    const staff = await gateway.staff.findUnique({
       where: { id },
     });
     if (!staff) {
@@ -38,10 +40,11 @@ export class StaffManagementService {
     return staff;
   }
 
-  async create(createStaffDto: CreateStaffDto) {
+  async create(tenantId: string, createStaffDto: CreateStaffDto) {
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
     const { userName, password, ...rest } = createStaffDto;
 
-    const existingStaff = await this.prisma.staff.findUnique({
+    const existingStaff = await gateway.staff.findUnique({
       where: { userName },
     });
 
@@ -51,7 +54,7 @@ export class StaffManagementService {
 
     const hashedPassword = this.hashPassword(password);
 
-    return this.prisma.staff.create({
+    return gateway.staff.create({
       data: {
         ...rest,
         userName,
@@ -61,13 +64,14 @@ export class StaffManagementService {
     });
   }
 
-  async update(id: number, updateStaffDto: UpdateStaffDto) {
+  async update(tenantId: string, id: number, updateStaffDto: UpdateStaffDto) {
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
     const { password, userName, ...rest } = updateStaffDto as any;
 
-    const staff = await this.findOne(id);
+    const staff = await this.findOne(tenantId, id);
 
     if (userName && userName !== staff.userName) {
-      const existingStaff = await this.prisma.staff.findUnique({
+      const existingStaff = await gateway.staff.findUnique({
         where: { userName },
       });
       if (existingStaff) {
@@ -88,7 +92,6 @@ export class StaffManagementService {
       data.password = this.hashPassword(password);
     }
 
-    // Convert string dates to Date objects if they exist
     const dateFields = ['dateOfBirth', 'hireDate', 'idCardExpiryDate', 'idCardIssueDate', 'resignDate'];
     for (const field of dateFields) {
       if (data[field]) {
@@ -96,19 +99,20 @@ export class StaffManagementService {
       }
     }
 
-    return this.prisma.staff.update({
+    return gateway.staff.update({
       where: { id },
       data,
     });
   }
 
-  async remove(id: number) {
-    const staff = await this.findOne(id);
+  async remove(tenantId: string, id: number) {
+    const staff = await this.findOne(tenantId, id);
     if (staff.isAdmin) {
       throw new BadRequestException('Cannot delete admin accounts');
     }
 
-    return this.prisma.staff.update({
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
+    return gateway.staff.update({
       where: { id },
       data: {
         isDeleted: true,
@@ -117,11 +121,11 @@ export class StaffManagementService {
     });
   }
 
-  async resetPassword(id: number) {
-    await this.findOne(id);
+  async resetPassword(tenantId: string, id: number) {
+    await this.findOne(tenantId, id);
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
     const resetPasswordHash = this.hashPassword(`RESET_PASSWORD_REQUIRED_${id}`);
-    
-    return this.prisma.staff.update({
+    return gateway.staff.update({
       where: { id },
       data: {
         password: resetPasswordHash,

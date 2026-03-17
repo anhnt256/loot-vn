@@ -1,34 +1,41 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Req, UseGuards, BadRequestException } from '@nestjs/common';
 import { WorkShiftService } from './work-shift.service';
 import { AuthGuard } from '../../auth/auth.guard';
+import { getTenantIdFromRequest } from '../../hr-app/tenant-from-request';
 
 @Controller('hr-manager/work-shifts')
 @UseGuards(AuthGuard)
 export class WorkShiftController {
   constructor(private readonly workShiftService: WorkShiftService) {}
 
+  private getTenantId(req: any): string {
+    const id = getTenantIdFromRequest(req);
+    if (!id) throw new BadRequestException('Missing x-tenant-id or invalid Origin/Referer');
+    return id;
+  }
+
   @Get()
-  async findAll() {
-    return this.workShiftService.findAll();
+  async findAll(@Req() req: any) {
+    return this.workShiftService.findAll(this.getTenantId(req));
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.workShiftService.findOne(+id);
+  async findOne(@Req() req: any, @Param('id') id: string) {
+    return this.workShiftService.findOne(this.getTenantId(req), +id);
   }
 
   @Post()
-  async create(@Body() data: any) {
-    return this.workShiftService.create(data);
+  async create(@Req() req: any, @Body() data: any) {
+    return this.workShiftService.create(this.getTenantId(req), data);
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() data: any) {
-    return this.workShiftService.update(+id, data);
+  async update(@Req() req: any, @Param('id') id: string, @Body() data: any) {
+    return this.workShiftService.update(this.getTenantId(req), +id, data);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return this.workShiftService.remove(+id);
+  async remove(@Req() req: any, @Param('id') id: string) {
+    return this.workShiftService.remove(this.getTenantId(req), +id);
   }
 }

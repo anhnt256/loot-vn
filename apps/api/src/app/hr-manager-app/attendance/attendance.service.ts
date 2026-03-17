@@ -1,31 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../database/prisma.service';
+import { TenantGatewayService } from '../../database/tenant-gateway.service';
 import { dayjs } from '@gateway-workspace/shared/utils';
 
 @Injectable()
 export class AttendanceService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly tenantGateway: TenantGatewayService) {}
 
-  async findAll(filters: { startDate?: string; endDate?: string; staffId?: number }) {
+  async findAll(tenantId: string, filters: { startDate?: string; endDate?: string; staffId?: number }) {
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
     const { startDate, endDate, staffId } = filters;
-    
     const where: any = {};
-    
-    if (staffId) {
-      where.staffId = staffId;
-    }
-    
+    if (staffId) where.staffId = staffId;
     if (startDate || endDate) {
       where.checkInTime = {};
-      if (startDate) {
-        where.checkInTime.gte = dayjs(startDate).toDate();
-      }
-      if (endDate) {
-        where.checkInTime.lte = dayjs(endDate).toDate();
-      }
+      if (startDate) where.checkInTime.gte = dayjs(startDate).toDate();
+      if (endDate) where.checkInTime.lte = dayjs(endDate).toDate();
     }
-
-    return (this.prisma as any).staffTimeTracking.findMany({
+    return (gateway as any).staffTimeTracking.findMany({
       where,
       include: {
         staff: true,
@@ -36,8 +27,8 @@ export class AttendanceService {
     });
   }
 
-  async findAggregated(filters: { startDate?: string; endDate?: string }) {
-    const records = await this.findAll(filters);
+  async findAggregated(tenantId: string, filters: { startDate?: string; endDate?: string }) {
+    const records = await this.findAll(tenantId, filters);
 
     const aggregation = records.reduce((acc: any, record: any) => {
       const staffId = record.staffId;
@@ -62,8 +53,8 @@ export class AttendanceService {
     return Object.values(aggregation);
   }
 
-  async exportToExcel(filters: { startDate?: string; endDate?: string; staffId?: number }) {
-    const records = await this.findAll(filters);
+  async exportToExcel(tenantId: string, filters: { startDate?: string; endDate?: string; staffId?: number }) {
+    const records = await this.findAll(tenantId, filters);
     
     // Create CSV content with UTF-8 BOM
     const header = '\ufeffNhân viên,ID,Ngày,Giờ vào,Giờ ra,Tổng giờ (phút)\n';
@@ -82,8 +73,9 @@ export class AttendanceService {
     return header + rows;
   }
 
-  async create(data: any) {
-    return (this.prisma as any).staffTimeTracking.create({
+  async create(tenantId: string, data: any) {
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
+    return (gateway as any).staffTimeTracking.create({
       data: {
         staffId: parseInt(data.staffId, 10),
         checkInTime: data.checkInTime ? dayjs(data.checkInTime).toDate() : new Date(),
@@ -92,20 +84,21 @@ export class AttendanceService {
     });
   }
 
-  async update(id: number, data: any) {
+  async update(tenantId: string, id: number, data: any) {
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
     const updateData: any = {};
     if (data.checkInTime) updateData.checkInTime = dayjs(data.checkInTime).toDate();
     if (data.checkOutTime) updateData.checkOutTime = dayjs(data.checkOutTime).toDate();
     if (data.staffId) updateData.staffId = parseInt(data.staffId, 10);
-
-    return (this.prisma as any).staffTimeTracking.update({
+    return (gateway as any).staffTimeTracking.update({
       where: { id },
       data: updateData,
     });
   }
 
-  async remove(id: number) {
-    return (this.prisma as any).staffTimeTracking.delete({
+  async remove(tenantId: string, id: number) {
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
+    return (gateway as any).staffTimeTracking.delete({
       where: { id },
     });
   }

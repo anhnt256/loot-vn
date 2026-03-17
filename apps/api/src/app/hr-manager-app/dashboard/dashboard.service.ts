@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../database/prisma.service';
+import { TenantGatewayService } from '../../database/tenant-gateway.service';
 import { dayjs } from '@gateway-workspace/shared/utils';
 
 @Injectable()
 export class DashboardService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly tenantGateway: TenantGatewayService) {}
 
-  async getStats() {
+  async getStats(tenantId: string) {
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
     try {
       console.log(`[DashboardService] Fetching stats`);
       const now = dayjs().tz('Asia/Ho_Chi_Minh');
@@ -15,18 +16,18 @@ export class DashboardService {
       const currentYear = now.year();
 
       // 1. Total Staff
-      const totalStaff = await this.prisma.staff.count({
+      const totalStaff = await gateway.staff.count({
         where: { isDeleted: false, isAdmin: false },
       });
 
-      const staffLastMonth = await this.prisma.staff.count({
+      const staffLastMonth = await gateway.staff.count({
         where: { isDeleted: false, isAdmin: false, createdAt: { lt: startOfMonth } },
       });
       const staffChange = staffLastMonth === 0 ? 0 : ((totalStaff - staffLastMonth) / staffLastMonth) * 100;
 
       // 2. Financial Metrics (Real-time calculation if StaffSalary is empty)
       // Fetch all staff in branch to get base salaries
-      const staffInBranch = await this.prisma.staff.findMany({
+      const staffInBranch = await gateway.staff.findMany({
         where: { isDeleted: false, isAdmin: false },
         select: { id: true, baseSalary: true },
       });
@@ -34,7 +35,7 @@ export class DashboardService {
       const staffBaseSalaryMap = new Map(staffInBranch.map(s => [s.id, s.baseSalary || 0]));
 
       // Get finalized salary stats if any (for history or current if generated)
-      const finalizedSalaryStats = await this.prisma.staffSalary.aggregate({
+      const finalizedSalaryStats = await gateway.staffSalary.aggregate({
         where: {
           month: currentMonth,
           year: currentYear,
@@ -44,7 +45,7 @@ export class DashboardService {
       });
 
       // Get real-time bonuses and penalties for the month
-      const realTimeBonuses = await this.prisma.staffBonus.aggregate({
+      const realTimeBonuses = await gateway.staffBonus.aggregate({
         where: {
           staffId: { in: staffIds },
           rewardDate: { gte: startOfMonth, lt: dayjs(startOfMonth).add(1, 'month').toDate() },
@@ -52,7 +53,7 @@ export class DashboardService {
         _sum: { amount: true },
       });
 
-      const realTimePenalties = await this.prisma.staffPenalty.aggregate({
+      const realTimePenalties = await gateway.staffPenalty.aggregate({
         where: {
           staffId: { in: staffIds },
           penaltyDate: { gte: startOfMonth, lt: dayjs(startOfMonth).add(1, 'month').toDate() },
@@ -61,7 +62,7 @@ export class DashboardService {
       });
 
       // 3. Working Hours and Real-time accrued salary
-      const timeTrackingStats = await this.prisma.staffTimeTracking.findMany({
+      const timeTrackingStats = await gateway.staffTimeTracking.findMany({
         where: {
           staffId: { in: staffIds },
           checkInTime: { gte: startOfMonth, lt: dayjs(startOfMonth).add(1, 'month').toDate() },
@@ -94,7 +95,7 @@ export class DashboardService {
       const startOfLastMonth = lastMonthDate.startOf('month').toDate();
       const endOfLastMonth = lastMonthDate.endOf('month').toDate();
 
-      const finalizedSalaryLastMonth = await this.prisma.staffSalary.aggregate({
+      const finalizedSalaryLastMonth = await gateway.staffSalary.aggregate({
         where: { month: lm, year: ly, staffId: { in: staffIds } },
         _sum: { total: true },
       });
@@ -102,7 +103,7 @@ export class DashboardService {
       let salaryLastMonth = finalizedSalaryLastMonth._sum.total || 0;
       if (salaryLastMonth === 0) {
         // Fallback to real-time calculation for last month if no payroll finalized
-        const timeTrackingLastMonth = await this.prisma.staffTimeTracking.findMany({
+        const timeTrackingLastMonth = await gateway.staffTimeTracking.findMany({
           where: {
             staffId: { in: staffIds },
             checkInTime: { gte: startOfLastMonth, lt: endOfLastMonth },
@@ -111,12 +112,12 @@ export class DashboardService {
           select: { staffId: true, checkInTime: true, checkOutTime: true },
         });
 
-        const bonusesLastMonth = await this.prisma.staffBonus.aggregate({
+        const bonusesLastMonth = await gateway.staffBonus.aggregate({
           where: { staffId: { in: staffIds }, rewardDate: { gte: startOfLastMonth, lt: endOfLastMonth } },
           _sum: { amount: true },
         });
 
-        const penaltiesLastMonth = await this.prisma.staffPenalty.aggregate({
+        const penaltiesLastMonth = await gateway.staffPenalty.aggregate({
           where: { staffId: { in: staffIds }, penaltyDate: { gte: startOfLastMonth, lt: endOfLastMonth } },
           _sum: { amount: true },
         });
@@ -140,7 +141,7 @@ export class DashboardService {
         const y = d.year();
         const label = `${m}/${y}`;
         
-        const monthSalary = await this.prisma.staffSalary.aggregate({
+        const monthSalary = await gateway.staffSalary.aggregate({
           where: { month: m, year: y, staffId: { in: staffIds } },
           _sum: { total: true },
         });

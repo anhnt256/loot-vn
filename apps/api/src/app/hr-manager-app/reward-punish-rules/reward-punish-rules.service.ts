@@ -1,14 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../database/prisma.service';
-import { ResetCycle, RewardPunishType, RuleActionType } from '../../../../../../libs/database/src/index';
+import { TenantGatewayService } from '../../database/tenant-gateway.service';
+import { ResetCycle } from '../../../../../../libs/database/src/index';
 import { dayjs } from '@gateway-workspace/shared/utils';
 
 @Injectable()
 export class RewardPunishRulesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly tenantGateway: TenantGatewayService) {}
 
-  async findAll() {
-    return this.prisma.rewardPunishRule.findMany({
+  async findAll(tenantId: string) {
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
+    return gateway.rewardPunishRule.findMany({
       include: {
         severities: {
           orderBy: {
@@ -22,8 +23,9 @@ export class RewardPunishRulesService {
     });
   }
 
-  async findOne(id: number) {
-    const rule = await this.prisma.rewardPunishRule.findUnique({
+  async findOne(tenantId: string, id: number) {
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
+    const rule = await gateway.rewardPunishRule.findUnique({
       where: { id },
       include: {
         severities: {
@@ -37,9 +39,10 @@ export class RewardPunishRulesService {
     return rule;
   }
 
-  async create(data: any) {
+  async create(tenantId: string, data: any) {
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
     const { severities, ...ruleData } = data;
-    return this.prisma.rewardPunishRule.create({
+    return gateway.rewardPunishRule.create({
       data: {
         ...ruleData,
         severities: {
@@ -52,16 +55,13 @@ export class RewardPunishRulesService {
     });
   }
 
-  async update(id: number, data: any) {
+  async update(tenantId: string, id: number, data: any) {
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
     const { severities, ...ruleData } = data;
-    
-    // Simple approach: delete existing severities and recreate
-    // This is safe for configuration rules
-    await this.prisma.ruleSeverity.deleteMany({
+    await gateway.ruleSeverity.deleteMany({
       where: { ruleId: id },
     });
-
-    return this.prisma.rewardPunishRule.update({
+    return gateway.rewardPunishRule.update({
       where: { id },
       data: {
         ...ruleData,
@@ -75,23 +75,20 @@ export class RewardPunishRulesService {
     });
   }
 
-  async remove(id: number) {
-    return this.prisma.rewardPunishRule.delete({
+  async remove(tenantId: string, id: number) {
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
+    return gateway.rewardPunishRule.delete({
       where: { id },
     });
   }
 
-  /**
-   * Core logic to process a violation and determine the penalty
-   */
-  async processStaffViolation(staffId: number, ruleId: number, date: Date = new Date()) {
-    const rule = await this.findOne(ruleId);
+  async processStaffViolation(tenantId: string, staffId: number, ruleId: number, date: Date = new Date()) {
+    const rule = await this.findOne(tenantId, ruleId);
     if (!rule.isActive) return null;
 
     const cycleStartDate = this.calculateCycleStartDate(rule.resetCycle, date);
-
-    // Count existing violations in current cycle (Soft Reset)
-    const currentCount = await this.prisma.staffViolation.count({
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
+    const currentCount = await gateway.staffViolation.count({
       where: {
         staffId,
         ruleId,
@@ -112,9 +109,7 @@ export class RewardPunishRulesService {
     }
 
     const amount = severity?.amount || null;
-
-    // Record the violation
-    const violation = await this.prisma.staffViolation.create({
+    const violation = await gateway.staffViolation.create({
       data: {
         staffId,
         ruleId,

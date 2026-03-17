@@ -7,6 +7,12 @@ import { getTenantSlugFromRequest } from './tenant-from-request';
 export class HrAppController {
   constructor(private readonly hrAppService: HrAppService) {}
 
+  private getTenantId(req: any): string {
+    const id = (req.headers['x-tenant-id'] as string)?.trim() || getTenantSlugFromRequest(req);
+    if (!id) throw new BadRequestException('x-tenant-id header is required');
+    return id;
+  }
+
   @Post('login')
   async login(@Body() body: { userName: string; password?: string, loginMethod?: string }, @Req() req: any) {
     if (body.loginMethod && body.loginMethod !== 'staff') {
@@ -23,17 +29,18 @@ export class HrAppController {
   @Get('my-info')
   @UseGuards(AuthGuard)
   async getMyInfo(@Req() req: any) {
-    // AuthGuard puts user payload in req.user
     const { userName } = req.user;
-    const staff = await this.hrAppService.getMyInfo(userName);
+    const tenantId = this.getTenantId(req);
+    const staff = await this.hrAppService.getMyInfo(userName, tenantId);
     return { success: true, data: staff };
   }
 
   @Post('time-tracking')
   @UseGuards(AuthGuard)
-  async handleTimeTracking(@Body() body: { staffId: number; action?: string; recordId?: number; month?: string; year?: string; date?: string }) {
+  async handleTimeTracking(@Body() body: { staffId: number; action?: string; recordId?: number; month?: string; year?: string; date?: string }, @Req() req: any) {
+    const tenantId = this.getTenantId(req);
     if (body.action) {
-      const result = await this.hrAppService.postTimeTracking(body.staffId, body.action, body.recordId);
+      const result = await this.hrAppService.postTimeTracking(body.staffId, body.action, body.recordId, tenantId);
       return { success: true, ...result };
     }
     const data = await this.hrAppService.getTimeTracking({
@@ -41,7 +48,7 @@ export class HrAppController {
       month: body.month,
       year: body.year,
       date: body.date
-    });
+    }, tenantId);
     return { success: true, data };
   }
 
@@ -51,11 +58,12 @@ export class HrAppController {
     @Body() body: { staffId: number; month: string; year: string },
     @Req() req: any
   ) {
+    const tenantId = this.getTenantId(req);
     const data = await this.hrAppService.getSalary({
       staffId: body.staffId,
       month: body.month,
       year: body.year,
-    });
+    }, tenantId);
     return { success: true, data };
   }
 
@@ -65,11 +73,12 @@ export class HrAppController {
     @Body() body: { staffId: number; month: string; year: string },
     @Req() req: any
   ) {
+    const tenantId = this.getTenantId(req);
     const data = await this.hrAppService.getSalaryHistory({
       staffId: body.staffId,
       month: body.month,
       year: body.year,
-    });
+    }, tenantId);
     return { success: true, data };
   }
 
@@ -77,7 +86,8 @@ export class HrAppController {
   @UseGuards(AuthGuard)
   async getRequests(@Req() req: any) {
     const { userName } = req.user;
-    const data = await this.hrAppService.getRequests(userName);
+    const tenantId = this.getTenantId(req);
+    const data = await this.hrAppService.getRequests(userName, tenantId);
     return { success: true, data };
   }
 
@@ -85,7 +95,8 @@ export class HrAppController {
   @UseGuards(AuthGuard)
   async createRequest(@Req() req: any, @Body() body: { type: string; metadata?: Record<string, unknown> }) {
     const { userName } = req.user;
-    const data = await this.hrAppService.createRequest(userName, body);
+    const tenantId = this.getTenantId(req);
+    const data = await this.hrAppService.createRequest(userName, body, tenantId);
     return { success: true, data };
   }
 
@@ -93,21 +104,24 @@ export class HrAppController {
   @UseGuards(AuthGuard)
   async deleteRequest(@Req() req: any, @Param('id') id: string) {
     const { userName } = req.user;
-    await this.hrAppService.deleteRequest(userName, id);
+    const tenantId = this.getTenantId(req);
+    await this.hrAppService.deleteRequest(userName, id, tenantId);
     return { success: true };
   }
 
   @Get('all-requests')
   @UseGuards(AuthGuard)
   async getAllRequests(@Req() req: any) {
-    const data = await this.hrAppService.getAllRequests();
+    const tenantId = this.getTenantId(req);
+    const data = await this.hrAppService.getAllRequests(tenantId);
     return { success: true, data };
   }
 
   @Patch('requests/:id/status')
   @UseGuards(AuthGuard)
-  async updateRequestStatus(@Param('id') id: string, @Body() body: { status: 'APPROVED' | 'REJECTED' }) {
-    await this.hrAppService.updateRequestStatus(id, body.status);
+  async updateRequestStatus(@Param('id') id: string, @Body() body: { status: 'APPROVED' | 'REJECTED' }, @Req() req: any) {
+    const tenantId = this.getTenantId(req);
+    await this.hrAppService.updateRequestStatus(id, body.status, tenantId);
     return { success: true };
   }
 }
