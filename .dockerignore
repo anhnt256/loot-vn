@@ -16,3 +16,4 @@ tmp
 # Prisma specifics (if using local sqlite database or similar temp files)
 *.db
 *.db-journal
+libs/database/src/lib/generated
