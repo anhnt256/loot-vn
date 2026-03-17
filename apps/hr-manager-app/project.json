@@ -10,7 +10,7 @@
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
-        "outputPath": "dist/apps/hr-manager-app"
+        "outputPath": "dist/apps/hr-manager"
       }
     },
     "serve": {

@@ -10,7 +10,7 @@
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
-        "outputPath": "dist/apps/tenant-manage-app"
+        "outputPath": "dist/apps/tenant-manage"
       },
       "configurations": {
         "development": {

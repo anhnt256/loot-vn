@@ -10,7 +10,7 @@
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
-        "outputPath": "dist/apps/master-app"
+        "outputPath": "dist/apps/master"
       }
     },
     "serve": {

@@ -31,7 +31,7 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), nxViteTsPaths()],
 
     build: {
-      outDir: '../../dist/apps/tenant-manage-app',
+      outDir: '../../dist/apps/tenant-manage',
       emptyOutDir: true,
       reportCompressedSize: true,
       commonjsOptions: {

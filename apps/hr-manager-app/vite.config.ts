@@ -26,7 +26,7 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), nxViteTsPaths()],
 
     build: {
-      outDir: '../../dist/apps/hr-manager-app',
+      outDir: '../../dist/apps/hr-manager',
       emptyOutDir: true,
       reportCompressedSize: true,
       commonjsOptions: {
