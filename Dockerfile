@@ -17,19 +17,16 @@ COPY package*.json ./
 COPY nx.json ./
 COPY tsconfig.base.json ./
 
-# Copy Prisma schema
-COPY libs/database/prisma ./libs/database/prisma
-
 # Install dependencies (using --legacy-peer-deps if needed, or just npm ci)
 RUN npm ci
 
-# Generate Prisma Client explicitly for the Linux environment
+# Copy the rest of the source code (must be before prisma generate so schema paths exist)
+COPY . .
+
+# Generate Prisma Client for Linux (debian-openssl-3.0.x) so engines are not overwritten by host
 RUN npx prisma generate --schema libs/database/prisma/new/schema.prisma && \
     npx prisma generate --schema libs/database/prisma/tenant/schema.prisma && \
     npx prisma generate --schema libs/database/prisma/fnet/schema.prisma
-
-# Copy the rest of the source code
-COPY . .
 
 # Argument for the app name to build
 ARG APP_NAME
@@ -38,7 +35,6 @@ ENV APP_NAME=${APP_NAME}
 ENV TENANT_PREFIX=${TENANT_PREFIX}
 
 # Build the specified application
-# Use TENANT_PREFIX in build commands if necessary (e.g. for environment variables)
 RUN if [ "$APP_NAME" = "gateway-gaming" ] || [ "$APP_NAME" = "api" ]; then \
       npx nx build ${APP_NAME}; \
     else \
@@ -68,7 +64,7 @@ COPY --from=builder /app/dist/apps/${APP_NAME} ./dist/apps/${APP_NAME}
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
 
-# For Next.js apps, we might need public and other files
-# For simplicity, we can copy them if they exist or handle per-app
+# Prisma: point to Query Engine next to the API bundle (when APP_NAME=api)
+ENV PRISMA_QUERY_ENGINE_LIBRARY=/app/dist/apps/api/libquery_engine-debian-openssl-3.0.x.so.node
 
 CMD ["sh", "-c", "if [ -f \"dist/apps/${APP_NAME}/main.js\" ]; then node dist/apps/${APP_NAME}/main.js; else serve -s dist/apps/${APP_NAME} -p ${PORT:-3000}; fi"]
