@@ -88,7 +88,7 @@ services:
 networks:
   # Mạng nội bộ: Tự động tạo tên duy nhất trên VPS (VD: lootvn-govap-internal)
   internal-network:
-    name: ${TENANT_ID}-internal
+    name: ${TENANT_PREFIX:-}internal
     driver: bridge
 
   # Mạng Proxy: Kết nối vào mạng có sẵn của Nginx Proxy Manager
