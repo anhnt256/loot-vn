@@ -56,6 +56,7 @@ jobs:
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             FNET_GV_DATABASE_URL=${{ secrets.FNET_GV_DATABASE_URL }}
             FNET_TP_DATABASE_URL=${{ secrets.FNET_TP_DATABASE_URL }}
+            DATABASE_GMS_URL=${{ secrets.DATABASE_GMS_URL }}
             GATEWAY_BONUS_DEADLINE=${{ secrets.GATEWAY_BONUS_DEADLINE }}
             IS_DEBUG_GO_VAP=${{ secrets.IS_DEBUG_GO_VAP }}
             IS_DEBUG_TAN_PHU=${{ secrets.IS_DEBUG_TAN_PHU }}
