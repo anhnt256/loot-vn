@@ -10,7 +10,8 @@ services:
     container_name: ${TENANT_PREFIX:-}gateway-api
     environment:
       - TZ=Asia/Ho_Chi_Minh
-      - PORT=3000
+      - PORT=7300
+      - HOST=0.0.0.0
     env_file:
       - .env
     restart: always
@@ -29,6 +30,9 @@ services:
         APP_NAME: tenant-manage-app
         TENANT_PREFIX: ${TENANT_PREFIX:-}
     container_name: ${TENANT_PREFIX:-}tenant-manage-app
+    environment:
+      - PORT=7500
+      - HOST=0.0.0.0
     env_file:
       - .env
     restart: always
@@ -46,6 +50,9 @@ services:
         APP_NAME: master-app
         TENANT_PREFIX: ${TENANT_PREFIX:-}
     container_name: ${TENANT_PREFIX:-}master-app
+    environment:
+      - PORT=7700
+      - HOST=0.0.0.0
     env_file:
       - .env
     restart: always
@@ -62,6 +69,9 @@ services:
         APP_NAME: hr-app
         TENANT_PREFIX: ${TENANT_PREFIX:-}
     container_name: ${TENANT_PREFIX:-}hr-app
+    environment:
+      - PORT=7600
+      - HOST=0.0.0.0
     env_file:
       - .env
     restart: always
@@ -78,6 +88,9 @@ services:
         APP_NAME: hr-manager-app
         TENANT_PREFIX: ${TENANT_PREFIX:-}
     container_name: ${TENANT_PREFIX:-}hr-manager-app
+    environment:
+      - PORT=7400
+      - HOST=0.0.0.0
     env_file:
       - .env
     restart: always
