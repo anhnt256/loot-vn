@@ -31,8 +31,12 @@ RUN npx prisma generate --schema libs/database/prisma/new/schema.prisma && \
 # Argument for the app name to build
 ARG APP_NAME
 ARG TENANT_PREFIX=""
+ARG VITE_API_URL=""
+ARG VITE_TENANT_PREFIX=""
 ENV APP_NAME=${APP_NAME}
 ENV TENANT_PREFIX=${TENANT_PREFIX}
+ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_TENANT_PREFIX=${VITE_TENANT_PREFIX}
 
 # Build the specified application
 RUN if [ "$APP_NAME" = "gateway-gaming" ] || [ "$APP_NAME" = "api" ]; then \

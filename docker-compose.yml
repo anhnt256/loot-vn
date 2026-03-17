@@ -29,6 +29,8 @@ services:
       args:
         APP_NAME: tenant-manage
         TENANT_PREFIX: ${TENANT_PREFIX:-}
+        VITE_API_URL: ${VITE_API_URL:-}
+        VITE_TENANT_PREFIX: ${VITE_TENANT_PREFIX:-}
     container_name: ${TENANT_PREFIX:-}tenant-manage
     environment:
       - PORT=7500
@@ -49,6 +51,8 @@ services:
       args:
         APP_NAME: master
         TENANT_PREFIX: ${TENANT_PREFIX:-}
+        VITE_API_URL: ${VITE_API_URL:-}
+        VITE_TENANT_PREFIX: ${VITE_TENANT_PREFIX:-}
     container_name: ${TENANT_PREFIX:-}master
     environment:
       - PORT=7700
@@ -68,6 +72,8 @@ services:
       args:
         APP_NAME: hr
         TENANT_PREFIX: ${TENANT_PREFIX:-}
+        VITE_API_URL: ${VITE_API_URL:-}
+        VITE_TENANT_PREFIX: ${VITE_TENANT_PREFIX:-}
     container_name: ${TENANT_PREFIX:-}hr
     environment:
       - PORT=7600
@@ -87,6 +93,8 @@ services:
       args:
         APP_NAME: hr-manager
         TENANT_PREFIX: ${TENANT_PREFIX:-}
+        VITE_API_URL: ${VITE_API_URL:-}
+        VITE_TENANT_PREFIX: ${VITE_TENANT_PREFIX:-}
     container_name: ${TENANT_PREFIX:-}hr-manager
     environment:
       - PORT=7400

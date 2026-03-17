@@ -4,14 +4,16 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '../../', '');
+  const apiUrl = process.env.VITE_API_URL || env.VITE_API_URL || '';
+  const tenantPrefix = process.env.VITE_TENANT_PREFIX || env.VITE_TENANT_PREFIX || '';
   return {
     root: __dirname,
     cacheDir: '../../node_modules/.vite/apps/hr-manager-app',
 
     define: {
-      'process.env.VITE_TENANT_PREFIX': JSON.stringify(env.VITE_TENANT_PREFIX || ''),
-      'import.meta.env.VITE_API_URL': JSON.stringify(env.VITE_API_URL || ''),
-      'process.env.VITE_API_URL': JSON.stringify(env.VITE_API_URL || ''),
+      'process.env.VITE_TENANT_PREFIX': JSON.stringify(tenantPrefix),
+      'import.meta.env.VITE_API_URL': JSON.stringify(apiUrl),
+      'process.env.VITE_API_URL': JSON.stringify(apiUrl),
     },
 
     server: {
