@@ -1,5 +1,5 @@
 {
-  "name": "master-app",
+  "name": "master",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/master-app/src",
   "projectType": "application",
@@ -17,14 +17,14 @@
       "executor": "@nx/vite:dev-server",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "master-app:build"
+        "buildTarget": "master:build"
       },
       "configurations": {
         "development": {
-          "buildTarget": "master-app:build:development"
+          "buildTarget": "master:build:development"
         },
         "production": {
-          "buildTarget": "master-app:build:production"
+          "buildTarget": "master:build:production"
         }
       }
     }

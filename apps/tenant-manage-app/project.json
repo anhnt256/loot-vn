@@ -1,5 +1,5 @@
 {
-  "name": "tenant-manage-app",
+  "name": "tenant-manage",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/tenant-manage-app/src",
   "projectType": "application",
@@ -25,14 +25,14 @@
       "executor": "@nx/vite:dev-server",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "tenant-manage-app:build"
+        "buildTarget": "tenant-manage:build"
       },
       "configurations": {
         "development": {
-          "buildTarget": "tenant-manage-app:build:development"
+          "buildTarget": "tenant-manage:build:development"
         },
         "production": {
-          "buildTarget": "tenant-manage-app:build:production"
+          "buildTarget": "tenant-manage:build:production"
         }
       }
     },
@@ -40,14 +40,14 @@
       "executor": "@nx/vite:preview",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "tenant-manage-app:build"
+        "buildTarget": "tenant-manage:build"
       },
       "configurations": {
         "development": {
-          "buildTarget": "tenant-manage-app:build:development"
+          "buildTarget": "tenant-manage:build:development"
         },
         "production": {
-          "buildTarget": "tenant-manage-app:build:production"
+          "buildTarget": "tenant-manage:build:production"
         }
       }
     },

@@ -6,8 +6,9 @@ import axios, {
 } from "axios";
 import { getCookie } from "cookies-next";
 
-let host = process.env.NEXT_PUBLIC_GATEWAY_GO_VAP_API;
-let secretKey = process.env.NEXT_PUBLIC_GATEWAY_GO_VAP_SECRET_KEY;
+// Determine host from various environment variables injected by Vite / NextJS
+let host = process.env.VITE_API_URL || '';
+let secretKey = process.env.VITE_GATEWAY_GO_VAP_SECRET_KEY;
 
 const isServer = typeof window === "undefined";
 
@@ -35,12 +36,10 @@ apiClient.interceptors.request.use(async (request) => {
       token = JSON.parse(tokenString);
     }
 
-    if (cookie && cookie === "TAN_PHU") {
-      host = process.env.NEXT_PUBLIC_GATEWAY_TAN_PHU_API;
-      secretKey = process.env.NEXT_PUBLIC_GATEWAY_TAN_PHU_SECRET_KEY;
+    if (cookie && cookie.includes("TAN_PHU")) {
+      secretKey = process.env.VITE_GATEWAY_TAN_PHU_SECRET_KEY;
     } else {
-      host = process.env.NEXT_PUBLIC_GATEWAY_GO_VAP_API;
-      secretKey = process.env.NEXT_PUBLIC_GATEWAY_GO_VAP_SECRET_KEY;
+      secretKey = process.env.VITE_GATEWAY_GO_VAP_SECRET_KEY;
     }
 
     request.baseURL = host;

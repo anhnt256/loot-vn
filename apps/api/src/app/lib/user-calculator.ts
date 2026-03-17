@@ -770,7 +770,7 @@ export async function calculateActiveUsersInfo(
 
       // Tính rounds từ cache đã tính sẵn
       userTopUp = userTopUpsMap.get(userId) || 0;
-      const spendPerRound = Number(process.env.NEXT_PUBLIC_SPEND_PER_ROUND);
+      const spendPerRound = Number(process.env.VITE_SPEND_PER_ROUND || 30000);
       const round = Math.floor(userTopUp ? userTopUp / spendPerRound : 0);
 
       // Lấy từ cache đã tính sẵn

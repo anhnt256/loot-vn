@@ -5,8 +5,8 @@ import axios, {
 } from 'axios';
 import { ACCESS_TOKEN_KEY } from '@/constants/token.constant';
 
-let host = process.env.NEXT_PUBLIC_GATEWAY_GO_VAP_API;
-let secretKey = process.env.NEXT_PUBLIC_GATEWAY_GO_VAP_SECRET_KEY;
+let host = process.env.VITE_API_URL || '';
+let secretKey = process.env.VITE_GATEWAY_GO_VAP_SECRET_KEY;
 
 const apiClient = axios.create({
   baseURL: host,
@@ -22,12 +22,10 @@ apiClient.interceptors.request.use(async (request) => {
     token = JSON.parse(tokenString as string);
   }
 
-  if (cookie && cookie === 'TAN_PHU') {
-    host = process.env.NEXT_PUBLIC_GATEWAY_TAN_PHU_API;
-    secretKey = process.env.NEXT_PUBLIC_GATEWAY_TAN_PHU_SECRET_KEY;
+  if (cookie && cookie.includes('TAN_PHU')) {
+    secretKey = process.env.VITE_GATEWAY_TAN_PHU_SECRET_KEY;
   } else {
-    host = process.env.NEXT_PUBLIC_GATEWAY_GO_VAP_API;
-    secretKey = process.env.NEXT_PUBLIC_GATEWAY_GO_VAP_SECRET_KEY;
+    secretKey = process.env.VITE_GATEWAY_GO_VAP_SECRET_KEY;
   }
 
   request.baseURL = host;

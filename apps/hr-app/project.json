@@ -1,5 +1,5 @@
 {
-  "name": "hr-app",
+  "name": "hr",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/hr-app/src",
   "projectType": "application",
@@ -17,14 +17,14 @@
       "executor": "@nx/vite:dev-server",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "hr-app:build"
+        "buildTarget": "hr:build"
       },
       "configurations": {
         "development": {
-          "buildTarget": "hr-app:build:development"
+          "buildTarget": "hr:build:development"
         },
         "production": {
-          "buildTarget": "hr-app:build:production"
+          "buildTarget": "hr:build:production"
         }
       }
     }

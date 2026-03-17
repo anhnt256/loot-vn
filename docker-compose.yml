@@ -22,14 +22,14 @@ services:
   # Frontend Service (Next.js) - Removed as Next JS frontend is not in project.json list
   # frontend and fraud detection were removed from docker-compose.yml
   # Tenant Manage App (Vite)
-  tenant-manage-app:
+  tenant-manage:
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        APP_NAME: tenant-manage-app
+        APP_NAME: tenant-manage
         TENANT_PREFIX: ${TENANT_PREFIX:-}
-    container_name: ${TENANT_PREFIX:-}tenant-manage-app
+    container_name: ${TENANT_PREFIX:-}tenant-manage
     environment:
       - PORT=7500
       - HOST=0.0.0.0
@@ -42,14 +42,14 @@ services:
 
 
   # Master App (Vite)
-  master-app:
+  master:
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        APP_NAME: master-app
+        APP_NAME: master
         TENANT_PREFIX: ${TENANT_PREFIX:-}
-    container_name: ${TENANT_PREFIX:-}master-app
+    container_name: ${TENANT_PREFIX:-}master
     environment:
       - PORT=7700
       - HOST=0.0.0.0
@@ -61,14 +61,14 @@ services:
       - proxy-network
 
   # HR App (Vite)
-  hr-app:
+  hr:
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        APP_NAME: hr-app
+        APP_NAME: hr
         TENANT_PREFIX: ${TENANT_PREFIX:-}
-    container_name: ${TENANT_PREFIX:-}hr-app
+    container_name: ${TENANT_PREFIX:-}hr
     environment:
       - PORT=7600
       - HOST=0.0.0.0
@@ -80,14 +80,14 @@ services:
       - proxy-network
 
   # Manager App (Vite)
-  hr-manager-app:
+  hr-manager:
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        APP_NAME: hr-manager-app
+        APP_NAME: hr-manager
         TENANT_PREFIX: ${TENANT_PREFIX:-}
-    container_name: ${TENANT_PREFIX:-}hr-manager-app
+    container_name: ${TENANT_PREFIX:-}hr-manager
     environment:
       - PORT=7400
       - HOST=0.0.0.0

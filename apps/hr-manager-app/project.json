@@ -1,5 +1,5 @@
 {
-  "name": "hr-manager-app",
+  "name": "hr-manager",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/hr-manager-app/src",
   "projectType": "application",
@@ -17,14 +17,14 @@
       "executor": "@nx/vite:dev-server",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "hr-manager-app:build"
+        "buildTarget": "hr-manager:build"
       },
       "configurations": {
         "development": {
-          "buildTarget": "hr-manager-app:build:development"
+          "buildTarget": "hr-manager:build:development"
         },
         "production": {
-          "buildTarget": "hr-manager-app:build:production"
+          "buildTarget": "hr-manager:build:production"
         }
       }
     }
