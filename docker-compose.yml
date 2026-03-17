@@ -17,7 +17,8 @@ services:
       - .env
     restart: always
     networks:
-      - loot-vn-network
+      - internal-network
+      - proxy-network # Để Nginx Proxy Manager nhìn thấy API này
 
   # Frontend Service (Next.js) - Removed as Next JS frontend is not in project.json list
   # frontend and fraud detection were removed from docker-compose.yml
@@ -34,7 +35,7 @@ services:
       - .env
     restart: always
     networks:
-      - loot-vn-network
+      - internal-network
 
 
   # Master App (Vite)
@@ -50,7 +51,7 @@ services:
       - .env
     restart: always
     networks:
-      - loot-vn-network
+      - internal-network
 
   # HR App (Vite)
   hr-app:
@@ -65,7 +66,7 @@ services:
       - .env
     restart: always
     networks:
-      - loot-vn-network
+      - internal-network
 
   # Manager App (Vite)
   hr-manager-app:
@@ -80,10 +81,17 @@ services:
       - .env
     restart: always
     networks:
-      - loot-vn-network
+      - internal-network
 
 
 
 networks:
-  loot-vn-network:
+  # Mạng nội bộ: Tự động tạo tên duy nhất trên VPS (VD: lootvn-govap-internal)
+  internal-network:
+    name: ${TENANT_ID}-internal
     driver: bridge
+
+  # Mạng Proxy: Kết nối vào mạng có sẵn của Nginx Proxy Manager
+  proxy-network:
+    external: true
+    name: nginx-proxy-manager_default

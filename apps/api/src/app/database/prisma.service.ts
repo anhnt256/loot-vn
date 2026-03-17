@@ -1,8 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import {
   PrismaClient,
-  FnetGVPrismaClient,
-  FnetTPPrismaClient,
+  FnetPrismaClient,
   TenantPrismaClient,
 } from '@gateway-workspace/database';
 
@@ -26,41 +25,33 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
 }
 
 @Injectable()
-// @ts-ignore: PrismaClient missing index signature
-export class FnetGVPrismaService
-  extends FnetGVPrismaClient
-  implements OnModuleInit
-{
-  constructor() {
-    super({
-      datasources: {
-        db: {
-          url: process.env.FNET_GV_DATABASE_URL,
-        },
-      },
-    });
-  }
-  async onModuleInit() {
-    await this.$connect();
-  }
-}
+export class FnetPrismaService {
+  private clientCache: Record<string, FnetPrismaClient> = {};
 
-@Injectable()
-// @ts-ignore: PrismaClient missing index signature
-export class FnetTPPrismaService
-  extends FnetTPPrismaClient
-  implements OnModuleInit
-{
-  constructor() {
-    super({
-      datasources: {
-        db: {
-          url: process.env.FNET_TP_DATABASE_URL,
+  async getClient(fnetUrl: string): Promise<FnetPrismaClient> {
+    if (!fnetUrl) {
+      throw new Error('Fnet URL is required but not provided');
+    }
+
+    if (!this.clientCache[fnetUrl]) {
+      const client = new FnetPrismaClient({
+        datasources: {
+          db: {
+            url: fnetUrl,
+          },
         },
-      },
-    });
+      });
+      await client.$connect();
+      this.clientCache[fnetUrl] = client;
+    }
+
+    return this.clientCache[fnetUrl];
   }
-  async onModuleInit() {
-    await this.$connect();
+
+  async onApplicationShutdown() {
+    const disconnectPromises = Object.values(this.clientCache).map((client) =>
+      client.$disconnect(),
+    );
+    await Promise.all(disconnectPromises);
   }
 }

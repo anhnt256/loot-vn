@@ -1,4 +1,4 @@
-import { db, getFnetDBByBranch } from '@/lib/db';
+import { db, getFnetDB } from '@/lib/db';
 import { mapWorkShiftNameToShiftEnum } from '@/lib/work-shift-utils';
 
 // Prisma ShiftRevenueType: MORNING | AFTERNOON | EVENING
@@ -41,6 +41,7 @@ type RevenueRow = { shift: string; gamingRevenue: unknown };
  */
 export async function verifyFnetShifts(
   branch: string,
+  fnetUrl: string,
   serveDate: string,
 ): Promise<FnetShiftVerifyResult> {
   const workShiftRows = (await db.$queryRawUnsafe(
@@ -60,7 +61,7 @@ export async function verifyFnetShifts(
     revenueByShift.set(r.shift, rev);
   }
 
-  const fnetDB = getFnetDBByBranch(branch);
+  const fnetDB = await getFnetDB(fnetUrl);
   const rows: FnetShiftVerifyRow[] = [];
 
   for (const ws of workShiftRows) {

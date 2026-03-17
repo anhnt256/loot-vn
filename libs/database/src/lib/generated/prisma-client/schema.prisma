@@ -222,40 +222,41 @@ model Computer {
 }
 
 model Staff {
-  id                       Int              @id @default(autoincrement())
-  userName                 String           @unique
+  id                       Int                 @id @default(autoincrement())
+  userName                 String              @unique
   password                 String
-  isDeleted                Boolean          @default(false)
-  isAdmin                  Boolean          @default(false)
-  createdAt                DateTime         @default(now())
+  isDeleted                Boolean             @default(false)
+  isAdmin                  Boolean             @default(false)
+  createdAt                DateTime            @default(now())
   updatedAt                DateTime
-  address                  String?          @db.Text
+  address                  String?             @db.Text
   dateOfBirth              DateTime?
-  email                    String?          @db.VarChar(255)
-  fullName                 String           @db.VarChar(255)
-  gender                   Staff_gender     @default(OTHER)
+  email                    String?             @db.VarChar(255)
+  fullName                 String              @db.VarChar(255)
+  gender                   Staff_gender        @default(OTHER)
   hireDate                 DateTime?
-  idCard                   String?          @db.VarChar(20)
+  idCard                   String?             @db.VarChar(20)
   idCardExpiryDate         DateTime?
   idCardIssueDate          DateTime?
-  note                     String?          @db.Text
-  phone                    String?          @db.VarChar(15)
+  note                     String?             @db.Text
+  phone                    String?             @db.VarChar(15)
   resignDate               DateTime?
-  staffType                Staff_staffType  @default(STAFF)
-  needCheckMacAddress      Boolean          @default(true)
-  bankAccountName          String?          @db.VarChar(255)
-  bankAccountNumber        String?          @db.VarChar(50)
-  bankName                 String?          @db.VarChar(255)
-  baseSalary               Float            @default(0)
-  counterStaffReports      Report[]         @relation("CounterStaff")
-  kitchenStaffReports      Report[]         @relation("KitchenStaff")
-  securityStaffReports     Report[]         @relation("SecurityStaff")
-  morningHandoverReports   HandoverReport[] @relation("MorningStaff")
-  afternoonHandoverReports HandoverReport[] @relation("AfternoonStaff")
-  eveningHandoverReports   HandoverReport[] @relation("EveningStaff")
+  staffType                Staff_staffType     @default(STAFF)
+  needCheckMacAddress      Boolean             @default(true)
+  bankAccountName          String?             @db.VarChar(255)
+  bankAccountNumber        String?             @db.VarChar(50)
+  bankName                 String?             @db.VarChar(255)
+  baseSalary               Float               @default(0)
+  counterStaffReports      Report[]            @relation("CounterStaff")
+  kitchenStaffReports      Report[]            @relation("KitchenStaff")
+  securityStaffReports     Report[]            @relation("SecurityStaff")
+  morningHandoverReports   HandoverReport[]    @relation("MorningStaff")
+  afternoonHandoverReports HandoverReport[]    @relation("AfternoonStaff")
+  eveningHandoverReports   HandoverReport[]    @relation("EveningStaff")
+  workShiftId              Int?
+  workShift                WorkShift?          @relation(fields: [workShiftId], references: [id])
   staffViolations          StaffViolation[]
-  workShiftId              Int?             @map("work_shift_id")
-  workShift                WorkShift?       @relation(fields: [workShiftId], references: [id])
+  staffTimeTrackings       StaffTimeTracking[]
 }
 
 model StaffTimeTracking {
@@ -265,6 +266,7 @@ model StaffTimeTracking {
   checkOutTime DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+  staff        Staff     @relation(fields: [staffId], references: [id])
 
   @@index([staffId])
   @@index([checkInTime])
@@ -280,6 +282,7 @@ model WorkShift {
   updatedAt   DateTime @updatedAt
   isOvernight Boolean  @default(false)
   ffoodId     String?  @map("ffood_id") @db.Char(36)
+  gcpId       String?  @map("gcp_id") @db.VarChar(255)
   staffs      Staff[]
 
   @@index([name])
@@ -302,6 +305,7 @@ model WorkShiftRevenueReport {
   createdAt           DateTime         @default(now())
   updatedAt           DateTime         @updatedAt
 
+  @@unique([reportDate, shift])
   @@index([reportDate])
   @@map("WorkShiftRevenueReport")
 }
@@ -315,6 +319,7 @@ model FraudLoginAlert {
   createdAt   DateTime @default(now())
 
   @@index([loginAt])
+  @@index([serverLogId])
   @@map("FraudLoginAlert")
 }
 
@@ -600,6 +605,7 @@ model UserBirthdayProgress {
   updatedAt  DateTime     @updatedAt
   tier       BirthdayTier @relation(fields: [tierId], references: [id])
 
+  @@unique([userId, tierId])
   @@index([userId])
   @@map("UserBirthdayProgress")
 }
@@ -899,6 +905,7 @@ model EventParticipant {
   event             Event             @relation(fields: [eventId], references: [id])
   user              User?             @relation(fields: [userId], references: [id])
 
+  @@unique([eventId, userId])
   @@index([eventId])
   @@index([userId])
   @@index([status])
@@ -1130,39 +1137,36 @@ model RewardPunishRule {
   id            Int              @id @default(autoincrement())
   name          String           @db.VarChar(255)
   type          RewardPunishType
-  workShift     String?          @map("work_shift") @db.VarChar(50)
-  maxViolations Int              @default(5) @map("max_violations")
-  isActive      Boolean          @default(true) @map("is_active")
-  resetCycle    ResetCycle       @default(MONTHLY) @map("reset_cycle")
+  workShift     String?          @db.VarChar(50)
+  maxViolations Int              @default(5)
+  isActive      Boolean          @default(true)
+  resetCycle    ResetCycle       @default(MONTHLY)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   severities RuleSeverity[]
   violations StaffViolation[]
-
-  @@map("reward_punish_rules")
 }
 
 model RuleSeverity {
   id               Int            @id @default(autoincrement())
-  ruleId           Int            @map("rule_id")
-  occurrenceNumber Int            @map("occurrence_number")
-  actionType       RuleActionType @map("action_type")
+  ruleId           Int
+  occurrenceNumber Int
+  actionType       RuleActionType
   amount           Decimal?       @db.Decimal(12, 0)
 
   rule RewardPunishRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
 
   @@index([ruleId])
-  @@map("rule_severities")
 }
 
 model StaffViolation {
   id               Int      @id @default(autoincrement())
-  staffId          Int      @map("staff_id")
-  ruleId           Int      @map("rule_id")
-  violationDate    DateTime @default(now()) @map("violation_date")
-  occurrenceNumber Int      @map("occurrence_number")
+  staffId          Int
+  ruleId           Int
+  violationDate    DateTime @default(now())
+  occurrenceNumber Int
   amount           Decimal? @db.Decimal(12, 0)
   note             String?  @db.Text
 
@@ -1172,7 +1176,6 @@ model StaffViolation {
   @@index([staffId])
   @@index([ruleId])
   @@index([violationDate])
-  @@map("staff_violations")
 }
 
 enum RewardPunishType {

@@ -43,11 +43,16 @@ export class TenantManagementService {
   }
 
   private toTenantResponse(tenant: { clients?: unknown; [k: string]: unknown }, normalized: { list: unknown[]; dbUrl: string | null; fnetUrl: string | null }) {
+    // Exclude raw dbUrl/fnetUrl if they accidentally exist on the tenant object itself
+    const { dbUrl, fnetUrl, ...safeTenant } = tenant as any;
+    
     return {
-      ...tenant,
-      clients: normalized,
-      dbUrl: normalized.dbUrl,
-      fnetUrl: normalized.fnetUrl,
+      ...safeTenant,
+      clients: {
+        list: normalized.list
+        // explicitly omitting dbUrl and fnetUrl from clients payload for security
+      },
+      // Note: intentionally NOT returning dbUrl/fnetUrl at top-level
     };
   }
 
@@ -77,8 +82,11 @@ export class TenantManagementService {
       },
     });
 
+    const { dbUrl: _dbUrl, fnetUrl: _fnetUrl, clients: _clients, ...safeTenant } = tenant as any;
+
     return {
-      ...tenant,
+      ...safeTenant,
+      clients: { list: [] },
       fullApiKey: fullKey, // Return the full key only once
     };
   }
@@ -101,10 +109,12 @@ export class TenantManagementService {
       };
       updateData.clients = next;
     }
-    return this.prisma.tenant.update({
+    const result = await this.prisma.tenant.update({
       where: { id },
       data: updateData,
     });
+    
+    return this.findOne(id);
   }
 
   async remove(id: string) {

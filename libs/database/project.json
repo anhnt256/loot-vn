@@ -27,10 +27,9 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "npx prisma generate --schema libs/database/prisma/main/schema.prisma",
           "npx prisma generate --schema libs/database/prisma/tenant/schema.prisma",
-          "npx prisma generate --schema libs/database/prisma/fnet/schema.prisma",
-          "npx prisma generate --schema libs/database/prisma/fnet/schemaTP.prisma"
+          "npx prisma generate --schema libs/database/prisma/new/schema.prisma",
+          "npx prisma generate --schema libs/database/prisma/fnet/schema.prisma"
         ],
         "parallel": false
       }

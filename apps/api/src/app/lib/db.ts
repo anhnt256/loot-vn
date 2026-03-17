@@ -1,54 +1,44 @@
 import {
   PrismaClient,
-  FnetGVPrismaClient,
-  FnetTPPrismaClient,
-  FnetGVPrisma,
-  FnetTPPrisma,
+  FnetPrismaClient,
+  FnetPrisma,
 } from '@gateway-workspace/database';
-import { BRANCH } from '@/constants/enum.constant';
 
 export const db = new PrismaClient();
-const fnetGV = new FnetGVPrismaClient({
-  datasources: { db: { url: process.env.FNET_GV_DATABASE_URL } },
-});
-const fnetTP = new FnetTPPrismaClient({
-  datasources: { db: { url: process.env.FNET_TP_DATABASE_URL } },
-});
 
-export function getFnetDBByBranch(branch: string) {
-  const b = (branch || '').trim();
-  switch (b) {
-    case BRANCH.GOVAP:
-      return fnetGV;
-    case BRANCH.TANPHU:
-      return fnetTP;
-    default:
-      return fnetGV;
+// Cache to hold dynamic instantiations of Fnet clients mapped by fnetUrl
+const fnetClientCache: Record<string, FnetPrismaClient> = {};
+
+/**
+ * Get Fnet Database Client dynamically. 
+ * Creates a new PrismaClient connection if one hasn't been cached for the URL.
+ * @param fnetUrl The Fnet Connection URL (retrieved from the Tenant model)
+ */
+export async function getFnetDB(fnetUrl: string): Promise<FnetPrismaClient> {
+  if (!fnetUrl) throw new Error('Fnet URL is required but not provided');
+  
+  if (!fnetClientCache[fnetUrl]) {
+    fnetClientCache[fnetUrl] = new FnetPrismaClient({
+      datasources: { db: { url: fnetUrl } },
+    });
   }
+  
+  return fnetClientCache[fnetUrl];
 }
 
-export async function getFnetDB(branch: string) {
-  if (!branch) throw new Error('Branch is required but not found');
-  return getFnetDBByBranch(branch);
-}
-
-export async function getFnetPrisma(branch: string) {
-  if (!branch) throw new Error('Branch is required but not found');
-  switch (branch) {
-    case BRANCH.GOVAP:
-      return FnetGVPrisma;
-    case BRANCH.TANPHU:
-      return FnetTPPrisma;
-    default:
-      return FnetGVPrisma;
-  }
+export async function getFnetPrisma(fnetUrl: string) {
+  if (!fnetUrl) throw new Error('Fnet URL is required but not provided');
+  return FnetPrisma;
 }
 
 export async function disconnectAll() {
   try {
     await db.$disconnect();
-    await fnetGV.$disconnect();
-    await fnetTP.$disconnect();
+    
+    // Disconnect all dynamically cached Fnet clients
+    const disconnectPromises = Object.values(fnetClientCache).map(client => client.$disconnect());
+    await Promise.all(disconnectPromises);
+    
   } catch (error) {
     console.error('Error disconnecting databases:', error);
   }

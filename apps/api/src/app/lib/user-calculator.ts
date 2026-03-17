@@ -373,6 +373,7 @@ function calculateCheckInMinutes(
 export async function calculateActiveUsersInfo(
   listUsers: number[],
   branch: string,
+  fnetUrl: string,
   isDebug: boolean = false,
   debugUsers: number[] = [],
 ): Promise<UserInfo[]> {
@@ -386,7 +387,7 @@ export async function calculateActiveUsersInfo(
       return [];
     }
 
-    const fnetDB = await getFnetDB(branch);
+    const fnetDB = await getFnetDB(fnetUrl);
 
     // Sử dụng các hàm từ timezone-utils để đảm bảo tính nhất quán
     const startOfDayVN = getStartOfDayVNISO();

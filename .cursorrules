@@ -1,0 +1,5 @@
+# DB Management Rules
+
+- **ABSOLUTELY NO AUTOMATIC PRISMA COMMANDS**: Never automatically run Prisma commands that alter the database schema or data (such as `npx prisma migrate dev`, `npx prisma db push`, `npx prisma migrate reset`, or `npx nx run database:migrate-tenant`). 
+- **WHY**: Because these commands can be destructive and silently result in complete data loss (e.g. dropping tables during a reset or drift correction).
+- **WHAT TO DO INSTEAD**: Only suggest/provide the terminal command in plain text formatted as markdown for the user to run themselves, unless the user explicitly commands you to run it.

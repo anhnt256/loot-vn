@@ -25,7 +25,30 @@ export class OrgManagementService {
     const org = await this.prisma.organization.findUnique({
       where: { id },
       include: {
-        tenants: true,
+        tenants: {
+          select: {
+            id: true,
+            name: true,
+            apiKey: true,
+            dbUrl: false,
+            fnetUrl: false,
+            domain: true,
+            createdAt: true,
+            updatedAt: true,
+            organizationId: true,
+            deletedAt: true,
+            createdBy: true,
+            updatedBy: true,
+            tenantId: true,
+            altName: true,
+            description: true,
+            altDescription: true,
+            clients: true,
+            logo: true,
+            domainPrefix: true,
+            isWorkflowEnabled: true,
+          }
+        },
       },
     });
 
@@ -48,6 +71,28 @@ export class OrgManagementService {
       },
       include: {
         tenants: {
+          select: {
+            id: true,
+            name: true,
+            apiKey: true,
+            dbUrl: false,
+            fnetUrl: false,
+            domain: true,
+            createdAt: true,
+            updatedAt: true,
+            organizationId: true,
+            deletedAt: true,
+            createdBy: true,
+            updatedBy: true,
+            tenantId: true,
+            altName: true,
+            description: true,
+            altDescription: true,
+            clients: true,
+            logo: true,
+            domainPrefix: true,
+            isWorkflowEnabled: true,
+          },
           where: { deletedAt: null },
           orderBy: { name: 'asc' },
         },

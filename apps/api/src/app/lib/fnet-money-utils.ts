@@ -7,7 +7,7 @@ export type WalletType = 'MAIN' | 'SUB';
 
 export interface UpdateFnetMoneyParams {
   userId: number;
-  branch: string;
+  fnetUrl: string;
   walletType: WalletType;
   amount: number; // Amount to ADD (can be negative to subtract)
   targetId?: number;
@@ -27,7 +27,7 @@ export interface UpdateFnetMoneyParams {
 export async function updateFnetMoney(params: UpdateFnetMoneyParams) {
   const {
     userId,
-    branch,
+    fnetUrl,
     walletType,
     amount,
     targetId,
@@ -40,7 +40,7 @@ export async function updateFnetMoney(params: UpdateFnetMoneyParams) {
   );
 
   try {
-    const fnetDB = await getFnetDB(branch);
+    const fnetDB = await getFnetDB(fnetUrl);
 
     // 1. Get current wallet balance from fnetDB
     const walletResult = await fnetDB.$queryRaw<any[]>`
@@ -89,13 +89,13 @@ export async function updateFnetMoney(params: UpdateFnetMoneyParams) {
         // Update MAIN: oldMainMoney -> newMainMoney, sub giữ nguyên
         await db.$executeRaw`
           INSERT INTO FnetHistory (userId, branch, oldMainMoney, newMainMoney, oldSubMoney, newSubMoney, moneyType, targetId, type, createdAt, updatedAt)
-          VALUES (${userId}, ${branch}, ${currentMain}, ${newMain}, ${currentSub}, ${currentSub}, 'MAIN', ${targetId || null}, ${transactionType || null}, ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
+          VALUES (${userId}, 'FNET_UPDATE', ${currentMain}, ${newMain}, ${currentSub}, ${currentSub}, 'MAIN', ${targetId || null}, ${transactionType || null}, ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
         `;
       } else {
         // Update SUB: oldSubMoney -> newSubMoney, main giữ nguyên
         await db.$executeRaw`
           INSERT INTO FnetHistory (userId, branch, oldSubMoney, newSubMoney, oldMainMoney, newMainMoney, moneyType, targetId, type, createdAt, updatedAt)
-          VALUES (${userId}, ${branch}, ${currentSub}, ${newSub}, ${currentMain}, ${currentMain}, 'SUB', ${targetId || null}, ${transactionType || null}, ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
+          VALUES (${userId}, 'FNET_UPDATE', ${currentSub}, ${newSub}, ${currentMain}, ${currentMain}, 'SUB', ${targetId || null}, ${transactionType || null}, ${getCurrentTimeVNDB()}, ${getCurrentTimeVNDB()})
         `;
       }
       console.log(
@@ -165,9 +165,9 @@ export async function updateFnetMoney(params: UpdateFnetMoneyParams) {
 /**
  * Get current wallet balance
  */
-export async function getWalletBalance(userId: number, branch: string) {
+export async function getWalletBalance(userId: number, fnetUrl: string) {
   try {
-    const fnetDB = await getFnetDB(branch);
+    const fnetDB = await getFnetDB(fnetUrl);
 
     const walletResult = await fnetDB.$queryRaw<any[]>`
       SELECT main, sub, userid 

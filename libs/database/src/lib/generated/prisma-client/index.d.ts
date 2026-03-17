@@ -6418,6 +6418,7 @@ export namespace Prisma {
     afternoonHandoverReports: number
     eveningHandoverReports: number
     staffViolations: number
+    staffTimeTrackings: number
   }
 
   export type StaffCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -6428,6 +6429,7 @@ export namespace Prisma {
     afternoonHandoverReports?: boolean | StaffCountOutputTypeCountAfternoonHandoverReportsArgs
     eveningHandoverReports?: boolean | StaffCountOutputTypeCountEveningHandoverReportsArgs
     staffViolations?: boolean | StaffCountOutputTypeCountStaffViolationsArgs
+    staffTimeTrackings?: boolean | StaffCountOutputTypeCountStaffTimeTrackingsArgs
   }
 
   // Custom InputTypes
@@ -6488,6 +6490,13 @@ export namespace Prisma {
    */
   export type StaffCountOutputTypeCountStaffViolationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: StaffViolationWhereInput
+  }
+
+  /**
+   * StaffCountOutputType without action
+   */
+  export type StaffCountOutputTypeCountStaffTimeTrackingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: StaffTimeTrackingWhereInput
   }
 
 
@@ -24399,8 +24408,9 @@ export namespace Prisma {
     morningHandoverReports?: boolean | Staff$morningHandoverReportsArgs<ExtArgs>
     afternoonHandoverReports?: boolean | Staff$afternoonHandoverReportsArgs<ExtArgs>
     eveningHandoverReports?: boolean | Staff$eveningHandoverReportsArgs<ExtArgs>
-    staffViolations?: boolean | Staff$staffViolationsArgs<ExtArgs>
     workShift?: boolean | Staff$workShiftArgs<ExtArgs>
+    staffViolations?: boolean | Staff$staffViolationsArgs<ExtArgs>
+    staffTimeTrackings?: boolean | Staff$staffTimeTrackingsArgs<ExtArgs>
     _count?: boolean | StaffCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["staff"]>
 
@@ -24443,8 +24453,9 @@ export namespace Prisma {
     morningHandoverReports?: boolean | Staff$morningHandoverReportsArgs<ExtArgs>
     afternoonHandoverReports?: boolean | Staff$afternoonHandoverReportsArgs<ExtArgs>
     eveningHandoverReports?: boolean | Staff$eveningHandoverReportsArgs<ExtArgs>
-    staffViolations?: boolean | Staff$staffViolationsArgs<ExtArgs>
     workShift?: boolean | Staff$workShiftArgs<ExtArgs>
+    staffViolations?: boolean | Staff$staffViolationsArgs<ExtArgs>
+    staffTimeTrackings?: boolean | Staff$staffTimeTrackingsArgs<ExtArgs>
     _count?: boolean | StaffCountOutputTypeDefaultArgs<ExtArgs>
   }
 
@@ -24457,8 +24468,9 @@ export namespace Prisma {
       morningHandoverReports: Prisma.$HandoverReportPayload<ExtArgs>[]
       afternoonHandoverReports: Prisma.$HandoverReportPayload<ExtArgs>[]
       eveningHandoverReports: Prisma.$HandoverReportPayload<ExtArgs>[]
-      staffViolations: Prisma.$StaffViolationPayload<ExtArgs>[]
       workShift: Prisma.$WorkShiftPayload<ExtArgs> | null
+      staffViolations: Prisma.$StaffViolationPayload<ExtArgs>[]
+      staffTimeTrackings: Prisma.$StaffTimeTrackingPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -24833,8 +24845,9 @@ export namespace Prisma {
     morningHandoverReports<T extends Staff$morningHandoverReportsArgs<ExtArgs> = {}>(args?: Subset<T, Staff$morningHandoverReportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HandoverReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     afternoonHandoverReports<T extends Staff$afternoonHandoverReportsArgs<ExtArgs> = {}>(args?: Subset<T, Staff$afternoonHandoverReportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HandoverReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     eveningHandoverReports<T extends Staff$eveningHandoverReportsArgs<ExtArgs> = {}>(args?: Subset<T, Staff$eveningHandoverReportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HandoverReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    staffViolations<T extends Staff$staffViolationsArgs<ExtArgs> = {}>(args?: Subset<T, Staff$staffViolationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StaffViolationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     workShift<T extends Staff$workShiftArgs<ExtArgs> = {}>(args?: Subset<T, Staff$workShiftArgs<ExtArgs>>): Prisma__WorkShiftClient<$Result.GetResult<Prisma.$WorkShiftPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    staffViolations<T extends Staff$staffViolationsArgs<ExtArgs> = {}>(args?: Subset<T, Staff$staffViolationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StaffViolationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    staffTimeTrackings<T extends Staff$staffTimeTrackingsArgs<ExtArgs> = {}>(args?: Subset<T, Staff$staffTimeTrackingsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StaffTimeTrackingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -25377,6 +25390,25 @@ export namespace Prisma {
   }
 
   /**
+   * Staff.workShift
+   */
+  export type Staff$workShiftArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WorkShift
+     */
+    select?: WorkShiftSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WorkShift
+     */
+    omit?: WorkShiftOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WorkShiftInclude<ExtArgs> | null
+    where?: WorkShiftWhereInput
+  }
+
+  /**
    * Staff.staffViolations
    */
   export type Staff$staffViolationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -25401,22 +25433,27 @@ export namespace Prisma {
   }
 
   /**
-   * Staff.workShift
+   * Staff.staffTimeTrackings
    */
-  export type Staff$workShiftArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type Staff$staffTimeTrackingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the WorkShift
+     * Select specific fields to fetch from the StaffTimeTracking
      */
-    select?: WorkShiftSelect<ExtArgs> | null
+    select?: StaffTimeTrackingSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the WorkShift
+     * Omit specific fields from the StaffTimeTracking
      */
-    omit?: WorkShiftOmit<ExtArgs> | null
+    omit?: StaffTimeTrackingOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: WorkShiftInclude<ExtArgs> | null
-    where?: WorkShiftWhereInput
+    include?: StaffTimeTrackingInclude<ExtArgs> | null
+    where?: StaffTimeTrackingWhereInput
+    orderBy?: StaffTimeTrackingOrderByWithRelationInput | StaffTimeTrackingOrderByWithRelationInput[]
+    cursor?: StaffTimeTrackingWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: StaffTimeTrackingScalarFieldEnum | StaffTimeTrackingScalarFieldEnum[]
   }
 
   /**
@@ -25648,6 +25685,7 @@ export namespace Prisma {
     checkOutTime?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    staff?: boolean | StaffDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["staffTimeTracking"]>
 
 
@@ -25662,10 +25700,15 @@ export namespace Prisma {
   }
 
   export type StaffTimeTrackingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "staffId" | "checkInTime" | "checkOutTime" | "createdAt" | "updatedAt", ExtArgs["result"]["staffTimeTracking"]>
+  export type StaffTimeTrackingInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    staff?: boolean | StaffDefaultArgs<ExtArgs>
+  }
 
   export type $StaffTimeTrackingPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "StaffTimeTracking"
-    objects: {}
+    objects: {
+      staff: Prisma.$StaffPayload<ExtArgs>
+    }
     scalars: $Extensions.GetPayloadResult<{
       id: number
       staffId: number
@@ -26013,6 +26056,7 @@ export namespace Prisma {
    */
   export interface Prisma__StaffTimeTrackingClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    staff<T extends StaffDefaultArgs<ExtArgs> = {}>(args?: Subset<T, StaffDefaultArgs<ExtArgs>>): Prisma__StaffClient<$Result.GetResult<Prisma.$StaffPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -26065,6 +26109,10 @@ export namespace Prisma {
      */
     omit?: StaffTimeTrackingOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffTimeTrackingInclude<ExtArgs> | null
+    /**
      * Filter, which StaffTimeTracking to fetch.
      */
     where: StaffTimeTrackingWhereUniqueInput
@@ -26083,6 +26131,10 @@ export namespace Prisma {
      */
     omit?: StaffTimeTrackingOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffTimeTrackingInclude<ExtArgs> | null
+    /**
      * Filter, which StaffTimeTracking to fetch.
      */
     where: StaffTimeTrackingWhereUniqueInput
@@ -26100,6 +26152,10 @@ export namespace Prisma {
      * Omit specific fields from the StaffTimeTracking
      */
     omit?: StaffTimeTrackingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffTimeTrackingInclude<ExtArgs> | null
     /**
      * Filter, which StaffTimeTracking to fetch.
      */
@@ -26149,6 +26205,10 @@ export namespace Prisma {
      */
     omit?: StaffTimeTrackingOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffTimeTrackingInclude<ExtArgs> | null
+    /**
      * Filter, which StaffTimeTracking to fetch.
      */
     where?: StaffTimeTrackingWhereInput
@@ -26197,6 +26257,10 @@ export namespace Prisma {
      */
     omit?: StaffTimeTrackingOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffTimeTrackingInclude<ExtArgs> | null
+    /**
      * Filter, which StaffTimeTrackings to fetch.
      */
     where?: StaffTimeTrackingWhereInput
@@ -26240,6 +26304,10 @@ export namespace Prisma {
      */
     omit?: StaffTimeTrackingOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffTimeTrackingInclude<ExtArgs> | null
+    /**
      * The data needed to create a StaffTimeTracking.
      */
     data: XOR<StaffTimeTrackingCreateInput, StaffTimeTrackingUncheckedCreateInput>
@@ -26268,6 +26336,10 @@ export namespace Prisma {
      * Omit specific fields from the StaffTimeTracking
      */
     omit?: StaffTimeTrackingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffTimeTrackingInclude<ExtArgs> | null
     /**
      * The data needed to update a StaffTimeTracking.
      */
@@ -26309,6 +26381,10 @@ export namespace Prisma {
      */
     omit?: StaffTimeTrackingOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffTimeTrackingInclude<ExtArgs> | null
+    /**
      * The filter to search for the StaffTimeTracking to update in case it exists.
      */
     where: StaffTimeTrackingWhereUniqueInput
@@ -26334,6 +26410,10 @@ export namespace Prisma {
      * Omit specific fields from the StaffTimeTracking
      */
     omit?: StaffTimeTrackingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffTimeTrackingInclude<ExtArgs> | null
     /**
      * Filter which StaffTimeTracking to delete.
      */
@@ -26366,6 +26446,10 @@ export namespace Prisma {
      * Omit specific fields from the StaffTimeTracking
      */
     omit?: StaffTimeTrackingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffTimeTrackingInclude<ExtArgs> | null
   }
 
 
@@ -26401,6 +26485,7 @@ export namespace Prisma {
     updatedAt: Date | null
     isOvernight: boolean | null
     ffoodId: string | null
+    gcpId: string | null
   }
 
   export type WorkShiftMaxAggregateOutputType = {
@@ -26413,6 +26498,7 @@ export namespace Prisma {
     updatedAt: Date | null
     isOvernight: boolean | null
     ffoodId: string | null
+    gcpId: string | null
   }
 
   export type WorkShiftCountAggregateOutputType = {
@@ -26425,6 +26511,7 @@ export namespace Prisma {
     updatedAt: number
     isOvernight: number
     ffoodId: number
+    gcpId: number
     _all: number
   }
 
@@ -26449,6 +26536,7 @@ export namespace Prisma {
     updatedAt?: true
     isOvernight?: true
     ffoodId?: true
+    gcpId?: true
   }
 
   export type WorkShiftMaxAggregateInputType = {
@@ -26461,6 +26549,7 @@ export namespace Prisma {
     updatedAt?: true
     isOvernight?: true
     ffoodId?: true
+    gcpId?: true
   }
 
   export type WorkShiftCountAggregateInputType = {
@@ -26473,6 +26562,7 @@ export namespace Prisma {
     updatedAt?: true
     isOvernight?: true
     ffoodId?: true
+    gcpId?: true
     _all?: true
   }
 
@@ -26572,6 +26662,7 @@ export namespace Prisma {
     updatedAt: Date
     isOvernight: boolean
     ffoodId: string | null
+    gcpId: string | null
     _count: WorkShiftCountAggregateOutputType | null
     _avg: WorkShiftAvgAggregateOutputType | null
     _sum: WorkShiftSumAggregateOutputType | null
@@ -26603,6 +26694,7 @@ export namespace Prisma {
     updatedAt?: boolean
     isOvernight?: boolean
     ffoodId?: boolean
+    gcpId?: boolean
     staffs?: boolean | WorkShift$staffsArgs<ExtArgs>
     _count?: boolean | WorkShiftCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["workShift"]>
@@ -26619,9 +26711,10 @@ export namespace Prisma {
     updatedAt?: boolean
     isOvernight?: boolean
     ffoodId?: boolean
+    gcpId?: boolean
   }
 
-  export type WorkShiftOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "startTime" | "endTime" | "FnetStaffId" | "createdAt" | "updatedAt" | "isOvernight" | "ffoodId", ExtArgs["result"]["workShift"]>
+  export type WorkShiftOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "startTime" | "endTime" | "FnetStaffId" | "createdAt" | "updatedAt" | "isOvernight" | "ffoodId" | "gcpId", ExtArgs["result"]["workShift"]>
   export type WorkShiftInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     staffs?: boolean | WorkShift$staffsArgs<ExtArgs>
     _count?: boolean | WorkShiftCountOutputTypeDefaultArgs<ExtArgs>
@@ -26642,6 +26735,7 @@ export namespace Prisma {
       updatedAt: Date
       isOvernight: boolean
       ffoodId: string | null
+      gcpId: string | null
     }, ExtArgs["result"]["workShift"]>
     composites: {}
   }
@@ -27021,6 +27115,7 @@ export namespace Prisma {
     readonly updatedAt: FieldRef<"WorkShift", 'DateTime'>
     readonly isOvernight: FieldRef<"WorkShift", 'Boolean'>
     readonly ffoodId: FieldRef<"WorkShift", 'String'>
+    readonly gcpId: FieldRef<"WorkShift", 'String'>
   }
     
 
@@ -70275,7 +70370,8 @@ export namespace Prisma {
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
     isOvernight: 'isOvernight',
-    ffoodId: 'ffoodId'
+    ffoodId: 'ffoodId',
+    gcpId: 'gcpId'
   };
 
   export type WorkShiftScalarFieldEnum = (typeof WorkShiftScalarFieldEnum)[keyof typeof WorkShiftScalarFieldEnum]
@@ -71094,7 +71190,8 @@ export namespace Prisma {
 
   export const WorkShiftOrderByRelevanceFieldEnum: {
     name: 'name',
-    ffoodId: 'ffoodId'
+    ffoodId: 'ffoodId',
+    gcpId: 'gcpId'
   };
 
   export type WorkShiftOrderByRelevanceFieldEnum = (typeof WorkShiftOrderByRelevanceFieldEnum)[keyof typeof WorkShiftOrderByRelevanceFieldEnum]
@@ -72880,8 +72977,9 @@ export namespace Prisma {
     morningHandoverReports?: HandoverReportListRelationFilter
     afternoonHandoverReports?: HandoverReportListRelationFilter
     eveningHandoverReports?: HandoverReportListRelationFilter
-    staffViolations?: StaffViolationListRelationFilter
     workShift?: XOR<WorkShiftNullableScalarRelationFilter, WorkShiftWhereInput> | null
+    staffViolations?: StaffViolationListRelationFilter
+    staffTimeTrackings?: StaffTimeTrackingListRelationFilter
   }
 
   export type StaffOrderByWithRelationInput = {
@@ -72917,8 +73015,9 @@ export namespace Prisma {
     morningHandoverReports?: HandoverReportOrderByRelationAggregateInput
     afternoonHandoverReports?: HandoverReportOrderByRelationAggregateInput
     eveningHandoverReports?: HandoverReportOrderByRelationAggregateInput
-    staffViolations?: StaffViolationOrderByRelationAggregateInput
     workShift?: WorkShiftOrderByWithRelationInput
+    staffViolations?: StaffViolationOrderByRelationAggregateInput
+    staffTimeTrackings?: StaffTimeTrackingOrderByRelationAggregateInput
     _relevance?: StaffOrderByRelevanceInput
   }
 
@@ -72958,8 +73057,9 @@ export namespace Prisma {
     morningHandoverReports?: HandoverReportListRelationFilter
     afternoonHandoverReports?: HandoverReportListRelationFilter
     eveningHandoverReports?: HandoverReportListRelationFilter
-    staffViolations?: StaffViolationListRelationFilter
     workShift?: XOR<WorkShiftNullableScalarRelationFilter, WorkShiftWhereInput> | null
+    staffViolations?: StaffViolationListRelationFilter
+    staffTimeTrackings?: StaffTimeTrackingListRelationFilter
   }, "id" | "userName">
 
   export type StaffOrderByWithAggregationInput = {
@@ -73038,6 +73138,7 @@ export namespace Prisma {
     checkOutTime?: DateTimeNullableFilter<"StaffTimeTracking"> | Date | string | null
     createdAt?: DateTimeFilter<"StaffTimeTracking"> | Date | string
     updatedAt?: DateTimeFilter<"StaffTimeTracking"> | Date | string
+    staff?: XOR<StaffScalarRelationFilter, StaffWhereInput>
   }
 
   export type StaffTimeTrackingOrderByWithRelationInput = {
@@ -73047,6 +73148,7 @@ export namespace Prisma {
     checkOutTime?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    staff?: StaffOrderByWithRelationInput
   }
 
   export type StaffTimeTrackingWhereUniqueInput = Prisma.AtLeast<{
@@ -73059,6 +73161,7 @@ export namespace Prisma {
     checkOutTime?: DateTimeNullableFilter<"StaffTimeTracking"> | Date | string | null
     createdAt?: DateTimeFilter<"StaffTimeTracking"> | Date | string
     updatedAt?: DateTimeFilter<"StaffTimeTracking"> | Date | string
+    staff?: XOR<StaffScalarRelationFilter, StaffWhereInput>
   }, "id">
 
   export type StaffTimeTrackingOrderByWithAggregationInput = {
@@ -73100,6 +73203,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"WorkShift"> | Date | string
     isOvernight?: BoolFilter<"WorkShift"> | boolean
     ffoodId?: StringNullableFilter<"WorkShift"> | string | null
+    gcpId?: StringNullableFilter<"WorkShift"> | string | null
     staffs?: StaffListRelationFilter
   }
 
@@ -73113,6 +73217,7 @@ export namespace Prisma {
     updatedAt?: SortOrder
     isOvernight?: SortOrder
     ffoodId?: SortOrderInput | SortOrder
+    gcpId?: SortOrderInput | SortOrder
     staffs?: StaffOrderByRelationAggregateInput
     _relevance?: WorkShiftOrderByRelevanceInput
   }
@@ -73130,6 +73235,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"WorkShift"> | Date | string
     isOvernight?: BoolFilter<"WorkShift"> | boolean
     ffoodId?: StringNullableFilter<"WorkShift"> | string | null
+    gcpId?: StringNullableFilter<"WorkShift"> | string | null
     staffs?: StaffListRelationFilter
   }, "id">
 
@@ -73143,6 +73249,7 @@ export namespace Prisma {
     updatedAt?: SortOrder
     isOvernight?: SortOrder
     ffoodId?: SortOrderInput | SortOrder
+    gcpId?: SortOrderInput | SortOrder
     _count?: WorkShiftCountOrderByAggregateInput
     _avg?: WorkShiftAvgOrderByAggregateInput
     _max?: WorkShiftMaxOrderByAggregateInput
@@ -73163,6 +73270,7 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"WorkShift"> | Date | string
     isOvernight?: BoolWithAggregatesFilter<"WorkShift"> | boolean
     ffoodId?: StringNullableWithAggregatesFilter<"WorkShift"> | string | null
+    gcpId?: StringNullableWithAggregatesFilter<"WorkShift"> | string | null
   }
 
   export type WorkShiftRevenueReportWhereInput = {
@@ -73204,6 +73312,7 @@ export namespace Prisma {
 
   export type WorkShiftRevenueReportWhereUniqueInput = Prisma.AtLeast<{
     id?: number
+    reportDate_shift?: WorkShiftRevenueReportReportDateShiftCompoundUniqueInput
     AND?: WorkShiftRevenueReportWhereInput | WorkShiftRevenueReportWhereInput[]
     OR?: WorkShiftRevenueReportWhereInput[]
     NOT?: WorkShiftRevenueReportWhereInput | WorkShiftRevenueReportWhereInput[]
@@ -73220,7 +73329,7 @@ export namespace Prisma {
     confirmedHeldAmount?: DecimalFilter<"WorkShiftRevenueReport"> | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFilter<"WorkShiftRevenueReport"> | Date | string
     updatedAt?: DateTimeFilter<"WorkShiftRevenueReport"> | Date | string
-  }, "id">
+  }, "id" | "reportDate_shift">
 
   export type WorkShiftRevenueReportOrderByWithAggregationInput = {
     id?: SortOrder
@@ -74716,6 +74825,7 @@ export namespace Prisma {
 
   export type UserBirthdayProgressWhereUniqueInput = Prisma.AtLeast<{
     id?: number
+    userId_tierId?: UserBirthdayProgressUserIdTierIdCompoundUniqueInput
     AND?: UserBirthdayProgressWhereInput | UserBirthdayProgressWhereInput[]
     OR?: UserBirthdayProgressWhereInput[]
     NOT?: UserBirthdayProgressWhereInput | UserBirthdayProgressWhereInput[]
@@ -74727,7 +74837,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"UserBirthdayProgress"> | Date | string
     updatedAt?: DateTimeFilter<"UserBirthdayProgress"> | Date | string
     tier?: XOR<BirthdayTierScalarRelationFilter, BirthdayTierWhereInput>
-  }, "id">
+  }, "id" | "userId_tierId">
 
   export type UserBirthdayProgressOrderByWithAggregationInput = {
     id?: SortOrder
@@ -76122,6 +76232,7 @@ export namespace Prisma {
 
   export type EventParticipantWhereUniqueInput = Prisma.AtLeast<{
     id?: number
+    eventId_userId?: EventParticipantEventIdUserIdCompoundUniqueInput
     AND?: EventParticipantWhereInput | EventParticipantWhereInput[]
     OR?: EventParticipantWhereInput[]
     NOT?: EventParticipantWhereInput | EventParticipantWhereInput[]
@@ -76136,7 +76247,7 @@ export namespace Prisma {
     totalSpent?: IntFilter<"EventParticipant"> | number
     event?: XOR<EventScalarRelationFilter, EventWhereInput>
     user?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
-  }, "id">
+  }, "id" | "eventId_userId">
 
   export type EventParticipantOrderByWithAggregationInput = {
     id?: SortOrder
@@ -78020,8 +78131,9 @@ export namespace Prisma {
     morningHandoverReports?: HandoverReportCreateNestedManyWithoutMorningStaffInput
     afternoonHandoverReports?: HandoverReportCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
-    staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
     workShift?: WorkShiftCreateNestedOneWithoutStaffsInput
+    staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
+    staffTimeTrackings?: StaffTimeTrackingCreateNestedManyWithoutStaffInput
   }
 
   export type StaffUncheckedCreateInput = {
@@ -78058,6 +78170,7 @@ export namespace Prisma {
     afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
     staffViolations?: StaffViolationUncheckedCreateNestedManyWithoutStaffInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedCreateNestedManyWithoutStaffInput
   }
 
   export type StaffUpdateInput = {
@@ -78091,8 +78204,9 @@ export namespace Prisma {
     morningHandoverReports?: HandoverReportUpdateManyWithoutMorningStaffNestedInput
     afternoonHandoverReports?: HandoverReportUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
-    staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
     workShift?: WorkShiftUpdateOneWithoutStaffsNestedInput
+    staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUncheckedUpdateInput = {
@@ -78129,6 +78243,7 @@ export namespace Prisma {
     afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
     staffViolations?: StaffViolationUncheckedUpdateManyWithoutStaffNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffCreateManyInput = {
@@ -78217,11 +78332,11 @@ export namespace Prisma {
   }
 
   export type StaffTimeTrackingCreateInput = {
-    staffId: number
     checkInTime?: Date | string
     checkOutTime?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    staff: StaffCreateNestedOneWithoutStaffTimeTrackingsInput
   }
 
   export type StaffTimeTrackingUncheckedCreateInput = {
@@ -78234,11 +78349,11 @@ export namespace Prisma {
   }
 
   export type StaffTimeTrackingUpdateInput = {
-    staffId?: IntFieldUpdateOperationsInput | number
     checkInTime?: DateTimeFieldUpdateOperationsInput | Date | string
     checkOutTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    staff?: StaffUpdateOneRequiredWithoutStaffTimeTrackingsNestedInput
   }
 
   export type StaffTimeTrackingUncheckedUpdateInput = {
@@ -78260,7 +78375,6 @@ export namespace Prisma {
   }
 
   export type StaffTimeTrackingUpdateManyMutationInput = {
-    staffId?: IntFieldUpdateOperationsInput | number
     checkInTime?: DateTimeFieldUpdateOperationsInput | Date | string
     checkOutTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -78285,6 +78399,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     isOvernight?: boolean
     ffoodId?: string | null
+    gcpId?: string | null
     staffs?: StaffCreateNestedManyWithoutWorkShiftInput
   }
 
@@ -78298,6 +78413,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     isOvernight?: boolean
     ffoodId?: string | null
+    gcpId?: string | null
     staffs?: StaffUncheckedCreateNestedManyWithoutWorkShiftInput
   }
 
@@ -78310,6 +78426,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isOvernight?: BoolFieldUpdateOperationsInput | boolean
     ffoodId?: NullableStringFieldUpdateOperationsInput | string | null
+    gcpId?: NullableStringFieldUpdateOperationsInput | string | null
     staffs?: StaffUpdateManyWithoutWorkShiftNestedInput
   }
 
@@ -78323,6 +78440,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isOvernight?: BoolFieldUpdateOperationsInput | boolean
     ffoodId?: NullableStringFieldUpdateOperationsInput | string | null
+    gcpId?: NullableStringFieldUpdateOperationsInput | string | null
     staffs?: StaffUncheckedUpdateManyWithoutWorkShiftNestedInput
   }
 
@@ -78336,6 +78454,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     isOvernight?: boolean
     ffoodId?: string | null
+    gcpId?: string | null
   }
 
   export type WorkShiftUpdateManyMutationInput = {
@@ -78347,6 +78466,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isOvernight?: BoolFieldUpdateOperationsInput | boolean
     ffoodId?: NullableStringFieldUpdateOperationsInput | string | null
+    gcpId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type WorkShiftUncheckedUpdateManyInput = {
@@ -78359,6 +78479,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isOvernight?: BoolFieldUpdateOperationsInput | boolean
     ffoodId?: NullableStringFieldUpdateOperationsInput | string | null
+    gcpId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type WorkShiftRevenueReportCreateInput = {
@@ -83544,15 +83665,21 @@ export namespace Prisma {
     none?: HandoverReportWhereInput
   }
 
+  export type WorkShiftNullableScalarRelationFilter = {
+    is?: WorkShiftWhereInput | null
+    isNot?: WorkShiftWhereInput | null
+  }
+
   export type StaffViolationListRelationFilter = {
     every?: StaffViolationWhereInput
     some?: StaffViolationWhereInput
     none?: StaffViolationWhereInput
   }
 
-  export type WorkShiftNullableScalarRelationFilter = {
-    is?: WorkShiftWhereInput | null
-    isNot?: WorkShiftWhereInput | null
+  export type StaffTimeTrackingListRelationFilter = {
+    every?: StaffTimeTrackingWhereInput
+    some?: StaffTimeTrackingWhereInput
+    none?: StaffTimeTrackingWhereInput
   }
 
   export type ReportOrderByRelationAggregateInput = {
@@ -83564,6 +83691,10 @@ export namespace Prisma {
   }
 
   export type StaffViolationOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type StaffTimeTrackingOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -83692,6 +83823,11 @@ export namespace Prisma {
     _max?: NestedEnumStaff_staffTypeFilter<$PrismaModel>
   }
 
+  export type StaffScalarRelationFilter = {
+    is?: StaffWhereInput
+    isNot?: StaffWhereInput
+  }
+
   export type StaffTimeTrackingCountOrderByAggregateInput = {
     id?: SortOrder
     staffId?: SortOrder
@@ -83755,6 +83891,7 @@ export namespace Prisma {
     updatedAt?: SortOrder
     isOvernight?: SortOrder
     ffoodId?: SortOrder
+    gcpId?: SortOrder
   }
 
   export type WorkShiftAvgOrderByAggregateInput = {
@@ -83772,6 +83909,7 @@ export namespace Prisma {
     updatedAt?: SortOrder
     isOvernight?: SortOrder
     ffoodId?: SortOrder
+    gcpId?: SortOrder
   }
 
   export type WorkShiftMinOrderByAggregateInput = {
@@ -83784,6 +83922,7 @@ export namespace Prisma {
     updatedAt?: SortOrder
     isOvernight?: SortOrder
     ffoodId?: SortOrder
+    gcpId?: SortOrder
   }
 
   export type WorkShiftSumOrderByAggregateInput = {
@@ -83818,6 +83957,11 @@ export namespace Prisma {
     gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
     gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
     not?: NestedDecimalNullableFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
+  }
+
+  export type WorkShiftRevenueReportReportDateShiftCompoundUniqueInput = {
+    reportDate: Date | string
+    shift: $Enums.ShiftRevenueType
   }
 
   export type WorkShiftRevenueReportCountOrderByAggregateInput = {
@@ -85095,6 +85239,11 @@ export namespace Prisma {
     isNot?: BirthdayTierWhereInput
   }
 
+  export type UserBirthdayProgressUserIdTierIdCompoundUniqueInput = {
+    userId: number
+    tierId: number
+  }
+
   export type UserBirthdayProgressCountOrderByAggregateInput = {
     id?: SortOrder
     userId?: SortOrder
@@ -85275,11 +85424,6 @@ export namespace Prisma {
     every?: ReportDetailWhereInput
     some?: ReportDetailWhereInput
     none?: ReportDetailWhereInput
-  }
-
-  export type StaffScalarRelationFilter = {
-    is?: StaffWhereInput
-    isNot?: StaffWhereInput
   }
 
   export type ReportDetailOrderByRelationAggregateInput = {
@@ -86340,6 +86484,11 @@ export namespace Prisma {
     fields: EventParticipantOrderByRelevanceFieldEnum | EventParticipantOrderByRelevanceFieldEnum[]
     sort: SortOrder
     search: string
+  }
+
+  export type EventParticipantEventIdUserIdCompoundUniqueInput = {
+    eventId: string
+    userId: number
   }
 
   export type EventParticipantCountOrderByAggregateInput = {
@@ -87545,6 +87694,12 @@ export namespace Prisma {
     connect?: HandoverReportWhereUniqueInput | HandoverReportWhereUniqueInput[]
   }
 
+  export type WorkShiftCreateNestedOneWithoutStaffsInput = {
+    create?: XOR<WorkShiftCreateWithoutStaffsInput, WorkShiftUncheckedCreateWithoutStaffsInput>
+    connectOrCreate?: WorkShiftCreateOrConnectWithoutStaffsInput
+    connect?: WorkShiftWhereUniqueInput
+  }
+
   export type StaffViolationCreateNestedManyWithoutStaffInput = {
     create?: XOR<StaffViolationCreateWithoutStaffInput, StaffViolationUncheckedCreateWithoutStaffInput> | StaffViolationCreateWithoutStaffInput[] | StaffViolationUncheckedCreateWithoutStaffInput[]
     connectOrCreate?: StaffViolationCreateOrConnectWithoutStaffInput | StaffViolationCreateOrConnectWithoutStaffInput[]
@@ -87552,10 +87707,11 @@ export namespace Prisma {
     connect?: StaffViolationWhereUniqueInput | StaffViolationWhereUniqueInput[]
   }
 
-  export type WorkShiftCreateNestedOneWithoutStaffsInput = {
-    create?: XOR<WorkShiftCreateWithoutStaffsInput, WorkShiftUncheckedCreateWithoutStaffsInput>
-    connectOrCreate?: WorkShiftCreateOrConnectWithoutStaffsInput
-    connect?: WorkShiftWhereUniqueInput
+  export type StaffTimeTrackingCreateNestedManyWithoutStaffInput = {
+    create?: XOR<StaffTimeTrackingCreateWithoutStaffInput, StaffTimeTrackingUncheckedCreateWithoutStaffInput> | StaffTimeTrackingCreateWithoutStaffInput[] | StaffTimeTrackingUncheckedCreateWithoutStaffInput[]
+    connectOrCreate?: StaffTimeTrackingCreateOrConnectWithoutStaffInput | StaffTimeTrackingCreateOrConnectWithoutStaffInput[]
+    createMany?: StaffTimeTrackingCreateManyStaffInputEnvelope
+    connect?: StaffTimeTrackingWhereUniqueInput | StaffTimeTrackingWhereUniqueInput[]
   }
 
   export type ReportUncheckedCreateNestedManyWithoutCounterStaffInput = {
@@ -87605,6 +87761,13 @@ export namespace Prisma {
     connectOrCreate?: StaffViolationCreateOrConnectWithoutStaffInput | StaffViolationCreateOrConnectWithoutStaffInput[]
     createMany?: StaffViolationCreateManyStaffInputEnvelope
     connect?: StaffViolationWhereUniqueInput | StaffViolationWhereUniqueInput[]
+  }
+
+  export type StaffTimeTrackingUncheckedCreateNestedManyWithoutStaffInput = {
+    create?: XOR<StaffTimeTrackingCreateWithoutStaffInput, StaffTimeTrackingUncheckedCreateWithoutStaffInput> | StaffTimeTrackingCreateWithoutStaffInput[] | StaffTimeTrackingUncheckedCreateWithoutStaffInput[]
+    connectOrCreate?: StaffTimeTrackingCreateOrConnectWithoutStaffInput | StaffTimeTrackingCreateOrConnectWithoutStaffInput[]
+    createMany?: StaffTimeTrackingCreateManyStaffInputEnvelope
+    connect?: StaffTimeTrackingWhereUniqueInput | StaffTimeTrackingWhereUniqueInput[]
   }
 
   export type EnumStaff_genderFieldUpdateOperationsInput = {
@@ -87699,6 +87862,16 @@ export namespace Prisma {
     deleteMany?: HandoverReportScalarWhereInput | HandoverReportScalarWhereInput[]
   }
 
+  export type WorkShiftUpdateOneWithoutStaffsNestedInput = {
+    create?: XOR<WorkShiftCreateWithoutStaffsInput, WorkShiftUncheckedCreateWithoutStaffsInput>
+    connectOrCreate?: WorkShiftCreateOrConnectWithoutStaffsInput
+    upsert?: WorkShiftUpsertWithoutStaffsInput
+    disconnect?: WorkShiftWhereInput | boolean
+    delete?: WorkShiftWhereInput | boolean
+    connect?: WorkShiftWhereUniqueInput
+    update?: XOR<XOR<WorkShiftUpdateToOneWithWhereWithoutStaffsInput, WorkShiftUpdateWithoutStaffsInput>, WorkShiftUncheckedUpdateWithoutStaffsInput>
+  }
+
   export type StaffViolationUpdateManyWithoutStaffNestedInput = {
     create?: XOR<StaffViolationCreateWithoutStaffInput, StaffViolationUncheckedCreateWithoutStaffInput> | StaffViolationCreateWithoutStaffInput[] | StaffViolationUncheckedCreateWithoutStaffInput[]
     connectOrCreate?: StaffViolationCreateOrConnectWithoutStaffInput | StaffViolationCreateOrConnectWithoutStaffInput[]
@@ -87713,14 +87886,18 @@ export namespace Prisma {
     deleteMany?: StaffViolationScalarWhereInput | StaffViolationScalarWhereInput[]
   }
 
-  export type WorkShiftUpdateOneWithoutStaffsNestedInput = {
-    create?: XOR<WorkShiftCreateWithoutStaffsInput, WorkShiftUncheckedCreateWithoutStaffsInput>
-    connectOrCreate?: WorkShiftCreateOrConnectWithoutStaffsInput
-    upsert?: WorkShiftUpsertWithoutStaffsInput
-    disconnect?: WorkShiftWhereInput | boolean
-    delete?: WorkShiftWhereInput | boolean
-    connect?: WorkShiftWhereUniqueInput
-    update?: XOR<XOR<WorkShiftUpdateToOneWithWhereWithoutStaffsInput, WorkShiftUpdateWithoutStaffsInput>, WorkShiftUncheckedUpdateWithoutStaffsInput>
+  export type StaffTimeTrackingUpdateManyWithoutStaffNestedInput = {
+    create?: XOR<StaffTimeTrackingCreateWithoutStaffInput, StaffTimeTrackingUncheckedCreateWithoutStaffInput> | StaffTimeTrackingCreateWithoutStaffInput[] | StaffTimeTrackingUncheckedCreateWithoutStaffInput[]
+    connectOrCreate?: StaffTimeTrackingCreateOrConnectWithoutStaffInput | StaffTimeTrackingCreateOrConnectWithoutStaffInput[]
+    upsert?: StaffTimeTrackingUpsertWithWhereUniqueWithoutStaffInput | StaffTimeTrackingUpsertWithWhereUniqueWithoutStaffInput[]
+    createMany?: StaffTimeTrackingCreateManyStaffInputEnvelope
+    set?: StaffTimeTrackingWhereUniqueInput | StaffTimeTrackingWhereUniqueInput[]
+    disconnect?: StaffTimeTrackingWhereUniqueInput | StaffTimeTrackingWhereUniqueInput[]
+    delete?: StaffTimeTrackingWhereUniqueInput | StaffTimeTrackingWhereUniqueInput[]
+    connect?: StaffTimeTrackingWhereUniqueInput | StaffTimeTrackingWhereUniqueInput[]
+    update?: StaffTimeTrackingUpdateWithWhereUniqueWithoutStaffInput | StaffTimeTrackingUpdateWithWhereUniqueWithoutStaffInput[]
+    updateMany?: StaffTimeTrackingUpdateManyWithWhereWithoutStaffInput | StaffTimeTrackingUpdateManyWithWhereWithoutStaffInput[]
+    deleteMany?: StaffTimeTrackingScalarWhereInput | StaffTimeTrackingScalarWhereInput[]
   }
 
   export type ReportUncheckedUpdateManyWithoutCounterStaffNestedInput = {
@@ -87819,6 +87996,34 @@ export namespace Prisma {
     update?: StaffViolationUpdateWithWhereUniqueWithoutStaffInput | StaffViolationUpdateWithWhereUniqueWithoutStaffInput[]
     updateMany?: StaffViolationUpdateManyWithWhereWithoutStaffInput | StaffViolationUpdateManyWithWhereWithoutStaffInput[]
     deleteMany?: StaffViolationScalarWhereInput | StaffViolationScalarWhereInput[]
+  }
+
+  export type StaffTimeTrackingUncheckedUpdateManyWithoutStaffNestedInput = {
+    create?: XOR<StaffTimeTrackingCreateWithoutStaffInput, StaffTimeTrackingUncheckedCreateWithoutStaffInput> | StaffTimeTrackingCreateWithoutStaffInput[] | StaffTimeTrackingUncheckedCreateWithoutStaffInput[]
+    connectOrCreate?: StaffTimeTrackingCreateOrConnectWithoutStaffInput | StaffTimeTrackingCreateOrConnectWithoutStaffInput[]
+    upsert?: StaffTimeTrackingUpsertWithWhereUniqueWithoutStaffInput | StaffTimeTrackingUpsertWithWhereUniqueWithoutStaffInput[]
+    createMany?: StaffTimeTrackingCreateManyStaffInputEnvelope
+    set?: StaffTimeTrackingWhereUniqueInput | StaffTimeTrackingWhereUniqueInput[]
+    disconnect?: StaffTimeTrackingWhereUniqueInput | StaffTimeTrackingWhereUniqueInput[]
+    delete?: StaffTimeTrackingWhereUniqueInput | StaffTimeTrackingWhereUniqueInput[]
+    connect?: StaffTimeTrackingWhereUniqueInput | StaffTimeTrackingWhereUniqueInput[]
+    update?: StaffTimeTrackingUpdateWithWhereUniqueWithoutStaffInput | StaffTimeTrackingUpdateWithWhereUniqueWithoutStaffInput[]
+    updateMany?: StaffTimeTrackingUpdateManyWithWhereWithoutStaffInput | StaffTimeTrackingUpdateManyWithWhereWithoutStaffInput[]
+    deleteMany?: StaffTimeTrackingScalarWhereInput | StaffTimeTrackingScalarWhereInput[]
+  }
+
+  export type StaffCreateNestedOneWithoutStaffTimeTrackingsInput = {
+    create?: XOR<StaffCreateWithoutStaffTimeTrackingsInput, StaffUncheckedCreateWithoutStaffTimeTrackingsInput>
+    connectOrCreate?: StaffCreateOrConnectWithoutStaffTimeTrackingsInput
+    connect?: StaffWhereUniqueInput
+  }
+
+  export type StaffUpdateOneRequiredWithoutStaffTimeTrackingsNestedInput = {
+    create?: XOR<StaffCreateWithoutStaffTimeTrackingsInput, StaffUncheckedCreateWithoutStaffTimeTrackingsInput>
+    connectOrCreate?: StaffCreateOrConnectWithoutStaffTimeTrackingsInput
+    upsert?: StaffUpsertWithoutStaffTimeTrackingsInput
+    connect?: StaffWhereUniqueInput
+    update?: XOR<XOR<StaffUpdateToOneWithWhereWithoutStaffTimeTrackingsInput, StaffUpdateWithoutStaffTimeTrackingsInput>, StaffUncheckedUpdateWithoutStaffTimeTrackingsInput>
   }
 
   export type StaffCreateNestedManyWithoutWorkShiftInput = {
@@ -91162,6 +91367,36 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type WorkShiftCreateWithoutStaffsInput = {
+    name: string
+    startTime: Date | string
+    endTime: Date | string
+    FnetStaffId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isOvernight?: boolean
+    ffoodId?: string | null
+    gcpId?: string | null
+  }
+
+  export type WorkShiftUncheckedCreateWithoutStaffsInput = {
+    id?: number
+    name: string
+    startTime: Date | string
+    endTime: Date | string
+    FnetStaffId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isOvernight?: boolean
+    ffoodId?: string | null
+    gcpId?: string | null
+  }
+
+  export type WorkShiftCreateOrConnectWithoutStaffsInput = {
+    where: WorkShiftWhereUniqueInput
+    create: XOR<WorkShiftCreateWithoutStaffsInput, WorkShiftUncheckedCreateWithoutStaffsInput>
+  }
+
   export type StaffViolationCreateWithoutStaffInput = {
     violationDate?: Date | string
     occurrenceNumber: number
@@ -91189,32 +91424,29 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
-  export type WorkShiftCreateWithoutStaffsInput = {
-    name: string
-    startTime: Date | string
-    endTime: Date | string
-    FnetStaffId?: number | null
+  export type StaffTimeTrackingCreateWithoutStaffInput = {
+    checkInTime?: Date | string
+    checkOutTime?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    isOvernight?: boolean
-    ffoodId?: string | null
   }
 
-  export type WorkShiftUncheckedCreateWithoutStaffsInput = {
+  export type StaffTimeTrackingUncheckedCreateWithoutStaffInput = {
     id?: number
-    name: string
-    startTime: Date | string
-    endTime: Date | string
-    FnetStaffId?: number | null
+    checkInTime?: Date | string
+    checkOutTime?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    isOvernight?: boolean
-    ffoodId?: string | null
   }
 
-  export type WorkShiftCreateOrConnectWithoutStaffsInput = {
-    where: WorkShiftWhereUniqueInput
-    create: XOR<WorkShiftCreateWithoutStaffsInput, WorkShiftUncheckedCreateWithoutStaffsInput>
+  export type StaffTimeTrackingCreateOrConnectWithoutStaffInput = {
+    where: StaffTimeTrackingWhereUniqueInput
+    create: XOR<StaffTimeTrackingCreateWithoutStaffInput, StaffTimeTrackingUncheckedCreateWithoutStaffInput>
+  }
+
+  export type StaffTimeTrackingCreateManyStaffInputEnvelope = {
+    data: StaffTimeTrackingCreateManyStaffInput | StaffTimeTrackingCreateManyStaffInput[]
+    skipDuplicates?: boolean
   }
 
   export type ReportUpsertWithWhereUniqueWithoutCounterStaffInput = {
@@ -91350,6 +91582,42 @@ export namespace Prisma {
     data: XOR<HandoverReportUpdateManyMutationInput, HandoverReportUncheckedUpdateManyWithoutEveningStaffInput>
   }
 
+  export type WorkShiftUpsertWithoutStaffsInput = {
+    update: XOR<WorkShiftUpdateWithoutStaffsInput, WorkShiftUncheckedUpdateWithoutStaffsInput>
+    create: XOR<WorkShiftCreateWithoutStaffsInput, WorkShiftUncheckedCreateWithoutStaffsInput>
+    where?: WorkShiftWhereInput
+  }
+
+  export type WorkShiftUpdateToOneWithWhereWithoutStaffsInput = {
+    where?: WorkShiftWhereInput
+    data: XOR<WorkShiftUpdateWithoutStaffsInput, WorkShiftUncheckedUpdateWithoutStaffsInput>
+  }
+
+  export type WorkShiftUpdateWithoutStaffsInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    endTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    FnetStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isOvernight?: BoolFieldUpdateOperationsInput | boolean
+    ffoodId?: NullableStringFieldUpdateOperationsInput | string | null
+    gcpId?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type WorkShiftUncheckedUpdateWithoutStaffsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    endTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    FnetStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isOvernight?: BoolFieldUpdateOperationsInput | boolean
+    ffoodId?: NullableStringFieldUpdateOperationsInput | string | null
+    gcpId?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
   export type StaffViolationUpsertWithWhereUniqueWithoutStaffInput = {
     where: StaffViolationWhereUniqueInput
     update: XOR<StaffViolationUpdateWithoutStaffInput, StaffViolationUncheckedUpdateWithoutStaffInput>
@@ -91379,38 +91647,190 @@ export namespace Prisma {
     note?: StringNullableFilter<"StaffViolation"> | string | null
   }
 
-  export type WorkShiftUpsertWithoutStaffsInput = {
-    update: XOR<WorkShiftUpdateWithoutStaffsInput, WorkShiftUncheckedUpdateWithoutStaffsInput>
-    create: XOR<WorkShiftCreateWithoutStaffsInput, WorkShiftUncheckedCreateWithoutStaffsInput>
-    where?: WorkShiftWhereInput
+  export type StaffTimeTrackingUpsertWithWhereUniqueWithoutStaffInput = {
+    where: StaffTimeTrackingWhereUniqueInput
+    update: XOR<StaffTimeTrackingUpdateWithoutStaffInput, StaffTimeTrackingUncheckedUpdateWithoutStaffInput>
+    create: XOR<StaffTimeTrackingCreateWithoutStaffInput, StaffTimeTrackingUncheckedCreateWithoutStaffInput>
   }
 
-  export type WorkShiftUpdateToOneWithWhereWithoutStaffsInput = {
-    where?: WorkShiftWhereInput
-    data: XOR<WorkShiftUpdateWithoutStaffsInput, WorkShiftUncheckedUpdateWithoutStaffsInput>
+  export type StaffTimeTrackingUpdateWithWhereUniqueWithoutStaffInput = {
+    where: StaffTimeTrackingWhereUniqueInput
+    data: XOR<StaffTimeTrackingUpdateWithoutStaffInput, StaffTimeTrackingUncheckedUpdateWithoutStaffInput>
   }
 
-  export type WorkShiftUpdateWithoutStaffsInput = {
-    name?: StringFieldUpdateOperationsInput | string
-    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
-    endTime?: DateTimeFieldUpdateOperationsInput | Date | string
-    FnetStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+  export type StaffTimeTrackingUpdateManyWithWhereWithoutStaffInput = {
+    where: StaffTimeTrackingScalarWhereInput
+    data: XOR<StaffTimeTrackingUpdateManyMutationInput, StaffTimeTrackingUncheckedUpdateManyWithoutStaffInput>
+  }
+
+  export type StaffTimeTrackingScalarWhereInput = {
+    AND?: StaffTimeTrackingScalarWhereInput | StaffTimeTrackingScalarWhereInput[]
+    OR?: StaffTimeTrackingScalarWhereInput[]
+    NOT?: StaffTimeTrackingScalarWhereInput | StaffTimeTrackingScalarWhereInput[]
+    id?: IntFilter<"StaffTimeTracking"> | number
+    staffId?: IntFilter<"StaffTimeTracking"> | number
+    checkInTime?: DateTimeFilter<"StaffTimeTracking"> | Date | string
+    checkOutTime?: DateTimeNullableFilter<"StaffTimeTracking"> | Date | string | null
+    createdAt?: DateTimeFilter<"StaffTimeTracking"> | Date | string
+    updatedAt?: DateTimeFilter<"StaffTimeTracking"> | Date | string
+  }
+
+  export type StaffCreateWithoutStaffTimeTrackingsInput = {
+    userName: string
+    password: string
+    isDeleted?: boolean
+    isAdmin?: boolean
+    createdAt?: Date | string
+    updatedAt: Date | string
+    address?: string | null
+    dateOfBirth?: Date | string | null
+    email?: string | null
+    fullName: string
+    gender?: $Enums.Staff_gender
+    hireDate?: Date | string | null
+    idCard?: string | null
+    idCardExpiryDate?: Date | string | null
+    idCardIssueDate?: Date | string | null
+    note?: string | null
+    phone?: string | null
+    resignDate?: Date | string | null
+    staffType?: $Enums.Staff_staffType
+    needCheckMacAddress?: boolean
+    bankAccountName?: string | null
+    bankAccountNumber?: string | null
+    bankName?: string | null
+    baseSalary?: number
+    counterStaffReports?: ReportCreateNestedManyWithoutCounterStaffInput
+    kitchenStaffReports?: ReportCreateNestedManyWithoutKitchenStaffInput
+    securityStaffReports?: ReportCreateNestedManyWithoutSecurityStaffInput
+    morningHandoverReports?: HandoverReportCreateNestedManyWithoutMorningStaffInput
+    afternoonHandoverReports?: HandoverReportCreateNestedManyWithoutAfternoonStaffInput
+    eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
+    workShift?: WorkShiftCreateNestedOneWithoutStaffsInput
+    staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
+  }
+
+  export type StaffUncheckedCreateWithoutStaffTimeTrackingsInput = {
+    id?: number
+    userName: string
+    password: string
+    isDeleted?: boolean
+    isAdmin?: boolean
+    createdAt?: Date | string
+    updatedAt: Date | string
+    address?: string | null
+    dateOfBirth?: Date | string | null
+    email?: string | null
+    fullName: string
+    gender?: $Enums.Staff_gender
+    hireDate?: Date | string | null
+    idCard?: string | null
+    idCardExpiryDate?: Date | string | null
+    idCardIssueDate?: Date | string | null
+    note?: string | null
+    phone?: string | null
+    resignDate?: Date | string | null
+    staffType?: $Enums.Staff_staffType
+    needCheckMacAddress?: boolean
+    bankAccountName?: string | null
+    bankAccountNumber?: string | null
+    bankName?: string | null
+    baseSalary?: number
+    workShiftId?: number | null
+    counterStaffReports?: ReportUncheckedCreateNestedManyWithoutCounterStaffInput
+    kitchenStaffReports?: ReportUncheckedCreateNestedManyWithoutKitchenStaffInput
+    securityStaffReports?: ReportUncheckedCreateNestedManyWithoutSecurityStaffInput
+    morningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutMorningStaffInput
+    afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
+    eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
+    staffViolations?: StaffViolationUncheckedCreateNestedManyWithoutStaffInput
+  }
+
+  export type StaffCreateOrConnectWithoutStaffTimeTrackingsInput = {
+    where: StaffWhereUniqueInput
+    create: XOR<StaffCreateWithoutStaffTimeTrackingsInput, StaffUncheckedCreateWithoutStaffTimeTrackingsInput>
+  }
+
+  export type StaffUpsertWithoutStaffTimeTrackingsInput = {
+    update: XOR<StaffUpdateWithoutStaffTimeTrackingsInput, StaffUncheckedUpdateWithoutStaffTimeTrackingsInput>
+    create: XOR<StaffCreateWithoutStaffTimeTrackingsInput, StaffUncheckedCreateWithoutStaffTimeTrackingsInput>
+    where?: StaffWhereInput
+  }
+
+  export type StaffUpdateToOneWithWhereWithoutStaffTimeTrackingsInput = {
+    where?: StaffWhereInput
+    data: XOR<StaffUpdateWithoutStaffTimeTrackingsInput, StaffUncheckedUpdateWithoutStaffTimeTrackingsInput>
+  }
+
+  export type StaffUpdateWithoutStaffTimeTrackingsInput = {
+    userName?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    isAdmin?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    isOvernight?: BoolFieldUpdateOperationsInput | boolean
-    ffoodId?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    fullName?: StringFieldUpdateOperationsInput | string
+    gender?: EnumStaff_genderFieldUpdateOperationsInput | $Enums.Staff_gender
+    hireDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCard?: NullableStringFieldUpdateOperationsInput | string | null
+    idCardExpiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCardIssueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    resignDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    staffType?: EnumStaff_staffTypeFieldUpdateOperationsInput | $Enums.Staff_staffType
+    needCheckMacAddress?: BoolFieldUpdateOperationsInput | boolean
+    bankAccountName?: NullableStringFieldUpdateOperationsInput | string | null
+    bankAccountNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    bankName?: NullableStringFieldUpdateOperationsInput | string | null
+    baseSalary?: FloatFieldUpdateOperationsInput | number
+    counterStaffReports?: ReportUpdateManyWithoutCounterStaffNestedInput
+    kitchenStaffReports?: ReportUpdateManyWithoutKitchenStaffNestedInput
+    securityStaffReports?: ReportUpdateManyWithoutSecurityStaffNestedInput
+    morningHandoverReports?: HandoverReportUpdateManyWithoutMorningStaffNestedInput
+    afternoonHandoverReports?: HandoverReportUpdateManyWithoutAfternoonStaffNestedInput
+    eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
+    workShift?: WorkShiftUpdateOneWithoutStaffsNestedInput
+    staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
   }
 
-  export type WorkShiftUncheckedUpdateWithoutStaffsInput = {
+  export type StaffUncheckedUpdateWithoutStaffTimeTrackingsInput = {
     id?: IntFieldUpdateOperationsInput | number
-    name?: StringFieldUpdateOperationsInput | string
-    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
-    endTime?: DateTimeFieldUpdateOperationsInput | Date | string
-    FnetStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    userName?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    isAdmin?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    isOvernight?: BoolFieldUpdateOperationsInput | boolean
-    ffoodId?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    fullName?: StringFieldUpdateOperationsInput | string
+    gender?: EnumStaff_genderFieldUpdateOperationsInput | $Enums.Staff_gender
+    hireDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCard?: NullableStringFieldUpdateOperationsInput | string | null
+    idCardExpiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCardIssueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    resignDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    staffType?: EnumStaff_staffTypeFieldUpdateOperationsInput | $Enums.Staff_staffType
+    needCheckMacAddress?: BoolFieldUpdateOperationsInput | boolean
+    bankAccountName?: NullableStringFieldUpdateOperationsInput | string | null
+    bankAccountNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    bankName?: NullableStringFieldUpdateOperationsInput | string | null
+    baseSalary?: FloatFieldUpdateOperationsInput | number
+    workShiftId?: NullableIntFieldUpdateOperationsInput | number | null
+    counterStaffReports?: ReportUncheckedUpdateManyWithoutCounterStaffNestedInput
+    kitchenStaffReports?: ReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
+    securityStaffReports?: ReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
+    morningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutMorningStaffNestedInput
+    afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
+    eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
+    staffViolations?: StaffViolationUncheckedUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffCreateWithoutWorkShiftInput = {
@@ -91445,6 +91865,7 @@ export namespace Prisma {
     afternoonHandoverReports?: HandoverReportCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
     staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
+    staffTimeTrackings?: StaffTimeTrackingCreateNestedManyWithoutStaffInput
   }
 
   export type StaffUncheckedCreateWithoutWorkShiftInput = {
@@ -91480,6 +91901,7 @@ export namespace Prisma {
     afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
     staffViolations?: StaffViolationUncheckedCreateNestedManyWithoutStaffInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedCreateNestedManyWithoutStaffInput
   }
 
   export type StaffCreateOrConnectWithoutWorkShiftInput = {
@@ -92381,8 +92803,9 @@ export namespace Prisma {
     morningHandoverReports?: HandoverReportCreateNestedManyWithoutMorningStaffInput
     afternoonHandoverReports?: HandoverReportCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
-    staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
     workShift?: WorkShiftCreateNestedOneWithoutStaffsInput
+    staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
+    staffTimeTrackings?: StaffTimeTrackingCreateNestedManyWithoutStaffInput
   }
 
   export type StaffUncheckedCreateWithoutCounterStaffReportsInput = {
@@ -92418,6 +92841,7 @@ export namespace Prisma {
     afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
     staffViolations?: StaffViolationUncheckedCreateNestedManyWithoutStaffInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedCreateNestedManyWithoutStaffInput
   }
 
   export type StaffCreateOrConnectWithoutCounterStaffReportsInput = {
@@ -92455,8 +92879,9 @@ export namespace Prisma {
     morningHandoverReports?: HandoverReportCreateNestedManyWithoutMorningStaffInput
     afternoonHandoverReports?: HandoverReportCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
-    staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
     workShift?: WorkShiftCreateNestedOneWithoutStaffsInput
+    staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
+    staffTimeTrackings?: StaffTimeTrackingCreateNestedManyWithoutStaffInput
   }
 
   export type StaffUncheckedCreateWithoutKitchenStaffReportsInput = {
@@ -92492,6 +92917,7 @@ export namespace Prisma {
     afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
     staffViolations?: StaffViolationUncheckedCreateNestedManyWithoutStaffInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedCreateNestedManyWithoutStaffInput
   }
 
   export type StaffCreateOrConnectWithoutKitchenStaffReportsInput = {
@@ -92529,8 +92955,9 @@ export namespace Prisma {
     morningHandoverReports?: HandoverReportCreateNestedManyWithoutMorningStaffInput
     afternoonHandoverReports?: HandoverReportCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
-    staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
     workShift?: WorkShiftCreateNestedOneWithoutStaffsInput
+    staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
+    staffTimeTrackings?: StaffTimeTrackingCreateNestedManyWithoutStaffInput
   }
 
   export type StaffUncheckedCreateWithoutSecurityStaffReportsInput = {
@@ -92566,6 +92993,7 @@ export namespace Prisma {
     afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
     staffViolations?: StaffViolationUncheckedCreateNestedManyWithoutStaffInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedCreateNestedManyWithoutStaffInput
   }
 
   export type StaffCreateOrConnectWithoutSecurityStaffReportsInput = {
@@ -92640,8 +93068,9 @@ export namespace Prisma {
     morningHandoverReports?: HandoverReportUpdateManyWithoutMorningStaffNestedInput
     afternoonHandoverReports?: HandoverReportUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
-    staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
     workShift?: WorkShiftUpdateOneWithoutStaffsNestedInput
+    staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUncheckedUpdateWithoutCounterStaffReportsInput = {
@@ -92677,6 +93106,7 @@ export namespace Prisma {
     afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
     staffViolations?: StaffViolationUncheckedUpdateManyWithoutStaffNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUpsertWithoutKitchenStaffReportsInput = {
@@ -92720,8 +93150,9 @@ export namespace Prisma {
     morningHandoverReports?: HandoverReportUpdateManyWithoutMorningStaffNestedInput
     afternoonHandoverReports?: HandoverReportUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
-    staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
     workShift?: WorkShiftUpdateOneWithoutStaffsNestedInput
+    staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUncheckedUpdateWithoutKitchenStaffReportsInput = {
@@ -92757,6 +93188,7 @@ export namespace Prisma {
     afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
     staffViolations?: StaffViolationUncheckedUpdateManyWithoutStaffNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUpsertWithoutSecurityStaffReportsInput = {
@@ -92800,8 +93232,9 @@ export namespace Prisma {
     morningHandoverReports?: HandoverReportUpdateManyWithoutMorningStaffNestedInput
     afternoonHandoverReports?: HandoverReportUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
-    staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
     workShift?: WorkShiftUpdateOneWithoutStaffsNestedInput
+    staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUncheckedUpdateWithoutSecurityStaffReportsInput = {
@@ -92837,6 +93270,7 @@ export namespace Prisma {
     afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
     staffViolations?: StaffViolationUncheckedUpdateManyWithoutStaffNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedUpdateManyWithoutStaffNestedInput
   }
 
   export type HandoverMaterialCreateWithoutHandoverReportInput = {
@@ -92916,8 +93350,9 @@ export namespace Prisma {
     securityStaffReports?: ReportCreateNestedManyWithoutSecurityStaffInput
     afternoonHandoverReports?: HandoverReportCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
-    staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
     workShift?: WorkShiftCreateNestedOneWithoutStaffsInput
+    staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
+    staffTimeTrackings?: StaffTimeTrackingCreateNestedManyWithoutStaffInput
   }
 
   export type StaffUncheckedCreateWithoutMorningHandoverReportsInput = {
@@ -92953,6 +93388,7 @@ export namespace Prisma {
     afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
     staffViolations?: StaffViolationUncheckedCreateNestedManyWithoutStaffInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedCreateNestedManyWithoutStaffInput
   }
 
   export type StaffCreateOrConnectWithoutMorningHandoverReportsInput = {
@@ -92990,8 +93426,9 @@ export namespace Prisma {
     securityStaffReports?: ReportCreateNestedManyWithoutSecurityStaffInput
     morningHandoverReports?: HandoverReportCreateNestedManyWithoutMorningStaffInput
     eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
-    staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
     workShift?: WorkShiftCreateNestedOneWithoutStaffsInput
+    staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
+    staffTimeTrackings?: StaffTimeTrackingCreateNestedManyWithoutStaffInput
   }
 
   export type StaffUncheckedCreateWithoutAfternoonHandoverReportsInput = {
@@ -93027,6 +93464,7 @@ export namespace Prisma {
     morningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutMorningStaffInput
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
     staffViolations?: StaffViolationUncheckedCreateNestedManyWithoutStaffInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedCreateNestedManyWithoutStaffInput
   }
 
   export type StaffCreateOrConnectWithoutAfternoonHandoverReportsInput = {
@@ -93064,8 +93502,9 @@ export namespace Prisma {
     securityStaffReports?: ReportCreateNestedManyWithoutSecurityStaffInput
     morningHandoverReports?: HandoverReportCreateNestedManyWithoutMorningStaffInput
     afternoonHandoverReports?: HandoverReportCreateNestedManyWithoutAfternoonStaffInput
-    staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
     workShift?: WorkShiftCreateNestedOneWithoutStaffsInput
+    staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
+    staffTimeTrackings?: StaffTimeTrackingCreateNestedManyWithoutStaffInput
   }
 
   export type StaffUncheckedCreateWithoutEveningHandoverReportsInput = {
@@ -93101,6 +93540,7 @@ export namespace Prisma {
     morningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutMorningStaffInput
     afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
     staffViolations?: StaffViolationUncheckedCreateNestedManyWithoutStaffInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedCreateNestedManyWithoutStaffInput
   }
 
   export type StaffCreateOrConnectWithoutEveningHandoverReportsInput = {
@@ -93188,8 +93628,9 @@ export namespace Prisma {
     securityStaffReports?: ReportUpdateManyWithoutSecurityStaffNestedInput
     afternoonHandoverReports?: HandoverReportUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
-    staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
     workShift?: WorkShiftUpdateOneWithoutStaffsNestedInput
+    staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUncheckedUpdateWithoutMorningHandoverReportsInput = {
@@ -93225,6 +93666,7 @@ export namespace Prisma {
     afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
     staffViolations?: StaffViolationUncheckedUpdateManyWithoutStaffNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUpsertWithoutAfternoonHandoverReportsInput = {
@@ -93268,8 +93710,9 @@ export namespace Prisma {
     securityStaffReports?: ReportUpdateManyWithoutSecurityStaffNestedInput
     morningHandoverReports?: HandoverReportUpdateManyWithoutMorningStaffNestedInput
     eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
-    staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
     workShift?: WorkShiftUpdateOneWithoutStaffsNestedInput
+    staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUncheckedUpdateWithoutAfternoonHandoverReportsInput = {
@@ -93305,6 +93748,7 @@ export namespace Prisma {
     morningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutMorningStaffNestedInput
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
     staffViolations?: StaffViolationUncheckedUpdateManyWithoutStaffNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUpsertWithoutEveningHandoverReportsInput = {
@@ -93348,8 +93792,9 @@ export namespace Prisma {
     securityStaffReports?: ReportUpdateManyWithoutSecurityStaffNestedInput
     morningHandoverReports?: HandoverReportUpdateManyWithoutMorningStaffNestedInput
     afternoonHandoverReports?: HandoverReportUpdateManyWithoutAfternoonStaffNestedInput
-    staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
     workShift?: WorkShiftUpdateOneWithoutStaffsNestedInput
+    staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUncheckedUpdateWithoutEveningHandoverReportsInput = {
@@ -93385,6 +93830,7 @@ export namespace Prisma {
     morningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutMorningStaffNestedInput
     afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
     staffViolations?: StaffViolationUncheckedUpdateManyWithoutStaffNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedUpdateManyWithoutStaffNestedInput
   }
 
   export type HandoverReportCreateWithoutMaterialsInput = {
@@ -95130,6 +95576,7 @@ export namespace Prisma {
     afternoonHandoverReports?: HandoverReportCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
     workShift?: WorkShiftCreateNestedOneWithoutStaffsInput
+    staffTimeTrackings?: StaffTimeTrackingCreateNestedManyWithoutStaffInput
   }
 
   export type StaffUncheckedCreateWithoutStaffViolationsInput = {
@@ -95165,6 +95612,7 @@ export namespace Prisma {
     morningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutMorningStaffInput
     afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedCreateNestedManyWithoutStaffInput
   }
 
   export type StaffCreateOrConnectWithoutStaffViolationsInput = {
@@ -95251,6 +95699,7 @@ export namespace Prisma {
     afternoonHandoverReports?: HandoverReportUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
     workShift?: WorkShiftUpdateOneWithoutStaffsNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUncheckedUpdateWithoutStaffViolationsInput = {
@@ -95286,6 +95735,7 @@ export namespace Prisma {
     morningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutMorningStaffNestedInput
     afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedUpdateManyWithoutStaffNestedInput
   }
 
   export type UserStarHistoryCreateManyGameResultInput = {
@@ -95957,6 +96407,14 @@ export namespace Prisma {
     note?: string | null
   }
 
+  export type StaffTimeTrackingCreateManyStaffInput = {
+    id?: number
+    checkInTime?: Date | string
+    checkOutTime?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type ReportUpdateWithoutCounterStaffInput = {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     shift?: EnumShiftFieldUpdateOperationsInput | $Enums.Shift
@@ -96250,6 +96708,29 @@ export namespace Prisma {
     note?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
+  export type StaffTimeTrackingUpdateWithoutStaffInput = {
+    checkInTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    checkOutTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type StaffTimeTrackingUncheckedUpdateWithoutStaffInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    checkInTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    checkOutTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type StaffTimeTrackingUncheckedUpdateManyWithoutStaffInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    checkInTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    checkOutTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StaffCreateManyWorkShiftInput = {
     id?: number
     userName: string
@@ -96310,6 +96791,7 @@ export namespace Prisma {
     afternoonHandoverReports?: HandoverReportUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
     staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUncheckedUpdateWithoutWorkShiftInput = {
@@ -96345,6 +96827,7 @@ export namespace Prisma {
     afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
     staffViolations?: StaffViolationUncheckedUpdateManyWithoutStaffNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUncheckedUpdateManyWithoutWorkShiftInput = {

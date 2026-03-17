@@ -121,20 +121,6 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
-exports.Prisma.UserScalarFieldEnum = {
-  id: 'id',
-  username: 'username',
-  password: 'password',
-  email: 'email',
-  isActive: 'isActive',
-  createdAt: 'createdAt',
-  createdBy: 'createdBy',
-  updatedAt: 'updatedAt',
-  updatedBy: 'updatedBy',
-  deletedAt: 'deletedAt',
-  deletedBy: 'deletedBy'
-};
-
 exports.Prisma.ApiKeyScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -226,6 +212,8 @@ exports.Prisma.TenantScalarFieldEnum = {
   domain: 'domain',
   tenantId: 'tenantId',
   clients: 'clients',
+  dbUrl: 'dbUrl',
+  fnetUrl: 'fnetUrl',
   logo: 'logo',
   altName: 'altName',
   altDescription: 'altDescription',
@@ -233,22 +221,6 @@ exports.Prisma.TenantScalarFieldEnum = {
   apiKey: 'apiKey',
   domainPrefix: 'domainPrefix',
   organizationId: 'organizationId'
-};
-
-exports.Prisma.RequestScalarFieldEnum = {
-  id: 'id',
-  tenantId: 'tenantId',
-  userId: 'userId',
-  managerId: 'managerId',
-  type: 'type',
-  status: 'status',
-  metadata: 'metadata',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  deletedAt: 'deletedAt',
-  createdBy: 'createdBy',
-  updatedBy: 'updatedBy',
-  deletedBy: 'deletedBy'
 };
 
 exports.Prisma.SortOrder = {
@@ -261,21 +233,6 @@ exports.Prisma.NullableJsonNullValueInput = {
   JsonNull: Prisma.JsonNull
 };
 
-exports.Prisma.NullsOrder = {
-  first: 'first',
-  last: 'last'
-};
-
-exports.Prisma.UserOrderByRelevanceFieldEnum = {
-  id: 'id',
-  username: 'username',
-  password: 'password',
-  email: 'email',
-  createdBy: 'createdBy',
-  updatedBy: 'updatedBy',
-  deletedBy: 'deletedBy'
-};
-
 exports.Prisma.JsonNullValueFilter = {
   DbNull: Prisma.DbNull,
   JsonNull: Prisma.JsonNull,
@@ -285,6 +242,11 @@ exports.Prisma.JsonNullValueFilter = {
 exports.Prisma.QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
+};
+
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
 };
 
 exports.Prisma.ApiKeyOrderByRelevanceFieldEnum = {
@@ -348,6 +310,8 @@ exports.Prisma.TenantOrderByRelevanceFieldEnum = {
   description: 'description',
   domain: 'domain',
   tenantId: 'tenantId',
+  dbUrl: 'dbUrl',
+  fnetUrl: 'fnetUrl',
   altName: 'altName',
   altDescription: 'altDescription',
   apiKey: 'apiKey',
@@ -355,31 +319,14 @@ exports.Prisma.TenantOrderByRelevanceFieldEnum = {
   organizationId: 'organizationId'
 };
 
-exports.Prisma.RequestOrderByRelevanceFieldEnum = {
-  id: 'id',
-  tenantId: 'tenantId',
-  userId: 'userId',
-  managerId: 'managerId',
-  type: 'type',
-  createdBy: 'createdBy',
-  updatedBy: 'updatedBy',
-  deletedBy: 'deletedBy'
-};
-exports.RequestStatus = exports.$Enums.RequestStatus = {
-  PENDING: 'PENDING',
-  APPROVED: 'APPROVED',
-  REJECTED: 'REJECTED'
-};
 
 exports.Prisma.ModelName = {
-  User: 'User',
   ApiKey: 'ApiKey',
   FeatureFlag: 'FeatureFlag',
   TenantApiKey: 'TenantApiKey',
   TenantConfiguration: 'TenantConfiguration',
   Organization: 'Organization',
-  Tenant: 'Tenant',
-  Request: 'Request'
+  Tenant: 'Tenant'
 };
 
 /**
