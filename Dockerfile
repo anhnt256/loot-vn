@@ -23,6 +23,9 @@ COPY libs/database/prisma ./libs/database/prisma
 # Install dependencies (using --legacy-peer-deps if needed, or just npm ci)
 RUN npm ci
 
+# Generate Prisma Client explicitly for the Linux environment
+RUN npx nx run database:generate
+
 # Copy the rest of the source code
 COPY . .
 
