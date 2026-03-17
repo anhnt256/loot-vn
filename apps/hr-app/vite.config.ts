@@ -10,6 +10,8 @@ export default defineConfig(({ mode }) => {
 
     define: {
       'process.env.VITE_TENANT_PREFIX': JSON.stringify(env.VITE_TENANT_PREFIX || ''),
+      'import.meta.env.VITE_API_URL': JSON.stringify(env.VITE_API_URL || ''),
+      'process.env.VITE_API_URL': JSON.stringify(env.VITE_API_URL || ''),
     },
 
     server: {

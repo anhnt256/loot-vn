@@ -9,6 +9,11 @@ export default defineConfig(({ mode }) => {
     root: __dirname,
     cacheDir: '../../node_modules/.vite/apps/master-app',
 
+    define: {
+      'import.meta.env.VITE_TENANT_PREFIX': JSON.stringify(env.VITE_TENANT_PREFIX || ''),
+      'import.meta.env.VITE_API_URL': JSON.stringify(env.VITE_API_URL || ''),
+    },
+
     server: {
       port: 7700,
     },

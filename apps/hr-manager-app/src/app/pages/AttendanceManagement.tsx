@@ -125,7 +125,7 @@ const AttendanceManagement: React.FC = () => {
     if (staffId) {
       params.append('staffId', staffId.toString());
     }
-    window.open(`${process.env.VITE_API_URL || 'http://localhost:7300'}/api/hr-manager/attendance/export?${params.toString()}`, '_blank');
+    window.open(`${import.meta.env.VITE_API_URL || ''}/api/hr-manager/attendance/export?${params.toString()}`, '_blank');
   };
 
   const mainColumns = [
