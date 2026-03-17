@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       tenant_prefix:
-        description: 'Tenant prefix for this deployment (e.g. tenant-a-). MUST BE PROVIDED.'
+        description: "Tenant prefix for this deployment (e.g. tenant-a-). MUST BE PROVIDED."
         required: true
-        default: ''
+        default: ""
 
 jobs:
   deploy:
