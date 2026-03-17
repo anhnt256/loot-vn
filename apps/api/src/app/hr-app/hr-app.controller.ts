@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Query, Req, UseGuards, Delete, Param, BadRequestException, Patch } from '@nestjs/common';
 import { HrAppService } from './hr-app.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { getTenantSlugFromRequest } from './tenant-from-request';
 
 @Controller('hr-app')
 export class HrAppController {
@@ -11,7 +12,10 @@ export class HrAppController {
     if (body.loginMethod && body.loginMethod !== 'staff') {
         throw new BadRequestException('Phương thức đăng nhập không hợp lệ');
     }
-    const tenantId = req.headers['x-tenant-id'];
+    const tenantId =
+      (req.headers['x-tenant-id'] as string)?.trim() ||
+      getTenantSlugFromRequest(req) ||
+      undefined;
     const result = await this.hrAppService.login(body.userName, body.password, tenantId);
     return { success: true, ...result };
   }
