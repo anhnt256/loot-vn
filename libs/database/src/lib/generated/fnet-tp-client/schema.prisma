@@ -1,7 +1,6 @@
 generator client {
-  provider      = "prisma-client-js"
-  output        = "../../src/lib/generated/fnet-tp-client"
-  binaryTargets = ["native"]
+  provider = "prisma-client-js"
+  output   = "../../src/lib/generated/fnet-tp-client"
 }
 
 datasource db {
