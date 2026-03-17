@@ -40,7 +40,16 @@ jobs:
             fi
 
             # Determine tenant prefix
-            TENANT_PREFIX="${{ github.event.inputs.tenant_prefix }}"
+            RAW_PREFIX="${{ github.event.inputs.tenant_prefix }}"
+
+            # Remove trailing dash for project name if exists
+            PROJECT_NAME="${RAW_PREFIX%-}"
+            if [ -z "$PROJECT_NAME" ]; then
+              PROJECT_NAME="gateway-refactor"
+            fi
+
+            # Ensure prefix for containers has a trailing dash
+            TENANT_PREFIX="${PROJECT_NAME}-"
 
             # Ensure .env is updated from secrets
             cat > .env << EOF
@@ -59,9 +68,6 @@ jobs:
             NEXT_PUBLIC_GATEWAY_BATTLE_PASS_ENABLE=${{ secrets.NEXT_PUBLIC_GATEWAY_BATTLE_PASS_ENABLE }}
             NEXT_PUBLIC_GATEWAY_BATTLE_PASS_PREMIUM_ENABLE=${{ secrets.NEXT_PUBLIC_GATEWAY_BATTLE_PASS_PREMIUM_ENABLE }}
             USE_DEFAULT_USER_ID=${{ secrets.USE_DEFAULT_USER_ID }}
-            REDIS_HOST=${{ secrets.REDIS_HOST }}
-            REDIS_PORT=${{ secrets.REDIS_PORT }}
-            REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
             NEXT_PUBLIC_CALENDAR_GV=${{ secrets.NEXT_PUBLIC_CALENDAR_GV }}
             NEXT_PUBLIC_CALENDAR_TP=${{ secrets.NEXT_PUBLIC_CALENDAR_TP }}
             NODE_ENV=production
@@ -70,4 +76,4 @@ jobs:
             EOF
 
             # Build and deploy all services using docker-compose
-            docker compose -p ${TENANT_PREFIX}gateway-refactor up -d --build --remove-orphans
+            docker compose -p ${PROJECT_NAME} up -d --build --remove-orphans
