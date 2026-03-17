@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Form, Input, Select } from 'antd';
-import axios from '@gateway-workspace/shared/utils/apiClient';
+import { apiClient as axios } from '@gateway-workspace/shared/utils';
 
 const { TextArea } = Input;
 
@@ -49,7 +49,7 @@ const CreateOrgModal: React.FC<CreateOrgModalProps> = ({
     setLoadingTenants(true);
     axios
       .get('/api/tenant-admin/tenant-management/tenants')
-      .then((res) => {
+      .then((res: any) => {
         const data = Array.isArray(res.data) ? res.data : res.data?.data ?? [];
         setTenantList(data);
       })
