@@ -13,19 +13,6 @@ export class HrAppController {
     return id;
   }
 
-  @Post('login')
-  async login(@Body() body: { userName: string; password?: string, loginMethod?: string }, @Req() req: any) {
-    if (body.loginMethod && body.loginMethod !== 'staff') {
-        throw new BadRequestException('Phương thức đăng nhập không hợp lệ');
-    }
-    const tenantId =
-      (req.headers['x-tenant-id'] as string)?.trim() ||
-      getTenantSlugFromRequest(req) ||
-      undefined;
-    const result = await this.hrAppService.login(body.userName, body.password, tenantId);
-    return { success: true, ...result };
-  }
-
   @Get('my-info')
   @UseGuards(AuthGuard)
   async getMyInfo(@Req() req: any) {

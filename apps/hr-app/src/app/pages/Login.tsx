@@ -37,7 +37,7 @@ const Login: React.FC = () => {
     setLoading(true);
     try {
       console.log('Login attempt:', { username });
-      const result = await apiClient.post('/hr-app/login', {
+      const result = await apiClient.post('/auth/login', {
         userName: username,
         password: password,
         loginMethod: 'staff',
@@ -46,13 +46,10 @@ const Login: React.FC = () => {
       if (result.data.success) {
         if (result.data.requirePasswordReset) {
           message.warning('Vui lòng đặt lại mật khẩu');
-          // navigate('/reset-password'); // Future feature
           return;
         }
-
         const { token } = result.data;
         setCookie(ACCESS_TOKEN_KEY, token, { maxAge: 86400, path: '/' });
-        
         message.success('Chào mừng đến với Portal!');
         navigate('/dashboard');
       } else {
@@ -60,6 +57,10 @@ const Login: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Login error:', error);
+      if (error.response?.status === 403 && error.response?.data?.data?.requirePasswordReset) {
+        message.warning('Vui lòng đặt lại mật khẩu');
+        return;
+      }
       const errorMsg = error.response?.data?.message || 'Đã có lỗi xảy ra khi đăng nhập. Vui lòng thử lại.';
       message.error(errorMsg);
     } finally {

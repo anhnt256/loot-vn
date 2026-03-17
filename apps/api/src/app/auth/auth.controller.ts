@@ -1,13 +1,7 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Req,
-  Res,
-  BadRequestException,
-} from '@nestjs/common';
+import { Controller, Post, Body, Req, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { Response, Request } from 'express';
+import { Response } from 'express';
+import { getTenantIdFromRequest } from '../hr-app/tenant-from-request';
 
 @Controller('auth')
 export class AuthController {
@@ -15,7 +9,8 @@ export class AuthController {
 
   @Post('login')
   async login(@Body() body: any, @Req() req: any, @Res() res: Response) {
-    const result: any = await this.authService.login(body);
+    const tenantId = getTenantIdFromRequest(req) ?? undefined;
+    const result: any = await this.authService.login(body, tenantId);
 
     if (result.requirePasswordReset) {
       return res.status(403).json({

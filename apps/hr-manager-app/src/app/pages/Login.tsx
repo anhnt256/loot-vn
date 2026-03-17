@@ -27,17 +27,13 @@ const Login: React.FC = () => {
         loginMethod: 'staff',
       });
 
-      if (result.data.statusCode === 200 || result.data.success) {
+      if (result.data.success) {
         if (result.data.requirePasswordReset) {
           message.warning('Vui lòng đặt lại mật khẩu');
           return;
         }
-
         const { token } = result.data;
-        if (token) {
-          setCookie(ACCESS_TOKEN_KEY, token, { maxAge: 86400, path: '/' });
-        }
-        
+        if (token) setCookie(ACCESS_TOKEN_KEY, token, { maxAge: 86400, path: '/' });
         message.success('Đã đăng nhập thành công!');
         navigate('/dashboard/overview');
       } else {
@@ -45,6 +41,10 @@ const Login: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Login error:', error);
+      if (error.response?.status === 403 && error.response?.data?.data?.requirePasswordReset) {
+        message.warning('Vui lòng đặt lại mật khẩu');
+        return;
+      }
       const errorMsg = error.response?.data?.message || 'Bạn không có quyền truy cập vào hệ thống này.';
       message.error(errorMsg);
     } finally {

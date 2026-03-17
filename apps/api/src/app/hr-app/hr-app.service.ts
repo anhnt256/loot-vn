@@ -1,9 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException, InternalServerErrorException, UnauthorizedException, Logger } from '@nestjs/common';
 import { PrismaService, TenantPrismaService, GatewayPrismaService } from '../database/prisma.service';
 import { TenantGatewayService } from '../database/tenant-gateway.service';
-import { getTenantDbUrl } from '../database/tenant-gateway.service';
-import { dayjs, getCurrentTimeVNISO, getCurrentTimeVNDB, signJWT } from '@gateway-workspace/shared/utils';
-import * as crypto from 'crypto';
+import { dayjs, getCurrentTimeVNISO, getCurrentTimeVNDB } from '@gateway-workspace/shared/utils';
 
 @Injectable()
 export class HrAppService {
@@ -14,104 +12,6 @@ export class HrAppService {
     private readonly gatewayPrisma: GatewayPrismaService,
     private readonly tenantGateway: TenantGatewayService,
   ) {}
-
-  async login(userName: string, password?: string, tenantId?: string) {
-    this.logger.log(`Login attempt for user: ${userName}, tenantId: ${tenantId}`);
-    if (!tenantId) {
-      throw new BadRequestException('x-tenant-id header is required');
-    }
-
-    // Verify tenant and apikey
-    let tenant = await this.tenantPrisma.tenant.findUnique({
-      where: { id: tenantId, deletedAt: null },
-    });
-
-    if (!tenant) {
-      // Try to find by slug (tenantId field)
-      tenant = await this.tenantPrisma.tenant.findFirst({
-        where: { tenantId: tenantId, deletedAt: null },
-      });
-    }
-
-    if (!tenant) {
-      this.logger.warn(`Tenant not found for ID or slug: ${tenantId}`);
-      throw new UnauthorizedException('Tenant không hợp lệ');
-    }
-
-    this.logger.log(`Found tenant: ${tenant.name} (${tenant.id})`);
-
-    const apiKey = await this.tenantPrisma.apiKey.findFirst({
-      where: { tenantId: tenant.id, deletedAt: null },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    if (!apiKey) {
-      this.logger.warn(`Tenant ${tenant.id} has no API key`);
-      throw new UnauthorizedException('Tenant chưa cấu hình API key');
-    }
-
-    if (apiKey.expiresAt && new Date() > new Date(apiKey.expiresAt)) {
-      this.logger.warn(`Tenant ${tenant.id} API key expired`);
-      throw new UnauthorizedException('Hệ thống đã hết hạn, vui lòng gia hạn để sử dụng');
-    }
-
-    if (!userName || !password) {
-      throw new BadRequestException('Vui lòng nhập tên đăng nhập và mật khẩu');
-    }
-
-    const dbUrl = getTenantDbUrl(tenant);
-    if (!dbUrl) {
-      this.logger.warn(`Tenant ${tenant.id} has no dbUrl configured`);
-      throw new BadRequestException('Tenant chưa cấu hình DB URL. Vui lòng cập nhật trong quản lý tenant.');
-    }
-    const gateway = await this.gatewayPrisma.getClient(dbUrl);
-
-    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
-
-    const staff = (await gateway.$queryRawUnsafe(
-      `SELECT id, userName, fullName, staffType, password, isAdmin FROM Staff 
-       WHERE userName = ? AND isDeleted = false`,
-      userName,
-    )) as any[];
-
-    if (staff.length === 0) {
-      this.logger.warn(`Staff not found in gateway DB for userName: ${userName}`);
-      throw new BadRequestException('Tên đăng nhập hoặc mật khẩu không đúng');
-    }
-
-    const staffData = staff[0];
-
-    // Check reset password logic (optional but good for consistency)
-    const resetPasswordHash = crypto.createHash('sha256').update("RESET_PASSWORD_REQUIRED_" + staffData.id).digest('hex');
-    if (staffData.password === resetPasswordHash) {
-      return { requirePasswordReset: true, staffId: staffData.id };
-    }
-
-    if (staffData.password !== hashedPassword) {
-      this.logger.warn(`Password mismatch for userName: ${userName}`);
-      throw new BadRequestException('Tên đăng nhập hoặc mật khẩu không đúng');
-    }
-
-    this.logger.log(`Login success for userName: ${userName}`);
-    const payload = {
-      userId: staffData.id,
-      userName: staffData.userName,
-      role: 'staff',
-      staffType: staffData.isAdmin ? 'SUPER_ADMIN' : staffData.staffType,
-    };
-
-    const token = await signJWT(payload);
-
-    return {
-      token,
-      user: {
-        id: staffData.id,
-        userName: staffData.userName,
-        fullName: staffData.fullName,
-        staffType: staffData.isAdmin ? 'SUPER_ADMIN' : staffData.staffType,
-      }
-    };
-  }
 
   async getMyInfo(userName: string, tenantId: string) {
     if (!userName) {
