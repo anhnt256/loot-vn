@@ -24,10 +24,9 @@ COPY libs/database/prisma ./libs/database/prisma
 RUN npm ci
 
 # Generate Prisma Client explicitly for the Linux environment
-RUN npx prisma generate --schema libs/database/prisma/main/schema.prisma && \
+RUN npx prisma generate --schema libs/database/prisma/new/schema.prisma && \
     npx prisma generate --schema libs/database/prisma/tenant/schema.prisma && \
-    npx prisma generate --schema libs/database/prisma/fnet/schema.prisma && \
-    npx prisma generate --schema libs/database/prisma/fnet/schemaTP.prisma
+    npx prisma generate --schema libs/database/prisma/fnet/schema.prisma
 
 # Copy the rest of the source code
 COPY . .
