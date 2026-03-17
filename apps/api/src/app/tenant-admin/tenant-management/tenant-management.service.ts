@@ -42,31 +42,28 @@ export class TenantManagementService {
     };
   }
 
-  private toTenantResponse(tenant: { clients?: unknown; [k: string]: unknown }, normalized: { list: unknown[]; dbUrl: string | null; fnetUrl: string | null }) {
-    // Exclude raw dbUrl/fnetUrl if they accidentally exist on the tenant object itself
+  private toTenantResponse(tenant: { clients?: unknown; dbUrl?: string | null; fnetUrl?: string | null; domainPrefix?: string | null; [k: string]: unknown }, normalized: { list: unknown[]; dbUrl: string | null; fnetUrl: string | null }) {
     const { dbUrl, fnetUrl, ...safeTenant } = tenant as any;
-    
     return {
       ...safeTenant,
-      clients: {
-        list: normalized.list
-        // explicitly omitting dbUrl and fnetUrl from clients payload for security
-      },
-      // Note: intentionally NOT returning dbUrl/fnetUrl at top-level
+      dbUrl: tenant.dbUrl ?? normalized.dbUrl ?? null,
+      fnetUrl: tenant.fnetUrl ?? normalized.fnetUrl ?? null,
+      domainPrefix: tenant.domainPrefix ?? null,
+      clients: { list: normalized.list },
     };
   }
 
   async create(data: any) {
-    const { status, dbUrl, fnetUrl, ...rest } = data;
+    const { status, dbUrl, fnetUrl, domainPrefix, ...rest } = data;
     const { keyId, fullKey, secretHash } = this.generateStripeStyleKey();
-    const clients: Record<string, unknown> = {};
-    if (dbUrl !== undefined) clients.dbUrl = dbUrl;
-    if (fnetUrl !== undefined) clients.fnetUrl = fnetUrl;
 
     const tenant = await this.prisma.tenant.create({
       data: {
         ...rest,
-        clients: Object.keys(clients).length > 0 ? clients : undefined,
+        dbUrl: dbUrl !== undefined && dbUrl !== '' ? dbUrl : null,
+        fnetUrl: fnetUrl !== undefined && fnetUrl !== '' ? fnetUrl : null,
+        domainPrefix: domainPrefix !== undefined && domainPrefix !== '' ? domainPrefix : null,
+        clients: { list: [] },
         apiKey: fullKey,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -92,28 +89,37 @@ export class TenantManagementService {
   }
 
   async update(id: string, data: any) {
-    const { status, dbUrl, fnetUrl, clients: clientsPayload, ...rest } = data;
-    const updateData: Record<string, unknown> = { ...rest, updatedAt: new Date() };
+    const { status, dbUrl, fnetUrl, domainPrefix, clients: clientsPayload, ...rest } = data;
     const existing = await this.prisma.tenant.findUnique({ where: { id }, select: { clients: true } });
     const current = this.normalizeClients(existing?.clients);
 
-    const shouldUpdateClients =
-      dbUrl !== undefined ||
-      fnetUrl !== undefined ||
-      (Array.isArray(clientsPayload) && clientsPayload.length >= 0);
+    const updateData: Record<string, unknown> = { ...rest, updatedAt: new Date() };
+
+    // Persist to DB columns (db_url, fnet_url, domainPrefix)
+    if (dbUrl !== undefined) updateData.dbUrl = dbUrl === '' ? null : dbUrl;
+    if (fnetUrl !== undefined) updateData.fnetUrl = fnetUrl === '' ? null : fnetUrl;
+    if (domainPrefix !== undefined) updateData.domainPrefix = domainPrefix === '' ? null : domainPrefix;
+
+    const shouldUpdateClients = Array.isArray(clientsPayload);
     if (shouldUpdateClients) {
-      const next: Record<string, unknown> = {
-        list: Array.isArray(clientsPayload) ? clientsPayload : current.list,
+      updateData.clients = {
+        list: clientsPayload,
         dbUrl: dbUrl !== undefined ? dbUrl : current.dbUrl,
         fnetUrl: fnetUrl !== undefined ? fnetUrl : current.fnetUrl,
       };
-      updateData.clients = next;
+    } else if (dbUrl !== undefined || fnetUrl !== undefined) {
+      updateData.clients = {
+        list: current.list,
+        dbUrl: dbUrl !== undefined ? dbUrl : current.dbUrl,
+        fnetUrl: fnetUrl !== undefined ? fnetUrl : current.fnetUrl,
+      };
     }
-    const result = await this.prisma.tenant.update({
+
+    await this.prisma.tenant.update({
       where: { id },
       data: updateData,
     });
-    
+
     return this.findOne(id);
   }
 

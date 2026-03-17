@@ -333,6 +333,21 @@ exports.Prisma.StaffScalarFieldEnum = {
   workShiftId: 'workShiftId'
 };
 
+exports.Prisma.RequestScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  status: 'status',
+  metadata: 'metadata',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.StaffRequestScalarFieldEnum = {
+  id: 'id',
+  requestId: 'requestId',
+  staffId: 'staffId'
+};
+
 exports.Prisma.StaffTimeTrackingScalarFieldEnum = {
   id: 'id',
   staffId: 'staffId',
@@ -924,6 +939,11 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
+};
+
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
@@ -999,6 +1019,21 @@ exports.Prisma.StaffOrderByRelevanceFieldEnum = {
   bankAccountName: 'bankAccountName',
   bankAccountNumber: 'bankAccountNumber',
   bankName: 'bankName'
+};
+
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
+};
+
+exports.Prisma.QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
+};
+
+exports.Prisma.RequestOrderByRelevanceFieldEnum = {
+  type: 'type'
 };
 
 exports.Prisma.WorkShiftOrderByRelevanceFieldEnum = {
@@ -1256,6 +1291,12 @@ exports.Staff_staffType = exports.$Enums.Staff_staffType = {
   BRANCH_ADMIN: 'BRANCH_ADMIN'
 };
 
+exports.StaffRequestStatus = exports.$Enums.StaffRequestStatus = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED'
+};
+
 exports.ShiftRevenueType = exports.$Enums.ShiftRevenueType = {
   MORNING: 'MORNING',
   AFTERNOON: 'AFTERNOON',
@@ -1405,6 +1446,8 @@ exports.Prisma.ModelName = {
   SavingPlan: 'SavingPlan',
   Computer: 'Computer',
   Staff: 'Staff',
+  Request: 'Request',
+  StaffRequest: 'StaffRequest',
   StaffTimeTracking: 'StaffTimeTracking',
   WorkShift: 'WorkShift',
   WorkShiftRevenueReport: 'WorkShiftRevenueReport',

@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../../src/lib/generated/prisma-client"
+  provider      = "prisma-client-js"
+  output        = "../../src/lib/generated/prisma-client"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -257,6 +258,33 @@ model Staff {
   workShift                WorkShift?          @relation(fields: [workShiftId], references: [id])
   staffViolations          StaffViolation[]
   staffTimeTrackings       StaffTimeTracking[]
+  staffRequests            StaffRequest[]
+}
+
+/// Request entity: type, status, metadata. One-to-one with StaffRequest (links to staff).
+model Request {
+  id           Int                @id @default(autoincrement())
+  type         String             @db.VarChar(50)
+  status       StaffRequestStatus @default(PENDING)
+  metadata     Json?              @db.Json
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  staffRequest StaffRequest?
+
+  @@map("Request")
+}
+
+/// Links a Request to the Staff who created it.
+model StaffRequest {
+  id        Int     @id @default(autoincrement())
+  requestId Int     @unique
+  staffId   Int
+  request   Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  staff     Staff   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([staffId])
+  @@index([requestId])
+  @@map("StaffRequest")
 }
 
 model StaffTimeTracking {
@@ -1048,6 +1076,12 @@ enum ReportDetailType {
 enum HandoverReportType {
   BAO_CAO_BEP
   BAO_CAO_NUOC
+}
+
+enum StaffRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum Staff_gender {

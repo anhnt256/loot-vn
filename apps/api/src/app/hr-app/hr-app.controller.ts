@@ -73,5 +73,41 @@ export class HrAppController {
     return { success: true, data };
   }
 
+  @Get('requests')
+  @UseGuards(AuthGuard)
+  async getRequests(@Req() req: any) {
+    const { userName } = req.user;
+    const data = await this.hrAppService.getRequests(userName);
+    return { success: true, data };
+  }
 
+  @Post('requests')
+  @UseGuards(AuthGuard)
+  async createRequest(@Req() req: any, @Body() body: { type: string; metadata?: Record<string, unknown> }) {
+    const { userName } = req.user;
+    const data = await this.hrAppService.createRequest(userName, body);
+    return { success: true, data };
+  }
+
+  @Delete('requests/:id')
+  @UseGuards(AuthGuard)
+  async deleteRequest(@Req() req: any, @Param('id') id: string) {
+    const { userName } = req.user;
+    await this.hrAppService.deleteRequest(userName, id);
+    return { success: true };
+  }
+
+  @Get('all-requests')
+  @UseGuards(AuthGuard)
+  async getAllRequests(@Req() req: any) {
+    const data = await this.hrAppService.getAllRequests();
+    return { success: true, data };
+  }
+
+  @Patch('requests/:id/status')
+  @UseGuards(AuthGuard)
+  async updateRequestStatus(@Param('id') id: string, @Body() body: { status: 'APPROVED' | 'REJECTED' }) {
+    await this.hrAppService.updateRequestStatus(id, body.status);
+    return { success: true };
+  }
 }

@@ -377,5 +377,100 @@ export class HrAppService {
     return this.getSalary({ staffId, month, year });
   }
 
+  async getRequests(userName: string) {
+    const staff = await this.prisma.staff.findFirst({
+      where: { userName, isDeleted: false },
+      select: { id: true },
+    });
+    if (!staff) return [];
+    const list = await this.prisma.staffRequest.findMany({
+      where: { staffId: staff.id },
+      include: { request: true, staff: { select: { userName: true } } },
+      orderBy: { request: { createdAt: 'desc' } },
+    });
+    return list.map(({ request, staff: s }) => ({
+      id: String(request.id),
+      type: request.type,
+      status: request.status,
+      metadata: (request.metadata as Record<string, unknown>) ?? {},
+      createdAt: request.createdAt.toISOString(),
+      staff: { userName: s.userName },
+    }));
+  }
 
+  async getAllRequests() {
+    const list = await this.prisma.staffRequest.findMany({
+      include: { request: true, staff: { select: { fullName: true, userName: true } } },
+      orderBy: { request: { createdAt: 'desc' } },
+    });
+    return list.map(({ request, staffId, staff: s }) => ({
+      id: String(request.id),
+      userId: String(staffId),
+      userName: s.userName,
+      type: request.type,
+      status: request.status,
+      metadata: (request.metadata as Record<string, unknown>) ?? {},
+      createdAt: request.createdAt.toISOString(),
+      staff: { fullName: s.fullName, userName: s.userName },
+    }));
+  }
+
+  async createRequest(userName: string, body: { type: string; metadata?: Record<string, unknown> }) {
+    const staff = await this.prisma.staff.findFirst({
+      where: { userName, isDeleted: false },
+      select: { id: true },
+    });
+    if (!staff) throw new BadRequestException('Staff not found');
+    const request = await this.prisma.request.create({
+      data: {
+        type: body.type ?? 'late_arrival',
+        status: 'PENDING',
+        metadata: (body.metadata ?? {}) as any,
+      },
+    });
+    await this.prisma.staffRequest.create({
+      data: { requestId: request.id, staffId: staff.id },
+    });
+    return {
+      id: String(request.id),
+      userId: staff.id,
+      userName,
+      type: request.type,
+      status: request.status,
+      metadata: (request.metadata as Record<string, unknown>) ?? {},
+      createdAt: request.createdAt.toISOString(),
+    };
+  }
+
+  async deleteRequest(userName: string, id: string) {
+    const requestId = parseInt(id, 10);
+    if (Number.isNaN(requestId)) throw new BadRequestException('Invalid request id');
+    const staff = await this.prisma.staff.findFirst({
+      where: { userName, isDeleted: false },
+      select: { id: true },
+    });
+    if (!staff) throw new BadRequestException('Staff not found');
+    const sr = await this.prisma.staffRequest.findFirst({
+      where: { requestId, staffId: staff.id },
+      select: { id: true },
+    });
+    if (!sr) throw new NotFoundException('Request not found');
+    await this.prisma.staffRequest.delete({ where: { id: sr.id } });
+    await this.prisma.request.delete({ where: { id: requestId } });
+    return { success: true };
+  }
+
+  async updateRequestStatus(id: string, status: 'APPROVED' | 'REJECTED') {
+    const requestId = parseInt(id, 10);
+    if (Number.isNaN(requestId)) throw new BadRequestException('Invalid request id');
+    const request = await this.prisma.request.findUnique({
+      where: { id: requestId },
+    });
+    if (!request) throw new NotFoundException('Request not found');
+    await this.prisma.request.update({
+      where: { id: requestId },
+      data: { status },
+    });
+    return { success: true };
+  }
 }

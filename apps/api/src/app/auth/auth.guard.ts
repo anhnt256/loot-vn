@@ -10,10 +10,18 @@ import { verifyJWT } from '../lib/jwt';
 export class AuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const token =
+    let token =
       request.headers['authorization']?.split(' ')[1] ||
       request.headers['token'] ||
       request.cookies?.['token'];
+    if (!token && request.headers['cookie']) {
+      const match = /(?:^|;\s*)token=([^;]*)/.exec(request.headers['cookie']);
+      if (match) token = decodeURIComponent(match[1].trim());
+    }
+    if (!token && request.headers['cookie']) {
+      const staffMatch = /(?:^|;\s*)staffToken=([^;]*)/.exec(request.headers['cookie']);
+      if (staffMatch) token = decodeURIComponent(staffMatch[1].trim());
+    }
 
     if (!token) {
       throw new UnauthorizedException('No token provided');

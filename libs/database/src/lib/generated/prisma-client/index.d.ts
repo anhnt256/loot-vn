@@ -104,6 +104,16 @@ export type Computer = $Result.DefaultSelection<Prisma.$ComputerPayload>
  */
 export type Staff = $Result.DefaultSelection<Prisma.$StaffPayload>
 /**
+ * Model Request
+ * Request entity: type, status, metadata. One-to-one with StaffRequest (links to staff).
+ */
+export type Request = $Result.DefaultSelection<Prisma.$RequestPayload>
+/**
+ * Model StaffRequest
+ * Links a Request to the Staff who created it.
+ */
+export type StaffRequest = $Result.DefaultSelection<Prisma.$StaffRequestPayload>
+/**
  * Model StaffTimeTracking
  * 
  */
@@ -428,6 +438,15 @@ export const HandoverReportType: {
 export type HandoverReportType = (typeof HandoverReportType)[keyof typeof HandoverReportType]
 
 
+export const StaffRequestStatus: {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED'
+};
+
+export type StaffRequestStatus = (typeof StaffRequestStatus)[keyof typeof StaffRequestStatus]
+
+
 export const Staff_gender: {
   MALE: 'MALE',
   FEMALE: 'FEMALE',
@@ -613,6 +632,10 @@ export const ReportDetailType: typeof $Enums.ReportDetailType
 export type HandoverReportType = $Enums.HandoverReportType
 
 export const HandoverReportType: typeof $Enums.HandoverReportType
+
+export type StaffRequestStatus = $Enums.StaffRequestStatus
+
+export const StaffRequestStatus: typeof $Enums.StaffRequestStatus
 
 export type Staff_gender = $Enums.Staff_gender
 
@@ -963,6 +986,26 @@ export class PrismaClient<
     * ```
     */
   get staff(): Prisma.StaffDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.request`: Exposes CRUD operations for the **Request** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Requests
+    * const requests = await prisma.request.findMany()
+    * ```
+    */
+  get request(): Prisma.RequestDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.staffRequest`: Exposes CRUD operations for the **StaffRequest** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more StaffRequests
+    * const staffRequests = await prisma.staffRequest.findMany()
+    * ```
+    */
+  get staffRequest(): Prisma.StaffRequestDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.staffTimeTracking`: Exposes CRUD operations for the **StaffTimeTracking** model.
@@ -1852,6 +1895,8 @@ export namespace Prisma {
     SavingPlan: 'SavingPlan',
     Computer: 'Computer',
     Staff: 'Staff',
+    Request: 'Request',
+    StaffRequest: 'StaffRequest',
     StaffTimeTracking: 'StaffTimeTracking',
     WorkShift: 'WorkShift',
     WorkShiftRevenueReport: 'WorkShiftRevenueReport',
@@ -1913,7 +1958,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "rank" | "game" | "checkInResult" | "checkInItem" | "checkInPromotion" | "item" | "gameItemMap" | "gameResult" | "user" | "mission" | "userMissionCompletion" | "userRewardMap" | "reward" | "promotionCode" | "userStarHistory" | "savingPlan" | "computer" | "staff" | "staffTimeTracking" | "workShift" | "workShiftRevenueReport" | "fraudLoginAlert" | "staffSalary" | "staffBonus" | "staffPenalty" | "managerIncomeExpense" | "giftRound" | "device" | "deviceHistory" | "battlePassSeason" | "battlePassReward" | "userBattlePass" | "userBattlePassReward" | "battlePassPremiumPackage" | "promotionSetting" | "battlePassPremiumOrder" | "chatMessage" | "birthdayTier" | "userBirthdayProgress" | "birthdayTransaction" | "reportDetail" | "report" | "handoverReport" | "handoverMaterial" | "material" | "feedback" | "fnetHistory" | "promotionReward" | "gameAppointmentTier" | "gameAppointment" | "gameAppointmentMember" | "gameAppointmentReward" | "event" | "eventParticipant" | "eventReward" | "eventReport" | "ffoodCredential" | "momoCredential" | "rewardPunishRule" | "ruleSeverity" | "staffViolation"
+      modelProps: "rank" | "game" | "checkInResult" | "checkInItem" | "checkInPromotion" | "item" | "gameItemMap" | "gameResult" | "user" | "mission" | "userMissionCompletion" | "userRewardMap" | "reward" | "promotionCode" | "userStarHistory" | "savingPlan" | "computer" | "staff" | "request" | "staffRequest" | "staffTimeTracking" | "workShift" | "workShiftRevenueReport" | "fraudLoginAlert" | "staffSalary" | "staffBonus" | "staffPenalty" | "managerIncomeExpense" | "giftRound" | "device" | "deviceHistory" | "battlePassSeason" | "battlePassReward" | "userBattlePass" | "userBattlePassReward" | "battlePassPremiumPackage" | "promotionSetting" | "battlePassPremiumOrder" | "chatMessage" | "birthdayTier" | "userBirthdayProgress" | "birthdayTransaction" | "reportDetail" | "report" | "handoverReport" | "handoverMaterial" | "material" | "feedback" | "fnetHistory" | "promotionReward" | "gameAppointmentTier" | "gameAppointment" | "gameAppointmentMember" | "gameAppointmentReward" | "event" | "eventParticipant" | "eventReward" | "eventReport" | "ffoodCredential" | "momoCredential" | "rewardPunishRule" | "ruleSeverity" | "staffViolation"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -3102,6 +3147,138 @@ export namespace Prisma {
           count: {
             args: Prisma.StaffCountArgs<ExtArgs>
             result: $Utils.Optional<StaffCountAggregateOutputType> | number
+          }
+        }
+      }
+      Request: {
+        payload: Prisma.$RequestPayload<ExtArgs>
+        fields: Prisma.RequestFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.RequestFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RequestPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.RequestFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RequestPayload>
+          }
+          findFirst: {
+            args: Prisma.RequestFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RequestPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.RequestFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RequestPayload>
+          }
+          findMany: {
+            args: Prisma.RequestFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RequestPayload>[]
+          }
+          create: {
+            args: Prisma.RequestCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RequestPayload>
+          }
+          createMany: {
+            args: Prisma.RequestCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.RequestDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RequestPayload>
+          }
+          update: {
+            args: Prisma.RequestUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RequestPayload>
+          }
+          deleteMany: {
+            args: Prisma.RequestDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.RequestUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.RequestUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RequestPayload>
+          }
+          aggregate: {
+            args: Prisma.RequestAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateRequest>
+          }
+          groupBy: {
+            args: Prisma.RequestGroupByArgs<ExtArgs>
+            result: $Utils.Optional<RequestGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.RequestCountArgs<ExtArgs>
+            result: $Utils.Optional<RequestCountAggregateOutputType> | number
+          }
+        }
+      }
+      StaffRequest: {
+        payload: Prisma.$StaffRequestPayload<ExtArgs>
+        fields: Prisma.StaffRequestFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.StaffRequestFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StaffRequestPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.StaffRequestFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StaffRequestPayload>
+          }
+          findFirst: {
+            args: Prisma.StaffRequestFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StaffRequestPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.StaffRequestFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StaffRequestPayload>
+          }
+          findMany: {
+            args: Prisma.StaffRequestFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StaffRequestPayload>[]
+          }
+          create: {
+            args: Prisma.StaffRequestCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StaffRequestPayload>
+          }
+          createMany: {
+            args: Prisma.StaffRequestCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.StaffRequestDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StaffRequestPayload>
+          }
+          update: {
+            args: Prisma.StaffRequestUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StaffRequestPayload>
+          }
+          deleteMany: {
+            args: Prisma.StaffRequestDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.StaffRequestUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.StaffRequestUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StaffRequestPayload>
+          }
+          aggregate: {
+            args: Prisma.StaffRequestAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateStaffRequest>
+          }
+          groupBy: {
+            args: Prisma.StaffRequestGroupByArgs<ExtArgs>
+            result: $Utils.Optional<StaffRequestGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.StaffRequestCountArgs<ExtArgs>
+            result: $Utils.Optional<StaffRequestCountAggregateOutputType> | number
           }
         }
       }
@@ -6057,6 +6234,8 @@ export namespace Prisma {
     savingPlan?: SavingPlanOmit
     computer?: ComputerOmit
     staff?: StaffOmit
+    request?: RequestOmit
+    staffRequest?: StaffRequestOmit
     staffTimeTracking?: StaffTimeTrackingOmit
     workShift?: WorkShiftOmit
     workShiftRevenueReport?: WorkShiftRevenueReportOmit
@@ -6419,6 +6598,7 @@ export namespace Prisma {
     eveningHandoverReports: number
     staffViolations: number
     staffTimeTrackings: number
+    staffRequests: number
   }
 
   export type StaffCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -6430,6 +6610,7 @@ export namespace Prisma {
     eveningHandoverReports?: boolean | StaffCountOutputTypeCountEveningHandoverReportsArgs
     staffViolations?: boolean | StaffCountOutputTypeCountStaffViolationsArgs
     staffTimeTrackings?: boolean | StaffCountOutputTypeCountStaffTimeTrackingsArgs
+    staffRequests?: boolean | StaffCountOutputTypeCountStaffRequestsArgs
   }
 
   // Custom InputTypes
@@ -6497,6 +6678,13 @@ export namespace Prisma {
    */
   export type StaffCountOutputTypeCountStaffTimeTrackingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: StaffTimeTrackingWhereInput
+  }
+
+  /**
+   * StaffCountOutputType without action
+   */
+  export type StaffCountOutputTypeCountStaffRequestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: StaffRequestWhereInput
   }
 
 
@@ -24411,6 +24599,7 @@ export namespace Prisma {
     workShift?: boolean | Staff$workShiftArgs<ExtArgs>
     staffViolations?: boolean | Staff$staffViolationsArgs<ExtArgs>
     staffTimeTrackings?: boolean | Staff$staffTimeTrackingsArgs<ExtArgs>
+    staffRequests?: boolean | Staff$staffRequestsArgs<ExtArgs>
     _count?: boolean | StaffCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["staff"]>
 
@@ -24456,6 +24645,7 @@ export namespace Prisma {
     workShift?: boolean | Staff$workShiftArgs<ExtArgs>
     staffViolations?: boolean | Staff$staffViolationsArgs<ExtArgs>
     staffTimeTrackings?: boolean | Staff$staffTimeTrackingsArgs<ExtArgs>
+    staffRequests?: boolean | Staff$staffRequestsArgs<ExtArgs>
     _count?: boolean | StaffCountOutputTypeDefaultArgs<ExtArgs>
   }
 
@@ -24471,6 +24661,7 @@ export namespace Prisma {
       workShift: Prisma.$WorkShiftPayload<ExtArgs> | null
       staffViolations: Prisma.$StaffViolationPayload<ExtArgs>[]
       staffTimeTrackings: Prisma.$StaffTimeTrackingPayload<ExtArgs>[]
+      staffRequests: Prisma.$StaffRequestPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -24848,6 +25039,7 @@ export namespace Prisma {
     workShift<T extends Staff$workShiftArgs<ExtArgs> = {}>(args?: Subset<T, Staff$workShiftArgs<ExtArgs>>): Prisma__WorkShiftClient<$Result.GetResult<Prisma.$WorkShiftPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     staffViolations<T extends Staff$staffViolationsArgs<ExtArgs> = {}>(args?: Subset<T, Staff$staffViolationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StaffViolationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     staffTimeTrackings<T extends Staff$staffTimeTrackingsArgs<ExtArgs> = {}>(args?: Subset<T, Staff$staffTimeTrackingsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StaffTimeTrackingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    staffRequests<T extends Staff$staffRequestsArgs<ExtArgs> = {}>(args?: Subset<T, Staff$staffRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StaffRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -25457,6 +25649,30 @@ export namespace Prisma {
   }
 
   /**
+   * Staff.staffRequests
+   */
+  export type Staff$staffRequestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StaffRequest
+     */
+    select?: StaffRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StaffRequest
+     */
+    omit?: StaffRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffRequestInclude<ExtArgs> | null
+    where?: StaffRequestWhereInput
+    orderBy?: StaffRequestOrderByWithRelationInput | StaffRequestOrderByWithRelationInput[]
+    cursor?: StaffRequestWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: StaffRequestScalarFieldEnum | StaffRequestScalarFieldEnum[]
+  }
+
+  /**
    * Staff without action
    */
   export type StaffDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -25472,6 +25688,1948 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: StaffInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model Request
+   */
+
+  export type AggregateRequest = {
+    _count: RequestCountAggregateOutputType | null
+    _avg: RequestAvgAggregateOutputType | null
+    _sum: RequestSumAggregateOutputType | null
+    _min: RequestMinAggregateOutputType | null
+    _max: RequestMaxAggregateOutputType | null
+  }
+
+  export type RequestAvgAggregateOutputType = {
+    id: number | null
+  }
+
+  export type RequestSumAggregateOutputType = {
+    id: number | null
+  }
+
+  export type RequestMinAggregateOutputType = {
+    id: number | null
+    type: string | null
+    status: $Enums.StaffRequestStatus | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type RequestMaxAggregateOutputType = {
+    id: number | null
+    type: string | null
+    status: $Enums.StaffRequestStatus | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type RequestCountAggregateOutputType = {
+    id: number
+    type: number
+    status: number
+    metadata: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type RequestAvgAggregateInputType = {
+    id?: true
+  }
+
+  export type RequestSumAggregateInputType = {
+    id?: true
+  }
+
+  export type RequestMinAggregateInputType = {
+    id?: true
+    type?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type RequestMaxAggregateInputType = {
+    id?: true
+    type?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type RequestCountAggregateInputType = {
+    id?: true
+    type?: true
+    status?: true
+    metadata?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type RequestAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Request to aggregate.
+     */
+    where?: RequestWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Requests to fetch.
+     */
+    orderBy?: RequestOrderByWithRelationInput | RequestOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: RequestWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Requests from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Requests.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Requests
+    **/
+    _count?: true | RequestCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: RequestAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: RequestSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: RequestMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: RequestMaxAggregateInputType
+  }
+
+  export type GetRequestAggregateType<T extends RequestAggregateArgs> = {
+        [P in keyof T & keyof AggregateRequest]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateRequest[P]>
+      : GetScalarType<T[P], AggregateRequest[P]>
+  }
+
+
+
+
+  export type RequestGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: RequestWhereInput
+    orderBy?: RequestOrderByWithAggregationInput | RequestOrderByWithAggregationInput[]
+    by: RequestScalarFieldEnum[] | RequestScalarFieldEnum
+    having?: RequestScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: RequestCountAggregateInputType | true
+    _avg?: RequestAvgAggregateInputType
+    _sum?: RequestSumAggregateInputType
+    _min?: RequestMinAggregateInputType
+    _max?: RequestMaxAggregateInputType
+  }
+
+  export type RequestGroupByOutputType = {
+    id: number
+    type: string
+    status: $Enums.StaffRequestStatus
+    metadata: JsonValue | null
+    createdAt: Date
+    updatedAt: Date
+    _count: RequestCountAggregateOutputType | null
+    _avg: RequestAvgAggregateOutputType | null
+    _sum: RequestSumAggregateOutputType | null
+    _min: RequestMinAggregateOutputType | null
+    _max: RequestMaxAggregateOutputType | null
+  }
+
+  type GetRequestGroupByPayload<T extends RequestGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<RequestGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof RequestGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], RequestGroupByOutputType[P]>
+            : GetScalarType<T[P], RequestGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type RequestSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    type?: boolean
+    status?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    staffRequest?: boolean | Request$staffRequestArgs<ExtArgs>
+  }, ExtArgs["result"]["request"]>
+
+
+
+  export type RequestSelectScalar = {
+    id?: boolean
+    type?: boolean
+    status?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type RequestOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "type" | "status" | "metadata" | "createdAt" | "updatedAt", ExtArgs["result"]["request"]>
+  export type RequestInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    staffRequest?: boolean | Request$staffRequestArgs<ExtArgs>
+  }
+
+  export type $RequestPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Request"
+    objects: {
+      staffRequest: Prisma.$StaffRequestPayload<ExtArgs> | null
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      type: string
+      status: $Enums.StaffRequestStatus
+      metadata: Prisma.JsonValue | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["request"]>
+    composites: {}
+  }
+
+  type RequestGetPayload<S extends boolean | null | undefined | RequestDefaultArgs> = $Result.GetResult<Prisma.$RequestPayload, S>
+
+  type RequestCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<RequestFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: RequestCountAggregateInputType | true
+    }
+
+  export interface RequestDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Request'], meta: { name: 'Request' } }
+    /**
+     * Find zero or one Request that matches the filter.
+     * @param {RequestFindUniqueArgs} args - Arguments to find a Request
+     * @example
+     * // Get one Request
+     * const request = await prisma.request.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends RequestFindUniqueArgs>(args: SelectSubset<T, RequestFindUniqueArgs<ExtArgs>>): Prisma__RequestClient<$Result.GetResult<Prisma.$RequestPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Request that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {RequestFindUniqueOrThrowArgs} args - Arguments to find a Request
+     * @example
+     * // Get one Request
+     * const request = await prisma.request.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends RequestFindUniqueOrThrowArgs>(args: SelectSubset<T, RequestFindUniqueOrThrowArgs<ExtArgs>>): Prisma__RequestClient<$Result.GetResult<Prisma.$RequestPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Request that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RequestFindFirstArgs} args - Arguments to find a Request
+     * @example
+     * // Get one Request
+     * const request = await prisma.request.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends RequestFindFirstArgs>(args?: SelectSubset<T, RequestFindFirstArgs<ExtArgs>>): Prisma__RequestClient<$Result.GetResult<Prisma.$RequestPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Request that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RequestFindFirstOrThrowArgs} args - Arguments to find a Request
+     * @example
+     * // Get one Request
+     * const request = await prisma.request.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends RequestFindFirstOrThrowArgs>(args?: SelectSubset<T, RequestFindFirstOrThrowArgs<ExtArgs>>): Prisma__RequestClient<$Result.GetResult<Prisma.$RequestPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Requests that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RequestFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Requests
+     * const requests = await prisma.request.findMany()
+     * 
+     * // Get first 10 Requests
+     * const requests = await prisma.request.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const requestWithIdOnly = await prisma.request.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends RequestFindManyArgs>(args?: SelectSubset<T, RequestFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Request.
+     * @param {RequestCreateArgs} args - Arguments to create a Request.
+     * @example
+     * // Create one Request
+     * const Request = await prisma.request.create({
+     *   data: {
+     *     // ... data to create a Request
+     *   }
+     * })
+     * 
+     */
+    create<T extends RequestCreateArgs>(args: SelectSubset<T, RequestCreateArgs<ExtArgs>>): Prisma__RequestClient<$Result.GetResult<Prisma.$RequestPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Requests.
+     * @param {RequestCreateManyArgs} args - Arguments to create many Requests.
+     * @example
+     * // Create many Requests
+     * const request = await prisma.request.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends RequestCreateManyArgs>(args?: SelectSubset<T, RequestCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a Request.
+     * @param {RequestDeleteArgs} args - Arguments to delete one Request.
+     * @example
+     * // Delete one Request
+     * const Request = await prisma.request.delete({
+     *   where: {
+     *     // ... filter to delete one Request
+     *   }
+     * })
+     * 
+     */
+    delete<T extends RequestDeleteArgs>(args: SelectSubset<T, RequestDeleteArgs<ExtArgs>>): Prisma__RequestClient<$Result.GetResult<Prisma.$RequestPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Request.
+     * @param {RequestUpdateArgs} args - Arguments to update one Request.
+     * @example
+     * // Update one Request
+     * const request = await prisma.request.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends RequestUpdateArgs>(args: SelectSubset<T, RequestUpdateArgs<ExtArgs>>): Prisma__RequestClient<$Result.GetResult<Prisma.$RequestPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Requests.
+     * @param {RequestDeleteManyArgs} args - Arguments to filter Requests to delete.
+     * @example
+     * // Delete a few Requests
+     * const { count } = await prisma.request.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends RequestDeleteManyArgs>(args?: SelectSubset<T, RequestDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Requests.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RequestUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Requests
+     * const request = await prisma.request.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends RequestUpdateManyArgs>(args: SelectSubset<T, RequestUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one Request.
+     * @param {RequestUpsertArgs} args - Arguments to update or create a Request.
+     * @example
+     * // Update or create a Request
+     * const request = await prisma.request.upsert({
+     *   create: {
+     *     // ... data to create a Request
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Request we want to update
+     *   }
+     * })
+     */
+    upsert<T extends RequestUpsertArgs>(args: SelectSubset<T, RequestUpsertArgs<ExtArgs>>): Prisma__RequestClient<$Result.GetResult<Prisma.$RequestPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Requests.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RequestCountArgs} args - Arguments to filter Requests to count.
+     * @example
+     * // Count the number of Requests
+     * const count = await prisma.request.count({
+     *   where: {
+     *     // ... the filter for the Requests we want to count
+     *   }
+     * })
+    **/
+    count<T extends RequestCountArgs>(
+      args?: Subset<T, RequestCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], RequestCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Request.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RequestAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends RequestAggregateArgs>(args: Subset<T, RequestAggregateArgs>): Prisma.PrismaPromise<GetRequestAggregateType<T>>
+
+    /**
+     * Group by Request.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RequestGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends RequestGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: RequestGroupByArgs['orderBy'] }
+        : { orderBy?: RequestGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, RequestGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetRequestGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Request model
+   */
+  readonly fields: RequestFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Request.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__RequestClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    staffRequest<T extends Request$staffRequestArgs<ExtArgs> = {}>(args?: Subset<T, Request$staffRequestArgs<ExtArgs>>): Prisma__StaffRequestClient<$Result.GetResult<Prisma.$StaffRequestPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Request model
+   */
+  interface RequestFieldRefs {
+    readonly id: FieldRef<"Request", 'Int'>
+    readonly type: FieldRef<"Request", 'String'>
+    readonly status: FieldRef<"Request", 'StaffRequestStatus'>
+    readonly metadata: FieldRef<"Request", 'Json'>
+    readonly createdAt: FieldRef<"Request", 'DateTime'>
+    readonly updatedAt: FieldRef<"Request", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Request findUnique
+   */
+  export type RequestFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Request
+     */
+    select?: RequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Request
+     */
+    omit?: RequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RequestInclude<ExtArgs> | null
+    /**
+     * Filter, which Request to fetch.
+     */
+    where: RequestWhereUniqueInput
+  }
+
+  /**
+   * Request findUniqueOrThrow
+   */
+  export type RequestFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Request
+     */
+    select?: RequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Request
+     */
+    omit?: RequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RequestInclude<ExtArgs> | null
+    /**
+     * Filter, which Request to fetch.
+     */
+    where: RequestWhereUniqueInput
+  }
+
+  /**
+   * Request findFirst
+   */
+  export type RequestFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Request
+     */
+    select?: RequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Request
+     */
+    omit?: RequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RequestInclude<ExtArgs> | null
+    /**
+     * Filter, which Request to fetch.
+     */
+    where?: RequestWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Requests to fetch.
+     */
+    orderBy?: RequestOrderByWithRelationInput | RequestOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Requests.
+     */
+    cursor?: RequestWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Requests from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Requests.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Requests.
+     */
+    distinct?: RequestScalarFieldEnum | RequestScalarFieldEnum[]
+  }
+
+  /**
+   * Request findFirstOrThrow
+   */
+  export type RequestFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Request
+     */
+    select?: RequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Request
+     */
+    omit?: RequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RequestInclude<ExtArgs> | null
+    /**
+     * Filter, which Request to fetch.
+     */
+    where?: RequestWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Requests to fetch.
+     */
+    orderBy?: RequestOrderByWithRelationInput | RequestOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Requests.
+     */
+    cursor?: RequestWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Requests from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Requests.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Requests.
+     */
+    distinct?: RequestScalarFieldEnum | RequestScalarFieldEnum[]
+  }
+
+  /**
+   * Request findMany
+   */
+  export type RequestFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Request
+     */
+    select?: RequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Request
+     */
+    omit?: RequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RequestInclude<ExtArgs> | null
+    /**
+     * Filter, which Requests to fetch.
+     */
+    where?: RequestWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Requests to fetch.
+     */
+    orderBy?: RequestOrderByWithRelationInput | RequestOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Requests.
+     */
+    cursor?: RequestWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Requests from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Requests.
+     */
+    skip?: number
+    distinct?: RequestScalarFieldEnum | RequestScalarFieldEnum[]
+  }
+
+  /**
+   * Request create
+   */
+  export type RequestCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Request
+     */
+    select?: RequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Request
+     */
+    omit?: RequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RequestInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Request.
+     */
+    data: XOR<RequestCreateInput, RequestUncheckedCreateInput>
+  }
+
+  /**
+   * Request createMany
+   */
+  export type RequestCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Requests.
+     */
+    data: RequestCreateManyInput | RequestCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Request update
+   */
+  export type RequestUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Request
+     */
+    select?: RequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Request
+     */
+    omit?: RequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RequestInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Request.
+     */
+    data: XOR<RequestUpdateInput, RequestUncheckedUpdateInput>
+    /**
+     * Choose, which Request to update.
+     */
+    where: RequestWhereUniqueInput
+  }
+
+  /**
+   * Request updateMany
+   */
+  export type RequestUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Requests.
+     */
+    data: XOR<RequestUpdateManyMutationInput, RequestUncheckedUpdateManyInput>
+    /**
+     * Filter which Requests to update
+     */
+    where?: RequestWhereInput
+    /**
+     * Limit how many Requests to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Request upsert
+   */
+  export type RequestUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Request
+     */
+    select?: RequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Request
+     */
+    omit?: RequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RequestInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Request to update in case it exists.
+     */
+    where: RequestWhereUniqueInput
+    /**
+     * In case the Request found by the `where` argument doesn't exist, create a new Request with this data.
+     */
+    create: XOR<RequestCreateInput, RequestUncheckedCreateInput>
+    /**
+     * In case the Request was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<RequestUpdateInput, RequestUncheckedUpdateInput>
+  }
+
+  /**
+   * Request delete
+   */
+  export type RequestDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Request
+     */
+    select?: RequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Request
+     */
+    omit?: RequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RequestInclude<ExtArgs> | null
+    /**
+     * Filter which Request to delete.
+     */
+    where: RequestWhereUniqueInput
+  }
+
+  /**
+   * Request deleteMany
+   */
+  export type RequestDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Requests to delete
+     */
+    where?: RequestWhereInput
+    /**
+     * Limit how many Requests to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Request.staffRequest
+   */
+  export type Request$staffRequestArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StaffRequest
+     */
+    select?: StaffRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StaffRequest
+     */
+    omit?: StaffRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffRequestInclude<ExtArgs> | null
+    where?: StaffRequestWhereInput
+  }
+
+  /**
+   * Request without action
+   */
+  export type RequestDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Request
+     */
+    select?: RequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Request
+     */
+    omit?: RequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RequestInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model StaffRequest
+   */
+
+  export type AggregateStaffRequest = {
+    _count: StaffRequestCountAggregateOutputType | null
+    _avg: StaffRequestAvgAggregateOutputType | null
+    _sum: StaffRequestSumAggregateOutputType | null
+    _min: StaffRequestMinAggregateOutputType | null
+    _max: StaffRequestMaxAggregateOutputType | null
+  }
+
+  export type StaffRequestAvgAggregateOutputType = {
+    id: number | null
+    requestId: number | null
+    staffId: number | null
+  }
+
+  export type StaffRequestSumAggregateOutputType = {
+    id: number | null
+    requestId: number | null
+    staffId: number | null
+  }
+
+  export type StaffRequestMinAggregateOutputType = {
+    id: number | null
+    requestId: number | null
+    staffId: number | null
+  }
+
+  export type StaffRequestMaxAggregateOutputType = {
+    id: number | null
+    requestId: number | null
+    staffId: number | null
+  }
+
+  export type StaffRequestCountAggregateOutputType = {
+    id: number
+    requestId: number
+    staffId: number
+    _all: number
+  }
+
+
+  export type StaffRequestAvgAggregateInputType = {
+    id?: true
+    requestId?: true
+    staffId?: true
+  }
+
+  export type StaffRequestSumAggregateInputType = {
+    id?: true
+    requestId?: true
+    staffId?: true
+  }
+
+  export type StaffRequestMinAggregateInputType = {
+    id?: true
+    requestId?: true
+    staffId?: true
+  }
+
+  export type StaffRequestMaxAggregateInputType = {
+    id?: true
+    requestId?: true
+    staffId?: true
+  }
+
+  export type StaffRequestCountAggregateInputType = {
+    id?: true
+    requestId?: true
+    staffId?: true
+    _all?: true
+  }
+
+  export type StaffRequestAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which StaffRequest to aggregate.
+     */
+    where?: StaffRequestWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StaffRequests to fetch.
+     */
+    orderBy?: StaffRequestOrderByWithRelationInput | StaffRequestOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: StaffRequestWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StaffRequests from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StaffRequests.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned StaffRequests
+    **/
+    _count?: true | StaffRequestCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: StaffRequestAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: StaffRequestSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: StaffRequestMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: StaffRequestMaxAggregateInputType
+  }
+
+  export type GetStaffRequestAggregateType<T extends StaffRequestAggregateArgs> = {
+        [P in keyof T & keyof AggregateStaffRequest]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateStaffRequest[P]>
+      : GetScalarType<T[P], AggregateStaffRequest[P]>
+  }
+
+
+
+
+  export type StaffRequestGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: StaffRequestWhereInput
+    orderBy?: StaffRequestOrderByWithAggregationInput | StaffRequestOrderByWithAggregationInput[]
+    by: StaffRequestScalarFieldEnum[] | StaffRequestScalarFieldEnum
+    having?: StaffRequestScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: StaffRequestCountAggregateInputType | true
+    _avg?: StaffRequestAvgAggregateInputType
+    _sum?: StaffRequestSumAggregateInputType
+    _min?: StaffRequestMinAggregateInputType
+    _max?: StaffRequestMaxAggregateInputType
+  }
+
+  export type StaffRequestGroupByOutputType = {
+    id: number
+    requestId: number
+    staffId: number
+    _count: StaffRequestCountAggregateOutputType | null
+    _avg: StaffRequestAvgAggregateOutputType | null
+    _sum: StaffRequestSumAggregateOutputType | null
+    _min: StaffRequestMinAggregateOutputType | null
+    _max: StaffRequestMaxAggregateOutputType | null
+  }
+
+  type GetStaffRequestGroupByPayload<T extends StaffRequestGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<StaffRequestGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof StaffRequestGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], StaffRequestGroupByOutputType[P]>
+            : GetScalarType<T[P], StaffRequestGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type StaffRequestSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    requestId?: boolean
+    staffId?: boolean
+    request?: boolean | RequestDefaultArgs<ExtArgs>
+    staff?: boolean | StaffDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["staffRequest"]>
+
+
+
+  export type StaffRequestSelectScalar = {
+    id?: boolean
+    requestId?: boolean
+    staffId?: boolean
+  }
+
+  export type StaffRequestOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "requestId" | "staffId", ExtArgs["result"]["staffRequest"]>
+  export type StaffRequestInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    request?: boolean | RequestDefaultArgs<ExtArgs>
+    staff?: boolean | StaffDefaultArgs<ExtArgs>
+  }
+
+  export type $StaffRequestPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "StaffRequest"
+    objects: {
+      request: Prisma.$RequestPayload<ExtArgs>
+      staff: Prisma.$StaffPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      requestId: number
+      staffId: number
+    }, ExtArgs["result"]["staffRequest"]>
+    composites: {}
+  }
+
+  type StaffRequestGetPayload<S extends boolean | null | undefined | StaffRequestDefaultArgs> = $Result.GetResult<Prisma.$StaffRequestPayload, S>
+
+  type StaffRequestCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<StaffRequestFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: StaffRequestCountAggregateInputType | true
+    }
+
+  export interface StaffRequestDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['StaffRequest'], meta: { name: 'StaffRequest' } }
+    /**
+     * Find zero or one StaffRequest that matches the filter.
+     * @param {StaffRequestFindUniqueArgs} args - Arguments to find a StaffRequest
+     * @example
+     * // Get one StaffRequest
+     * const staffRequest = await prisma.staffRequest.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends StaffRequestFindUniqueArgs>(args: SelectSubset<T, StaffRequestFindUniqueArgs<ExtArgs>>): Prisma__StaffRequestClient<$Result.GetResult<Prisma.$StaffRequestPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one StaffRequest that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {StaffRequestFindUniqueOrThrowArgs} args - Arguments to find a StaffRequest
+     * @example
+     * // Get one StaffRequest
+     * const staffRequest = await prisma.staffRequest.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends StaffRequestFindUniqueOrThrowArgs>(args: SelectSubset<T, StaffRequestFindUniqueOrThrowArgs<ExtArgs>>): Prisma__StaffRequestClient<$Result.GetResult<Prisma.$StaffRequestPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first StaffRequest that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StaffRequestFindFirstArgs} args - Arguments to find a StaffRequest
+     * @example
+     * // Get one StaffRequest
+     * const staffRequest = await prisma.staffRequest.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends StaffRequestFindFirstArgs>(args?: SelectSubset<T, StaffRequestFindFirstArgs<ExtArgs>>): Prisma__StaffRequestClient<$Result.GetResult<Prisma.$StaffRequestPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first StaffRequest that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StaffRequestFindFirstOrThrowArgs} args - Arguments to find a StaffRequest
+     * @example
+     * // Get one StaffRequest
+     * const staffRequest = await prisma.staffRequest.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends StaffRequestFindFirstOrThrowArgs>(args?: SelectSubset<T, StaffRequestFindFirstOrThrowArgs<ExtArgs>>): Prisma__StaffRequestClient<$Result.GetResult<Prisma.$StaffRequestPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more StaffRequests that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StaffRequestFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all StaffRequests
+     * const staffRequests = await prisma.staffRequest.findMany()
+     * 
+     * // Get first 10 StaffRequests
+     * const staffRequests = await prisma.staffRequest.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const staffRequestWithIdOnly = await prisma.staffRequest.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends StaffRequestFindManyArgs>(args?: SelectSubset<T, StaffRequestFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StaffRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a StaffRequest.
+     * @param {StaffRequestCreateArgs} args - Arguments to create a StaffRequest.
+     * @example
+     * // Create one StaffRequest
+     * const StaffRequest = await prisma.staffRequest.create({
+     *   data: {
+     *     // ... data to create a StaffRequest
+     *   }
+     * })
+     * 
+     */
+    create<T extends StaffRequestCreateArgs>(args: SelectSubset<T, StaffRequestCreateArgs<ExtArgs>>): Prisma__StaffRequestClient<$Result.GetResult<Prisma.$StaffRequestPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many StaffRequests.
+     * @param {StaffRequestCreateManyArgs} args - Arguments to create many StaffRequests.
+     * @example
+     * // Create many StaffRequests
+     * const staffRequest = await prisma.staffRequest.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends StaffRequestCreateManyArgs>(args?: SelectSubset<T, StaffRequestCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a StaffRequest.
+     * @param {StaffRequestDeleteArgs} args - Arguments to delete one StaffRequest.
+     * @example
+     * // Delete one StaffRequest
+     * const StaffRequest = await prisma.staffRequest.delete({
+     *   where: {
+     *     // ... filter to delete one StaffRequest
+     *   }
+     * })
+     * 
+     */
+    delete<T extends StaffRequestDeleteArgs>(args: SelectSubset<T, StaffRequestDeleteArgs<ExtArgs>>): Prisma__StaffRequestClient<$Result.GetResult<Prisma.$StaffRequestPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one StaffRequest.
+     * @param {StaffRequestUpdateArgs} args - Arguments to update one StaffRequest.
+     * @example
+     * // Update one StaffRequest
+     * const staffRequest = await prisma.staffRequest.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends StaffRequestUpdateArgs>(args: SelectSubset<T, StaffRequestUpdateArgs<ExtArgs>>): Prisma__StaffRequestClient<$Result.GetResult<Prisma.$StaffRequestPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more StaffRequests.
+     * @param {StaffRequestDeleteManyArgs} args - Arguments to filter StaffRequests to delete.
+     * @example
+     * // Delete a few StaffRequests
+     * const { count } = await prisma.staffRequest.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends StaffRequestDeleteManyArgs>(args?: SelectSubset<T, StaffRequestDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more StaffRequests.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StaffRequestUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many StaffRequests
+     * const staffRequest = await prisma.staffRequest.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends StaffRequestUpdateManyArgs>(args: SelectSubset<T, StaffRequestUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one StaffRequest.
+     * @param {StaffRequestUpsertArgs} args - Arguments to update or create a StaffRequest.
+     * @example
+     * // Update or create a StaffRequest
+     * const staffRequest = await prisma.staffRequest.upsert({
+     *   create: {
+     *     // ... data to create a StaffRequest
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the StaffRequest we want to update
+     *   }
+     * })
+     */
+    upsert<T extends StaffRequestUpsertArgs>(args: SelectSubset<T, StaffRequestUpsertArgs<ExtArgs>>): Prisma__StaffRequestClient<$Result.GetResult<Prisma.$StaffRequestPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of StaffRequests.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StaffRequestCountArgs} args - Arguments to filter StaffRequests to count.
+     * @example
+     * // Count the number of StaffRequests
+     * const count = await prisma.staffRequest.count({
+     *   where: {
+     *     // ... the filter for the StaffRequests we want to count
+     *   }
+     * })
+    **/
+    count<T extends StaffRequestCountArgs>(
+      args?: Subset<T, StaffRequestCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], StaffRequestCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a StaffRequest.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StaffRequestAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends StaffRequestAggregateArgs>(args: Subset<T, StaffRequestAggregateArgs>): Prisma.PrismaPromise<GetStaffRequestAggregateType<T>>
+
+    /**
+     * Group by StaffRequest.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StaffRequestGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends StaffRequestGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: StaffRequestGroupByArgs['orderBy'] }
+        : { orderBy?: StaffRequestGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, StaffRequestGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetStaffRequestGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the StaffRequest model
+   */
+  readonly fields: StaffRequestFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for StaffRequest.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__StaffRequestClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    request<T extends RequestDefaultArgs<ExtArgs> = {}>(args?: Subset<T, RequestDefaultArgs<ExtArgs>>): Prisma__RequestClient<$Result.GetResult<Prisma.$RequestPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    staff<T extends StaffDefaultArgs<ExtArgs> = {}>(args?: Subset<T, StaffDefaultArgs<ExtArgs>>): Prisma__StaffClient<$Result.GetResult<Prisma.$StaffPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the StaffRequest model
+   */
+  interface StaffRequestFieldRefs {
+    readonly id: FieldRef<"StaffRequest", 'Int'>
+    readonly requestId: FieldRef<"StaffRequest", 'Int'>
+    readonly staffId: FieldRef<"StaffRequest", 'Int'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * StaffRequest findUnique
+   */
+  export type StaffRequestFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StaffRequest
+     */
+    select?: StaffRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StaffRequest
+     */
+    omit?: StaffRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffRequestInclude<ExtArgs> | null
+    /**
+     * Filter, which StaffRequest to fetch.
+     */
+    where: StaffRequestWhereUniqueInput
+  }
+
+  /**
+   * StaffRequest findUniqueOrThrow
+   */
+  export type StaffRequestFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StaffRequest
+     */
+    select?: StaffRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StaffRequest
+     */
+    omit?: StaffRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffRequestInclude<ExtArgs> | null
+    /**
+     * Filter, which StaffRequest to fetch.
+     */
+    where: StaffRequestWhereUniqueInput
+  }
+
+  /**
+   * StaffRequest findFirst
+   */
+  export type StaffRequestFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StaffRequest
+     */
+    select?: StaffRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StaffRequest
+     */
+    omit?: StaffRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffRequestInclude<ExtArgs> | null
+    /**
+     * Filter, which StaffRequest to fetch.
+     */
+    where?: StaffRequestWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StaffRequests to fetch.
+     */
+    orderBy?: StaffRequestOrderByWithRelationInput | StaffRequestOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for StaffRequests.
+     */
+    cursor?: StaffRequestWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StaffRequests from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StaffRequests.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of StaffRequests.
+     */
+    distinct?: StaffRequestScalarFieldEnum | StaffRequestScalarFieldEnum[]
+  }
+
+  /**
+   * StaffRequest findFirstOrThrow
+   */
+  export type StaffRequestFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StaffRequest
+     */
+    select?: StaffRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StaffRequest
+     */
+    omit?: StaffRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffRequestInclude<ExtArgs> | null
+    /**
+     * Filter, which StaffRequest to fetch.
+     */
+    where?: StaffRequestWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StaffRequests to fetch.
+     */
+    orderBy?: StaffRequestOrderByWithRelationInput | StaffRequestOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for StaffRequests.
+     */
+    cursor?: StaffRequestWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StaffRequests from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StaffRequests.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of StaffRequests.
+     */
+    distinct?: StaffRequestScalarFieldEnum | StaffRequestScalarFieldEnum[]
+  }
+
+  /**
+   * StaffRequest findMany
+   */
+  export type StaffRequestFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StaffRequest
+     */
+    select?: StaffRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StaffRequest
+     */
+    omit?: StaffRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffRequestInclude<ExtArgs> | null
+    /**
+     * Filter, which StaffRequests to fetch.
+     */
+    where?: StaffRequestWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StaffRequests to fetch.
+     */
+    orderBy?: StaffRequestOrderByWithRelationInput | StaffRequestOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing StaffRequests.
+     */
+    cursor?: StaffRequestWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StaffRequests from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StaffRequests.
+     */
+    skip?: number
+    distinct?: StaffRequestScalarFieldEnum | StaffRequestScalarFieldEnum[]
+  }
+
+  /**
+   * StaffRequest create
+   */
+  export type StaffRequestCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StaffRequest
+     */
+    select?: StaffRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StaffRequest
+     */
+    omit?: StaffRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffRequestInclude<ExtArgs> | null
+    /**
+     * The data needed to create a StaffRequest.
+     */
+    data: XOR<StaffRequestCreateInput, StaffRequestUncheckedCreateInput>
+  }
+
+  /**
+   * StaffRequest createMany
+   */
+  export type StaffRequestCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many StaffRequests.
+     */
+    data: StaffRequestCreateManyInput | StaffRequestCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * StaffRequest update
+   */
+  export type StaffRequestUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StaffRequest
+     */
+    select?: StaffRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StaffRequest
+     */
+    omit?: StaffRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffRequestInclude<ExtArgs> | null
+    /**
+     * The data needed to update a StaffRequest.
+     */
+    data: XOR<StaffRequestUpdateInput, StaffRequestUncheckedUpdateInput>
+    /**
+     * Choose, which StaffRequest to update.
+     */
+    where: StaffRequestWhereUniqueInput
+  }
+
+  /**
+   * StaffRequest updateMany
+   */
+  export type StaffRequestUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update StaffRequests.
+     */
+    data: XOR<StaffRequestUpdateManyMutationInput, StaffRequestUncheckedUpdateManyInput>
+    /**
+     * Filter which StaffRequests to update
+     */
+    where?: StaffRequestWhereInput
+    /**
+     * Limit how many StaffRequests to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * StaffRequest upsert
+   */
+  export type StaffRequestUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StaffRequest
+     */
+    select?: StaffRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StaffRequest
+     */
+    omit?: StaffRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffRequestInclude<ExtArgs> | null
+    /**
+     * The filter to search for the StaffRequest to update in case it exists.
+     */
+    where: StaffRequestWhereUniqueInput
+    /**
+     * In case the StaffRequest found by the `where` argument doesn't exist, create a new StaffRequest with this data.
+     */
+    create: XOR<StaffRequestCreateInput, StaffRequestUncheckedCreateInput>
+    /**
+     * In case the StaffRequest was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<StaffRequestUpdateInput, StaffRequestUncheckedUpdateInput>
+  }
+
+  /**
+   * StaffRequest delete
+   */
+  export type StaffRequestDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StaffRequest
+     */
+    select?: StaffRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StaffRequest
+     */
+    omit?: StaffRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffRequestInclude<ExtArgs> | null
+    /**
+     * Filter which StaffRequest to delete.
+     */
+    where: StaffRequestWhereUniqueInput
+  }
+
+  /**
+   * StaffRequest deleteMany
+   */
+  export type StaffRequestDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which StaffRequests to delete
+     */
+    where?: StaffRequestWhereInput
+    /**
+     * Limit how many StaffRequests to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * StaffRequest without action
+   */
+  export type StaffRequestDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StaffRequest
+     */
+    select?: StaffRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StaffRequest
+     */
+    omit?: StaffRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffRequestInclude<ExtArgs> | null
   }
 
 
@@ -70349,6 +72507,27 @@ export namespace Prisma {
   export type StaffScalarFieldEnum = (typeof StaffScalarFieldEnum)[keyof typeof StaffScalarFieldEnum]
 
 
+  export const RequestScalarFieldEnum: {
+    id: 'id',
+    type: 'type',
+    status: 'status',
+    metadata: 'metadata',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type RequestScalarFieldEnum = (typeof RequestScalarFieldEnum)[keyof typeof RequestScalarFieldEnum]
+
+
+  export const StaffRequestScalarFieldEnum: {
+    id: 'id',
+    requestId: 'requestId',
+    staffId: 'staffId'
+  };
+
+  export type StaffRequestScalarFieldEnum = (typeof StaffRequestScalarFieldEnum)[keyof typeof StaffRequestScalarFieldEnum]
+
+
   export const StaffTimeTrackingScalarFieldEnum: {
     id: 'id',
     staffId: 'staffId',
@@ -71072,6 +73251,14 @@ export namespace Prisma {
   export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+  export const NullableJsonNullValueInput: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull
+  };
+
+  export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
   export const NullsOrder: {
     first: 'first',
     last: 'last'
@@ -71186,6 +73373,30 @@ export namespace Prisma {
   };
 
   export type StaffOrderByRelevanceFieldEnum = (typeof StaffOrderByRelevanceFieldEnum)[keyof typeof StaffOrderByRelevanceFieldEnum]
+
+
+  export const JsonNullValueFilter: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull,
+    AnyNull: typeof AnyNull
+  };
+
+  export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
+
+
+  export const QueryMode: {
+    default: 'default',
+    insensitive: 'insensitive'
+  };
+
+  export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+  export const RequestOrderByRelevanceFieldEnum: {
+    type: 'type'
+  };
+
+  export type RequestOrderByRelevanceFieldEnum = (typeof RequestOrderByRelevanceFieldEnum)[keyof typeof RequestOrderByRelevanceFieldEnum]
 
 
   export const WorkShiftOrderByRelevanceFieldEnum: {
@@ -71584,6 +73795,27 @@ export namespace Prisma {
    * Reference to a field of type 'Staff_staffType'
    */
   export type EnumStaff_staffTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Staff_staffType'>
+    
+
+
+  /**
+   * Reference to a field of type 'StaffRequestStatus'
+   */
+  export type EnumStaffRequestStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StaffRequestStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'Json'
+   */
+  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+  /**
+   * Reference to a field of type 'QueryMode'
+   */
+  export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
 
 
@@ -72980,6 +75212,7 @@ export namespace Prisma {
     workShift?: XOR<WorkShiftNullableScalarRelationFilter, WorkShiftWhereInput> | null
     staffViolations?: StaffViolationListRelationFilter
     staffTimeTrackings?: StaffTimeTrackingListRelationFilter
+    staffRequests?: StaffRequestListRelationFilter
   }
 
   export type StaffOrderByWithRelationInput = {
@@ -73018,6 +75251,7 @@ export namespace Prisma {
     workShift?: WorkShiftOrderByWithRelationInput
     staffViolations?: StaffViolationOrderByRelationAggregateInput
     staffTimeTrackings?: StaffTimeTrackingOrderByRelationAggregateInput
+    staffRequests?: StaffRequestOrderByRelationAggregateInput
     _relevance?: StaffOrderByRelevanceInput
   }
 
@@ -73060,6 +75294,7 @@ export namespace Prisma {
     workShift?: XOR<WorkShiftNullableScalarRelationFilter, WorkShiftWhereInput> | null
     staffViolations?: StaffViolationListRelationFilter
     staffTimeTrackings?: StaffTimeTrackingListRelationFilter
+    staffRequests?: StaffRequestListRelationFilter
   }, "id" | "userName">
 
   export type StaffOrderByWithAggregationInput = {
@@ -73126,6 +75361,119 @@ export namespace Prisma {
     bankName?: StringNullableWithAggregatesFilter<"Staff"> | string | null
     baseSalary?: FloatWithAggregatesFilter<"Staff"> | number
     workShiftId?: IntNullableWithAggregatesFilter<"Staff"> | number | null
+  }
+
+  export type RequestWhereInput = {
+    AND?: RequestWhereInput | RequestWhereInput[]
+    OR?: RequestWhereInput[]
+    NOT?: RequestWhereInput | RequestWhereInput[]
+    id?: IntFilter<"Request"> | number
+    type?: StringFilter<"Request"> | string
+    status?: EnumStaffRequestStatusFilter<"Request"> | $Enums.StaffRequestStatus
+    metadata?: JsonNullableFilter<"Request">
+    createdAt?: DateTimeFilter<"Request"> | Date | string
+    updatedAt?: DateTimeFilter<"Request"> | Date | string
+    staffRequest?: XOR<StaffRequestNullableScalarRelationFilter, StaffRequestWhereInput> | null
+  }
+
+  export type RequestOrderByWithRelationInput = {
+    id?: SortOrder
+    type?: SortOrder
+    status?: SortOrder
+    metadata?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    staffRequest?: StaffRequestOrderByWithRelationInput
+    _relevance?: RequestOrderByRelevanceInput
+  }
+
+  export type RequestWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: RequestWhereInput | RequestWhereInput[]
+    OR?: RequestWhereInput[]
+    NOT?: RequestWhereInput | RequestWhereInput[]
+    type?: StringFilter<"Request"> | string
+    status?: EnumStaffRequestStatusFilter<"Request"> | $Enums.StaffRequestStatus
+    metadata?: JsonNullableFilter<"Request">
+    createdAt?: DateTimeFilter<"Request"> | Date | string
+    updatedAt?: DateTimeFilter<"Request"> | Date | string
+    staffRequest?: XOR<StaffRequestNullableScalarRelationFilter, StaffRequestWhereInput> | null
+  }, "id">
+
+  export type RequestOrderByWithAggregationInput = {
+    id?: SortOrder
+    type?: SortOrder
+    status?: SortOrder
+    metadata?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: RequestCountOrderByAggregateInput
+    _avg?: RequestAvgOrderByAggregateInput
+    _max?: RequestMaxOrderByAggregateInput
+    _min?: RequestMinOrderByAggregateInput
+    _sum?: RequestSumOrderByAggregateInput
+  }
+
+  export type RequestScalarWhereWithAggregatesInput = {
+    AND?: RequestScalarWhereWithAggregatesInput | RequestScalarWhereWithAggregatesInput[]
+    OR?: RequestScalarWhereWithAggregatesInput[]
+    NOT?: RequestScalarWhereWithAggregatesInput | RequestScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"Request"> | number
+    type?: StringWithAggregatesFilter<"Request"> | string
+    status?: EnumStaffRequestStatusWithAggregatesFilter<"Request"> | $Enums.StaffRequestStatus
+    metadata?: JsonNullableWithAggregatesFilter<"Request">
+    createdAt?: DateTimeWithAggregatesFilter<"Request"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Request"> | Date | string
+  }
+
+  export type StaffRequestWhereInput = {
+    AND?: StaffRequestWhereInput | StaffRequestWhereInput[]
+    OR?: StaffRequestWhereInput[]
+    NOT?: StaffRequestWhereInput | StaffRequestWhereInput[]
+    id?: IntFilter<"StaffRequest"> | number
+    requestId?: IntFilter<"StaffRequest"> | number
+    staffId?: IntFilter<"StaffRequest"> | number
+    request?: XOR<RequestScalarRelationFilter, RequestWhereInput>
+    staff?: XOR<StaffScalarRelationFilter, StaffWhereInput>
+  }
+
+  export type StaffRequestOrderByWithRelationInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    staffId?: SortOrder
+    request?: RequestOrderByWithRelationInput
+    staff?: StaffOrderByWithRelationInput
+  }
+
+  export type StaffRequestWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    requestId?: number
+    AND?: StaffRequestWhereInput | StaffRequestWhereInput[]
+    OR?: StaffRequestWhereInput[]
+    NOT?: StaffRequestWhereInput | StaffRequestWhereInput[]
+    staffId?: IntFilter<"StaffRequest"> | number
+    request?: XOR<RequestScalarRelationFilter, RequestWhereInput>
+    staff?: XOR<StaffScalarRelationFilter, StaffWhereInput>
+  }, "id" | "requestId">
+
+  export type StaffRequestOrderByWithAggregationInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    staffId?: SortOrder
+    _count?: StaffRequestCountOrderByAggregateInput
+    _avg?: StaffRequestAvgOrderByAggregateInput
+    _max?: StaffRequestMaxOrderByAggregateInput
+    _min?: StaffRequestMinOrderByAggregateInput
+    _sum?: StaffRequestSumOrderByAggregateInput
+  }
+
+  export type StaffRequestScalarWhereWithAggregatesInput = {
+    AND?: StaffRequestScalarWhereWithAggregatesInput | StaffRequestScalarWhereWithAggregatesInput[]
+    OR?: StaffRequestScalarWhereWithAggregatesInput[]
+    NOT?: StaffRequestScalarWhereWithAggregatesInput | StaffRequestScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"StaffRequest"> | number
+    requestId?: IntWithAggregatesFilter<"StaffRequest"> | number
+    staffId?: IntWithAggregatesFilter<"StaffRequest"> | number
   }
 
   export type StaffTimeTrackingWhereInput = {
@@ -78134,6 +80482,7 @@ export namespace Prisma {
     workShift?: WorkShiftCreateNestedOneWithoutStaffsInput
     staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
     staffTimeTrackings?: StaffTimeTrackingCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestCreateNestedManyWithoutStaffInput
   }
 
   export type StaffUncheckedCreateInput = {
@@ -78171,6 +80520,7 @@ export namespace Prisma {
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
     staffViolations?: StaffViolationUncheckedCreateNestedManyWithoutStaffInput
     staffTimeTrackings?: StaffTimeTrackingUncheckedCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestUncheckedCreateNestedManyWithoutStaffInput
   }
 
   export type StaffUpdateInput = {
@@ -78207,6 +80557,7 @@ export namespace Prisma {
     workShift?: WorkShiftUpdateOneWithoutStaffsNestedInput
     staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
     staffTimeTrackings?: StaffTimeTrackingUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUncheckedUpdateInput = {
@@ -78244,6 +80595,7 @@ export namespace Prisma {
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
     staffViolations?: StaffViolationUncheckedUpdateManyWithoutStaffNestedInput
     staffTimeTrackings?: StaffTimeTrackingUncheckedUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUncheckedUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffCreateManyInput = {
@@ -78329,6 +80681,108 @@ export namespace Prisma {
     bankName?: NullableStringFieldUpdateOperationsInput | string | null
     baseSalary?: FloatFieldUpdateOperationsInput | number
     workShiftId?: NullableIntFieldUpdateOperationsInput | number | null
+  }
+
+  export type RequestCreateInput = {
+    type: string
+    status?: $Enums.StaffRequestStatus
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    staffRequest?: StaffRequestCreateNestedOneWithoutRequestInput
+  }
+
+  export type RequestUncheckedCreateInput = {
+    id?: number
+    type: string
+    status?: $Enums.StaffRequestStatus
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    staffRequest?: StaffRequestUncheckedCreateNestedOneWithoutRequestInput
+  }
+
+  export type RequestUpdateInput = {
+    type?: StringFieldUpdateOperationsInput | string
+    status?: EnumStaffRequestStatusFieldUpdateOperationsInput | $Enums.StaffRequestStatus
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    staffRequest?: StaffRequestUpdateOneWithoutRequestNestedInput
+  }
+
+  export type RequestUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    type?: StringFieldUpdateOperationsInput | string
+    status?: EnumStaffRequestStatusFieldUpdateOperationsInput | $Enums.StaffRequestStatus
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    staffRequest?: StaffRequestUncheckedUpdateOneWithoutRequestNestedInput
+  }
+
+  export type RequestCreateManyInput = {
+    id?: number
+    type: string
+    status?: $Enums.StaffRequestStatus
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type RequestUpdateManyMutationInput = {
+    type?: StringFieldUpdateOperationsInput | string
+    status?: EnumStaffRequestStatusFieldUpdateOperationsInput | $Enums.StaffRequestStatus
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RequestUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    type?: StringFieldUpdateOperationsInput | string
+    status?: EnumStaffRequestStatusFieldUpdateOperationsInput | $Enums.StaffRequestStatus
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type StaffRequestCreateInput = {
+    request: RequestCreateNestedOneWithoutStaffRequestInput
+    staff: StaffCreateNestedOneWithoutStaffRequestsInput
+  }
+
+  export type StaffRequestUncheckedCreateInput = {
+    id?: number
+    requestId: number
+    staffId: number
+  }
+
+  export type StaffRequestUpdateInput = {
+    request?: RequestUpdateOneRequiredWithoutStaffRequestNestedInput
+    staff?: StaffUpdateOneRequiredWithoutStaffRequestsNestedInput
+  }
+
+  export type StaffRequestUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    requestId?: IntFieldUpdateOperationsInput | number
+    staffId?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type StaffRequestCreateManyInput = {
+    id?: number
+    requestId: number
+    staffId: number
+  }
+
+  export type StaffRequestUpdateManyMutationInput = {
+
+  }
+
+  export type StaffRequestUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    requestId?: IntFieldUpdateOperationsInput | number
+    staffId?: IntFieldUpdateOperationsInput | number
   }
 
   export type StaffTimeTrackingCreateInput = {
@@ -83682,6 +86136,12 @@ export namespace Prisma {
     none?: StaffTimeTrackingWhereInput
   }
 
+  export type StaffRequestListRelationFilter = {
+    every?: StaffRequestWhereInput
+    some?: StaffRequestWhereInput
+    none?: StaffRequestWhereInput
+  }
+
   export type ReportOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -83695,6 +86155,10 @@ export namespace Prisma {
   }
 
   export type StaffTimeTrackingOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type StaffRequestOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -83823,9 +86287,154 @@ export namespace Prisma {
     _max?: NestedEnumStaff_staffTypeFilter<$PrismaModel>
   }
 
+  export type EnumStaffRequestStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.StaffRequestStatus | EnumStaffRequestStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.StaffRequestStatus[]
+    notIn?: $Enums.StaffRequestStatus[]
+    not?: NestedEnumStaffRequestStatusFilter<$PrismaModel> | $Enums.StaffRequestStatus
+  }
+  export type JsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue
+    lte?: InputJsonValue
+    gt?: InputJsonValue
+    gte?: InputJsonValue
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type StaffRequestNullableScalarRelationFilter = {
+    is?: StaffRequestWhereInput | null
+    isNot?: StaffRequestWhereInput | null
+  }
+
+  export type RequestOrderByRelevanceInput = {
+    fields: RequestOrderByRelevanceFieldEnum | RequestOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
+  }
+
+  export type RequestCountOrderByAggregateInput = {
+    id?: SortOrder
+    type?: SortOrder
+    status?: SortOrder
+    metadata?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type RequestAvgOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
+  export type RequestMaxOrderByAggregateInput = {
+    id?: SortOrder
+    type?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type RequestMinOrderByAggregateInput = {
+    id?: SortOrder
+    type?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type RequestSumOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
+  export type EnumStaffRequestStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.StaffRequestStatus | EnumStaffRequestStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.StaffRequestStatus[]
+    notIn?: $Enums.StaffRequestStatus[]
+    not?: NestedEnumStaffRequestStatusWithAggregatesFilter<$PrismaModel> | $Enums.StaffRequestStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumStaffRequestStatusFilter<$PrismaModel>
+    _max?: NestedEnumStaffRequestStatusFilter<$PrismaModel>
+  }
+  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue
+    lte?: InputJsonValue
+    gt?: InputJsonValue
+    gte?: InputJsonValue
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedJsonNullableFilter<$PrismaModel>
+    _max?: NestedJsonNullableFilter<$PrismaModel>
+  }
+
+  export type RequestScalarRelationFilter = {
+    is?: RequestWhereInput
+    isNot?: RequestWhereInput
+  }
+
   export type StaffScalarRelationFilter = {
     is?: StaffWhereInput
     isNot?: StaffWhereInput
+  }
+
+  export type StaffRequestCountOrderByAggregateInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    staffId?: SortOrder
+  }
+
+  export type StaffRequestAvgOrderByAggregateInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    staffId?: SortOrder
+  }
+
+  export type StaffRequestMaxOrderByAggregateInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    staffId?: SortOrder
+  }
+
+  export type StaffRequestMinOrderByAggregateInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    staffId?: SortOrder
+  }
+
+  export type StaffRequestSumOrderByAggregateInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    staffId?: SortOrder
   }
 
   export type StaffTimeTrackingCountOrderByAggregateInput = {
@@ -87714,6 +90323,13 @@ export namespace Prisma {
     connect?: StaffTimeTrackingWhereUniqueInput | StaffTimeTrackingWhereUniqueInput[]
   }
 
+  export type StaffRequestCreateNestedManyWithoutStaffInput = {
+    create?: XOR<StaffRequestCreateWithoutStaffInput, StaffRequestUncheckedCreateWithoutStaffInput> | StaffRequestCreateWithoutStaffInput[] | StaffRequestUncheckedCreateWithoutStaffInput[]
+    connectOrCreate?: StaffRequestCreateOrConnectWithoutStaffInput | StaffRequestCreateOrConnectWithoutStaffInput[]
+    createMany?: StaffRequestCreateManyStaffInputEnvelope
+    connect?: StaffRequestWhereUniqueInput | StaffRequestWhereUniqueInput[]
+  }
+
   export type ReportUncheckedCreateNestedManyWithoutCounterStaffInput = {
     create?: XOR<ReportCreateWithoutCounterStaffInput, ReportUncheckedCreateWithoutCounterStaffInput> | ReportCreateWithoutCounterStaffInput[] | ReportUncheckedCreateWithoutCounterStaffInput[]
     connectOrCreate?: ReportCreateOrConnectWithoutCounterStaffInput | ReportCreateOrConnectWithoutCounterStaffInput[]
@@ -87768,6 +90384,13 @@ export namespace Prisma {
     connectOrCreate?: StaffTimeTrackingCreateOrConnectWithoutStaffInput | StaffTimeTrackingCreateOrConnectWithoutStaffInput[]
     createMany?: StaffTimeTrackingCreateManyStaffInputEnvelope
     connect?: StaffTimeTrackingWhereUniqueInput | StaffTimeTrackingWhereUniqueInput[]
+  }
+
+  export type StaffRequestUncheckedCreateNestedManyWithoutStaffInput = {
+    create?: XOR<StaffRequestCreateWithoutStaffInput, StaffRequestUncheckedCreateWithoutStaffInput> | StaffRequestCreateWithoutStaffInput[] | StaffRequestUncheckedCreateWithoutStaffInput[]
+    connectOrCreate?: StaffRequestCreateOrConnectWithoutStaffInput | StaffRequestCreateOrConnectWithoutStaffInput[]
+    createMany?: StaffRequestCreateManyStaffInputEnvelope
+    connect?: StaffRequestWhereUniqueInput | StaffRequestWhereUniqueInput[]
   }
 
   export type EnumStaff_genderFieldUpdateOperationsInput = {
@@ -87900,6 +90523,20 @@ export namespace Prisma {
     deleteMany?: StaffTimeTrackingScalarWhereInput | StaffTimeTrackingScalarWhereInput[]
   }
 
+  export type StaffRequestUpdateManyWithoutStaffNestedInput = {
+    create?: XOR<StaffRequestCreateWithoutStaffInput, StaffRequestUncheckedCreateWithoutStaffInput> | StaffRequestCreateWithoutStaffInput[] | StaffRequestUncheckedCreateWithoutStaffInput[]
+    connectOrCreate?: StaffRequestCreateOrConnectWithoutStaffInput | StaffRequestCreateOrConnectWithoutStaffInput[]
+    upsert?: StaffRequestUpsertWithWhereUniqueWithoutStaffInput | StaffRequestUpsertWithWhereUniqueWithoutStaffInput[]
+    createMany?: StaffRequestCreateManyStaffInputEnvelope
+    set?: StaffRequestWhereUniqueInput | StaffRequestWhereUniqueInput[]
+    disconnect?: StaffRequestWhereUniqueInput | StaffRequestWhereUniqueInput[]
+    delete?: StaffRequestWhereUniqueInput | StaffRequestWhereUniqueInput[]
+    connect?: StaffRequestWhereUniqueInput | StaffRequestWhereUniqueInput[]
+    update?: StaffRequestUpdateWithWhereUniqueWithoutStaffInput | StaffRequestUpdateWithWhereUniqueWithoutStaffInput[]
+    updateMany?: StaffRequestUpdateManyWithWhereWithoutStaffInput | StaffRequestUpdateManyWithWhereWithoutStaffInput[]
+    deleteMany?: StaffRequestScalarWhereInput | StaffRequestScalarWhereInput[]
+  }
+
   export type ReportUncheckedUpdateManyWithoutCounterStaffNestedInput = {
     create?: XOR<ReportCreateWithoutCounterStaffInput, ReportUncheckedCreateWithoutCounterStaffInput> | ReportCreateWithoutCounterStaffInput[] | ReportUncheckedCreateWithoutCounterStaffInput[]
     connectOrCreate?: ReportCreateOrConnectWithoutCounterStaffInput | ReportCreateOrConnectWithoutCounterStaffInput[]
@@ -88010,6 +90647,84 @@ export namespace Prisma {
     update?: StaffTimeTrackingUpdateWithWhereUniqueWithoutStaffInput | StaffTimeTrackingUpdateWithWhereUniqueWithoutStaffInput[]
     updateMany?: StaffTimeTrackingUpdateManyWithWhereWithoutStaffInput | StaffTimeTrackingUpdateManyWithWhereWithoutStaffInput[]
     deleteMany?: StaffTimeTrackingScalarWhereInput | StaffTimeTrackingScalarWhereInput[]
+  }
+
+  export type StaffRequestUncheckedUpdateManyWithoutStaffNestedInput = {
+    create?: XOR<StaffRequestCreateWithoutStaffInput, StaffRequestUncheckedCreateWithoutStaffInput> | StaffRequestCreateWithoutStaffInput[] | StaffRequestUncheckedCreateWithoutStaffInput[]
+    connectOrCreate?: StaffRequestCreateOrConnectWithoutStaffInput | StaffRequestCreateOrConnectWithoutStaffInput[]
+    upsert?: StaffRequestUpsertWithWhereUniqueWithoutStaffInput | StaffRequestUpsertWithWhereUniqueWithoutStaffInput[]
+    createMany?: StaffRequestCreateManyStaffInputEnvelope
+    set?: StaffRequestWhereUniqueInput | StaffRequestWhereUniqueInput[]
+    disconnect?: StaffRequestWhereUniqueInput | StaffRequestWhereUniqueInput[]
+    delete?: StaffRequestWhereUniqueInput | StaffRequestWhereUniqueInput[]
+    connect?: StaffRequestWhereUniqueInput | StaffRequestWhereUniqueInput[]
+    update?: StaffRequestUpdateWithWhereUniqueWithoutStaffInput | StaffRequestUpdateWithWhereUniqueWithoutStaffInput[]
+    updateMany?: StaffRequestUpdateManyWithWhereWithoutStaffInput | StaffRequestUpdateManyWithWhereWithoutStaffInput[]
+    deleteMany?: StaffRequestScalarWhereInput | StaffRequestScalarWhereInput[]
+  }
+
+  export type StaffRequestCreateNestedOneWithoutRequestInput = {
+    create?: XOR<StaffRequestCreateWithoutRequestInput, StaffRequestUncheckedCreateWithoutRequestInput>
+    connectOrCreate?: StaffRequestCreateOrConnectWithoutRequestInput
+    connect?: StaffRequestWhereUniqueInput
+  }
+
+  export type StaffRequestUncheckedCreateNestedOneWithoutRequestInput = {
+    create?: XOR<StaffRequestCreateWithoutRequestInput, StaffRequestUncheckedCreateWithoutRequestInput>
+    connectOrCreate?: StaffRequestCreateOrConnectWithoutRequestInput
+    connect?: StaffRequestWhereUniqueInput
+  }
+
+  export type EnumStaffRequestStatusFieldUpdateOperationsInput = {
+    set?: $Enums.StaffRequestStatus
+  }
+
+  export type StaffRequestUpdateOneWithoutRequestNestedInput = {
+    create?: XOR<StaffRequestCreateWithoutRequestInput, StaffRequestUncheckedCreateWithoutRequestInput>
+    connectOrCreate?: StaffRequestCreateOrConnectWithoutRequestInput
+    upsert?: StaffRequestUpsertWithoutRequestInput
+    disconnect?: StaffRequestWhereInput | boolean
+    delete?: StaffRequestWhereInput | boolean
+    connect?: StaffRequestWhereUniqueInput
+    update?: XOR<XOR<StaffRequestUpdateToOneWithWhereWithoutRequestInput, StaffRequestUpdateWithoutRequestInput>, StaffRequestUncheckedUpdateWithoutRequestInput>
+  }
+
+  export type StaffRequestUncheckedUpdateOneWithoutRequestNestedInput = {
+    create?: XOR<StaffRequestCreateWithoutRequestInput, StaffRequestUncheckedCreateWithoutRequestInput>
+    connectOrCreate?: StaffRequestCreateOrConnectWithoutRequestInput
+    upsert?: StaffRequestUpsertWithoutRequestInput
+    disconnect?: StaffRequestWhereInput | boolean
+    delete?: StaffRequestWhereInput | boolean
+    connect?: StaffRequestWhereUniqueInput
+    update?: XOR<XOR<StaffRequestUpdateToOneWithWhereWithoutRequestInput, StaffRequestUpdateWithoutRequestInput>, StaffRequestUncheckedUpdateWithoutRequestInput>
+  }
+
+  export type RequestCreateNestedOneWithoutStaffRequestInput = {
+    create?: XOR<RequestCreateWithoutStaffRequestInput, RequestUncheckedCreateWithoutStaffRequestInput>
+    connectOrCreate?: RequestCreateOrConnectWithoutStaffRequestInput
+    connect?: RequestWhereUniqueInput
+  }
+
+  export type StaffCreateNestedOneWithoutStaffRequestsInput = {
+    create?: XOR<StaffCreateWithoutStaffRequestsInput, StaffUncheckedCreateWithoutStaffRequestsInput>
+    connectOrCreate?: StaffCreateOrConnectWithoutStaffRequestsInput
+    connect?: StaffWhereUniqueInput
+  }
+
+  export type RequestUpdateOneRequiredWithoutStaffRequestNestedInput = {
+    create?: XOR<RequestCreateWithoutStaffRequestInput, RequestUncheckedCreateWithoutStaffRequestInput>
+    connectOrCreate?: RequestCreateOrConnectWithoutStaffRequestInput
+    upsert?: RequestUpsertWithoutStaffRequestInput
+    connect?: RequestWhereUniqueInput
+    update?: XOR<XOR<RequestUpdateToOneWithWhereWithoutStaffRequestInput, RequestUpdateWithoutStaffRequestInput>, RequestUncheckedUpdateWithoutStaffRequestInput>
+  }
+
+  export type StaffUpdateOneRequiredWithoutStaffRequestsNestedInput = {
+    create?: XOR<StaffCreateWithoutStaffRequestsInput, StaffUncheckedCreateWithoutStaffRequestsInput>
+    connectOrCreate?: StaffCreateOrConnectWithoutStaffRequestsInput
+    upsert?: StaffUpsertWithoutStaffRequestsInput
+    connect?: StaffWhereUniqueInput
+    update?: XOR<XOR<StaffUpdateToOneWithWhereWithoutStaffRequestsInput, StaffUpdateWithoutStaffRequestsInput>, StaffUncheckedUpdateWithoutStaffRequestsInput>
   }
 
   export type StaffCreateNestedOneWithoutStaffTimeTrackingsInput = {
@@ -89574,6 +92289,46 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumStaff_staffTypeFilter<$PrismaModel>
     _max?: NestedEnumStaff_staffTypeFilter<$PrismaModel>
+  }
+
+  export type NestedEnumStaffRequestStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.StaffRequestStatus | EnumStaffRequestStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.StaffRequestStatus[]
+    notIn?: $Enums.StaffRequestStatus[]
+    not?: NestedEnumStaffRequestStatusFilter<$PrismaModel> | $Enums.StaffRequestStatus
+  }
+
+  export type NestedEnumStaffRequestStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.StaffRequestStatus | EnumStaffRequestStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.StaffRequestStatus[]
+    notIn?: $Enums.StaffRequestStatus[]
+    not?: NestedEnumStaffRequestStatusWithAggregatesFilter<$PrismaModel> | $Enums.StaffRequestStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumStaffRequestStatusFilter<$PrismaModel>
+    _max?: NestedEnumStaffRequestStatusFilter<$PrismaModel>
+  }
+  export type NestedJsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue
+    lte?: InputJsonValue
+    gt?: InputJsonValue
+    gte?: InputJsonValue
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
   export type NestedEnumShiftRevenueTypeFilter<$PrismaModel = never> = {
@@ -91449,6 +94204,25 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type StaffRequestCreateWithoutStaffInput = {
+    request: RequestCreateNestedOneWithoutStaffRequestInput
+  }
+
+  export type StaffRequestUncheckedCreateWithoutStaffInput = {
+    id?: number
+    requestId: number
+  }
+
+  export type StaffRequestCreateOrConnectWithoutStaffInput = {
+    where: StaffRequestWhereUniqueInput
+    create: XOR<StaffRequestCreateWithoutStaffInput, StaffRequestUncheckedCreateWithoutStaffInput>
+  }
+
+  export type StaffRequestCreateManyStaffInputEnvelope = {
+    data: StaffRequestCreateManyStaffInput | StaffRequestCreateManyStaffInput[]
+    skipDuplicates?: boolean
+  }
+
   export type ReportUpsertWithWhereUniqueWithoutCounterStaffInput = {
     where: ReportWhereUniqueInput
     update: XOR<ReportUpdateWithoutCounterStaffInput, ReportUncheckedUpdateWithoutCounterStaffInput>
@@ -91675,6 +94449,277 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"StaffTimeTracking"> | Date | string
   }
 
+  export type StaffRequestUpsertWithWhereUniqueWithoutStaffInput = {
+    where: StaffRequestWhereUniqueInput
+    update: XOR<StaffRequestUpdateWithoutStaffInput, StaffRequestUncheckedUpdateWithoutStaffInput>
+    create: XOR<StaffRequestCreateWithoutStaffInput, StaffRequestUncheckedCreateWithoutStaffInput>
+  }
+
+  export type StaffRequestUpdateWithWhereUniqueWithoutStaffInput = {
+    where: StaffRequestWhereUniqueInput
+    data: XOR<StaffRequestUpdateWithoutStaffInput, StaffRequestUncheckedUpdateWithoutStaffInput>
+  }
+
+  export type StaffRequestUpdateManyWithWhereWithoutStaffInput = {
+    where: StaffRequestScalarWhereInput
+    data: XOR<StaffRequestUpdateManyMutationInput, StaffRequestUncheckedUpdateManyWithoutStaffInput>
+  }
+
+  export type StaffRequestScalarWhereInput = {
+    AND?: StaffRequestScalarWhereInput | StaffRequestScalarWhereInput[]
+    OR?: StaffRequestScalarWhereInput[]
+    NOT?: StaffRequestScalarWhereInput | StaffRequestScalarWhereInput[]
+    id?: IntFilter<"StaffRequest"> | number
+    requestId?: IntFilter<"StaffRequest"> | number
+    staffId?: IntFilter<"StaffRequest"> | number
+  }
+
+  export type StaffRequestCreateWithoutRequestInput = {
+    staff: StaffCreateNestedOneWithoutStaffRequestsInput
+  }
+
+  export type StaffRequestUncheckedCreateWithoutRequestInput = {
+    id?: number
+    staffId: number
+  }
+
+  export type StaffRequestCreateOrConnectWithoutRequestInput = {
+    where: StaffRequestWhereUniqueInput
+    create: XOR<StaffRequestCreateWithoutRequestInput, StaffRequestUncheckedCreateWithoutRequestInput>
+  }
+
+  export type StaffRequestUpsertWithoutRequestInput = {
+    update: XOR<StaffRequestUpdateWithoutRequestInput, StaffRequestUncheckedUpdateWithoutRequestInput>
+    create: XOR<StaffRequestCreateWithoutRequestInput, StaffRequestUncheckedCreateWithoutRequestInput>
+    where?: StaffRequestWhereInput
+  }
+
+  export type StaffRequestUpdateToOneWithWhereWithoutRequestInput = {
+    where?: StaffRequestWhereInput
+    data: XOR<StaffRequestUpdateWithoutRequestInput, StaffRequestUncheckedUpdateWithoutRequestInput>
+  }
+
+  export type StaffRequestUpdateWithoutRequestInput = {
+    staff?: StaffUpdateOneRequiredWithoutStaffRequestsNestedInput
+  }
+
+  export type StaffRequestUncheckedUpdateWithoutRequestInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    staffId?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type RequestCreateWithoutStaffRequestInput = {
+    type: string
+    status?: $Enums.StaffRequestStatus
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type RequestUncheckedCreateWithoutStaffRequestInput = {
+    id?: number
+    type: string
+    status?: $Enums.StaffRequestStatus
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type RequestCreateOrConnectWithoutStaffRequestInput = {
+    where: RequestWhereUniqueInput
+    create: XOR<RequestCreateWithoutStaffRequestInput, RequestUncheckedCreateWithoutStaffRequestInput>
+  }
+
+  export type StaffCreateWithoutStaffRequestsInput = {
+    userName: string
+    password: string
+    isDeleted?: boolean
+    isAdmin?: boolean
+    createdAt?: Date | string
+    updatedAt: Date | string
+    address?: string | null
+    dateOfBirth?: Date | string | null
+    email?: string | null
+    fullName: string
+    gender?: $Enums.Staff_gender
+    hireDate?: Date | string | null
+    idCard?: string | null
+    idCardExpiryDate?: Date | string | null
+    idCardIssueDate?: Date | string | null
+    note?: string | null
+    phone?: string | null
+    resignDate?: Date | string | null
+    staffType?: $Enums.Staff_staffType
+    needCheckMacAddress?: boolean
+    bankAccountName?: string | null
+    bankAccountNumber?: string | null
+    bankName?: string | null
+    baseSalary?: number
+    counterStaffReports?: ReportCreateNestedManyWithoutCounterStaffInput
+    kitchenStaffReports?: ReportCreateNestedManyWithoutKitchenStaffInput
+    securityStaffReports?: ReportCreateNestedManyWithoutSecurityStaffInput
+    morningHandoverReports?: HandoverReportCreateNestedManyWithoutMorningStaffInput
+    afternoonHandoverReports?: HandoverReportCreateNestedManyWithoutAfternoonStaffInput
+    eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
+    workShift?: WorkShiftCreateNestedOneWithoutStaffsInput
+    staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
+    staffTimeTrackings?: StaffTimeTrackingCreateNestedManyWithoutStaffInput
+  }
+
+  export type StaffUncheckedCreateWithoutStaffRequestsInput = {
+    id?: number
+    userName: string
+    password: string
+    isDeleted?: boolean
+    isAdmin?: boolean
+    createdAt?: Date | string
+    updatedAt: Date | string
+    address?: string | null
+    dateOfBirth?: Date | string | null
+    email?: string | null
+    fullName: string
+    gender?: $Enums.Staff_gender
+    hireDate?: Date | string | null
+    idCard?: string | null
+    idCardExpiryDate?: Date | string | null
+    idCardIssueDate?: Date | string | null
+    note?: string | null
+    phone?: string | null
+    resignDate?: Date | string | null
+    staffType?: $Enums.Staff_staffType
+    needCheckMacAddress?: boolean
+    bankAccountName?: string | null
+    bankAccountNumber?: string | null
+    bankName?: string | null
+    baseSalary?: number
+    workShiftId?: number | null
+    counterStaffReports?: ReportUncheckedCreateNestedManyWithoutCounterStaffInput
+    kitchenStaffReports?: ReportUncheckedCreateNestedManyWithoutKitchenStaffInput
+    securityStaffReports?: ReportUncheckedCreateNestedManyWithoutSecurityStaffInput
+    morningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutMorningStaffInput
+    afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
+    eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
+    staffViolations?: StaffViolationUncheckedCreateNestedManyWithoutStaffInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedCreateNestedManyWithoutStaffInput
+  }
+
+  export type StaffCreateOrConnectWithoutStaffRequestsInput = {
+    where: StaffWhereUniqueInput
+    create: XOR<StaffCreateWithoutStaffRequestsInput, StaffUncheckedCreateWithoutStaffRequestsInput>
+  }
+
+  export type RequestUpsertWithoutStaffRequestInput = {
+    update: XOR<RequestUpdateWithoutStaffRequestInput, RequestUncheckedUpdateWithoutStaffRequestInput>
+    create: XOR<RequestCreateWithoutStaffRequestInput, RequestUncheckedCreateWithoutStaffRequestInput>
+    where?: RequestWhereInput
+  }
+
+  export type RequestUpdateToOneWithWhereWithoutStaffRequestInput = {
+    where?: RequestWhereInput
+    data: XOR<RequestUpdateWithoutStaffRequestInput, RequestUncheckedUpdateWithoutStaffRequestInput>
+  }
+
+  export type RequestUpdateWithoutStaffRequestInput = {
+    type?: StringFieldUpdateOperationsInput | string
+    status?: EnumStaffRequestStatusFieldUpdateOperationsInput | $Enums.StaffRequestStatus
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RequestUncheckedUpdateWithoutStaffRequestInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    type?: StringFieldUpdateOperationsInput | string
+    status?: EnumStaffRequestStatusFieldUpdateOperationsInput | $Enums.StaffRequestStatus
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type StaffUpsertWithoutStaffRequestsInput = {
+    update: XOR<StaffUpdateWithoutStaffRequestsInput, StaffUncheckedUpdateWithoutStaffRequestsInput>
+    create: XOR<StaffCreateWithoutStaffRequestsInput, StaffUncheckedCreateWithoutStaffRequestsInput>
+    where?: StaffWhereInput
+  }
+
+  export type StaffUpdateToOneWithWhereWithoutStaffRequestsInput = {
+    where?: StaffWhereInput
+    data: XOR<StaffUpdateWithoutStaffRequestsInput, StaffUncheckedUpdateWithoutStaffRequestsInput>
+  }
+
+  export type StaffUpdateWithoutStaffRequestsInput = {
+    userName?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    isAdmin?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    fullName?: StringFieldUpdateOperationsInput | string
+    gender?: EnumStaff_genderFieldUpdateOperationsInput | $Enums.Staff_gender
+    hireDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCard?: NullableStringFieldUpdateOperationsInput | string | null
+    idCardExpiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCardIssueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    resignDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    staffType?: EnumStaff_staffTypeFieldUpdateOperationsInput | $Enums.Staff_staffType
+    needCheckMacAddress?: BoolFieldUpdateOperationsInput | boolean
+    bankAccountName?: NullableStringFieldUpdateOperationsInput | string | null
+    bankAccountNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    bankName?: NullableStringFieldUpdateOperationsInput | string | null
+    baseSalary?: FloatFieldUpdateOperationsInput | number
+    counterStaffReports?: ReportUpdateManyWithoutCounterStaffNestedInput
+    kitchenStaffReports?: ReportUpdateManyWithoutKitchenStaffNestedInput
+    securityStaffReports?: ReportUpdateManyWithoutSecurityStaffNestedInput
+    morningHandoverReports?: HandoverReportUpdateManyWithoutMorningStaffNestedInput
+    afternoonHandoverReports?: HandoverReportUpdateManyWithoutAfternoonStaffNestedInput
+    eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
+    workShift?: WorkShiftUpdateOneWithoutStaffsNestedInput
+    staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUpdateManyWithoutStaffNestedInput
+  }
+
+  export type StaffUncheckedUpdateWithoutStaffRequestsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    userName?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    isAdmin?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    fullName?: StringFieldUpdateOperationsInput | string
+    gender?: EnumStaff_genderFieldUpdateOperationsInput | $Enums.Staff_gender
+    hireDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCard?: NullableStringFieldUpdateOperationsInput | string | null
+    idCardExpiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCardIssueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    resignDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    staffType?: EnumStaff_staffTypeFieldUpdateOperationsInput | $Enums.Staff_staffType
+    needCheckMacAddress?: BoolFieldUpdateOperationsInput | boolean
+    bankAccountName?: NullableStringFieldUpdateOperationsInput | string | null
+    bankAccountNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    bankName?: NullableStringFieldUpdateOperationsInput | string | null
+    baseSalary?: FloatFieldUpdateOperationsInput | number
+    workShiftId?: NullableIntFieldUpdateOperationsInput | number | null
+    counterStaffReports?: ReportUncheckedUpdateManyWithoutCounterStaffNestedInput
+    kitchenStaffReports?: ReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
+    securityStaffReports?: ReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
+    morningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutMorningStaffNestedInput
+    afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
+    eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
+    staffViolations?: StaffViolationUncheckedUpdateManyWithoutStaffNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedUpdateManyWithoutStaffNestedInput
+  }
+
   export type StaffCreateWithoutStaffTimeTrackingsInput = {
     userName: string
     password: string
@@ -91708,6 +94753,7 @@ export namespace Prisma {
     eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
     workShift?: WorkShiftCreateNestedOneWithoutStaffsInput
     staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestCreateNestedManyWithoutStaffInput
   }
 
   export type StaffUncheckedCreateWithoutStaffTimeTrackingsInput = {
@@ -91744,6 +94790,7 @@ export namespace Prisma {
     afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
     staffViolations?: StaffViolationUncheckedCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestUncheckedCreateNestedManyWithoutStaffInput
   }
 
   export type StaffCreateOrConnectWithoutStaffTimeTrackingsInput = {
@@ -91795,6 +94842,7 @@ export namespace Prisma {
     eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
     workShift?: WorkShiftUpdateOneWithoutStaffsNestedInput
     staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUncheckedUpdateWithoutStaffTimeTrackingsInput = {
@@ -91831,6 +94879,7 @@ export namespace Prisma {
     afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
     staffViolations?: StaffViolationUncheckedUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUncheckedUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffCreateWithoutWorkShiftInput = {
@@ -91866,6 +94915,7 @@ export namespace Prisma {
     eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
     staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
     staffTimeTrackings?: StaffTimeTrackingCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestCreateNestedManyWithoutStaffInput
   }
 
   export type StaffUncheckedCreateWithoutWorkShiftInput = {
@@ -91902,6 +94952,7 @@ export namespace Prisma {
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
     staffViolations?: StaffViolationUncheckedCreateNestedManyWithoutStaffInput
     staffTimeTrackings?: StaffTimeTrackingUncheckedCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestUncheckedCreateNestedManyWithoutStaffInput
   }
 
   export type StaffCreateOrConnectWithoutWorkShiftInput = {
@@ -92806,6 +95857,7 @@ export namespace Prisma {
     workShift?: WorkShiftCreateNestedOneWithoutStaffsInput
     staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
     staffTimeTrackings?: StaffTimeTrackingCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestCreateNestedManyWithoutStaffInput
   }
 
   export type StaffUncheckedCreateWithoutCounterStaffReportsInput = {
@@ -92842,6 +95894,7 @@ export namespace Prisma {
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
     staffViolations?: StaffViolationUncheckedCreateNestedManyWithoutStaffInput
     staffTimeTrackings?: StaffTimeTrackingUncheckedCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestUncheckedCreateNestedManyWithoutStaffInput
   }
 
   export type StaffCreateOrConnectWithoutCounterStaffReportsInput = {
@@ -92882,6 +95935,7 @@ export namespace Prisma {
     workShift?: WorkShiftCreateNestedOneWithoutStaffsInput
     staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
     staffTimeTrackings?: StaffTimeTrackingCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestCreateNestedManyWithoutStaffInput
   }
 
   export type StaffUncheckedCreateWithoutKitchenStaffReportsInput = {
@@ -92918,6 +95972,7 @@ export namespace Prisma {
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
     staffViolations?: StaffViolationUncheckedCreateNestedManyWithoutStaffInput
     staffTimeTrackings?: StaffTimeTrackingUncheckedCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestUncheckedCreateNestedManyWithoutStaffInput
   }
 
   export type StaffCreateOrConnectWithoutKitchenStaffReportsInput = {
@@ -92958,6 +96013,7 @@ export namespace Prisma {
     workShift?: WorkShiftCreateNestedOneWithoutStaffsInput
     staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
     staffTimeTrackings?: StaffTimeTrackingCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestCreateNestedManyWithoutStaffInput
   }
 
   export type StaffUncheckedCreateWithoutSecurityStaffReportsInput = {
@@ -92994,6 +96050,7 @@ export namespace Prisma {
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
     staffViolations?: StaffViolationUncheckedCreateNestedManyWithoutStaffInput
     staffTimeTrackings?: StaffTimeTrackingUncheckedCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestUncheckedCreateNestedManyWithoutStaffInput
   }
 
   export type StaffCreateOrConnectWithoutSecurityStaffReportsInput = {
@@ -93071,6 +96128,7 @@ export namespace Prisma {
     workShift?: WorkShiftUpdateOneWithoutStaffsNestedInput
     staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
     staffTimeTrackings?: StaffTimeTrackingUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUncheckedUpdateWithoutCounterStaffReportsInput = {
@@ -93107,6 +96165,7 @@ export namespace Prisma {
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
     staffViolations?: StaffViolationUncheckedUpdateManyWithoutStaffNestedInput
     staffTimeTrackings?: StaffTimeTrackingUncheckedUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUncheckedUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUpsertWithoutKitchenStaffReportsInput = {
@@ -93153,6 +96212,7 @@ export namespace Prisma {
     workShift?: WorkShiftUpdateOneWithoutStaffsNestedInput
     staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
     staffTimeTrackings?: StaffTimeTrackingUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUncheckedUpdateWithoutKitchenStaffReportsInput = {
@@ -93189,6 +96249,7 @@ export namespace Prisma {
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
     staffViolations?: StaffViolationUncheckedUpdateManyWithoutStaffNestedInput
     staffTimeTrackings?: StaffTimeTrackingUncheckedUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUncheckedUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUpsertWithoutSecurityStaffReportsInput = {
@@ -93235,6 +96296,7 @@ export namespace Prisma {
     workShift?: WorkShiftUpdateOneWithoutStaffsNestedInput
     staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
     staffTimeTrackings?: StaffTimeTrackingUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUncheckedUpdateWithoutSecurityStaffReportsInput = {
@@ -93271,6 +96333,7 @@ export namespace Prisma {
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
     staffViolations?: StaffViolationUncheckedUpdateManyWithoutStaffNestedInput
     staffTimeTrackings?: StaffTimeTrackingUncheckedUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUncheckedUpdateManyWithoutStaffNestedInput
   }
 
   export type HandoverMaterialCreateWithoutHandoverReportInput = {
@@ -93353,6 +96416,7 @@ export namespace Prisma {
     workShift?: WorkShiftCreateNestedOneWithoutStaffsInput
     staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
     staffTimeTrackings?: StaffTimeTrackingCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestCreateNestedManyWithoutStaffInput
   }
 
   export type StaffUncheckedCreateWithoutMorningHandoverReportsInput = {
@@ -93389,6 +96453,7 @@ export namespace Prisma {
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
     staffViolations?: StaffViolationUncheckedCreateNestedManyWithoutStaffInput
     staffTimeTrackings?: StaffTimeTrackingUncheckedCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestUncheckedCreateNestedManyWithoutStaffInput
   }
 
   export type StaffCreateOrConnectWithoutMorningHandoverReportsInput = {
@@ -93429,6 +96494,7 @@ export namespace Prisma {
     workShift?: WorkShiftCreateNestedOneWithoutStaffsInput
     staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
     staffTimeTrackings?: StaffTimeTrackingCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestCreateNestedManyWithoutStaffInput
   }
 
   export type StaffUncheckedCreateWithoutAfternoonHandoverReportsInput = {
@@ -93465,6 +96531,7 @@ export namespace Prisma {
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
     staffViolations?: StaffViolationUncheckedCreateNestedManyWithoutStaffInput
     staffTimeTrackings?: StaffTimeTrackingUncheckedCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestUncheckedCreateNestedManyWithoutStaffInput
   }
 
   export type StaffCreateOrConnectWithoutAfternoonHandoverReportsInput = {
@@ -93505,6 +96572,7 @@ export namespace Prisma {
     workShift?: WorkShiftCreateNestedOneWithoutStaffsInput
     staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
     staffTimeTrackings?: StaffTimeTrackingCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestCreateNestedManyWithoutStaffInput
   }
 
   export type StaffUncheckedCreateWithoutEveningHandoverReportsInput = {
@@ -93541,6 +96609,7 @@ export namespace Prisma {
     afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
     staffViolations?: StaffViolationUncheckedCreateNestedManyWithoutStaffInput
     staffTimeTrackings?: StaffTimeTrackingUncheckedCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestUncheckedCreateNestedManyWithoutStaffInput
   }
 
   export type StaffCreateOrConnectWithoutEveningHandoverReportsInput = {
@@ -93631,6 +96700,7 @@ export namespace Prisma {
     workShift?: WorkShiftUpdateOneWithoutStaffsNestedInput
     staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
     staffTimeTrackings?: StaffTimeTrackingUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUncheckedUpdateWithoutMorningHandoverReportsInput = {
@@ -93667,6 +96737,7 @@ export namespace Prisma {
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
     staffViolations?: StaffViolationUncheckedUpdateManyWithoutStaffNestedInput
     staffTimeTrackings?: StaffTimeTrackingUncheckedUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUncheckedUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUpsertWithoutAfternoonHandoverReportsInput = {
@@ -93713,6 +96784,7 @@ export namespace Prisma {
     workShift?: WorkShiftUpdateOneWithoutStaffsNestedInput
     staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
     staffTimeTrackings?: StaffTimeTrackingUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUncheckedUpdateWithoutAfternoonHandoverReportsInput = {
@@ -93749,6 +96821,7 @@ export namespace Prisma {
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
     staffViolations?: StaffViolationUncheckedUpdateManyWithoutStaffNestedInput
     staffTimeTrackings?: StaffTimeTrackingUncheckedUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUncheckedUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUpsertWithoutEveningHandoverReportsInput = {
@@ -93795,6 +96868,7 @@ export namespace Prisma {
     workShift?: WorkShiftUpdateOneWithoutStaffsNestedInput
     staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
     staffTimeTrackings?: StaffTimeTrackingUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUncheckedUpdateWithoutEveningHandoverReportsInput = {
@@ -93831,6 +96905,7 @@ export namespace Prisma {
     afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
     staffViolations?: StaffViolationUncheckedUpdateManyWithoutStaffNestedInput
     staffTimeTrackings?: StaffTimeTrackingUncheckedUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUncheckedUpdateManyWithoutStaffNestedInput
   }
 
   export type HandoverReportCreateWithoutMaterialsInput = {
@@ -95577,6 +98652,7 @@ export namespace Prisma {
     eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
     workShift?: WorkShiftCreateNestedOneWithoutStaffsInput
     staffTimeTrackings?: StaffTimeTrackingCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestCreateNestedManyWithoutStaffInput
   }
 
   export type StaffUncheckedCreateWithoutStaffViolationsInput = {
@@ -95613,6 +98689,7 @@ export namespace Prisma {
     afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
     staffTimeTrackings?: StaffTimeTrackingUncheckedCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestUncheckedCreateNestedManyWithoutStaffInput
   }
 
   export type StaffCreateOrConnectWithoutStaffViolationsInput = {
@@ -95700,6 +98777,7 @@ export namespace Prisma {
     eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
     workShift?: WorkShiftUpdateOneWithoutStaffsNestedInput
     staffTimeTrackings?: StaffTimeTrackingUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUncheckedUpdateWithoutStaffViolationsInput = {
@@ -95736,6 +98814,7 @@ export namespace Prisma {
     afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
     staffTimeTrackings?: StaffTimeTrackingUncheckedUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUncheckedUpdateManyWithoutStaffNestedInput
   }
 
   export type UserStarHistoryCreateManyGameResultInput = {
@@ -96415,6 +99494,11 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type StaffRequestCreateManyStaffInput = {
+    id?: number
+    requestId: number
+  }
+
   export type ReportUpdateWithoutCounterStaffInput = {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     shift?: EnumShiftFieldUpdateOperationsInput | $Enums.Shift
@@ -96731,6 +99815,20 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type StaffRequestUpdateWithoutStaffInput = {
+    request?: RequestUpdateOneRequiredWithoutStaffRequestNestedInput
+  }
+
+  export type StaffRequestUncheckedUpdateWithoutStaffInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    requestId?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type StaffRequestUncheckedUpdateManyWithoutStaffInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    requestId?: IntFieldUpdateOperationsInput | number
+  }
+
   export type StaffCreateManyWorkShiftInput = {
     id?: number
     userName: string
@@ -96792,6 +99890,7 @@ export namespace Prisma {
     eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
     staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
     staffTimeTrackings?: StaffTimeTrackingUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUncheckedUpdateWithoutWorkShiftInput = {
@@ -96828,6 +99927,7 @@ export namespace Prisma {
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
     staffViolations?: StaffViolationUncheckedUpdateManyWithoutStaffNestedInput
     staffTimeTrackings?: StaffTimeTrackingUncheckedUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUncheckedUpdateManyWithoutStaffNestedInput
   }
 
   export type StaffUncheckedUpdateManyWithoutWorkShiftInput = {
