@@ -7,8 +7,10 @@ import { apiClient } from '@gateway-workspace/shared/utils';
 // Bind x-tenant-id from hostname (e.g. hr-gateway-go-vap.loot.vn -> gateway-go-vap) or env
 if (typeof globalThis.window !== 'undefined') {
   const host = globalThis.window.location.hostname;
-  const match = /^hr-(.+)\./.exec(host);
-  const slug = match ? match[1] : (import.meta.env.VITE_TENANT_PREFIX || '').replace(/-$/, '');
+  const firstSegment = host.split('.')[0] ?? '';
+  const slug = firstSegment.startsWith('hr-')
+    ? firstSegment.slice(3)
+    : (import.meta.env.VITE_TENANT_PREFIX || '').replace(/-$/, '');
   if (slug) apiClient.defaults.headers.common['x-tenant-id'] = slug;
 }
 
