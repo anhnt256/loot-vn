@@ -34,6 +34,7 @@ services:
     restart: always
     networks:
       - internal-network
+      - proxy-network
 
 
   # Master App (Vite)
@@ -50,6 +51,7 @@ services:
     restart: always
     networks:
       - internal-network
+      - proxy-network
 
   # HR App (Vite)
   hr-app:
@@ -65,6 +67,7 @@ services:
     restart: always
     networks:
       - internal-network
+      - proxy-network
 
   # Manager App (Vite)
   hr-manager-app:
@@ -80,6 +83,7 @@ services:
     restart: always
     networks:
       - internal-network
+      - proxy-network
 
 
 
