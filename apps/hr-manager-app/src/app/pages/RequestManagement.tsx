@@ -161,7 +161,7 @@ const RequestManagement: React.FC = () => {
       key: 'staff',
       render: (staff: any) => (
         <Space>
-          <div className="w-8 h-8 rounded-full bg-[#ff721f] flex items-center justify-center text-white text-[10px] font-bold">
+          <div className="w-8 h-8 rounded-full bg-[var(--primary-color)] flex items-center justify-center text-white text-[10px] font-bold">
             {staff?.fullName?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
           </div>
           <div className="flex flex-col">

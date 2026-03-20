@@ -43,6 +43,46 @@ export type Organization = $Result.DefaultSelection<Prisma.$OrganizationPayload>
  * 
  */
 export type Tenant = $Result.DefaultSelection<Prisma.$TenantPayload>
+/**
+ * Model Staff
+ * 
+ */
+export type Staff = $Result.DefaultSelection<Prisma.$StaffPayload>
+
+/**
+ * Enums
+ */
+export namespace $Enums {
+  export const Staff_gender: {
+  MALE: 'MALE',
+  FEMALE: 'FEMALE',
+  OTHER: 'OTHER'
+};
+
+export type Staff_gender = (typeof Staff_gender)[keyof typeof Staff_gender]
+
+
+export const Staff_staffType: {
+  STAFF: 'STAFF',
+  KITCHEN: 'KITCHEN',
+  SECURITY: 'SECURITY',
+  CASHIER: 'CASHIER',
+  MANAGER: 'MANAGER',
+  SUPER_ADMIN: 'SUPER_ADMIN',
+  BRANCH_ADMIN: 'BRANCH_ADMIN'
+};
+
+export type Staff_staffType = (typeof Staff_staffType)[keyof typeof Staff_staffType]
+
+}
+
+export type Staff_gender = $Enums.Staff_gender
+
+export const Staff_gender: typeof $Enums.Staff_gender
+
+export type Staff_staffType = $Enums.Staff_staffType
+
+export const Staff_staffType: typeof $Enums.Staff_staffType
 
 /**
  * ##  Prisma Client ʲˢ
@@ -221,6 +261,16 @@ export class PrismaClient<
     * ```
     */
   get tenant(): Prisma.TenantDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.staff`: Exposes CRUD operations for the **Staff** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Staff
+    * const staff = await prisma.staff.findMany()
+    * ```
+    */
+  get staff(): Prisma.StaffDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -667,7 +717,8 @@ export namespace Prisma {
     TenantApiKey: 'TenantApiKey',
     TenantConfiguration: 'TenantConfiguration',
     Organization: 'Organization',
-    Tenant: 'Tenant'
+    Tenant: 'Tenant',
+    Staff: 'Staff'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -686,7 +737,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "apiKey" | "featureFlag" | "tenantApiKey" | "tenantConfiguration" | "organization" | "tenant"
+      modelProps: "apiKey" | "featureFlag" | "tenantApiKey" | "tenantConfiguration" | "organization" | "tenant" | "staff"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1086,6 +1137,72 @@ export namespace Prisma {
           }
         }
       }
+      Staff: {
+        payload: Prisma.$StaffPayload<ExtArgs>
+        fields: Prisma.StaffFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.StaffFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StaffPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.StaffFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StaffPayload>
+          }
+          findFirst: {
+            args: Prisma.StaffFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StaffPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.StaffFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StaffPayload>
+          }
+          findMany: {
+            args: Prisma.StaffFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StaffPayload>[]
+          }
+          create: {
+            args: Prisma.StaffCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StaffPayload>
+          }
+          createMany: {
+            args: Prisma.StaffCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.StaffDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StaffPayload>
+          }
+          update: {
+            args: Prisma.StaffUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StaffPayload>
+          }
+          deleteMany: {
+            args: Prisma.StaffDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.StaffUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.StaffUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StaffPayload>
+          }
+          aggregate: {
+            args: Prisma.StaffAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateStaff>
+          }
+          groupBy: {
+            args: Prisma.StaffGroupByArgs<ExtArgs>
+            result: $Utils.Optional<StaffGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.StaffCountArgs<ExtArgs>
+            result: $Utils.Optional<StaffCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1188,6 +1305,7 @@ export namespace Prisma {
     tenantConfiguration?: TenantConfigurationOmit
     organization?: OrganizationOmit
     tenant?: TenantOmit
+    staff?: StaffOmit
   }
 
   /* Types for Logging */
@@ -5214,6 +5332,8 @@ export namespace Prisma {
     description: string | null
     status: string | null
     rootDomain: string | null
+    primaryColor: string | null
+    secondaryColor: string | null
     createdAt: Date | null
     updatedAt: Date | null
     deletedAt: Date | null
@@ -5225,6 +5345,8 @@ export namespace Prisma {
     description: string | null
     status: string | null
     rootDomain: string | null
+    primaryColor: string | null
+    secondaryColor: string | null
     createdAt: Date | null
     updatedAt: Date | null
     deletedAt: Date | null
@@ -5236,6 +5358,8 @@ export namespace Prisma {
     description: number
     status: number
     rootDomain: number
+    primaryColor: number
+    secondaryColor: number
     createdAt: number
     updatedAt: number
     deletedAt: number
@@ -5249,6 +5373,8 @@ export namespace Prisma {
     description?: true
     status?: true
     rootDomain?: true
+    primaryColor?: true
+    secondaryColor?: true
     createdAt?: true
     updatedAt?: true
     deletedAt?: true
@@ -5260,6 +5386,8 @@ export namespace Prisma {
     description?: true
     status?: true
     rootDomain?: true
+    primaryColor?: true
+    secondaryColor?: true
     createdAt?: true
     updatedAt?: true
     deletedAt?: true
@@ -5271,6 +5399,8 @@ export namespace Prisma {
     description?: true
     status?: true
     rootDomain?: true
+    primaryColor?: true
+    secondaryColor?: true
     createdAt?: true
     updatedAt?: true
     deletedAt?: true
@@ -5355,6 +5485,8 @@ export namespace Prisma {
     description: string | null
     status: string
     rootDomain: string | null
+    primaryColor: string | null
+    secondaryColor: string | null
     createdAt: Date
     updatedAt: Date
     deletedAt: Date | null
@@ -5383,6 +5515,8 @@ export namespace Prisma {
     description?: boolean
     status?: boolean
     rootDomain?: boolean
+    primaryColor?: boolean
+    secondaryColor?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     deletedAt?: boolean
@@ -5398,12 +5532,14 @@ export namespace Prisma {
     description?: boolean
     status?: boolean
     rootDomain?: boolean
+    primaryColor?: boolean
+    secondaryColor?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     deletedAt?: boolean
   }
 
-  export type OrganizationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "status" | "rootDomain" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["organization"]>
+  export type OrganizationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "status" | "rootDomain" | "primaryColor" | "secondaryColor" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["organization"]>
   export type OrganizationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     tenants?: boolean | Organization$tenantsArgs<ExtArgs>
     _count?: boolean | OrganizationCountOutputTypeDefaultArgs<ExtArgs>
@@ -5420,6 +5556,8 @@ export namespace Prisma {
       description: string | null
       status: string
       rootDomain: string | null
+      primaryColor: string | null
+      secondaryColor: string | null
       createdAt: Date
       updatedAt: Date
       deletedAt: Date | null
@@ -5798,6 +5936,8 @@ export namespace Prisma {
     readonly description: FieldRef<"Organization", 'String'>
     readonly status: FieldRef<"Organization", 'String'>
     readonly rootDomain: FieldRef<"Organization", 'String'>
+    readonly primaryColor: FieldRef<"Organization", 'String'>
+    readonly secondaryColor: FieldRef<"Organization", 'String'>
     readonly createdAt: FieldRef<"Organization", 'DateTime'>
     readonly updatedAt: FieldRef<"Organization", 'DateTime'>
     readonly deletedAt: FieldRef<"Organization", 'DateTime'>
@@ -7292,6 +7432,1146 @@ export namespace Prisma {
 
 
   /**
+   * Model Staff
+   */
+
+  export type AggregateStaff = {
+    _count: StaffCountAggregateOutputType | null
+    _avg: StaffAvgAggregateOutputType | null
+    _sum: StaffSumAggregateOutputType | null
+    _min: StaffMinAggregateOutputType | null
+    _max: StaffMaxAggregateOutputType | null
+  }
+
+  export type StaffAvgAggregateOutputType = {
+    id: number | null
+    baseSalary: number | null
+  }
+
+  export type StaffSumAggregateOutputType = {
+    id: number | null
+    baseSalary: number | null
+  }
+
+  export type StaffMinAggregateOutputType = {
+    id: number | null
+    userName: string | null
+    password: string | null
+    isDeleted: boolean | null
+    isAdmin: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    address: string | null
+    dateOfBirth: Date | null
+    email: string | null
+    fullName: string | null
+    gender: $Enums.Staff_gender | null
+    hireDate: Date | null
+    idCard: string | null
+    idCardExpiryDate: Date | null
+    idCardIssueDate: Date | null
+    note: string | null
+    phone: string | null
+    resignDate: Date | null
+    staffType: $Enums.Staff_staffType | null
+    needCheckMacAddress: boolean | null
+    bankAccountName: string | null
+    bankAccountNumber: string | null
+    bankName: string | null
+    baseSalary: number | null
+  }
+
+  export type StaffMaxAggregateOutputType = {
+    id: number | null
+    userName: string | null
+    password: string | null
+    isDeleted: boolean | null
+    isAdmin: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    address: string | null
+    dateOfBirth: Date | null
+    email: string | null
+    fullName: string | null
+    gender: $Enums.Staff_gender | null
+    hireDate: Date | null
+    idCard: string | null
+    idCardExpiryDate: Date | null
+    idCardIssueDate: Date | null
+    note: string | null
+    phone: string | null
+    resignDate: Date | null
+    staffType: $Enums.Staff_staffType | null
+    needCheckMacAddress: boolean | null
+    bankAccountName: string | null
+    bankAccountNumber: string | null
+    bankName: string | null
+    baseSalary: number | null
+  }
+
+  export type StaffCountAggregateOutputType = {
+    id: number
+    userName: number
+    password: number
+    isDeleted: number
+    isAdmin: number
+    createdAt: number
+    updatedAt: number
+    address: number
+    dateOfBirth: number
+    email: number
+    fullName: number
+    gender: number
+    hireDate: number
+    idCard: number
+    idCardExpiryDate: number
+    idCardIssueDate: number
+    note: number
+    phone: number
+    resignDate: number
+    staffType: number
+    needCheckMacAddress: number
+    bankAccountName: number
+    bankAccountNumber: number
+    bankName: number
+    baseSalary: number
+    _all: number
+  }
+
+
+  export type StaffAvgAggregateInputType = {
+    id?: true
+    baseSalary?: true
+  }
+
+  export type StaffSumAggregateInputType = {
+    id?: true
+    baseSalary?: true
+  }
+
+  export type StaffMinAggregateInputType = {
+    id?: true
+    userName?: true
+    password?: true
+    isDeleted?: true
+    isAdmin?: true
+    createdAt?: true
+    updatedAt?: true
+    address?: true
+    dateOfBirth?: true
+    email?: true
+    fullName?: true
+    gender?: true
+    hireDate?: true
+    idCard?: true
+    idCardExpiryDate?: true
+    idCardIssueDate?: true
+    note?: true
+    phone?: true
+    resignDate?: true
+    staffType?: true
+    needCheckMacAddress?: true
+    bankAccountName?: true
+    bankAccountNumber?: true
+    bankName?: true
+    baseSalary?: true
+  }
+
+  export type StaffMaxAggregateInputType = {
+    id?: true
+    userName?: true
+    password?: true
+    isDeleted?: true
+    isAdmin?: true
+    createdAt?: true
+    updatedAt?: true
+    address?: true
+    dateOfBirth?: true
+    email?: true
+    fullName?: true
+    gender?: true
+    hireDate?: true
+    idCard?: true
+    idCardExpiryDate?: true
+    idCardIssueDate?: true
+    note?: true
+    phone?: true
+    resignDate?: true
+    staffType?: true
+    needCheckMacAddress?: true
+    bankAccountName?: true
+    bankAccountNumber?: true
+    bankName?: true
+    baseSalary?: true
+  }
+
+  export type StaffCountAggregateInputType = {
+    id?: true
+    userName?: true
+    password?: true
+    isDeleted?: true
+    isAdmin?: true
+    createdAt?: true
+    updatedAt?: true
+    address?: true
+    dateOfBirth?: true
+    email?: true
+    fullName?: true
+    gender?: true
+    hireDate?: true
+    idCard?: true
+    idCardExpiryDate?: true
+    idCardIssueDate?: true
+    note?: true
+    phone?: true
+    resignDate?: true
+    staffType?: true
+    needCheckMacAddress?: true
+    bankAccountName?: true
+    bankAccountNumber?: true
+    bankName?: true
+    baseSalary?: true
+    _all?: true
+  }
+
+  export type StaffAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Staff to aggregate.
+     */
+    where?: StaffWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Staff to fetch.
+     */
+    orderBy?: StaffOrderByWithRelationInput | StaffOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: StaffWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Staff from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Staff.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Staff
+    **/
+    _count?: true | StaffCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: StaffAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: StaffSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: StaffMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: StaffMaxAggregateInputType
+  }
+
+  export type GetStaffAggregateType<T extends StaffAggregateArgs> = {
+        [P in keyof T & keyof AggregateStaff]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateStaff[P]>
+      : GetScalarType<T[P], AggregateStaff[P]>
+  }
+
+
+
+
+  export type StaffGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: StaffWhereInput
+    orderBy?: StaffOrderByWithAggregationInput | StaffOrderByWithAggregationInput[]
+    by: StaffScalarFieldEnum[] | StaffScalarFieldEnum
+    having?: StaffScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: StaffCountAggregateInputType | true
+    _avg?: StaffAvgAggregateInputType
+    _sum?: StaffSumAggregateInputType
+    _min?: StaffMinAggregateInputType
+    _max?: StaffMaxAggregateInputType
+  }
+
+  export type StaffGroupByOutputType = {
+    id: number
+    userName: string
+    password: string
+    isDeleted: boolean
+    isAdmin: boolean
+    createdAt: Date
+    updatedAt: Date
+    address: string | null
+    dateOfBirth: Date | null
+    email: string | null
+    fullName: string
+    gender: $Enums.Staff_gender
+    hireDate: Date | null
+    idCard: string | null
+    idCardExpiryDate: Date | null
+    idCardIssueDate: Date | null
+    note: string | null
+    phone: string | null
+    resignDate: Date | null
+    staffType: $Enums.Staff_staffType
+    needCheckMacAddress: boolean
+    bankAccountName: string | null
+    bankAccountNumber: string | null
+    bankName: string | null
+    baseSalary: number
+    _count: StaffCountAggregateOutputType | null
+    _avg: StaffAvgAggregateOutputType | null
+    _sum: StaffSumAggregateOutputType | null
+    _min: StaffMinAggregateOutputType | null
+    _max: StaffMaxAggregateOutputType | null
+  }
+
+  type GetStaffGroupByPayload<T extends StaffGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<StaffGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof StaffGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], StaffGroupByOutputType[P]>
+            : GetScalarType<T[P], StaffGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type StaffSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userName?: boolean
+    password?: boolean
+    isDeleted?: boolean
+    isAdmin?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    address?: boolean
+    dateOfBirth?: boolean
+    email?: boolean
+    fullName?: boolean
+    gender?: boolean
+    hireDate?: boolean
+    idCard?: boolean
+    idCardExpiryDate?: boolean
+    idCardIssueDate?: boolean
+    note?: boolean
+    phone?: boolean
+    resignDate?: boolean
+    staffType?: boolean
+    needCheckMacAddress?: boolean
+    bankAccountName?: boolean
+    bankAccountNumber?: boolean
+    bankName?: boolean
+    baseSalary?: boolean
+  }, ExtArgs["result"]["staff"]>
+
+
+
+  export type StaffSelectScalar = {
+    id?: boolean
+    userName?: boolean
+    password?: boolean
+    isDeleted?: boolean
+    isAdmin?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    address?: boolean
+    dateOfBirth?: boolean
+    email?: boolean
+    fullName?: boolean
+    gender?: boolean
+    hireDate?: boolean
+    idCard?: boolean
+    idCardExpiryDate?: boolean
+    idCardIssueDate?: boolean
+    note?: boolean
+    phone?: boolean
+    resignDate?: boolean
+    staffType?: boolean
+    needCheckMacAddress?: boolean
+    bankAccountName?: boolean
+    bankAccountNumber?: boolean
+    bankName?: boolean
+    baseSalary?: boolean
+  }
+
+  export type StaffOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userName" | "password" | "isDeleted" | "isAdmin" | "createdAt" | "updatedAt" | "address" | "dateOfBirth" | "email" | "fullName" | "gender" | "hireDate" | "idCard" | "idCardExpiryDate" | "idCardIssueDate" | "note" | "phone" | "resignDate" | "staffType" | "needCheckMacAddress" | "bankAccountName" | "bankAccountNumber" | "bankName" | "baseSalary", ExtArgs["result"]["staff"]>
+
+  export type $StaffPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Staff"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      userName: string
+      password: string
+      isDeleted: boolean
+      isAdmin: boolean
+      createdAt: Date
+      updatedAt: Date
+      address: string | null
+      dateOfBirth: Date | null
+      email: string | null
+      fullName: string
+      gender: $Enums.Staff_gender
+      hireDate: Date | null
+      idCard: string | null
+      idCardExpiryDate: Date | null
+      idCardIssueDate: Date | null
+      note: string | null
+      phone: string | null
+      resignDate: Date | null
+      staffType: $Enums.Staff_staffType
+      needCheckMacAddress: boolean
+      bankAccountName: string | null
+      bankAccountNumber: string | null
+      bankName: string | null
+      baseSalary: number
+    }, ExtArgs["result"]["staff"]>
+    composites: {}
+  }
+
+  type StaffGetPayload<S extends boolean | null | undefined | StaffDefaultArgs> = $Result.GetResult<Prisma.$StaffPayload, S>
+
+  type StaffCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<StaffFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: StaffCountAggregateInputType | true
+    }
+
+  export interface StaffDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Staff'], meta: { name: 'Staff' } }
+    /**
+     * Find zero or one Staff that matches the filter.
+     * @param {StaffFindUniqueArgs} args - Arguments to find a Staff
+     * @example
+     * // Get one Staff
+     * const staff = await prisma.staff.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends StaffFindUniqueArgs>(args: SelectSubset<T, StaffFindUniqueArgs<ExtArgs>>): Prisma__StaffClient<$Result.GetResult<Prisma.$StaffPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Staff that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {StaffFindUniqueOrThrowArgs} args - Arguments to find a Staff
+     * @example
+     * // Get one Staff
+     * const staff = await prisma.staff.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends StaffFindUniqueOrThrowArgs>(args: SelectSubset<T, StaffFindUniqueOrThrowArgs<ExtArgs>>): Prisma__StaffClient<$Result.GetResult<Prisma.$StaffPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Staff that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StaffFindFirstArgs} args - Arguments to find a Staff
+     * @example
+     * // Get one Staff
+     * const staff = await prisma.staff.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends StaffFindFirstArgs>(args?: SelectSubset<T, StaffFindFirstArgs<ExtArgs>>): Prisma__StaffClient<$Result.GetResult<Prisma.$StaffPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Staff that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StaffFindFirstOrThrowArgs} args - Arguments to find a Staff
+     * @example
+     * // Get one Staff
+     * const staff = await prisma.staff.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends StaffFindFirstOrThrowArgs>(args?: SelectSubset<T, StaffFindFirstOrThrowArgs<ExtArgs>>): Prisma__StaffClient<$Result.GetResult<Prisma.$StaffPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Staff that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StaffFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Staff
+     * const staff = await prisma.staff.findMany()
+     * 
+     * // Get first 10 Staff
+     * const staff = await prisma.staff.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const staffWithIdOnly = await prisma.staff.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends StaffFindManyArgs>(args?: SelectSubset<T, StaffFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StaffPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Staff.
+     * @param {StaffCreateArgs} args - Arguments to create a Staff.
+     * @example
+     * // Create one Staff
+     * const Staff = await prisma.staff.create({
+     *   data: {
+     *     // ... data to create a Staff
+     *   }
+     * })
+     * 
+     */
+    create<T extends StaffCreateArgs>(args: SelectSubset<T, StaffCreateArgs<ExtArgs>>): Prisma__StaffClient<$Result.GetResult<Prisma.$StaffPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Staff.
+     * @param {StaffCreateManyArgs} args - Arguments to create many Staff.
+     * @example
+     * // Create many Staff
+     * const staff = await prisma.staff.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends StaffCreateManyArgs>(args?: SelectSubset<T, StaffCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a Staff.
+     * @param {StaffDeleteArgs} args - Arguments to delete one Staff.
+     * @example
+     * // Delete one Staff
+     * const Staff = await prisma.staff.delete({
+     *   where: {
+     *     // ... filter to delete one Staff
+     *   }
+     * })
+     * 
+     */
+    delete<T extends StaffDeleteArgs>(args: SelectSubset<T, StaffDeleteArgs<ExtArgs>>): Prisma__StaffClient<$Result.GetResult<Prisma.$StaffPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Staff.
+     * @param {StaffUpdateArgs} args - Arguments to update one Staff.
+     * @example
+     * // Update one Staff
+     * const staff = await prisma.staff.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends StaffUpdateArgs>(args: SelectSubset<T, StaffUpdateArgs<ExtArgs>>): Prisma__StaffClient<$Result.GetResult<Prisma.$StaffPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Staff.
+     * @param {StaffDeleteManyArgs} args - Arguments to filter Staff to delete.
+     * @example
+     * // Delete a few Staff
+     * const { count } = await prisma.staff.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends StaffDeleteManyArgs>(args?: SelectSubset<T, StaffDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Staff.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StaffUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Staff
+     * const staff = await prisma.staff.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends StaffUpdateManyArgs>(args: SelectSubset<T, StaffUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one Staff.
+     * @param {StaffUpsertArgs} args - Arguments to update or create a Staff.
+     * @example
+     * // Update or create a Staff
+     * const staff = await prisma.staff.upsert({
+     *   create: {
+     *     // ... data to create a Staff
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Staff we want to update
+     *   }
+     * })
+     */
+    upsert<T extends StaffUpsertArgs>(args: SelectSubset<T, StaffUpsertArgs<ExtArgs>>): Prisma__StaffClient<$Result.GetResult<Prisma.$StaffPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Staff.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StaffCountArgs} args - Arguments to filter Staff to count.
+     * @example
+     * // Count the number of Staff
+     * const count = await prisma.staff.count({
+     *   where: {
+     *     // ... the filter for the Staff we want to count
+     *   }
+     * })
+    **/
+    count<T extends StaffCountArgs>(
+      args?: Subset<T, StaffCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], StaffCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Staff.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StaffAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends StaffAggregateArgs>(args: Subset<T, StaffAggregateArgs>): Prisma.PrismaPromise<GetStaffAggregateType<T>>
+
+    /**
+     * Group by Staff.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StaffGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends StaffGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: StaffGroupByArgs['orderBy'] }
+        : { orderBy?: StaffGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, StaffGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetStaffGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Staff model
+   */
+  readonly fields: StaffFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Staff.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__StaffClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Staff model
+   */
+  interface StaffFieldRefs {
+    readonly id: FieldRef<"Staff", 'Int'>
+    readonly userName: FieldRef<"Staff", 'String'>
+    readonly password: FieldRef<"Staff", 'String'>
+    readonly isDeleted: FieldRef<"Staff", 'Boolean'>
+    readonly isAdmin: FieldRef<"Staff", 'Boolean'>
+    readonly createdAt: FieldRef<"Staff", 'DateTime'>
+    readonly updatedAt: FieldRef<"Staff", 'DateTime'>
+    readonly address: FieldRef<"Staff", 'String'>
+    readonly dateOfBirth: FieldRef<"Staff", 'DateTime'>
+    readonly email: FieldRef<"Staff", 'String'>
+    readonly fullName: FieldRef<"Staff", 'String'>
+    readonly gender: FieldRef<"Staff", 'Staff_gender'>
+    readonly hireDate: FieldRef<"Staff", 'DateTime'>
+    readonly idCard: FieldRef<"Staff", 'String'>
+    readonly idCardExpiryDate: FieldRef<"Staff", 'DateTime'>
+    readonly idCardIssueDate: FieldRef<"Staff", 'DateTime'>
+    readonly note: FieldRef<"Staff", 'String'>
+    readonly phone: FieldRef<"Staff", 'String'>
+    readonly resignDate: FieldRef<"Staff", 'DateTime'>
+    readonly staffType: FieldRef<"Staff", 'Staff_staffType'>
+    readonly needCheckMacAddress: FieldRef<"Staff", 'Boolean'>
+    readonly bankAccountName: FieldRef<"Staff", 'String'>
+    readonly bankAccountNumber: FieldRef<"Staff", 'String'>
+    readonly bankName: FieldRef<"Staff", 'String'>
+    readonly baseSalary: FieldRef<"Staff", 'Float'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Staff findUnique
+   */
+  export type StaffFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Staff
+     */
+    select?: StaffSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Staff
+     */
+    omit?: StaffOmit<ExtArgs> | null
+    /**
+     * Filter, which Staff to fetch.
+     */
+    where: StaffWhereUniqueInput
+  }
+
+  /**
+   * Staff findUniqueOrThrow
+   */
+  export type StaffFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Staff
+     */
+    select?: StaffSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Staff
+     */
+    omit?: StaffOmit<ExtArgs> | null
+    /**
+     * Filter, which Staff to fetch.
+     */
+    where: StaffWhereUniqueInput
+  }
+
+  /**
+   * Staff findFirst
+   */
+  export type StaffFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Staff
+     */
+    select?: StaffSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Staff
+     */
+    omit?: StaffOmit<ExtArgs> | null
+    /**
+     * Filter, which Staff to fetch.
+     */
+    where?: StaffWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Staff to fetch.
+     */
+    orderBy?: StaffOrderByWithRelationInput | StaffOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Staff.
+     */
+    cursor?: StaffWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Staff from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Staff.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Staff.
+     */
+    distinct?: StaffScalarFieldEnum | StaffScalarFieldEnum[]
+  }
+
+  /**
+   * Staff findFirstOrThrow
+   */
+  export type StaffFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Staff
+     */
+    select?: StaffSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Staff
+     */
+    omit?: StaffOmit<ExtArgs> | null
+    /**
+     * Filter, which Staff to fetch.
+     */
+    where?: StaffWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Staff to fetch.
+     */
+    orderBy?: StaffOrderByWithRelationInput | StaffOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Staff.
+     */
+    cursor?: StaffWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Staff from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Staff.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Staff.
+     */
+    distinct?: StaffScalarFieldEnum | StaffScalarFieldEnum[]
+  }
+
+  /**
+   * Staff findMany
+   */
+  export type StaffFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Staff
+     */
+    select?: StaffSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Staff
+     */
+    omit?: StaffOmit<ExtArgs> | null
+    /**
+     * Filter, which Staff to fetch.
+     */
+    where?: StaffWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Staff to fetch.
+     */
+    orderBy?: StaffOrderByWithRelationInput | StaffOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Staff.
+     */
+    cursor?: StaffWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Staff from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Staff.
+     */
+    skip?: number
+    distinct?: StaffScalarFieldEnum | StaffScalarFieldEnum[]
+  }
+
+  /**
+   * Staff create
+   */
+  export type StaffCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Staff
+     */
+    select?: StaffSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Staff
+     */
+    omit?: StaffOmit<ExtArgs> | null
+    /**
+     * The data needed to create a Staff.
+     */
+    data: XOR<StaffCreateInput, StaffUncheckedCreateInput>
+  }
+
+  /**
+   * Staff createMany
+   */
+  export type StaffCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Staff.
+     */
+    data: StaffCreateManyInput | StaffCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Staff update
+   */
+  export type StaffUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Staff
+     */
+    select?: StaffSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Staff
+     */
+    omit?: StaffOmit<ExtArgs> | null
+    /**
+     * The data needed to update a Staff.
+     */
+    data: XOR<StaffUpdateInput, StaffUncheckedUpdateInput>
+    /**
+     * Choose, which Staff to update.
+     */
+    where: StaffWhereUniqueInput
+  }
+
+  /**
+   * Staff updateMany
+   */
+  export type StaffUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Staff.
+     */
+    data: XOR<StaffUpdateManyMutationInput, StaffUncheckedUpdateManyInput>
+    /**
+     * Filter which Staff to update
+     */
+    where?: StaffWhereInput
+    /**
+     * Limit how many Staff to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Staff upsert
+   */
+  export type StaffUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Staff
+     */
+    select?: StaffSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Staff
+     */
+    omit?: StaffOmit<ExtArgs> | null
+    /**
+     * The filter to search for the Staff to update in case it exists.
+     */
+    where: StaffWhereUniqueInput
+    /**
+     * In case the Staff found by the `where` argument doesn't exist, create a new Staff with this data.
+     */
+    create: XOR<StaffCreateInput, StaffUncheckedCreateInput>
+    /**
+     * In case the Staff was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<StaffUpdateInput, StaffUncheckedUpdateInput>
+  }
+
+  /**
+   * Staff delete
+   */
+  export type StaffDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Staff
+     */
+    select?: StaffSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Staff
+     */
+    omit?: StaffOmit<ExtArgs> | null
+    /**
+     * Filter which Staff to delete.
+     */
+    where: StaffWhereUniqueInput
+  }
+
+  /**
+   * Staff deleteMany
+   */
+  export type StaffDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Staff to delete
+     */
+    where?: StaffWhereInput
+    /**
+     * Limit how many Staff to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Staff without action
+   */
+  export type StaffDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Staff
+     */
+    select?: StaffSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Staff
+     */
+    omit?: StaffOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -7391,6 +8671,8 @@ export namespace Prisma {
     description: 'description',
     status: 'status',
     rootDomain: 'rootDomain',
+    primaryColor: 'primaryColor',
+    secondaryColor: 'secondaryColor',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
     deletedAt: 'deletedAt'
@@ -7423,6 +8705,37 @@ export namespace Prisma {
   };
 
   export type TenantScalarFieldEnum = (typeof TenantScalarFieldEnum)[keyof typeof TenantScalarFieldEnum]
+
+
+  export const StaffScalarFieldEnum: {
+    id: 'id',
+    userName: 'userName',
+    password: 'password',
+    isDeleted: 'isDeleted',
+    isAdmin: 'isAdmin',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+    address: 'address',
+    dateOfBirth: 'dateOfBirth',
+    email: 'email',
+    fullName: 'fullName',
+    gender: 'gender',
+    hireDate: 'hireDate',
+    idCard: 'idCard',
+    idCardExpiryDate: 'idCardExpiryDate',
+    idCardIssueDate: 'idCardIssueDate',
+    note: 'note',
+    phone: 'phone',
+    resignDate: 'resignDate',
+    staffType: 'staffType',
+    needCheckMacAddress: 'needCheckMacAddress',
+    bankAccountName: 'bankAccountName',
+    bankAccountNumber: 'bankAccountNumber',
+    bankName: 'bankName',
+    baseSalary: 'baseSalary'
+  };
+
+  export type StaffScalarFieldEnum = (typeof StaffScalarFieldEnum)[keyof typeof StaffScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -7528,7 +8841,9 @@ export namespace Prisma {
     name: 'name',
     description: 'description',
     status: 'status',
-    rootDomain: 'rootDomain'
+    rootDomain: 'rootDomain',
+    primaryColor: 'primaryColor',
+    secondaryColor: 'secondaryColor'
   };
 
   export type OrganizationOrderByRelevanceFieldEnum = (typeof OrganizationOrderByRelevanceFieldEnum)[keyof typeof OrganizationOrderByRelevanceFieldEnum]
@@ -7552,6 +8867,23 @@ export namespace Prisma {
   };
 
   export type TenantOrderByRelevanceFieldEnum = (typeof TenantOrderByRelevanceFieldEnum)[keyof typeof TenantOrderByRelevanceFieldEnum]
+
+
+  export const StaffOrderByRelevanceFieldEnum: {
+    userName: 'userName',
+    password: 'password',
+    address: 'address',
+    email: 'email',
+    fullName: 'fullName',
+    idCard: 'idCard',
+    note: 'note',
+    phone: 'phone',
+    bankAccountName: 'bankAccountName',
+    bankAccountNumber: 'bankAccountNumber',
+    bankName: 'bankName'
+  };
+
+  export type StaffOrderByRelevanceFieldEnum = (typeof StaffOrderByRelevanceFieldEnum)[keyof typeof StaffOrderByRelevanceFieldEnum]
 
 
   /**
@@ -7598,6 +8930,27 @@ export namespace Prisma {
    * Reference to a field of type 'Int'
    */
   export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+    
+
+
+  /**
+   * Reference to a field of type 'Staff_gender'
+   */
+  export type EnumStaff_genderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Staff_gender'>
+    
+
+
+  /**
+   * Reference to a field of type 'Staff_staffType'
+   */
+  export type EnumStaff_staffTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Staff_staffType'>
+    
+
+
+  /**
+   * Reference to a field of type 'Float'
+   */
+  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
     
   /**
    * Deep Input Types
@@ -8005,6 +9358,8 @@ export namespace Prisma {
     description?: StringNullableFilter<"Organization"> | string | null
     status?: StringFilter<"Organization"> | string
     rootDomain?: StringNullableFilter<"Organization"> | string | null
+    primaryColor?: StringNullableFilter<"Organization"> | string | null
+    secondaryColor?: StringNullableFilter<"Organization"> | string | null
     createdAt?: DateTimeFilter<"Organization"> | Date | string
     updatedAt?: DateTimeFilter<"Organization"> | Date | string
     deletedAt?: DateTimeNullableFilter<"Organization"> | Date | string | null
@@ -8017,6 +9372,8 @@ export namespace Prisma {
     description?: SortOrderInput | SortOrder
     status?: SortOrder
     rootDomain?: SortOrderInput | SortOrder
+    primaryColor?: SortOrderInput | SortOrder
+    secondaryColor?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     deletedAt?: SortOrderInput | SortOrder
@@ -8033,6 +9390,8 @@ export namespace Prisma {
     description?: StringNullableFilter<"Organization"> | string | null
     status?: StringFilter<"Organization"> | string
     rootDomain?: StringNullableFilter<"Organization"> | string | null
+    primaryColor?: StringNullableFilter<"Organization"> | string | null
+    secondaryColor?: StringNullableFilter<"Organization"> | string | null
     createdAt?: DateTimeFilter<"Organization"> | Date | string
     updatedAt?: DateTimeFilter<"Organization"> | Date | string
     deletedAt?: DateTimeNullableFilter<"Organization"> | Date | string | null
@@ -8045,6 +9404,8 @@ export namespace Prisma {
     description?: SortOrderInput | SortOrder
     status?: SortOrder
     rootDomain?: SortOrderInput | SortOrder
+    primaryColor?: SortOrderInput | SortOrder
+    secondaryColor?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     deletedAt?: SortOrderInput | SortOrder
@@ -8062,6 +9423,8 @@ export namespace Prisma {
     description?: StringNullableWithAggregatesFilter<"Organization"> | string | null
     status?: StringWithAggregatesFilter<"Organization"> | string
     rootDomain?: StringNullableWithAggregatesFilter<"Organization"> | string | null
+    primaryColor?: StringNullableWithAggregatesFilter<"Organization"> | string | null
+    secondaryColor?: StringNullableWithAggregatesFilter<"Organization"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Organization"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Organization"> | Date | string
     deletedAt?: DateTimeNullableWithAggregatesFilter<"Organization"> | Date | string | null
@@ -8196,6 +9559,161 @@ export namespace Prisma {
     apiKey?: StringNullableWithAggregatesFilter<"Tenant"> | string | null
     domainPrefix?: StringNullableWithAggregatesFilter<"Tenant"> | string | null
     organizationId?: StringNullableWithAggregatesFilter<"Tenant"> | string | null
+  }
+
+  export type StaffWhereInput = {
+    AND?: StaffWhereInput | StaffWhereInput[]
+    OR?: StaffWhereInput[]
+    NOT?: StaffWhereInput | StaffWhereInput[]
+    id?: IntFilter<"Staff"> | number
+    userName?: StringFilter<"Staff"> | string
+    password?: StringFilter<"Staff"> | string
+    isDeleted?: BoolFilter<"Staff"> | boolean
+    isAdmin?: BoolFilter<"Staff"> | boolean
+    createdAt?: DateTimeFilter<"Staff"> | Date | string
+    updatedAt?: DateTimeFilter<"Staff"> | Date | string
+    address?: StringNullableFilter<"Staff"> | string | null
+    dateOfBirth?: DateTimeNullableFilter<"Staff"> | Date | string | null
+    email?: StringNullableFilter<"Staff"> | string | null
+    fullName?: StringFilter<"Staff"> | string
+    gender?: EnumStaff_genderFilter<"Staff"> | $Enums.Staff_gender
+    hireDate?: DateTimeNullableFilter<"Staff"> | Date | string | null
+    idCard?: StringNullableFilter<"Staff"> | string | null
+    idCardExpiryDate?: DateTimeNullableFilter<"Staff"> | Date | string | null
+    idCardIssueDate?: DateTimeNullableFilter<"Staff"> | Date | string | null
+    note?: StringNullableFilter<"Staff"> | string | null
+    phone?: StringNullableFilter<"Staff"> | string | null
+    resignDate?: DateTimeNullableFilter<"Staff"> | Date | string | null
+    staffType?: EnumStaff_staffTypeFilter<"Staff"> | $Enums.Staff_staffType
+    needCheckMacAddress?: BoolFilter<"Staff"> | boolean
+    bankAccountName?: StringNullableFilter<"Staff"> | string | null
+    bankAccountNumber?: StringNullableFilter<"Staff"> | string | null
+    bankName?: StringNullableFilter<"Staff"> | string | null
+    baseSalary?: FloatFilter<"Staff"> | number
+  }
+
+  export type StaffOrderByWithRelationInput = {
+    id?: SortOrder
+    userName?: SortOrder
+    password?: SortOrder
+    isDeleted?: SortOrder
+    isAdmin?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    address?: SortOrderInput | SortOrder
+    dateOfBirth?: SortOrderInput | SortOrder
+    email?: SortOrderInput | SortOrder
+    fullName?: SortOrder
+    gender?: SortOrder
+    hireDate?: SortOrderInput | SortOrder
+    idCard?: SortOrderInput | SortOrder
+    idCardExpiryDate?: SortOrderInput | SortOrder
+    idCardIssueDate?: SortOrderInput | SortOrder
+    note?: SortOrderInput | SortOrder
+    phone?: SortOrderInput | SortOrder
+    resignDate?: SortOrderInput | SortOrder
+    staffType?: SortOrder
+    needCheckMacAddress?: SortOrder
+    bankAccountName?: SortOrderInput | SortOrder
+    bankAccountNumber?: SortOrderInput | SortOrder
+    bankName?: SortOrderInput | SortOrder
+    baseSalary?: SortOrder
+    _relevance?: StaffOrderByRelevanceInput
+  }
+
+  export type StaffWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    userName?: string
+    AND?: StaffWhereInput | StaffWhereInput[]
+    OR?: StaffWhereInput[]
+    NOT?: StaffWhereInput | StaffWhereInput[]
+    password?: StringFilter<"Staff"> | string
+    isDeleted?: BoolFilter<"Staff"> | boolean
+    isAdmin?: BoolFilter<"Staff"> | boolean
+    createdAt?: DateTimeFilter<"Staff"> | Date | string
+    updatedAt?: DateTimeFilter<"Staff"> | Date | string
+    address?: StringNullableFilter<"Staff"> | string | null
+    dateOfBirth?: DateTimeNullableFilter<"Staff"> | Date | string | null
+    email?: StringNullableFilter<"Staff"> | string | null
+    fullName?: StringFilter<"Staff"> | string
+    gender?: EnumStaff_genderFilter<"Staff"> | $Enums.Staff_gender
+    hireDate?: DateTimeNullableFilter<"Staff"> | Date | string | null
+    idCard?: StringNullableFilter<"Staff"> | string | null
+    idCardExpiryDate?: DateTimeNullableFilter<"Staff"> | Date | string | null
+    idCardIssueDate?: DateTimeNullableFilter<"Staff"> | Date | string | null
+    note?: StringNullableFilter<"Staff"> | string | null
+    phone?: StringNullableFilter<"Staff"> | string | null
+    resignDate?: DateTimeNullableFilter<"Staff"> | Date | string | null
+    staffType?: EnumStaff_staffTypeFilter<"Staff"> | $Enums.Staff_staffType
+    needCheckMacAddress?: BoolFilter<"Staff"> | boolean
+    bankAccountName?: StringNullableFilter<"Staff"> | string | null
+    bankAccountNumber?: StringNullableFilter<"Staff"> | string | null
+    bankName?: StringNullableFilter<"Staff"> | string | null
+    baseSalary?: FloatFilter<"Staff"> | number
+  }, "id" | "userName">
+
+  export type StaffOrderByWithAggregationInput = {
+    id?: SortOrder
+    userName?: SortOrder
+    password?: SortOrder
+    isDeleted?: SortOrder
+    isAdmin?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    address?: SortOrderInput | SortOrder
+    dateOfBirth?: SortOrderInput | SortOrder
+    email?: SortOrderInput | SortOrder
+    fullName?: SortOrder
+    gender?: SortOrder
+    hireDate?: SortOrderInput | SortOrder
+    idCard?: SortOrderInput | SortOrder
+    idCardExpiryDate?: SortOrderInput | SortOrder
+    idCardIssueDate?: SortOrderInput | SortOrder
+    note?: SortOrderInput | SortOrder
+    phone?: SortOrderInput | SortOrder
+    resignDate?: SortOrderInput | SortOrder
+    staffType?: SortOrder
+    needCheckMacAddress?: SortOrder
+    bankAccountName?: SortOrderInput | SortOrder
+    bankAccountNumber?: SortOrderInput | SortOrder
+    bankName?: SortOrderInput | SortOrder
+    baseSalary?: SortOrder
+    _count?: StaffCountOrderByAggregateInput
+    _avg?: StaffAvgOrderByAggregateInput
+    _max?: StaffMaxOrderByAggregateInput
+    _min?: StaffMinOrderByAggregateInput
+    _sum?: StaffSumOrderByAggregateInput
+  }
+
+  export type StaffScalarWhereWithAggregatesInput = {
+    AND?: StaffScalarWhereWithAggregatesInput | StaffScalarWhereWithAggregatesInput[]
+    OR?: StaffScalarWhereWithAggregatesInput[]
+    NOT?: StaffScalarWhereWithAggregatesInput | StaffScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"Staff"> | number
+    userName?: StringWithAggregatesFilter<"Staff"> | string
+    password?: StringWithAggregatesFilter<"Staff"> | string
+    isDeleted?: BoolWithAggregatesFilter<"Staff"> | boolean
+    isAdmin?: BoolWithAggregatesFilter<"Staff"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"Staff"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Staff"> | Date | string
+    address?: StringNullableWithAggregatesFilter<"Staff"> | string | null
+    dateOfBirth?: DateTimeNullableWithAggregatesFilter<"Staff"> | Date | string | null
+    email?: StringNullableWithAggregatesFilter<"Staff"> | string | null
+    fullName?: StringWithAggregatesFilter<"Staff"> | string
+    gender?: EnumStaff_genderWithAggregatesFilter<"Staff"> | $Enums.Staff_gender
+    hireDate?: DateTimeNullableWithAggregatesFilter<"Staff"> | Date | string | null
+    idCard?: StringNullableWithAggregatesFilter<"Staff"> | string | null
+    idCardExpiryDate?: DateTimeNullableWithAggregatesFilter<"Staff"> | Date | string | null
+    idCardIssueDate?: DateTimeNullableWithAggregatesFilter<"Staff"> | Date | string | null
+    note?: StringNullableWithAggregatesFilter<"Staff"> | string | null
+    phone?: StringNullableWithAggregatesFilter<"Staff"> | string | null
+    resignDate?: DateTimeNullableWithAggregatesFilter<"Staff"> | Date | string | null
+    staffType?: EnumStaff_staffTypeWithAggregatesFilter<"Staff"> | $Enums.Staff_staffType
+    needCheckMacAddress?: BoolWithAggregatesFilter<"Staff"> | boolean
+    bankAccountName?: StringNullableWithAggregatesFilter<"Staff"> | string | null
+    bankAccountNumber?: StringNullableWithAggregatesFilter<"Staff"> | string | null
+    bankName?: StringNullableWithAggregatesFilter<"Staff"> | string | null
+    baseSalary?: FloatWithAggregatesFilter<"Staff"> | number
   }
 
   export type ApiKeyCreateInput = {
@@ -8680,6 +10198,8 @@ export namespace Prisma {
     description?: string | null
     status?: string
     rootDomain?: string | null
+    primaryColor?: string | null
+    secondaryColor?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     deletedAt?: Date | string | null
@@ -8692,6 +10212,8 @@ export namespace Prisma {
     description?: string | null
     status?: string
     rootDomain?: string | null
+    primaryColor?: string | null
+    secondaryColor?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     deletedAt?: Date | string | null
@@ -8704,6 +10226,8 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     rootDomain?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryColor?: NullableStringFieldUpdateOperationsInput | string | null
+    secondaryColor?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -8716,6 +10240,8 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     rootDomain?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryColor?: NullableStringFieldUpdateOperationsInput | string | null
+    secondaryColor?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -8728,6 +10254,8 @@ export namespace Prisma {
     description?: string | null
     status?: string
     rootDomain?: string | null
+    primaryColor?: string | null
+    secondaryColor?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     deletedAt?: Date | string | null
@@ -8739,6 +10267,8 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     rootDomain?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryColor?: NullableStringFieldUpdateOperationsInput | string | null
+    secondaryColor?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -8750,6 +10280,8 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     rootDomain?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryColor?: NullableStringFieldUpdateOperationsInput | string | null
+    secondaryColor?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -8913,6 +10445,199 @@ export namespace Prisma {
     apiKey?: NullableStringFieldUpdateOperationsInput | string | null
     domainPrefix?: NullableStringFieldUpdateOperationsInput | string | null
     organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type StaffCreateInput = {
+    userName: string
+    password: string
+    isDeleted?: boolean
+    isAdmin?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    address?: string | null
+    dateOfBirth?: Date | string | null
+    email?: string | null
+    fullName: string
+    gender?: $Enums.Staff_gender
+    hireDate?: Date | string | null
+    idCard?: string | null
+    idCardExpiryDate?: Date | string | null
+    idCardIssueDate?: Date | string | null
+    note?: string | null
+    phone?: string | null
+    resignDate?: Date | string | null
+    staffType?: $Enums.Staff_staffType
+    needCheckMacAddress?: boolean
+    bankAccountName?: string | null
+    bankAccountNumber?: string | null
+    bankName?: string | null
+    baseSalary?: number
+  }
+
+  export type StaffUncheckedCreateInput = {
+    id?: number
+    userName: string
+    password: string
+    isDeleted?: boolean
+    isAdmin?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    address?: string | null
+    dateOfBirth?: Date | string | null
+    email?: string | null
+    fullName: string
+    gender?: $Enums.Staff_gender
+    hireDate?: Date | string | null
+    idCard?: string | null
+    idCardExpiryDate?: Date | string | null
+    idCardIssueDate?: Date | string | null
+    note?: string | null
+    phone?: string | null
+    resignDate?: Date | string | null
+    staffType?: $Enums.Staff_staffType
+    needCheckMacAddress?: boolean
+    bankAccountName?: string | null
+    bankAccountNumber?: string | null
+    bankName?: string | null
+    baseSalary?: number
+  }
+
+  export type StaffUpdateInput = {
+    userName?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    isAdmin?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    fullName?: StringFieldUpdateOperationsInput | string
+    gender?: EnumStaff_genderFieldUpdateOperationsInput | $Enums.Staff_gender
+    hireDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCard?: NullableStringFieldUpdateOperationsInput | string | null
+    idCardExpiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCardIssueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    resignDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    staffType?: EnumStaff_staffTypeFieldUpdateOperationsInput | $Enums.Staff_staffType
+    needCheckMacAddress?: BoolFieldUpdateOperationsInput | boolean
+    bankAccountName?: NullableStringFieldUpdateOperationsInput | string | null
+    bankAccountNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    bankName?: NullableStringFieldUpdateOperationsInput | string | null
+    baseSalary?: FloatFieldUpdateOperationsInput | number
+  }
+
+  export type StaffUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    userName?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    isAdmin?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    fullName?: StringFieldUpdateOperationsInput | string
+    gender?: EnumStaff_genderFieldUpdateOperationsInput | $Enums.Staff_gender
+    hireDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCard?: NullableStringFieldUpdateOperationsInput | string | null
+    idCardExpiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCardIssueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    resignDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    staffType?: EnumStaff_staffTypeFieldUpdateOperationsInput | $Enums.Staff_staffType
+    needCheckMacAddress?: BoolFieldUpdateOperationsInput | boolean
+    bankAccountName?: NullableStringFieldUpdateOperationsInput | string | null
+    bankAccountNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    bankName?: NullableStringFieldUpdateOperationsInput | string | null
+    baseSalary?: FloatFieldUpdateOperationsInput | number
+  }
+
+  export type StaffCreateManyInput = {
+    id?: number
+    userName: string
+    password: string
+    isDeleted?: boolean
+    isAdmin?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    address?: string | null
+    dateOfBirth?: Date | string | null
+    email?: string | null
+    fullName: string
+    gender?: $Enums.Staff_gender
+    hireDate?: Date | string | null
+    idCard?: string | null
+    idCardExpiryDate?: Date | string | null
+    idCardIssueDate?: Date | string | null
+    note?: string | null
+    phone?: string | null
+    resignDate?: Date | string | null
+    staffType?: $Enums.Staff_staffType
+    needCheckMacAddress?: boolean
+    bankAccountName?: string | null
+    bankAccountNumber?: string | null
+    bankName?: string | null
+    baseSalary?: number
+  }
+
+  export type StaffUpdateManyMutationInput = {
+    userName?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    isAdmin?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    fullName?: StringFieldUpdateOperationsInput | string
+    gender?: EnumStaff_genderFieldUpdateOperationsInput | $Enums.Staff_gender
+    hireDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCard?: NullableStringFieldUpdateOperationsInput | string | null
+    idCardExpiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCardIssueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    resignDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    staffType?: EnumStaff_staffTypeFieldUpdateOperationsInput | $Enums.Staff_staffType
+    needCheckMacAddress?: BoolFieldUpdateOperationsInput | boolean
+    bankAccountName?: NullableStringFieldUpdateOperationsInput | string | null
+    bankAccountNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    bankName?: NullableStringFieldUpdateOperationsInput | string | null
+    baseSalary?: FloatFieldUpdateOperationsInput | number
+  }
+
+  export type StaffUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    userName?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    isAdmin?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    fullName?: StringFieldUpdateOperationsInput | string
+    gender?: EnumStaff_genderFieldUpdateOperationsInput | $Enums.Staff_gender
+    hireDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCard?: NullableStringFieldUpdateOperationsInput | string | null
+    idCardExpiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCardIssueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    resignDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    staffType?: EnumStaff_staffTypeFieldUpdateOperationsInput | $Enums.Staff_staffType
+    needCheckMacAddress?: BoolFieldUpdateOperationsInput | boolean
+    bankAccountName?: NullableStringFieldUpdateOperationsInput | string | null
+    bankAccountNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    bankName?: NullableStringFieldUpdateOperationsInput | string | null
+    baseSalary?: FloatFieldUpdateOperationsInput | number
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -9336,6 +11061,8 @@ export namespace Prisma {
     description?: SortOrder
     status?: SortOrder
     rootDomain?: SortOrder
+    primaryColor?: SortOrder
+    secondaryColor?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     deletedAt?: SortOrder
@@ -9347,6 +11074,8 @@ export namespace Prisma {
     description?: SortOrder
     status?: SortOrder
     rootDomain?: SortOrder
+    primaryColor?: SortOrder
+    secondaryColor?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     deletedAt?: SortOrder
@@ -9358,6 +11087,8 @@ export namespace Prisma {
     description?: SortOrder
     status?: SortOrder
     rootDomain?: SortOrder
+    primaryColor?: SortOrder
+    secondaryColor?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     deletedAt?: SortOrder
@@ -9439,6 +11170,194 @@ export namespace Prisma {
     organizationId?: SortOrder
   }
 
+  export type IntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
+  }
+
+  export type EnumStaff_genderFilter<$PrismaModel = never> = {
+    equals?: $Enums.Staff_gender | EnumStaff_genderFieldRefInput<$PrismaModel>
+    in?: $Enums.Staff_gender[]
+    notIn?: $Enums.Staff_gender[]
+    not?: NestedEnumStaff_genderFilter<$PrismaModel> | $Enums.Staff_gender
+  }
+
+  export type EnumStaff_staffTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.Staff_staffType | EnumStaff_staffTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.Staff_staffType[]
+    notIn?: $Enums.Staff_staffType[]
+    not?: NestedEnumStaff_staffTypeFilter<$PrismaModel> | $Enums.Staff_staffType
+  }
+
+  export type FloatFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
+  export type StaffOrderByRelevanceInput = {
+    fields: StaffOrderByRelevanceFieldEnum | StaffOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
+  }
+
+  export type StaffCountOrderByAggregateInput = {
+    id?: SortOrder
+    userName?: SortOrder
+    password?: SortOrder
+    isDeleted?: SortOrder
+    isAdmin?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    address?: SortOrder
+    dateOfBirth?: SortOrder
+    email?: SortOrder
+    fullName?: SortOrder
+    gender?: SortOrder
+    hireDate?: SortOrder
+    idCard?: SortOrder
+    idCardExpiryDate?: SortOrder
+    idCardIssueDate?: SortOrder
+    note?: SortOrder
+    phone?: SortOrder
+    resignDate?: SortOrder
+    staffType?: SortOrder
+    needCheckMacAddress?: SortOrder
+    bankAccountName?: SortOrder
+    bankAccountNumber?: SortOrder
+    bankName?: SortOrder
+    baseSalary?: SortOrder
+  }
+
+  export type StaffAvgOrderByAggregateInput = {
+    id?: SortOrder
+    baseSalary?: SortOrder
+  }
+
+  export type StaffMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userName?: SortOrder
+    password?: SortOrder
+    isDeleted?: SortOrder
+    isAdmin?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    address?: SortOrder
+    dateOfBirth?: SortOrder
+    email?: SortOrder
+    fullName?: SortOrder
+    gender?: SortOrder
+    hireDate?: SortOrder
+    idCard?: SortOrder
+    idCardExpiryDate?: SortOrder
+    idCardIssueDate?: SortOrder
+    note?: SortOrder
+    phone?: SortOrder
+    resignDate?: SortOrder
+    staffType?: SortOrder
+    needCheckMacAddress?: SortOrder
+    bankAccountName?: SortOrder
+    bankAccountNumber?: SortOrder
+    bankName?: SortOrder
+    baseSalary?: SortOrder
+  }
+
+  export type StaffMinOrderByAggregateInput = {
+    id?: SortOrder
+    userName?: SortOrder
+    password?: SortOrder
+    isDeleted?: SortOrder
+    isAdmin?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    address?: SortOrder
+    dateOfBirth?: SortOrder
+    email?: SortOrder
+    fullName?: SortOrder
+    gender?: SortOrder
+    hireDate?: SortOrder
+    idCard?: SortOrder
+    idCardExpiryDate?: SortOrder
+    idCardIssueDate?: SortOrder
+    note?: SortOrder
+    phone?: SortOrder
+    resignDate?: SortOrder
+    staffType?: SortOrder
+    needCheckMacAddress?: SortOrder
+    bankAccountName?: SortOrder
+    bankAccountNumber?: SortOrder
+    bankName?: SortOrder
+    baseSalary?: SortOrder
+  }
+
+  export type StaffSumOrderByAggregateInput = {
+    id?: SortOrder
+    baseSalary?: SortOrder
+  }
+
+  export type IntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
+  export type EnumStaff_genderWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.Staff_gender | EnumStaff_genderFieldRefInput<$PrismaModel>
+    in?: $Enums.Staff_gender[]
+    notIn?: $Enums.Staff_gender[]
+    not?: NestedEnumStaff_genderWithAggregatesFilter<$PrismaModel> | $Enums.Staff_gender
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumStaff_genderFilter<$PrismaModel>
+    _max?: NestedEnumStaff_genderFilter<$PrismaModel>
+  }
+
+  export type EnumStaff_staffTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.Staff_staffType | EnumStaff_staffTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.Staff_staffType[]
+    notIn?: $Enums.Staff_staffType[]
+    not?: NestedEnumStaff_staffTypeWithAggregatesFilter<$PrismaModel> | $Enums.Staff_staffType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumStaff_staffTypeFilter<$PrismaModel>
+    _max?: NestedEnumStaff_staffTypeFilter<$PrismaModel>
+  }
+
+  export type FloatWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedFloatFilter<$PrismaModel>
+    _min?: NestedFloatFilter<$PrismaModel>
+    _max?: NestedFloatFilter<$PrismaModel>
+  }
+
   export type StringFieldUpdateOperationsInput = {
     set?: string
   }
@@ -9515,6 +11434,30 @@ export namespace Prisma {
     delete?: OrganizationWhereInput | boolean
     connect?: OrganizationWhereUniqueInput
     update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutTenantsInput, OrganizationUpdateWithoutTenantsInput>, OrganizationUncheckedUpdateWithoutTenantsInput>
+  }
+
+  export type EnumStaff_genderFieldUpdateOperationsInput = {
+    set?: $Enums.Staff_gender
+  }
+
+  export type EnumStaff_staffTypeFieldUpdateOperationsInput = {
+    set?: $Enums.Staff_staffType
+  }
+
+  export type FloatFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type IntFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -9691,6 +11634,83 @@ export namespace Prisma {
     _max?: NestedBoolFilter<$PrismaModel>
   }
 
+  export type NestedEnumStaff_genderFilter<$PrismaModel = never> = {
+    equals?: $Enums.Staff_gender | EnumStaff_genderFieldRefInput<$PrismaModel>
+    in?: $Enums.Staff_gender[]
+    notIn?: $Enums.Staff_gender[]
+    not?: NestedEnumStaff_genderFilter<$PrismaModel> | $Enums.Staff_gender
+  }
+
+  export type NestedEnumStaff_staffTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.Staff_staffType | EnumStaff_staffTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.Staff_staffType[]
+    notIn?: $Enums.Staff_staffType[]
+    not?: NestedEnumStaff_staffTypeFilter<$PrismaModel> | $Enums.Staff_staffType
+  }
+
+  export type NestedFloatFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
+  export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
+  export type NestedEnumStaff_genderWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.Staff_gender | EnumStaff_genderFieldRefInput<$PrismaModel>
+    in?: $Enums.Staff_gender[]
+    notIn?: $Enums.Staff_gender[]
+    not?: NestedEnumStaff_genderWithAggregatesFilter<$PrismaModel> | $Enums.Staff_gender
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumStaff_genderFilter<$PrismaModel>
+    _max?: NestedEnumStaff_genderFilter<$PrismaModel>
+  }
+
+  export type NestedEnumStaff_staffTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.Staff_staffType | EnumStaff_staffTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.Staff_staffType[]
+    notIn?: $Enums.Staff_staffType[]
+    not?: NestedEnumStaff_staffTypeWithAggregatesFilter<$PrismaModel> | $Enums.Staff_staffType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumStaff_staffTypeFilter<$PrismaModel>
+    _max?: NestedEnumStaff_staffTypeFilter<$PrismaModel>
+  }
+
+  export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedFloatFilter<$PrismaModel>
+    _min?: NestedFloatFilter<$PrismaModel>
+    _max?: NestedFloatFilter<$PrismaModel>
+  }
+
   export type TenantCreateWithoutOrganizationInput = {
     id?: string
     createdAt?: Date | string
@@ -9793,6 +11813,8 @@ export namespace Prisma {
     description?: string | null
     status?: string
     rootDomain?: string | null
+    primaryColor?: string | null
+    secondaryColor?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     deletedAt?: Date | string | null
@@ -9804,6 +11826,8 @@ export namespace Prisma {
     description?: string | null
     status?: string
     rootDomain?: string | null
+    primaryColor?: string | null
+    secondaryColor?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     deletedAt?: Date | string | null
@@ -9831,6 +11855,8 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     rootDomain?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryColor?: NullableStringFieldUpdateOperationsInput | string | null
+    secondaryColor?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -9842,6 +11868,8 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     rootDomain?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryColor?: NullableStringFieldUpdateOperationsInput | string | null
+    secondaryColor?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null

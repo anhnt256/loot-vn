@@ -60,9 +60,13 @@ export const DashboardLayout = () => {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userInfo, setUserInfo] = useState<{ fullName?: string; userName?: string } | null>(null);
   const screens = useBreakpoint();
 
   const isMobile = !screens.md;
+
+  const defaultTenantConfig = (typeof window !== 'undefined' && (window as any).__TENANT_CONFIG__) || {};
+  const tenantLogo = defaultTenantConfig?.logo?.url || defaultTenantConfig?.logo || '/logo.png';
 
   const menuItems = [
     { category: 'Hoạt động nhân sự', items: [
@@ -82,13 +86,39 @@ export const DashboardLayout = () => {
 
   const handleLogout = () => {
     deleteCookie(ACCESS_TOKEN_KEY, { path: '/' });
+    localStorage.removeItem('userInfo');
     navigate('/login');
   };
 
   useEffect(() => {
     const token = getCookie(ACCESS_TOKEN_KEY);
-    if (!token) {
+    const loginType = getCookie('loginType');
+    
+    // Try localStorage first due to httpOnly tokens
+    const storedUser = localStorage.getItem('userInfo');
+    if (storedUser) {
+      try {
+        setUserInfo(JSON.parse(storedUser));
+      } catch (e) {}
+    }
+
+    if (!token && !loginType) {
       navigate('/login', { replace: true });
+    } else if (token && !storedUser) {
+      try {
+        const base64Url = (token as string).split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          window.atob(base64)
+            .split('')
+            .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+        const payload = JSON.parse(jsonPayload);
+        setUserInfo(payload);
+      } catch (err) {
+        console.error('Failed to parse token payload', err);
+      }
     }
   }, [navigate]);
 
@@ -97,7 +127,7 @@ export const DashboardLayout = () => {
       {/* Logo */}
       <div className="p-6 flex items-center gap-2">
         <img 
-          src="/logo.png" 
+          src={tenantLogo} 
           alt="HR Manager" 
           className="h-10 w-10 object-contain rounded-full"
           onError={(e) => {
@@ -132,8 +162,20 @@ export const DashboardLayout = () => {
 
       {/* Footer */}
       <div className="p-3 border-t border-[#f1f5f9]">
-        <div className="mb-2 p-2 bg-[#f8fafc] rounded-lg">
-           <div className="w-8 h-8 rounded-full bg-[#ff721f] border-2 border-white shadow-sm flex items-center justify-center text-white text-[10px] font-bold">HR</div>
+        <div className="mb-2 p-2 bg-[#f8fafc] rounded-lg flex items-center gap-3">
+           <div className="w-8 h-8 rounded-full bg-[var(--primary-color)] border-2 border-white shadow-sm flex items-center justify-center text-white text-[10px] font-bold shrink-0">
+             {userInfo?.fullName ? userInfo.fullName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : 'HR'}
+           </div>
+           {(!collapsed || isMobile) && (
+             <div className="flex flex-col overflow-hidden">
+               <span className="text-sm font-semibold text-[#1e293b] truncate">
+                 {userInfo?.fullName || 'Nhân viên'}
+               </span>
+               <span className="text-xs text-[#64748b] truncate">
+                 @{userInfo?.userName || 'user'}
+               </span>
+             </div>
+           )}
         </div>
         <SidebarItem 
           icon={LogOut} 
@@ -199,7 +241,7 @@ export const DashboardLayout = () => {
                 <MenuIcon size={20} />
               </button>
               <img 
-                src="/logo.png" 
+                src={tenantLogo} 
                 alt="Logo" 
                 className="h-8 w-8 object-contain rounded-full"
                 onError={(e) => {
@@ -208,7 +250,7 @@ export const DashboardLayout = () => {
               />
               <span className="font-bold text-[#003594] text-sm">Cổng quản lý nhân sự</span>
             </div>
-            <div className="w-8 h-8 rounded-full bg-[#ff721f] border-2 border-white shadow-sm flex items-center justify-center text-white text-[10px] font-bold">HR</div>
+            <div className="w-8 h-8 rounded-full bg-[var(--primary-color)] border-2 border-white shadow-sm flex items-center justify-center text-white text-[10px] font-bold">HR</div>
           </header>
         )}
 

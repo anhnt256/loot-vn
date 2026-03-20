@@ -17,6 +17,32 @@ interface CreateOrgModalProps {
   initialValues?: any;
 }
 
+interface ColorInputProps {
+  value?: string;
+  onChange?: (value: string) => void;
+}
+
+const ColorInput: React.FC<ColorInputProps> = ({ value, onChange }) => {
+  return (
+    <div className="flex bg-white border border-[#d9d9d9] rounded-lg overflow-hidden h-10 w-full focus-within:border-[#ff721f] focus-within:ring-1 focus-within:ring-[#ff721f] shadow-sm transition-all hover:border-[#ff721f]">
+      <input
+        type="color"
+        value={value || '#000000'}
+        onChange={(e) => onChange?.(e.target.value)}
+        className="p-0 border-0 w-10 h-full cursor-pointer shrink-0 bg-transparent"
+      />
+      <input
+        type="text"
+        value={value || ''}
+        onChange={(e) => onChange?.(e.target.value)}
+        placeholder="#HexCode"
+        className="flex-1 px-3 border-none outline-none bg-transparent font-mono text-sm uppercase"
+        maxLength={7}
+      />
+    </div>
+  );
+};
+
 const CreateOrgModal: React.FC<CreateOrgModalProps> = ({
   visible,
   onCancel,
@@ -36,6 +62,8 @@ const CreateOrgModal: React.FC<CreateOrgModalProps> = ({
           description: initialValues.description,
           status: initialValues.status,
           rootDomain: initialValues.rootDomain ?? '',
+          primaryColor: initialValues.primaryColor ?? '#ea580c',
+          secondaryColor: initialValues.secondaryColor ?? '#003594',
           tenantIds,
         });
       } else {
@@ -89,6 +117,16 @@ const CreateOrgModal: React.FC<CreateOrgModalProps> = ({
         <Form.Item name="rootDomain" label="Domain gốc">
           <Input placeholder="e.g. loot.vn" />
         </Form.Item>
+
+        <div className="flex gap-4">
+          <Form.Item name="primaryColor" label="Primary Color" initialValue="#ea580c" className="flex-1">
+            <ColorInput />
+          </Form.Item>
+
+          <Form.Item name="secondaryColor" label="Secondary Color" initialValue="#003594" className="flex-1">
+            <ColorInput />
+          </Form.Item>
+        </div>
 
         <Form.Item
           name="status"

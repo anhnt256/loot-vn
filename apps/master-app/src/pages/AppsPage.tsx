@@ -140,7 +140,18 @@ export default function AppsPage() {
     return (
       <div className="min-h-screen bg-[#151b22] flex flex-col items-center justify-center p-4">
         <div className="bg-[#1c232f] rounded-2xl p-8 max-w-md text-center">
-          <Building className="text-orange-500 mx-auto mb-4" size={40} />
+          {(() => {
+            let logo = null;
+            if (org.tenants && org.tenants.length > 0) {
+              const rawLogo = (org.tenants[0] as any).logo;
+              logo = typeof rawLogo === 'string' ? rawLogo : rawLogo?.url;
+            }
+            return logo ? (
+              <img src={logo} alt="Org Logo" className="w-10 h-10 object-cover rounded-md mx-auto mb-4 border border-gray-700 block" />
+            ) : (
+              <Building className="text-orange-500 mx-auto mb-4" size={40} />
+            );
+          })()}
           <h2 className="text-xl font-bold text-white mb-2">{org.name}</h2>
           <p className="text-gray-400 text-sm mb-4">
             Không có hệ thống nào có ứng dụng có thể truy cập.
@@ -162,7 +173,18 @@ export default function AppsPage() {
       {/* Header: org name (left) | tenant combobox (right) */}
       <header className="flex items-center justify-between gap-4 px-4 py-4 border-b border-gray-800 bg-[#1c232f]/80 sticky top-0 z-10">
         <div className="flex items-center gap-2 min-w-0">
-          <Building className="text-orange-500 shrink-0" size={24} />
+          {(() => {
+            let logo = null;
+            if (tenantsWithApps.length > 0) {
+              const rawLogo = (tenantsWithApps[0] as any).logo;
+              logo = typeof rawLogo === 'string' ? rawLogo : rawLogo?.url;
+            }
+            return logo ? (
+              <img src={logo} alt="Org Logo" className="w-6 h-6 object-cover rounded-md shrink-0 block" />
+            ) : (
+              <Building className="text-orange-500 shrink-0" size={24} />
+            );
+          })()}
           <h1 className="text-lg font-bold text-white truncate">{org.name}</h1>
         </div>
         <div className="flex items-center gap-2 shrink-0">

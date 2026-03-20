@@ -23,6 +23,8 @@ interface Organization {
   name: string;
   description: string;
   status: 'Active' | 'Inactive';
+  primaryColor?: string;
+  secondaryColor?: string;
   _count?: {
      tenants: number;
   };
@@ -137,6 +139,28 @@ const OrgManagement: React.FC = () => {
         <Tag color={status === 'Active' ? 'success' : 'default'} className="rounded-full px-3">
           {status}
         </Tag>
+      ),
+    },
+    {
+      title: 'Theme Colors',
+      key: 'colors',
+      render: (_: any, record: Organization) => (
+        <Space size="small">
+          {record.primaryColor && (
+            <div 
+              className="w-6 h-6 rounded-md border border-gray-300 shadow-sm" 
+              style={{ backgroundColor: record.primaryColor }}
+              title={`Primary: ${record.primaryColor}`}
+            />
+          )}
+          {record.secondaryColor && (
+            <div 
+              className="w-6 h-6 rounded-md border border-gray-300 shadow-sm" 
+              style={{ backgroundColor: record.secondaryColor }}
+              title={`Secondary: ${record.secondaryColor}`}
+            />
+          )}
+        </Space>
       ),
     },
     {

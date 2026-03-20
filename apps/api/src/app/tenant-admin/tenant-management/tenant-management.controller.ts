@@ -20,6 +20,7 @@ export class TenantManagementController {
     return this.tenantManagementService.create(data);
   }
 
+
   @Patch(':id')
   async update(@Param('id') id: string, @Body() data: any) {
     return this.tenantManagementService.update(id, data);

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Lock, EyeOff, Eye } from 'lucide-react';
 import { getBranchFromCookie } from '../lib/branch-cookie';
+import { apiClient } from '@gateway-workspace/shared/utils';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -9,6 +10,25 @@ export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [checkedBranch, setCheckedBranch] = useState(false);
+  const [tenantLogo, setTenantLogo] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTenantInfo = async () => {
+      try {
+        const result = await apiClient.get('/auth/tenant-info');
+        if (result.data?.success && result.data?.data?.logo) {
+          let logo = result.data.data.logo;
+          if (typeof logo === 'object') {
+            logo = logo?.url || null;
+          }
+          setTenantLogo(logo);
+        }
+      } catch (err) {
+        console.error('Failed to fetch tenant info:', err);
+      }
+    };
+    fetchTenantInfo();
+  }, []);
 
   useEffect(() => {
     if (checkedBranch) return;
@@ -43,6 +63,9 @@ export default function LoginPage() {
         
         {/* Logo area */}
         <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-yellow-600 p-1 mb-6 flex items-center justify-center relative shadow-[0_0_15px_rgba(246,106,18,0.5)]">
+          {tenantLogo ? (
+            <img src={tenantLogo} alt="Logo" className="w-full h-full rounded-full object-cover border-2 border-orange-500 z-10 relative bg-black" />
+          ) : (
             <div className="w-full h-full bg-black rounded-full flex items-center justify-center border-2 border-orange-500 overflow-hidden relative">
               {/* Outer decorative ring */}
               <div className="absolute inset-2 border border-orange-500/50 rounded-full border-dashed animate-[spin_10s_linear_infinite]" />
@@ -54,6 +77,7 @@ export default function LoginPage() {
                 <circle cx="50" cy="50" r="3" fill="currentColor" />
               </svg>
             </div>
+          )}
         </div>
 
         <h1 className="text-2xl font-bold text-white mb-8 tracking-wide">

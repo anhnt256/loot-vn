@@ -9,6 +9,7 @@ import { AppModule } from './app/app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
   const corsOrigins: any[] = process.env.CORS_ORIGINS?.split(',').map((s) => s.trim()).filter(Boolean) ?? [
     'http://localhost:7700',
     'http://127.0.0.1:7700',

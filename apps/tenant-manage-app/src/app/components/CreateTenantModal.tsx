@@ -1,5 +1,7 @@
-import React, { useEffect } from 'react';
-import { Modal, Form, Input, Select } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Modal, Form, Input, Select, Upload, message } from 'antd';
+import { UploadOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import { apiClient } from '@gateway-workspace/shared/utils/client';
 
 interface CreateTenantModalProps {
   visible: boolean;
@@ -15,22 +17,59 @@ const CreateTenantModal: React.FC<CreateTenantModalProps> = ({
   initialValues 
 }) => {
   const [form] = Form.useForm();
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (visible) {
       if (initialValues) {
         const c = initialValues.clients;
         const fromClients = typeof c === 'object' && c && !Array.isArray(c);
+        let logo = initialValues.logo;
+        if (typeof logo === 'object') {
+          logo = logo?.url || null;
+        }
+        setLogoUrl(logo || null);
         form.setFieldsValue({
           ...initialValues,
+          logo: logo || '',
           dbUrl: initialValues.dbUrl ?? (fromClients ? c.dbUrl : null) ?? '',
           fnetUrl: initialValues.fnetUrl ?? (fromClients ? c.fnetUrl : null) ?? '',
         });
       } else {
+        setLogoUrl(null);
         form.resetFields();
       }
     }
   }, [visible, initialValues, form]);
+
+  const handleLogoUpload = (options: any) => {
+    const { file, onSuccess, onError } = options;
+    const isLt1M = file.size / 1024 / 1024 < 1;
+    if (!isLt1M) {
+      message.error('Logo phải nhỏ hơn 1MB!');
+      onError(new Error('File quá lớn'));
+      return;
+    }
+
+    setUploading(true);
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      const base64String = reader.result as string;
+      setLogoUrl(base64String);
+      form.setFieldValue('logo', base64String);
+      message.success('Chọn logo thành công');
+      setUploading(false);
+      onSuccess('ok');
+    };
+    reader.onerror = (error) => {
+      console.error('Lỗi đọc file:', error);
+      message.error('Không thể đọc file');
+      setUploading(false);
+      onError(error);
+    };
+  };
 
   const handleOk = () => {
     form.validateFields()
@@ -90,6 +129,33 @@ const CreateTenantModal: React.FC<CreateTenantModalProps> = ({
           label="Description"
         >
           <Input.TextArea rows={3} placeholder="Enter tenant description" />
+        </Form.Item>
+
+        <Form.Item name="logo" hidden>
+          <Input />
+        </Form.Item>
+        <Form.Item label="Logo">
+          <Upload
+            accept="image/*"
+            showUploadList={false}
+            customRequest={handleLogoUpload}
+            className="logo-uploader"
+          >
+            <div className="border border-dashed border-[#30363d] rounded-lg p-4 text-center cursor-pointer hover:border-[#ff721f] transition-colors w-full flex flex-col items-center">
+              {logoUrl ? (
+                <img
+                  src={logoUrl.startsWith('data:') || logoUrl.startsWith('http') ? logoUrl : `${apiClient.defaults.baseURL || ''}${logoUrl}`}
+                  alt="logo"
+                  style={{ maxHeight: '100px', maxWidth: '100%', objectFit: 'contain' }}
+                />
+              ) : (
+                <div>
+                  {uploading ? <LoadingOutlined className="text-xl text-[#8b949e]" /> : <PlusOutlined className="text-xl text-[#8b949e]" />}
+                  <div style={{ marginTop: 8 }} className="text-[#8b949e]">Upload Logo</div>
+                </div>
+              )}
+            </div>
+          </Upload>
         </Form.Item>
 
         <Form.Item

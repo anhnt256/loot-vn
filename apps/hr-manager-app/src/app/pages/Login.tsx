@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Card, Input, Button, Typography, message, ConfigProvider, theme } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +12,32 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const defaultTenantConfig = (typeof window !== 'undefined' && (window as any).__TENANT_CONFIG__) || {};
+  const [tenantLogo, setTenantLogo] = useState<string | null>(defaultTenantConfig?.logo?.url || defaultTenantConfig?.logo || null);
+  const [tenantColor, setTenantColor] = useState<string>(defaultTenantConfig?.primaryColor || '#ff721f');
+
+  useEffect(() => {
+    const fetchTenantInfo = async () => {
+      try {
+        const result = await apiClient.get('/auth/tenant-info');
+        if (result.data?.success && result.data?.data) {
+          const tenantData = result.data.data;
+          let logo = tenantData.logo;
+          if (typeof logo === 'object') {
+            logo = logo?.url || null;
+          }
+          setTenantLogo(logo);
+          if (tenantData.primaryColor) {
+            setTenantColor(tenantData.primaryColor);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch tenant info:', err);
+      }
+    };
+    fetchTenantInfo();
+  }, []);
 
   const handleLogin = useCallback(async () => {
     if (!username || !password) {
@@ -32,8 +58,14 @@ const Login: React.FC = () => {
           message.warning('Vui lòng đặt lại mật khẩu');
           return;
         }
-        const { token } = result.data;
+        const { token, fullName, userName } = result.data;
         if (token) setCookie(ACCESS_TOKEN_KEY, token, { maxAge: 86400, path: '/' });
+        
+        // Save user info for dashboard layout since token might be httpOnly
+        if (fullName || userName) {
+          localStorage.setItem('userInfo', JSON.stringify({ fullName, userName }));
+        }
+
         message.success('Đã đăng nhập thành công!');
         navigate('/dashboard/overview');
       } else {
@@ -57,7 +89,7 @@ const Login: React.FC = () => {
       theme={{
         algorithm: theme.darkAlgorithm,
         token: {
-          colorPrimary: '#ff721f',
+          colorPrimary: tenantColor,
           colorBgContainer: '#161b22',
           colorBorder: '#30363d',
           borderRadius: 8,
@@ -73,9 +105,10 @@ const Login: React.FC = () => {
             <div className="flex flex-col items-center space-y-8">
               <div className="relative w-24 h-24">
                 <img
-                  src="/logo.png"
+                  src={tenantLogo || "/logo.png"}
                   alt="Logo"
-                  className="rounded-full object-cover w-full h-full shadow-[0_0_20px_rgba(255,114,31,0.2)] border-2 border-[#ff721f]/30"
+                  className="rounded-full object-cover w-full h-full border-2"
+                  style={{ borderColor: tenantColor, boxShadow: `0 0 20px ${tenantColor}33` }}
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = 'https://portal.thegateway.vn/logo.png';
                   }}
@@ -125,7 +158,8 @@ const Login: React.FC = () => {
                     size="large"
                     loading={loading}
                     onClick={handleLogin}
-                    className="w-full bg-[#ff721f] hover:bg-[#ff8a43] border-none h-12 text-base font-bold transition-all shadow-lg shadow-orange-600/20"
+                    className="w-full border-none h-12 text-base font-bold transition-all"
+                    style={{ backgroundColor: tenantColor, boxShadow: `0 10px 15px -3px ${tenantColor}1A, 0 4px 6px -4px ${tenantColor}1A` }}
                   >
                     Đăng nhập
                   </Button>

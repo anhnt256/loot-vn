@@ -21,6 +21,24 @@ export class AuthService {
     return crypto.createHash('sha256').update(pwd).digest('hex');
   }
 
+  async getTenantInfo(tenantId: string) {
+    if (!tenantId) return null;
+    const tenant = await this.tenantPrisma.tenant.findFirst({
+      where: { tenantId },
+      include: {
+        organization: {
+          select: { primaryColor: true }
+        }
+      }
+    });
+    if (!tenant) return null;
+    return {
+      name: tenant.name,
+      logo: tenant.logo,
+      primaryColor: tenant.organization?.primaryColor
+    };
+  }
+
   /**
    * Single entry for login. For staff/account: requires tenantId, uses tenant DB + API key check.
    * For other methods (future): may use central DB.
@@ -41,7 +59,39 @@ export class AuthService {
       return this.loginStaff(userName, password, tenantId.trim());
     }
 
-    throw new BadRequestException('Phương thức đăng nhập không hợp lệ. Dùng staff hoặc account.');
+    if (loginMethod === 'Admin' || loginMethod === 'admin') {
+      const staff = await (this.tenantPrisma as any).staff.findUnique({
+        where: { userName },
+      });
+
+      if (!staff || staff.isDeleted) {
+        throw new UnauthorizedException('Tên đăng nhập hoặc mật khẩu không đúng');
+      }
+
+      if (!staff.isAdmin) {
+        throw new UnauthorizedException('Chỉ có admin mới được phép truy cập bằng phương thức này');
+      }
+
+      if (staff.password !== this.hashPassword(password)) {
+        throw new UnauthorizedException('Tên đăng nhập hoặc mật khẩu không đúng');
+      }
+
+      const payload = {
+        userId: staff.id,
+        id: staff.id,
+        userName: staff.userName,
+        fullName: staff.fullName,
+        role: 'admin',
+        isAdmin: true,
+        loginType: 'admin',
+        staffType: staff.staffType,
+      };
+
+      const token = await signJWT(payload);
+      return { token, ...payload };
+    }
+
+    throw new BadRequestException('Phương thức đăng nhập không hợp lệ. Dùng Admin, staff hoặc account.');
   }
 
   private async loginStaff(userName: string, password: string, tenantId: string) {

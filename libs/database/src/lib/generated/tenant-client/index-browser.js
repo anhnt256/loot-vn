@@ -195,6 +195,8 @@ exports.Prisma.OrganizationScalarFieldEnum = {
   description: 'description',
   status: 'status',
   rootDomain: 'rootDomain',
+  primaryColor: 'primaryColor',
+  secondaryColor: 'secondaryColor',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   deletedAt: 'deletedAt'
@@ -221,6 +223,34 @@ exports.Prisma.TenantScalarFieldEnum = {
   apiKey: 'apiKey',
   domainPrefix: 'domainPrefix',
   organizationId: 'organizationId'
+};
+
+exports.Prisma.StaffScalarFieldEnum = {
+  id: 'id',
+  userName: 'userName',
+  password: 'password',
+  isDeleted: 'isDeleted',
+  isAdmin: 'isAdmin',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  address: 'address',
+  dateOfBirth: 'dateOfBirth',
+  email: 'email',
+  fullName: 'fullName',
+  gender: 'gender',
+  hireDate: 'hireDate',
+  idCard: 'idCard',
+  idCardExpiryDate: 'idCardExpiryDate',
+  idCardIssueDate: 'idCardIssueDate',
+  note: 'note',
+  phone: 'phone',
+  resignDate: 'resignDate',
+  staffType: 'staffType',
+  needCheckMacAddress: 'needCheckMacAddress',
+  bankAccountName: 'bankAccountName',
+  bankAccountNumber: 'bankAccountNumber',
+  bankName: 'bankName',
+  baseSalary: 'baseSalary'
 };
 
 exports.Prisma.SortOrder = {
@@ -299,7 +329,9 @@ exports.Prisma.OrganizationOrderByRelevanceFieldEnum = {
   name: 'name',
   description: 'description',
   status: 'status',
-  rootDomain: 'rootDomain'
+  rootDomain: 'rootDomain',
+  primaryColor: 'primaryColor',
+  secondaryColor: 'secondaryColor'
 };
 
 exports.Prisma.TenantOrderByRelevanceFieldEnum = {
@@ -319,6 +351,34 @@ exports.Prisma.TenantOrderByRelevanceFieldEnum = {
   organizationId: 'organizationId'
 };
 
+exports.Prisma.StaffOrderByRelevanceFieldEnum = {
+  userName: 'userName',
+  password: 'password',
+  address: 'address',
+  email: 'email',
+  fullName: 'fullName',
+  idCard: 'idCard',
+  note: 'note',
+  phone: 'phone',
+  bankAccountName: 'bankAccountName',
+  bankAccountNumber: 'bankAccountNumber',
+  bankName: 'bankName'
+};
+exports.Staff_gender = exports.$Enums.Staff_gender = {
+  MALE: 'MALE',
+  FEMALE: 'FEMALE',
+  OTHER: 'OTHER'
+};
+
+exports.Staff_staffType = exports.$Enums.Staff_staffType = {
+  STAFF: 'STAFF',
+  KITCHEN: 'KITCHEN',
+  SECURITY: 'SECURITY',
+  CASHIER: 'CASHIER',
+  MANAGER: 'MANAGER',
+  SUPER_ADMIN: 'SUPER_ADMIN',
+  BRANCH_ADMIN: 'BRANCH_ADMIN'
+};
 
 exports.Prisma.ModelName = {
   ApiKey: 'ApiKey',
@@ -326,7 +386,8 @@ exports.Prisma.ModelName = {
   TenantApiKey: 'TenantApiKey',
   TenantConfiguration: 'TenantConfiguration',
   Organization: 'Organization',
-  Tenant: 'Tenant'
+  Tenant: 'Tenant',
+  Staff: 'Staff'
 };
 
 /**

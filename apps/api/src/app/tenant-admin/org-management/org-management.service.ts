@@ -121,6 +121,8 @@ export class OrgManagementService {
         description: data.description ?? null,
         status: data.status || 'Active',
         rootDomain: data.rootDomain ?? null,
+        primaryColor: data.primaryColor ?? null,
+        secondaryColor: data.secondaryColor ?? null,
       },
     });
     if (tenantIds.length > 0) {
@@ -149,11 +151,13 @@ export class OrgManagementService {
       }
     }
 
-    const orgData: { name?: string; description?: string | null; status?: string; rootDomain?: string | null } = {};
+    const orgData: { name?: string; description?: string | null; status?: string; rootDomain?: string | null; primaryColor?: string | null; secondaryColor?: string | null } = {};
     if (data.name != null) orgData.name = data.name;
     if (data.description !== undefined) orgData.description = data.description;
     if (data.status != null) orgData.status = data.status;
     if (data.rootDomain !== undefined) orgData.rootDomain = data.rootDomain ?? null;
+    if (data.primaryColor !== undefined) orgData.primaryColor = data.primaryColor ?? null;
+    if (data.secondaryColor !== undefined) orgData.secondaryColor = data.secondaryColor ?? null;
     if (Object.keys(orgData).length > 0) {
       await this.prisma.organization.update({ where: { id }, data: orgData });
     }

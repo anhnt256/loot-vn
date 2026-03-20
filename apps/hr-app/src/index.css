@@ -4,6 +4,10 @@
   --primary-color: #ff721f;
 }
 
+@theme {
+  --color-primary: var(--primary-color);
+}
+
 * {
   box-sizing: border-box;
 }

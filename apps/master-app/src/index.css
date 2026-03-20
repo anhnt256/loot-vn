@@ -7,8 +7,11 @@
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
 
-  --color-primary: hsl(var(--primary));
+  --color-primary: var(--primary-color, hsl(var(--primary)));
   --color-primary-foreground: hsl(var(--primary-foreground));
+
+  /* Map orange-500 to dynamic primary color since master-app uses it extensively for branding */
+  --color-orange-500: var(--primary-color, #f97316);
 
   --color-secondary: hsl(var(--secondary));
   --color-secondary-foreground: hsl(var(--secondary-foreground));

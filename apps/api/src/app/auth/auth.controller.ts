@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Req, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Response } from 'express';
 import { getTenantIdFromRequest } from '../hr-app/tenant-from-request';
@@ -6,6 +6,19 @@ import { getTenantIdFromRequest } from '../hr-app/tenant-from-request';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Get('tenant-info')
+  async getTenantInfo(@Req() req: any, @Res() res: Response) {
+    const tenantId = getTenantIdFromRequest(req);
+    if (!tenantId) {
+      return res.json({ success: false, message: 'Tenant ID not found' });
+    }
+    const tenantInfo = await this.authService.getTenantInfo(tenantId);
+    if (!tenantInfo) {
+      return res.json({ success: false, message: 'Tenant not found' });
+    }
+    return res.json({ success: true, data: tenantInfo });
+  }
 
   @Post('login')
   async login(@Body() body: any, @Req() req: any, @Res() res: Response) {

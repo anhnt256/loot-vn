@@ -37,6 +37,7 @@ export interface OrgWithTenants {
   name: string;
   description?: string | null;
   rootDomain?: string | null;
+  primaryColor?: string | null;
   tenants: TenantWithClients[];
 }
 
@@ -76,7 +77,12 @@ export default function MasterHomePage() {
         }
         return res.json();
       })
-      .then((data: OrgWithTenants) => setOrg(data))
+      .then((data: OrgWithTenants) => {
+        setOrg(data);
+        if (data.primaryColor) {
+          document.documentElement.style.setProperty('--primary-color', data.primaryColor);
+        }
+      })
       .catch((e) => setError(e.message || 'Lỗi kết nối'))
       .finally(() => setLoading(false));
   }, []);
@@ -132,8 +138,19 @@ export default function MasterHomePage() {
         className="w-full bg-[#1c232f] rounded-2xl p-8 shadow-xl border border-gray-800 flex flex-col"
       >
         <div className="text-center mb-6">
-          <div className="w-16 h-16 mx-auto bg-gray-800/50 rounded-full flex items-center justify-center mb-4 border border-gray-700">
-            <Building className="text-orange-500" size={32} />
+          <div className="w-16 h-16 mx-auto bg-gray-800/50 rounded-full flex items-center justify-center mb-4 border border-gray-700 overflow-hidden">
+            {(() => {
+              let logo = null;
+              if (tenantsWithApps.length > 0) {
+                const rawLogo = (tenantsWithApps[0] as any).logo;
+                logo = typeof rawLogo === 'string' ? rawLogo : rawLogo?.url;
+              }
+              return logo ? (
+                <img src={logo} alt="Org Logo" className="w-full h-full object-cover" />
+              ) : (
+                <Building className="text-orange-500" size={32} />
+              );
+            })()}
           </div>
           <h1 className="text-2xl font-bold text-white tracking-wide">
             {org.name}

@@ -93,6 +93,8 @@ model Organization {
   description String? @db.VarChar(500)
   status      String  @default("Active") @db.VarChar(50)
   rootDomain  String? @db.VarChar(255) // Domain gốc, VD: loot.vn
+  primaryColor   String? @db.VarChar(50)
+  secondaryColor String? @db.VarChar(50)
 
   // Relations
   tenants Tenant[]
@@ -133,4 +135,50 @@ model Tenant {
 
   @@index([organizationId])
   @@map("tenants")
+}
+
+model Staff {
+  id                       Int              @id @default(autoincrement())
+  userName                 String           @unique
+  password                 String
+  isDeleted                Boolean          @default(false)
+  isAdmin                  Boolean          @default(false)
+  createdAt                DateTime         @default(now())
+  updatedAt                DateTime         @updatedAt
+  address                  String?          @db.Text
+  dateOfBirth              DateTime?
+  email                    String?          @db.VarChar(255)
+  fullName                 String           @db.VarChar(255)
+  gender                   Staff_gender     @default(OTHER)
+  hireDate                 DateTime?
+  idCard                   String?          @db.VarChar(20)
+  idCardExpiryDate         DateTime?
+  idCardIssueDate          DateTime?
+  note                     String?          @db.Text
+  phone                    String?          @db.VarChar(15)
+  resignDate               DateTime?
+  staffType                Staff_staffType  @default(STAFF)
+  needCheckMacAddress      Boolean          @default(true)
+  bankAccountName          String?          @db.VarChar(255)
+  bankAccountNumber        String?          @db.VarChar(50)
+  bankName                 String?          @db.VarChar(255)
+  baseSalary               Float            @default(0)
+
+  @@map("Staff")
+}
+
+enum Staff_gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum Staff_staffType {
+  STAFF
+  KITCHEN
+  SECURITY
+  CASHIER
+  MANAGER
+  SUPER_ADMIN
+  BRANCH_ADMIN
 }

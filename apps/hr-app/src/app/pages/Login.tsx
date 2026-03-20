@@ -18,6 +18,10 @@ const Login: React.FC = () => {
   const [searchParams] = useSearchParams();
   const isExpired = searchParams.get('error') === 'expired';
 
+  const defaultTenantConfig = (typeof window !== 'undefined' && (window as any).__TENANT_CONFIG__) || {};
+  const [tenantLogo, setTenantLogo] = useState<string | null>(defaultTenantConfig?.logo?.url || defaultTenantConfig?.logo || null);
+  const [tenantColor, setTenantColor] = useState<string>(defaultTenantConfig?.primaryColor || '#ff721f');
+
   useEffect(() => {
     if (isExpired) {
       message.error({
@@ -27,6 +31,28 @@ const Login: React.FC = () => {
       });
     }
   }, [isExpired, message]);
+
+  useEffect(() => {
+    const fetchTenantInfo = async () => {
+      try {
+        const result = await apiClient.get('/auth/tenant-info');
+        if (result.data?.success && result.data?.data) {
+          const tenantData = result.data.data;
+          let logo = tenantData.logo;
+          if (typeof logo === 'object') {
+            logo = logo?.url || null;
+          }
+          setTenantLogo(logo);
+          if (tenantData.primaryColor) {
+            setTenantColor(tenantData.primaryColor);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch tenant info:', err);
+      }
+    };
+    fetchTenantInfo();
+  }, []);
 
   const handleLogin = useCallback(async () => {
     if (!username || !password) {
@@ -73,7 +99,7 @@ const Login: React.FC = () => {
       theme={{
         algorithm: theme.darkAlgorithm,
         token: {
-          colorPrimary: '#ff721f',
+          colorPrimary: tenantColor,
           colorBgContainer: '#161b22',
           colorBorder: '#30363d',
           borderRadius: 8,
@@ -89,9 +115,10 @@ const Login: React.FC = () => {
             <div className="flex flex-col items-center space-y-8">
               <div className="relative w-24 h-24">
                 <img
-                  src="/logo.png"
+                  src={tenantLogo || "/logo.png"}
                   alt="Logo"
-                  className="rounded-full object-cover w-full h-full shadow-[0_0_20px_rgba(255,114,31,0.2)]"
+                  className="rounded-full object-cover w-full h-full border-2"
+                  style={{ borderColor: tenantColor, boxShadow: `0 0 20px ${tenantColor}33` }}
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = 'https://portal.thegateway.vn/logo.png';
                   }}
@@ -153,7 +180,8 @@ const Login: React.FC = () => {
                     size="large"
                     loading={loading}
                     onClick={handleLogin}
-                    className="w-full bg-[#ff721f] hover:bg-[#ff8a43] border-none h-12 text-base font-bold transition-all shadow-lg shadow-orange-600/10"
+                    className="w-full border-none h-12 text-base font-bold transition-all"
+                    style={{ backgroundColor: tenantColor, boxShadow: `0 10px 15px -3px ${tenantColor}1A, 0 4px 6px -4px ${tenantColor}1A` }}
                   >
                     Đăng nhập
                   </Button>

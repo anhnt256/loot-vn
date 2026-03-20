@@ -58,3 +58,4 @@ credentials/
 *.secret
 *.credentials
 config.local.*
+/uploads/

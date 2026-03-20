@@ -15,6 +15,11 @@ export default defineConfig(({ mode }) => {
     define: {
       'import.meta.env.VITE_TENANT_PREFIX': JSON.stringify(tenantPrefix),
       'import.meta.env.VITE_API_URL': JSON.stringify(apiUrl),
+      'process.env.NODE_ENV': JSON.stringify(mode),
+      'process.env.VITE_API_URL': JSON.stringify(apiUrl),
+      'process.env.VITE_GATEWAY_GO_VAP_SECRET_KEY': JSON.stringify(process.env.VITE_GATEWAY_GO_VAP_SECRET_KEY || env.VITE_GATEWAY_GO_VAP_SECRET_KEY || ''),
+      'process.env.VITE_GATEWAY_TAN_PHU_SECRET_KEY': JSON.stringify(process.env.VITE_GATEWAY_TAN_PHU_SECRET_KEY || env.VITE_GATEWAY_TAN_PHU_SECRET_KEY || ''),
+      'process.env.JWT_SECRET': JSON.stringify(process.env.JWT_SECRET || env.JWT_SECRET || ''),
     },
 
     server: {
