@@ -4,13 +4,21 @@ on:
   workflow_dispatch:
     inputs:
       tenant_prefix:
-        description: "Tenant prefix for this deployment (e.g. tenant-a-). MUST BE PROVIDED."
+        description: "Tenant prefix for this deployment"
+        type: choice
         required: true
-        default: ""
+        options:
+          - gateway-go-vap
+          - gateway-tan-phu
+          - to-hieu
       base_domain:
-        description: "Base domain for the deployment (e.g. loot.vn)"
+        description: "Base domain for the deployment"
+        type: choice
         required: true
         default: "loot.vn"
+        options:
+          - loot.vn
+          - quanlyhifriends.com
 
 jobs:
   deploy:
