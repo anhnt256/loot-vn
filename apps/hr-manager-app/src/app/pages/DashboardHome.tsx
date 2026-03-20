@@ -90,7 +90,7 @@ const DashboardHome = () => {
       </div>
 
       {/* Main Stats Row */}
-      <Row gutter={[16, 16]} sm={{ gutter: [24, 24] }}>
+      <Row gutter={[16, 16]}>
         <Col xs={24} sm={24} lg={8}>
           <Card className="h-full hover:shadow-md transition-shadow border-none bg-gradient-to-br from-orange-50 to-white" styles={{ body: { padding: '16px 20px' } }}>
             <div className="flex justify-between items-start">
@@ -128,7 +128,7 @@ const DashboardHome = () => {
         </Col>
 
         <Col xs={24} sm={24} lg={16}>
-          <Row gutter={[16, 16]} sm={{ gutter: [24, 24] }} className="h-full">
+          <Row gutter={[16, 16]} className="h-full">
             <Col xs={24} sm={12}>
               <div className="flex flex-col h-full justify-between gap-4 sm:gap-0">
                 <Card 
@@ -194,7 +194,7 @@ const DashboardHome = () => {
       </Row>
 
       {/* Chart and Detail Row */}
-      <Row gutter={[16, 16]} sm={{ gutter: [24, 24] }}>
+      <Row gutter={[16, 16]}>
         <Col xs={24} lg={16}>
           <Card 
             title={<span className="flex items-center gap-2"><TrendingUp size={18} className="text-orange-500" /> Biến động quỹ lương 6 tháng qua</span>}
