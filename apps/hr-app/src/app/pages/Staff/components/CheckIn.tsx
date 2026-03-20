@@ -180,7 +180,7 @@ export default function CheckInComponent({ staffId, month, year }: CheckInProps)
                 onClick={handleCheckIn}
                 loading={loading}
                 block
-                className="max-w-xs mx-auto h-12 text-lg font-bold rounded-xl bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200"
+                className="max-w-xs mx-auto h-12 text-lg font-bold rounded-xl bg-[var(--primary-color)] border-none text-white hover:brightness-90 shadow-lg"
               >
                 Bắt đầu làm việc
               </Button>
@@ -191,7 +191,8 @@ export default function CheckInComponent({ staffId, month, year }: CheckInProps)
 
       <Card 
         title={<span className="flex items-center gap-2 text-gray-800 font-bold"><Clock size={18} /> Lịch sử hôm nay</span>} 
-        className="shadow-sm border-0"
+        className="shadow-sm border-0 mt-4"
+        style={{ marginTop: 16 }}
       >
         {todayRecords.length === 0 ? (
           <div className="py-8"><Empty description="Chưa có lịch sử làm việc hôm nay" /></div>

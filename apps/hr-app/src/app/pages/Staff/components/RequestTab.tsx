@@ -106,14 +106,14 @@ export default function RequestTab({ staffId }: RequestTabProps) {
         title={
           <div className="flex justify-between items-center w-full">
             <span className="flex items-center gap-2">
-              <Send size={18} className="text-orange-600" />
+              <Send size={18} className="text-[var(--primary-color)]" />
               Yêu cầu của tôi
             </span>
             <Button 
               type="primary" 
               icon={<Plus size={16} />} 
               onClick={() => setIsModalOpen(true)}
-              className="bg-orange-500 hover:bg-orange-600"
+              className="bg-[var(--primary-color)] border-none hover:opacity-90 hover:!bg-[var(--primary-color)]"
             >
               Tạo mới
             </Button>
@@ -263,7 +263,7 @@ export default function RequestTab({ staffId }: RequestTabProps) {
 
           <Form.Item className="mb-0 flex justify-end">
             <Button onClick={() => setIsModalOpen(false)} className="mr-2">Hủy</Button>
-            <Button type="primary" htmlType="submit" className="bg-orange-500">Gửi yêu cầu</Button>
+            <Button type="primary" htmlType="submit" className="bg-[var(--primary-color)] border-none hover:opacity-90 hover:!bg-[var(--primary-color)]">Gửi yêu cầu</Button>
           </Form.Item>
         </Form>
       </Modal>

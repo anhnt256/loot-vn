@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Card, Descriptions, Tag, Button, Form, Input, Select, DatePicker, message } from "antd";
-import { Edit, Phone, Mail, MapPin, Calendar, CreditCard, DollarSign, Save, X } from "lucide-react";
+import { Card, Descriptions, Tag, Button, Form, Input, Select, DatePicker, message, Modal } from "antd";
+import { Edit, Phone, Mail, MapPin, Calendar, CreditCard, DollarSign, Save, X, Key } from "lucide-react";
 import dayjs from "dayjs";
 import { toast } from "sonner";
 import { apiClient } from "@gateway-workspace/shared/utils";
@@ -14,6 +14,10 @@ export default function StaffInfo({ staffData, onRefresh }: StaffInfoProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [passwordForm] = Form.useForm();
+  const [loadingPassword, setLoadingPassword] = useState(false);
 
   // In the real app, we need to get user context to check permissions
   // For now, allow edit
@@ -65,6 +69,32 @@ export default function StaffInfo({ staffData, onRefresh }: StaffInfoProps) {
     } catch (error: any) {
       toast.error(error.message || "Không thể gửi yêu cầu cập nhật");
       setLoading(false);
+    }
+  };
+
+  const handlePasswordChange = async (values: any) => {
+    try {
+      setLoadingPassword(true);
+      const result = await apiClient.post('/hr-app/change-password', values);
+      if (result.data.success) {
+        toast.success("Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
+        setIsPasswordModalOpen(false);
+        passwordForm.resetFields();
+        
+        // Logout and redirect to login
+        try {
+          await apiClient.post('/auth/logout');
+        } catch (e) {
+          console.error("Logout failed", e);
+        }
+        window.location.href = '/login';
+      } else {
+        throw new Error(result.data.message || result.data.error || "Đổi mật khẩu thất bại");
+      }
+    } catch (error: any) {
+      toast.error(error.message || error.response?.data?.message || "Không thể đổi mật khẩu");
+    } finally {
+      setLoadingPassword(false);
     }
   };
 
@@ -161,11 +191,21 @@ export default function StaffInfo({ staffData, onRefresh }: StaffInfoProps) {
       <Card
         className="shadow-sm border-blue-50"
         extra={
-          canEdit ? (
-            <Button type="primary" ghost icon={<Edit size={16} />} onClick={handleEdit}>
-              Chỉnh sửa
+          <div className="flex gap-2">
+            <Button 
+              type="primary" 
+              icon={<Key size={16} />} 
+              onClick={() => setIsPasswordModalOpen(true)}
+              className="bg-[var(--primary-color)] border-none hover:opacity-90 hover:!bg-[var(--primary-color)]"
+            >
+              Đổi mật khẩu
             </Button>
-          ) : null
+            {canEdit && (
+              <Button type="default" icon={<Edit size={16} />} onClick={handleEdit}>
+                Chỉnh sửa
+              </Button>
+            )}
+          </div>
         }
       >
         <Descriptions column={{ xs: 1, sm: 1, md: 2 }} className="mt-2 text-base">
@@ -257,6 +297,51 @@ export default function StaffInfo({ staffData, onRefresh }: StaffInfoProps) {
           <p className="text-gray-700 whitespace-pre-wrap">{staffData.note}</p>
         </Card>
       )}
+
+      <Modal
+        title="Đổi mật khẩu"
+        open={isPasswordModalOpen}
+        onCancel={() => {
+          setIsPasswordModalOpen(false);
+          passwordForm.resetFields();
+        }}
+        footer={null}
+        destroyOnClose
+      >
+        <Form form={passwordForm} layout="vertical" onFinish={handlePasswordChange}>
+          <Form.Item label="Mật khẩu hiện tại" name="currentPassword" rules={[{ required: true, message: "Vui lòng nhập mật khẩu hiện tại" }]}>
+            <Input.Password size="large" />
+          </Form.Item>
+
+          <Form.Item label="Mật khẩu mới" name="newPassword" rules={[{ required: true, message: "Vui lòng nhập mật khẩu mới" }, { min: 6, message: "Mật khẩu phải có ít nhất 6 ký tự" }]}>
+            <Input.Password size="large" />
+          </Form.Item>
+
+          <Form.Item 
+            label="Xác nhận mật khẩu mới" 
+            name="confirmPassword" 
+            dependencies={['newPassword']}
+            rules={[
+              { required: true, message: "Vui lòng nhập lại mật khẩu mới" },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue('newPassword') === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error('Mật khẩu xác nhận không khớp!'));
+                },
+              }),
+            ]}
+          >
+            <Input.Password size="large" />
+          </Form.Item>
+
+          <Form.Item className="mb-0 flex justify-end mt-6">
+            <Button onClick={() => setIsPasswordModalOpen(false)} className="mr-2">Hủy</Button>
+            <Button type="primary" htmlType="submit" loading={loadingPassword} className="bg-[var(--primary-color)] border-none hover:opacity-90 hover:!bg-[var(--primary-color)]">Đổi mật khẩu</Button>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }

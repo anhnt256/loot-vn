@@ -109,6 +109,7 @@ export default function TimeTracking({ staffId, month, year }: TimeTrackingProps
         title={<span className="flex items-center gap-2 font-bold text-gray-800"><Clock size={18} /> Lịch sử làm việc</span>} 
         className="shadow-sm border-0 mt-4"
         bodyStyle={{ padding: 0 }}
+        style={{ marginTop: 16 }}
       >
         {sortedDates.length === 0 ? (
           <div className="py-12"><Empty description="Chưa có dữ liệu lịch sử" /></div>

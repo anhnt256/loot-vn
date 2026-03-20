@@ -111,4 +111,13 @@ export class HrAppController {
     await this.hrAppService.updateRequestStatus(id, body.status, tenantId);
     return { success: true };
   }
+
+  @Post('change-password')
+  @UseGuards(AuthGuard)
+  async changePassword(@Req() req: any, @Body() body: any) {
+    const { userName } = req.user;
+    const tenantId = this.getTenantId(req);
+    const data = await this.hrAppService.changePassword(userName, body, tenantId);
+    return { success: true, ...data };
+  }
 }

@@ -78,27 +78,28 @@ const DashboardHome = () => {
   };
 
   return (
-    <div className="p-6 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex justify-between items-end mb-4">
+    <div className="p-4 sm:p-6 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2 sm:gap-0 mb-4">
         <div>
-          <Title level={2} className="!mb-1">Tổng quan sức khỏe doanh nghiệp</Title>
-          <Text type="secondary">Phân tích hiệu suất nhân sự và tài chính tháng này</Text>
+          <Title level={2} className="!mb-1 text-xl sm:text-2xl">Tổng quan sức khỏe doanh nghiệp</Title>
+          <Text type="secondary" className="text-xs sm:text-sm">Phân tích hiệu suất nhân sự và tài chính tháng này</Text>
         </div>
-        <Tag color="blue" icon={<Activity size={14} className="mr-1" />} className="px-3 py-1 text-sm font-medium rounded-full">
+        <Tag color="blue" icon={<Activity size={14} className="mr-1" />} className="px-3 py-1 text-xs sm:text-sm font-medium rounded-full w-fit">
           Cập nhật: {new Date().toLocaleTimeString('vi-VN')}
         </Tag>
       </div>
 
       {/* Main Stats Row */}
-      <Row gutter={[24, 24]}>
-        <Col xs={24} sm={12} lg={8}>
-          <Card className="h-full hover:shadow-md transition-shadow border-none bg-gradient-to-br from-orange-50 to-white" styles={{ body: { padding: '24px' } }}>
+      <Row gutter={[16, 16]} sm={{ gutter: [24, 24] }}>
+        <Col xs={24} sm={24} lg={8}>
+          <Card className="h-full hover:shadow-md transition-shadow border-none bg-gradient-to-br from-orange-50 to-white" styles={{ body: { padding: '16px 20px' } }}>
             <div className="flex justify-between items-start">
               <Statistic
-                title={<span className="text-orange-600 font-bold text-lg flex items-center gap-2"><DollarSign size={22} /> Tổng quỹ lương tháng này</span>}
+                title={<span className="text-orange-600 font-bold text-base sm:text-lg flex items-center gap-2"><DollarSign size={20} /> Tổng quỹ lương tháng này</span>}
                 value={stats.totalSalary}
                 formatter={(value) => formatCurrency(Number(value))}
-                valueStyle={{ fontWeight: 900, color: '#ea580c', fontSize: '32px' }}
+                valueStyle={{ fontWeight: 900, color: '#ea580c' }}
+                className="[&_.ant-statistic-content-value]:text-2xl [&_.ant-statistic-content-value]:sm:text-3xl"
               />
               <div className="pt-2">
                 {stats.salaryChange > 0 ? (
@@ -126,60 +127,64 @@ const DashboardHome = () => {
           </Card>
         </Col>
 
-        <Col xs={24} sm={12} lg={16}>
-          <Row gutter={[24, 24]} className="h-full">
-            <Col span={12}>
-              <div className="flex flex-col h-full justify-between">
+        <Col xs={24} sm={24} lg={16}>
+          <Row gutter={[16, 16]} sm={{ gutter: [24, 24] }} className="h-full">
+            <Col xs={24} sm={12}>
+              <div className="flex flex-col h-full justify-between gap-4 sm:gap-0">
                 <Card 
-                  className="hover:shadow-md transition-shadow border-none bg-emerald-50" 
-                  style={{ height: '40%', display: 'flex', flexDirection: 'column' }}
-                  styles={{ body: { padding: '16px 20px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' } }}
+                  className="hover:shadow-md transition-shadow border-none bg-emerald-50 mb-0 sm:mb-4" 
+                  style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+                  styles={{ body: { padding: '12px 16px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' } }}
                 >
                   <Statistic
-                    title={<span className="text-emerald-600 font-semibold flex items-center gap-2 text-xs"><Clock size={16} /> TỔNG GIỜ LÀM</span>}
+                    title={<span className="text-emerald-600 font-semibold flex items-center gap-2 text-[11px] sm:text-xs"><Clock size={16} /> TỔNG GIỜ LÀM</span>}
                     value={stats.totalHours}
                     suffix={<span className="text-gray-400 text-xs font-normal">giờ</span>}
-                    valueStyle={{ fontWeight: 800, color: '#059669', fontSize: '24px' }}
+                    valueStyle={{ fontWeight: 800, color: '#059669' }}
+                    className="[&_.ant-statistic-content-value]:text-xl [&_.ant-statistic-content-value]:sm:text-2xl"
                   />
                 </Card>
                 <Card 
                   className="hover:shadow-md transition-shadow border-none bg-blue-50" 
-                  style={{ height: '40%', display: 'flex', flexDirection: 'column' }}
-                  styles={{ body: { padding: '16px 20px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' } }}
+                  style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+                  styles={{ body: { padding: '12px 16px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' } }}
                 >
                   <Statistic
-                    title={<span className="text-blue-600 font-semibold flex items-center gap-2 text-xs"><Users size={16} /> NHÂN SỰ</span>}
+                    title={<span className="text-blue-600 font-semibold flex items-center gap-2 text-[11px] sm:text-xs"><Users size={16} /> NHÂN SỰ</span>}
                     value={stats.totalStaff}
                     suffix={<span className="text-gray-400 text-xs font-normal">người</span>}
-                    valueStyle={{ fontWeight: 800, color: '#1a73e8', fontSize: '24px' }}
+                    valueStyle={{ fontWeight: 800, color: '#1a73e8' }}
+                    className="[&_.ant-statistic-content-value]:text-xl [&_.ant-statistic-content-value]:sm:text-2xl"
                   />
                 </Card>
               </div>
             </Col>
-            <Col span={12}>
-              <div className="flex flex-col h-full justify-between">
+            <Col xs={24} sm={12}>
+              <div className="flex flex-col h-full justify-between gap-4 sm:gap-0">
                 <Card 
-                  className="hover:shadow-md transition-shadow border-none bg-amber-50" 
-                  style={{ height: '40%', display: 'flex', flexDirection: 'column' }}
-                  styles={{ body: { padding: '16px 20px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' } }}
+                  className="hover:shadow-md transition-shadow border-none bg-amber-50 mb-0 sm:mb-4" 
+                  style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+                  styles={{ body: { padding: '12px 16px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' } }}
                 >
                   <Statistic
-                    title={<span className="text-amber-600 font-semibold flex items-center gap-2 text-xs"><Award size={16} /> TỔNG THƯỞNG</span>}
+                    title={<span className="text-amber-600 font-semibold flex items-center gap-2 text-[11px] sm:text-xs"><Award size={16} /> TỔNG THƯỞNG</span>}
                     value={stats.totalBonus}
                     formatter={(value) => formatCurrency(Number(value))}
-                    valueStyle={{ fontWeight: 800, color: '#d97706', fontSize: '24px' }}
+                    valueStyle={{ fontWeight: 800, color: '#d97706' }}
+                    className="[&_.ant-statistic-content-value]:text-xl [&_.ant-statistic-content-value]:sm:text-2xl"
                   />
                 </Card>
                 <Card 
                   className="hover:shadow-md transition-shadow border-none bg-red-50" 
-                  style={{ height: '40%', display: 'flex', flexDirection: 'column' }}
-                  styles={{ body: { padding: '16px 20px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' } }}
+                  style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+                  styles={{ body: { padding: '12px 16px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' } }}
                 >
                   <Statistic
-                    title={<span className="text-red-600 font-semibold flex items-center gap-2 text-xs"><AlertCircle size={16} /> TỔNG PHẠT</span>}
+                    title={<span className="text-red-600 font-semibold flex items-center gap-2 text-[11px] sm:text-xs"><AlertCircle size={16} /> TỔNG PHẠT</span>}
                     value={stats.totalPenalty}
                     formatter={(value) => formatCurrency(Number(value))}
-                    valueStyle={{ fontWeight: 800, color: '#dc2626', fontSize: '24px' }}
+                    valueStyle={{ fontWeight: 800, color: '#dc2626' }}
+                    className="[&_.ant-statistic-content-value]:text-xl [&_.ant-statistic-content-value]:sm:text-2xl"
                   />
                 </Card>
               </div>
@@ -189,7 +194,7 @@ const DashboardHome = () => {
       </Row>
 
       {/* Chart and Detail Row */}
-      <Row gutter={[24, 24]}>
+      <Row gutter={[16, 16]} sm={{ gutter: [24, 24] }}>
         <Col xs={24} lg={16}>
           <Card 
             title={<span className="flex items-center gap-2"><TrendingUp size={18} className="text-orange-500" /> Biến động quỹ lương 6 tháng qua</span>}

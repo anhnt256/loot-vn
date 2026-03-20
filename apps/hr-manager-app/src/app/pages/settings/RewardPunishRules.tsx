@@ -198,15 +198,15 @@ const RewardPunishRules: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-end">
-        <div className="flex flex-col gap-1">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+        <div className="flex flex-col gap-1 w-full sm:w-auto">
           <Title level={4} style={{ margin: 0 }}>Cấu hình Quy tắc Thưởng/Phạt</Title>
           <p className="text-[#64748b] text-sm">Thiết lập các quy định, mức phạt và chu kỳ tính toán vi phạm cho nhân viên.</p>
         </div>
         <Button 
           type="primary" 
           icon={<PlusOutlined />} 
-          className="bg-[#003594] h-10 px-6 font-semibold rounded-lg"
+          className="bg-[#003594] h-10 px-6 font-semibold rounded-lg w-full sm:w-auto"
           onClick={handleAdd}
         >
           Thêm quy tắc
@@ -219,6 +219,7 @@ const RewardPunishRules: React.FC = () => {
           dataSource={rules} 
           rowKey="id" 
           loading={isLoading}
+          scroll={{ x: 'max-content' }}
           pagination={{ defaultPageSize: 10 }}
         />
       </div>

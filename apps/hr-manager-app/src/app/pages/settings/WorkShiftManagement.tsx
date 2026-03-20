@@ -144,8 +144,8 @@ const WorkShiftManagement: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex justify-between items-end">
-        <div className="flex flex-col gap-1">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+        <div className="flex flex-col gap-1 w-full sm:w-auto">
           <Title level={4} style={{ margin: 0 }} className="flex items-center gap-2">
             <Clock className="text-[#003594]" size={20} />
             Quản lý Ca làm việc
@@ -155,7 +155,7 @@ const WorkShiftManagement: React.FC = () => {
         <Button 
           type="primary" 
           icon={<PlusOutlined />} 
-          className="bg-[#003594] text-white border-none hover:!bg-[#002870] shadow-sm font-semibold px-6 h-10 rounded-lg"
+          className="bg-[#003594] text-white border-none hover:!bg-[#002870] shadow-sm font-semibold px-6 h-10 rounded-lg w-full sm:w-auto"
           onClick={() => {
             setEditingShift(null);
             setModalOpen(true);
@@ -166,13 +166,13 @@ const WorkShiftManagement: React.FC = () => {
       </div>
 
       <div className="bg-white p-6 rounded-xl border border-[#e2e8f0] shadow-sm">
-        <div className="mb-6 max-w-md">
+        <div className="mb-6 w-full sm:max-w-md">
           <Input
             placeholder="Tìm kiếm ca làm việc..."
             prefix={<SearchOutlined className="text-[#9ca3af]" />}
             value={searchText}
             onChange={e => setSearchText(e.target.value)}
-            className="bg-[#f8fafc] border-none h-11 rounded-lg"
+            className="bg-[#f8fafc] border-none h-11 rounded-lg w-full"
             allowClear
           />
         </div>
@@ -182,6 +182,7 @@ const WorkShiftManagement: React.FC = () => {
           dataSource={filteredShifts} 
           rowKey="id"
           loading={loading}
+          scroll={{ x: 'max-content' }}
           pagination={{
             showTotal: (total, range) => `${range[0]}-${range[1]} của ${total}`,
             position: ['bottomRight'],

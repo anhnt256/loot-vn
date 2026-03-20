@@ -73,13 +73,13 @@ export default function StaffPage() {
   return (
     <div className="min-h-screen pb-20 bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg">
+      <div className="text-white shadow-lg bg-[var(--primary-color)]">
         <div className="px-4 py-6 max-w-5xl mx-auto">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <Avatar
                 size={64}
-                className="bg-white text-orange-500 text-xl font-bold"
+                className="bg-white text-xl font-bold text-[var(--primary-color)]"
               >
                 {staffData?.fullName?.charAt(0)?.toUpperCase() || "S"}
               </Avatar>
@@ -87,10 +87,10 @@ export default function StaffPage() {
                 <h1 className="text-xl font-bold">
                   {staffData?.fullName || "Nhân viên"}
                 </h1>
-                <p className="text-orange-100 text-sm">
+                <p className="text-white/80 text-sm">
                   {staffData?.userName || ""}
                 </p>
-                <p className="text-orange-100 text-xs mt-1">
+                <p className="text-white/80 text-xs mt-1">
                   {staffData?.staffType === "STAFF" && "Nhân viên"}
                   {staffData?.staffType === "KITCHEN" && "Bếp"}
                   {staffData?.staffType === "SECURITY" && "Bảo vệ"}
@@ -106,7 +106,7 @@ export default function StaffPage() {
               type="text"
               icon={<LogOut size={20} />}
               onClick={handleLogout}
-              className="text-white hover:bg-orange-700"
+              className="text-white hover:bg-black/10"
             >
               Đăng xuất
             </Button>
@@ -123,7 +123,7 @@ export default function StaffPage() {
                 {activeTab === "checkin" ? (
                   <>
                     <span className="font-medium text-gray-600">Ngày hiện tại:</span>
-                    <span className="font-bold text-orange-600">{dayjs().format("DD/MM/YYYY")}</span>
+                    <span className="font-bold text-[var(--primary-color)]">{dayjs().format("DD/MM/YYYY")}</span>
                   </>
                 ) : (
                   <>

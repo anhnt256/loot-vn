@@ -232,31 +232,31 @@ export const DashboardLayout = () => {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile Header */}
         {isMobile && (
-          <header className="bg-white border-b border-[#e2e8f0] px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          <header className="bg-white border-b border-[#e2e8f0] px-4 py-3 flex items-center justify-between gap-2 overflow-hidden">
+            <div className="flex items-center gap-2 min-w-0">
               <button 
                 onClick={() => setMobileMenuOpen(true)}
-                className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg shrink-0"
               >
                 <MenuIcon size={20} />
               </button>
               <img 
                 src={tenantLogo} 
                 alt="Logo" 
-                className="h-8 w-8 object-contain rounded-full"
+                className="h-8 w-8 object-contain rounded-full shrink-0"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = 'https://portal.thegateway.vn/logo.png';
                 }}
               />
-              <span className="font-bold text-[#003594] text-sm">Cổng quản lý nhân sự</span>
+              <span className="font-bold text-[#003594] text-sm truncate">Cổng quản lý nhân sự</span>
             </div>
-            <div className="w-8 h-8 rounded-full bg-[var(--primary-color)] border-2 border-white shadow-sm flex items-center justify-center text-white text-[10px] font-bold">HR</div>
+            <div className="w-8 h-8 rounded-full bg-[var(--primary-color)] border-2 border-white shadow-sm flex items-center justify-center text-white text-[10px] font-bold shrink-0">HR</div>
           </header>
         )}
 
         <main className={cn(
           "flex-1 overflow-y-auto bg-[#f8fafc]",
-          isMobile ? "p-4" : "p-8"
+          isMobile ? "p-3 sm:p-4" : "p-8"
         )}>
            <Outlet />
         </main>

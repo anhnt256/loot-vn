@@ -396,4 +396,40 @@ export class HrAppService {
     });
     return { success: true };
   }
+
+  private hashPassword(password: string): string {
+    const crypto = require('crypto');
+    return crypto.createHash('sha256').update(password).digest('hex');
+  }
+
+  async changePassword(userName: string, body: any, tenantId: string) {
+    const { currentPassword, newPassword } = body;
+    if (!currentPassword || !newPassword) {
+      throw new BadRequestException('Mật khẩu hiện tại và mật khẩu mới là bắt buộc');
+    }
+
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
+    
+    // Find staff
+    const staff = await gateway.staff.findFirst({
+      where: { userName, isDeleted: false },
+    });
+    
+    if (!staff) {
+      throw new NotFoundException('Không tìm thấy tài khoản nhân viên');
+    }
+
+    // Verify current password
+    if (staff.password !== this.hashPassword(currentPassword)) {
+      throw new BadRequestException('Mật khẩu hiện tại không chính xác');
+    }
+
+    // Update to new password
+    await gateway.staff.update({
+      where: { id: staff.id },
+      data: { password: this.hashPassword(newPassword) },
+    });
+
+    return { success: true };
+  }
 }
