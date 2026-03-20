@@ -1,9 +1,5 @@
 import { ACCESS_TOKEN_KEY } from "./constants/token.constant";
-import axios, {
-  AxiosResponse,
-  InternalAxiosRequestConfig,
-  AxiosError,
-} from "axios";
+import axios from "axios";
 import { getCookie } from "cookies-next";
 
 // Determine host from various environment variables injected by Vite / NextJS
@@ -16,15 +12,6 @@ const apiClient = axios.create({
   baseURL: host,
   withCredentials: true,
 });
-
-const logOnDev = (
-  message: string,
-  log?: AxiosResponse | InternalAxiosRequestConfig | AxiosError,
-) => {
-  if (process.env.NODE_ENV === "development") {
-    console.log(message, log);
-  }
-};
 
 apiClient.interceptors.request.use(async (request) => {
   if (isServer) {

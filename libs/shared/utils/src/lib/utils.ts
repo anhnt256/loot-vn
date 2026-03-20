@@ -1,10 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import dayjs from "./dayjs";
-import { NextResponse } from "next/server";
-import { fetcher } from "./fetcher";
-import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
-import isEmpty from "lodash/isEmpty";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

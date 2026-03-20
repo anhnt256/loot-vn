@@ -1,12 +1,8 @@
 import { useMutation } from "@tanstack/react-query";
-import { deleteCookie, setCookie, getCookie } from "cookies-next";
+import { deleteCookie, getCookie } from "cookies-next";
 import { ACCESS_TOKEN_KEY, CURRENT_USER } from "@gateway-workspace/shared/utils";
-import dayjs from "../dayjs";
 import isEmpty from "lodash/isEmpty";
 import { clearUserData, clearAdminData, clearStaffData } from "../utils";
-
-const expirationDuration = 1;
-const expirationDate = dayjs().add(expirationDuration, "day").format();
 
 interface LoginParams {
   userName: string;
@@ -51,7 +47,7 @@ export const postLogin = async ({
   if (statusCode >= 200 && statusCode < 300) {
     try {
       const data = JSON.parse(resultText);
-      const { userId, userName } = data || {};
+      const { userName } = data || {};
       
       if (isEmpty(userName) && !isAdmin) {
         return {
