@@ -80,7 +80,7 @@ export default function SystemConfig() {
                 size="large"
                 min={0}
                 formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                parser={(value) => value!.replace(/\$\s?|(,*)/g, '')}
+                parser={(value) => value!.replace(/\$\s?|(,*)/g, '') as any}
               />
             </Form.Item>
 
@@ -104,7 +104,7 @@ export default function SystemConfig() {
                 size="large"
                 min={0}
                 formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                parser={(value) => value!.replace(/\$\s?|(,*)/g, '')}
+                parser={(value) => value!.replace(/\$\s?|(,*)/g, '') as any}
               />
             </Form.Item>
 

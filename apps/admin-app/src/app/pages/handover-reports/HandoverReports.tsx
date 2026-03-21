@@ -5,7 +5,7 @@ import { DatePicker, Select, Button, Table, Tabs } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 
-import { REPORT_TYPE_ENUM, REPORT_TYPE_LABELS, SHIFT_LABELS, ReportType } from "./constants";
+import { REPORT_TYPE_ENUM, REPORT_TYPE_LABELS, SHIFT_LABELS, SHIFT_ENUM, ReportType } from "./constants";
 import MaterialManagementDrawer from "./components/MaterialManagementDrawer";
 import SendReportDrawer from "./components/SendReportDrawer";
 import { apiClient } from "@gateway-workspace/shared/utils/client";
