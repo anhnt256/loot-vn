@@ -27,7 +27,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        APP_NAME: admin-app
+        APP_NAME: admin
         TENANT_PREFIX: ${TENANT_PREFIX:-}
         VITE_API_URL: ${VITE_API_URL:-}
         VITE_TENANT_PREFIX: ${VITE_TENANT_PREFIX:-}
