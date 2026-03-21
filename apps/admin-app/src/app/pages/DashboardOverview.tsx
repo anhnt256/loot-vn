@@ -5,6 +5,7 @@ import { apiClient } from '@gateway-workspace/shared/utils/client';
 import ComputerCard from '../components/ComputerCard';
 import ComputerDetailDrawer from '../components/ComputerDetailDrawer';
 import PanContainer from '../components/PanContainer';
+// @ts-expect-error type resolution issue
 import RGL, { WidthProvider } from 'react-grid-layout/legacy';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -71,7 +72,7 @@ const DashboardOverview: React.FC = () => {
       const live = computers.find(c => c.name === currentComputer.name);
       if (live) {
         // Deep compare or just set directly to ensure data consistency
-        setCurrentComputer(prev => ({ ...prev, ...live }));
+        setCurrentComputer((prev: any) => ({ ...prev, ...live }));
       }
     }
   }, [computers, showDetailDrawer]);
@@ -261,7 +262,7 @@ const DashboardOverview: React.FC = () => {
         onClose={() => setShowDetailDrawer(false)} 
         onUpdate={(updates) => {
           if (updates) {
-             setCurrentComputer(prev => {
+             setCurrentComputer((prev: any) => {
                 if (!prev) return prev;
                 const newC = { ...prev, ...updates };
                 if (updates.user) newC.user = { ...(prev.user || {}), ...updates.user };

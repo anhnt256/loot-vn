@@ -622,7 +622,6 @@ const ComputerDetailDrawer: React.FC<ComputerDetailDrawerProps> = ({ computer, o
         width={900}
         styles={{
           header: { background: "#1f2937", color: "white", borderBottom: "1px solid #374151", paddingBottom: "12px" },
-          content: { background: "#1f2937" },
           body: { background: "#1f2937", padding: "20px" },
           mask: { background: "rgba(0, 0, 0, 0.6)" },
         }}
@@ -686,7 +685,6 @@ const ComputerDetailDrawer: React.FC<ComputerDetailDrawerProps> = ({ computer, o
         width={900}
         styles={{
           header: { background: "#1f2937", color: "white", borderBottom: "1px solid #374151", paddingBottom: "12px" },
-          content: { background: "#1f2937" },
           body: { background: "#1f2937", padding: "20px" },
           mask: { background: "rgba(0, 0, 0, 0.6)" },
         }}
@@ -747,7 +745,6 @@ const ComputerDetailDrawer: React.FC<ComputerDetailDrawerProps> = ({ computer, o
         width={600}
         styles={{
           header: { background: "#1f2937", color: "white", borderBottom: "1px solid #374151" },
-          content: { background: "#1f2937" },
           body: { background: "#1f2937", padding: "20px" },
           mask: { background: "rgba(0, 0, 0, 0.6)" },
         }}

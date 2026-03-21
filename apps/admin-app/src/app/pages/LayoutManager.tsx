@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Card, Button, Input, List, Select, message, Checkbox, Modal, Form, Typography, Popconfirm, Tabs } from 'antd';
 import { PlusOutlined, SaveOutlined, DeleteOutlined, SwapRightOutlined } from '@ant-design/icons';
 import { apiClient } from '@gateway-workspace/shared/utils/client';
+// @ts-expect-error type resolution issue
 import RGL, { Layout, WidthProvider } from 'react-grid-layout/legacy';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
