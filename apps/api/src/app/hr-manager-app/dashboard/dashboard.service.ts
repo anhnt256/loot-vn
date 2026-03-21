@@ -9,7 +9,6 @@ export class DashboardService {
   async getStats(tenantId: string) {
     const gateway = await this.tenantGateway.getGatewayClient(tenantId);
     try {
-      console.log(`[DashboardService] Fetching stats`);
       const now = dayjs().tz('Asia/Ho_Chi_Minh');
       const startOfMonth = now.startOf('month').toDate();
       const currentMonth = now.month() + 1;

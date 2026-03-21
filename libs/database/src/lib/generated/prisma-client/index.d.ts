@@ -328,6 +328,16 @@ export type RuleSeverity = $Result.DefaultSelection<Prisma.$RuleSeverityPayload>
  * 
  */
 export type StaffViolation = $Result.DefaultSelection<Prisma.$StaffViolationPayload>
+/**
+ * Model Zone
+ * 
+ */
+export type Zone = $Result.DefaultSelection<Prisma.$ZonePayload>
+/**
+ * Model ComputerLayout
+ * 
+ */
+export type ComputerLayout = $Result.DefaultSelection<Prisma.$ComputerLayoutPayload>
 
 /**
  * Enums
@@ -1436,6 +1446,26 @@ export class PrismaClient<
     * ```
     */
   get staffViolation(): Prisma.StaffViolationDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.zone`: Exposes CRUD operations for the **Zone** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Zones
+    * const zones = await prisma.zone.findMany()
+    * ```
+    */
+  get zone(): Prisma.ZoneDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.computerLayout`: Exposes CRUD operations for the **ComputerLayout** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ComputerLayouts
+    * const computerLayouts = await prisma.computerLayout.findMany()
+    * ```
+    */
+  get computerLayout(): Prisma.ComputerLayoutDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -1939,7 +1969,9 @@ export namespace Prisma {
     MomoCredential: 'MomoCredential',
     RewardPunishRule: 'RewardPunishRule',
     RuleSeverity: 'RuleSeverity',
-    StaffViolation: 'StaffViolation'
+    StaffViolation: 'StaffViolation',
+    Zone: 'Zone',
+    ComputerLayout: 'ComputerLayout'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1958,7 +1990,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "rank" | "game" | "checkInResult" | "checkInItem" | "checkInPromotion" | "item" | "gameItemMap" | "gameResult" | "user" | "mission" | "userMissionCompletion" | "userRewardMap" | "reward" | "promotionCode" | "userStarHistory" | "savingPlan" | "computer" | "staff" | "request" | "staffRequest" | "staffTimeTracking" | "workShift" | "workShiftRevenueReport" | "fraudLoginAlert" | "staffSalary" | "staffBonus" | "staffPenalty" | "managerIncomeExpense" | "giftRound" | "device" | "deviceHistory" | "battlePassSeason" | "battlePassReward" | "userBattlePass" | "userBattlePassReward" | "battlePassPremiumPackage" | "promotionSetting" | "battlePassPremiumOrder" | "chatMessage" | "birthdayTier" | "userBirthdayProgress" | "birthdayTransaction" | "reportDetail" | "report" | "handoverReport" | "handoverMaterial" | "material" | "feedback" | "fnetHistory" | "promotionReward" | "gameAppointmentTier" | "gameAppointment" | "gameAppointmentMember" | "gameAppointmentReward" | "event" | "eventParticipant" | "eventReward" | "eventReport" | "ffoodCredential" | "momoCredential" | "rewardPunishRule" | "ruleSeverity" | "staffViolation"
+      modelProps: "rank" | "game" | "checkInResult" | "checkInItem" | "checkInPromotion" | "item" | "gameItemMap" | "gameResult" | "user" | "mission" | "userMissionCompletion" | "userRewardMap" | "reward" | "promotionCode" | "userStarHistory" | "savingPlan" | "computer" | "staff" | "request" | "staffRequest" | "staffTimeTracking" | "workShift" | "workShiftRevenueReport" | "fraudLoginAlert" | "staffSalary" | "staffBonus" | "staffPenalty" | "managerIncomeExpense" | "giftRound" | "device" | "deviceHistory" | "battlePassSeason" | "battlePassReward" | "userBattlePass" | "userBattlePassReward" | "battlePassPremiumPackage" | "promotionSetting" | "battlePassPremiumOrder" | "chatMessage" | "birthdayTier" | "userBirthdayProgress" | "birthdayTransaction" | "reportDetail" | "report" | "handoverReport" | "handoverMaterial" | "material" | "feedback" | "fnetHistory" | "promotionReward" | "gameAppointmentTier" | "gameAppointment" | "gameAppointmentMember" | "gameAppointmentReward" | "event" | "eventParticipant" | "eventReward" | "eventReport" | "ffoodCredential" | "momoCredential" | "rewardPunishRule" | "ruleSeverity" | "staffViolation" | "zone" | "computerLayout"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -6120,6 +6152,138 @@ export namespace Prisma {
           }
         }
       }
+      Zone: {
+        payload: Prisma.$ZonePayload<ExtArgs>
+        fields: Prisma.ZoneFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ZoneFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZonePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ZoneFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZonePayload>
+          }
+          findFirst: {
+            args: Prisma.ZoneFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZonePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ZoneFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZonePayload>
+          }
+          findMany: {
+            args: Prisma.ZoneFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZonePayload>[]
+          }
+          create: {
+            args: Prisma.ZoneCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZonePayload>
+          }
+          createMany: {
+            args: Prisma.ZoneCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.ZoneDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZonePayload>
+          }
+          update: {
+            args: Prisma.ZoneUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZonePayload>
+          }
+          deleteMany: {
+            args: Prisma.ZoneDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ZoneUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.ZoneUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZonePayload>
+          }
+          aggregate: {
+            args: Prisma.ZoneAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateZone>
+          }
+          groupBy: {
+            args: Prisma.ZoneGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ZoneGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ZoneCountArgs<ExtArgs>
+            result: $Utils.Optional<ZoneCountAggregateOutputType> | number
+          }
+        }
+      }
+      ComputerLayout: {
+        payload: Prisma.$ComputerLayoutPayload<ExtArgs>
+        fields: Prisma.ComputerLayoutFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ComputerLayoutFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComputerLayoutPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ComputerLayoutFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComputerLayoutPayload>
+          }
+          findFirst: {
+            args: Prisma.ComputerLayoutFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComputerLayoutPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ComputerLayoutFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComputerLayoutPayload>
+          }
+          findMany: {
+            args: Prisma.ComputerLayoutFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComputerLayoutPayload>[]
+          }
+          create: {
+            args: Prisma.ComputerLayoutCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComputerLayoutPayload>
+          }
+          createMany: {
+            args: Prisma.ComputerLayoutCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.ComputerLayoutDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComputerLayoutPayload>
+          }
+          update: {
+            args: Prisma.ComputerLayoutUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComputerLayoutPayload>
+          }
+          deleteMany: {
+            args: Prisma.ComputerLayoutDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ComputerLayoutUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.ComputerLayoutUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ComputerLayoutPayload>
+          }
+          aggregate: {
+            args: Prisma.ComputerLayoutAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateComputerLayout>
+          }
+          groupBy: {
+            args: Prisma.ComputerLayoutGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ComputerLayoutGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ComputerLayoutCountArgs<ExtArgs>
+            result: $Utils.Optional<ComputerLayoutCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -6279,6 +6443,8 @@ export namespace Prisma {
     rewardPunishRule?: RewardPunishRuleOmit
     ruleSeverity?: RuleSeverityOmit
     staffViolation?: StaffViolationOmit
+    zone?: ZoneOmit
+    computerLayout?: ComputerLayoutOmit
   }
 
   /* Types for Logging */
@@ -7102,6 +7268,37 @@ export namespace Prisma {
    */
   export type RewardPunishRuleCountOutputTypeCountViolationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: StaffViolationWhereInput
+  }
+
+
+  /**
+   * Count Type ZoneCountOutputType
+   */
+
+  export type ZoneCountOutputType = {
+    computerLayouts: number
+  }
+
+  export type ZoneCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    computerLayouts?: boolean | ZoneCountOutputTypeCountComputerLayoutsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * ZoneCountOutputType without action
+   */
+  export type ZoneCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZoneCountOutputType
+     */
+    select?: ZoneCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * ZoneCountOutputType without action
+   */
+  export type ZoneCountOutputTypeCountComputerLayoutsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ComputerLayoutWhereInput
   }
 
 
@@ -72228,6 +72425,2022 @@ export namespace Prisma {
 
 
   /**
+   * Model Zone
+   */
+
+  export type AggregateZone = {
+    _count: ZoneCountAggregateOutputType | null
+    _avg: ZoneAvgAggregateOutputType | null
+    _sum: ZoneSumAggregateOutputType | null
+    _min: ZoneMinAggregateOutputType | null
+    _max: ZoneMaxAggregateOutputType | null
+  }
+
+  export type ZoneAvgAggregateOutputType = {
+    id: number | null
+  }
+
+  export type ZoneSumAggregateOutputType = {
+    id: number | null
+  }
+
+  export type ZoneMinAggregateOutputType = {
+    id: number | null
+    name: string | null
+    description: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ZoneMaxAggregateOutputType = {
+    id: number | null
+    name: string | null
+    description: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ZoneCountAggregateOutputType = {
+    id: number
+    name: number
+    description: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ZoneAvgAggregateInputType = {
+    id?: true
+  }
+
+  export type ZoneSumAggregateInputType = {
+    id?: true
+  }
+
+  export type ZoneMinAggregateInputType = {
+    id?: true
+    name?: true
+    description?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ZoneMaxAggregateInputType = {
+    id?: true
+    name?: true
+    description?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ZoneCountAggregateInputType = {
+    id?: true
+    name?: true
+    description?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ZoneAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Zone to aggregate.
+     */
+    where?: ZoneWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Zones to fetch.
+     */
+    orderBy?: ZoneOrderByWithRelationInput | ZoneOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ZoneWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Zones from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Zones.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Zones
+    **/
+    _count?: true | ZoneCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ZoneAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ZoneSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ZoneMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ZoneMaxAggregateInputType
+  }
+
+  export type GetZoneAggregateType<T extends ZoneAggregateArgs> = {
+        [P in keyof T & keyof AggregateZone]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateZone[P]>
+      : GetScalarType<T[P], AggregateZone[P]>
+  }
+
+
+
+
+  export type ZoneGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ZoneWhereInput
+    orderBy?: ZoneOrderByWithAggregationInput | ZoneOrderByWithAggregationInput[]
+    by: ZoneScalarFieldEnum[] | ZoneScalarFieldEnum
+    having?: ZoneScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ZoneCountAggregateInputType | true
+    _avg?: ZoneAvgAggregateInputType
+    _sum?: ZoneSumAggregateInputType
+    _min?: ZoneMinAggregateInputType
+    _max?: ZoneMaxAggregateInputType
+  }
+
+  export type ZoneGroupByOutputType = {
+    id: number
+    name: string
+    description: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: ZoneCountAggregateOutputType | null
+    _avg: ZoneAvgAggregateOutputType | null
+    _sum: ZoneSumAggregateOutputType | null
+    _min: ZoneMinAggregateOutputType | null
+    _max: ZoneMaxAggregateOutputType | null
+  }
+
+  type GetZoneGroupByPayload<T extends ZoneGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ZoneGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ZoneGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ZoneGroupByOutputType[P]>
+            : GetScalarType<T[P], ZoneGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ZoneSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    description?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    computerLayouts?: boolean | Zone$computerLayoutsArgs<ExtArgs>
+    _count?: boolean | ZoneCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["zone"]>
+
+
+
+  export type ZoneSelectScalar = {
+    id?: boolean
+    name?: boolean
+    description?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ZoneOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "createdAt" | "updatedAt", ExtArgs["result"]["zone"]>
+  export type ZoneInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    computerLayouts?: boolean | Zone$computerLayoutsArgs<ExtArgs>
+    _count?: boolean | ZoneCountOutputTypeDefaultArgs<ExtArgs>
+  }
+
+  export type $ZonePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Zone"
+    objects: {
+      computerLayouts: Prisma.$ComputerLayoutPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      name: string
+      description: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["zone"]>
+    composites: {}
+  }
+
+  type ZoneGetPayload<S extends boolean | null | undefined | ZoneDefaultArgs> = $Result.GetResult<Prisma.$ZonePayload, S>
+
+  type ZoneCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ZoneFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ZoneCountAggregateInputType | true
+    }
+
+  export interface ZoneDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Zone'], meta: { name: 'Zone' } }
+    /**
+     * Find zero or one Zone that matches the filter.
+     * @param {ZoneFindUniqueArgs} args - Arguments to find a Zone
+     * @example
+     * // Get one Zone
+     * const zone = await prisma.zone.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ZoneFindUniqueArgs>(args: SelectSubset<T, ZoneFindUniqueArgs<ExtArgs>>): Prisma__ZoneClient<$Result.GetResult<Prisma.$ZonePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Zone that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ZoneFindUniqueOrThrowArgs} args - Arguments to find a Zone
+     * @example
+     * // Get one Zone
+     * const zone = await prisma.zone.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ZoneFindUniqueOrThrowArgs>(args: SelectSubset<T, ZoneFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ZoneClient<$Result.GetResult<Prisma.$ZonePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Zone that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZoneFindFirstArgs} args - Arguments to find a Zone
+     * @example
+     * // Get one Zone
+     * const zone = await prisma.zone.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ZoneFindFirstArgs>(args?: SelectSubset<T, ZoneFindFirstArgs<ExtArgs>>): Prisma__ZoneClient<$Result.GetResult<Prisma.$ZonePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Zone that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZoneFindFirstOrThrowArgs} args - Arguments to find a Zone
+     * @example
+     * // Get one Zone
+     * const zone = await prisma.zone.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ZoneFindFirstOrThrowArgs>(args?: SelectSubset<T, ZoneFindFirstOrThrowArgs<ExtArgs>>): Prisma__ZoneClient<$Result.GetResult<Prisma.$ZonePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Zones that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZoneFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Zones
+     * const zones = await prisma.zone.findMany()
+     * 
+     * // Get first 10 Zones
+     * const zones = await prisma.zone.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const zoneWithIdOnly = await prisma.zone.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ZoneFindManyArgs>(args?: SelectSubset<T, ZoneFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ZonePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Zone.
+     * @param {ZoneCreateArgs} args - Arguments to create a Zone.
+     * @example
+     * // Create one Zone
+     * const Zone = await prisma.zone.create({
+     *   data: {
+     *     // ... data to create a Zone
+     *   }
+     * })
+     * 
+     */
+    create<T extends ZoneCreateArgs>(args: SelectSubset<T, ZoneCreateArgs<ExtArgs>>): Prisma__ZoneClient<$Result.GetResult<Prisma.$ZonePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Zones.
+     * @param {ZoneCreateManyArgs} args - Arguments to create many Zones.
+     * @example
+     * // Create many Zones
+     * const zone = await prisma.zone.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ZoneCreateManyArgs>(args?: SelectSubset<T, ZoneCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a Zone.
+     * @param {ZoneDeleteArgs} args - Arguments to delete one Zone.
+     * @example
+     * // Delete one Zone
+     * const Zone = await prisma.zone.delete({
+     *   where: {
+     *     // ... filter to delete one Zone
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ZoneDeleteArgs>(args: SelectSubset<T, ZoneDeleteArgs<ExtArgs>>): Prisma__ZoneClient<$Result.GetResult<Prisma.$ZonePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Zone.
+     * @param {ZoneUpdateArgs} args - Arguments to update one Zone.
+     * @example
+     * // Update one Zone
+     * const zone = await prisma.zone.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ZoneUpdateArgs>(args: SelectSubset<T, ZoneUpdateArgs<ExtArgs>>): Prisma__ZoneClient<$Result.GetResult<Prisma.$ZonePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Zones.
+     * @param {ZoneDeleteManyArgs} args - Arguments to filter Zones to delete.
+     * @example
+     * // Delete a few Zones
+     * const { count } = await prisma.zone.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ZoneDeleteManyArgs>(args?: SelectSubset<T, ZoneDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Zones.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZoneUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Zones
+     * const zone = await prisma.zone.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ZoneUpdateManyArgs>(args: SelectSubset<T, ZoneUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one Zone.
+     * @param {ZoneUpsertArgs} args - Arguments to update or create a Zone.
+     * @example
+     * // Update or create a Zone
+     * const zone = await prisma.zone.upsert({
+     *   create: {
+     *     // ... data to create a Zone
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Zone we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ZoneUpsertArgs>(args: SelectSubset<T, ZoneUpsertArgs<ExtArgs>>): Prisma__ZoneClient<$Result.GetResult<Prisma.$ZonePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Zones.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZoneCountArgs} args - Arguments to filter Zones to count.
+     * @example
+     * // Count the number of Zones
+     * const count = await prisma.zone.count({
+     *   where: {
+     *     // ... the filter for the Zones we want to count
+     *   }
+     * })
+    **/
+    count<T extends ZoneCountArgs>(
+      args?: Subset<T, ZoneCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ZoneCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Zone.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZoneAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ZoneAggregateArgs>(args: Subset<T, ZoneAggregateArgs>): Prisma.PrismaPromise<GetZoneAggregateType<T>>
+
+    /**
+     * Group by Zone.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZoneGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ZoneGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ZoneGroupByArgs['orderBy'] }
+        : { orderBy?: ZoneGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ZoneGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetZoneGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Zone model
+   */
+  readonly fields: ZoneFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Zone.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ZoneClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    computerLayouts<T extends Zone$computerLayoutsArgs<ExtArgs> = {}>(args?: Subset<T, Zone$computerLayoutsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ComputerLayoutPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Zone model
+   */
+  interface ZoneFieldRefs {
+    readonly id: FieldRef<"Zone", 'Int'>
+    readonly name: FieldRef<"Zone", 'String'>
+    readonly description: FieldRef<"Zone", 'String'>
+    readonly createdAt: FieldRef<"Zone", 'DateTime'>
+    readonly updatedAt: FieldRef<"Zone", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Zone findUnique
+   */
+  export type ZoneFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Zone
+     */
+    select?: ZoneSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Zone
+     */
+    omit?: ZoneOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZoneInclude<ExtArgs> | null
+    /**
+     * Filter, which Zone to fetch.
+     */
+    where: ZoneWhereUniqueInput
+  }
+
+  /**
+   * Zone findUniqueOrThrow
+   */
+  export type ZoneFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Zone
+     */
+    select?: ZoneSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Zone
+     */
+    omit?: ZoneOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZoneInclude<ExtArgs> | null
+    /**
+     * Filter, which Zone to fetch.
+     */
+    where: ZoneWhereUniqueInput
+  }
+
+  /**
+   * Zone findFirst
+   */
+  export type ZoneFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Zone
+     */
+    select?: ZoneSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Zone
+     */
+    omit?: ZoneOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZoneInclude<ExtArgs> | null
+    /**
+     * Filter, which Zone to fetch.
+     */
+    where?: ZoneWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Zones to fetch.
+     */
+    orderBy?: ZoneOrderByWithRelationInput | ZoneOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Zones.
+     */
+    cursor?: ZoneWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Zones from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Zones.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Zones.
+     */
+    distinct?: ZoneScalarFieldEnum | ZoneScalarFieldEnum[]
+  }
+
+  /**
+   * Zone findFirstOrThrow
+   */
+  export type ZoneFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Zone
+     */
+    select?: ZoneSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Zone
+     */
+    omit?: ZoneOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZoneInclude<ExtArgs> | null
+    /**
+     * Filter, which Zone to fetch.
+     */
+    where?: ZoneWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Zones to fetch.
+     */
+    orderBy?: ZoneOrderByWithRelationInput | ZoneOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Zones.
+     */
+    cursor?: ZoneWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Zones from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Zones.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Zones.
+     */
+    distinct?: ZoneScalarFieldEnum | ZoneScalarFieldEnum[]
+  }
+
+  /**
+   * Zone findMany
+   */
+  export type ZoneFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Zone
+     */
+    select?: ZoneSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Zone
+     */
+    omit?: ZoneOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZoneInclude<ExtArgs> | null
+    /**
+     * Filter, which Zones to fetch.
+     */
+    where?: ZoneWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Zones to fetch.
+     */
+    orderBy?: ZoneOrderByWithRelationInput | ZoneOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Zones.
+     */
+    cursor?: ZoneWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Zones from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Zones.
+     */
+    skip?: number
+    distinct?: ZoneScalarFieldEnum | ZoneScalarFieldEnum[]
+  }
+
+  /**
+   * Zone create
+   */
+  export type ZoneCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Zone
+     */
+    select?: ZoneSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Zone
+     */
+    omit?: ZoneOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZoneInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Zone.
+     */
+    data: XOR<ZoneCreateInput, ZoneUncheckedCreateInput>
+  }
+
+  /**
+   * Zone createMany
+   */
+  export type ZoneCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Zones.
+     */
+    data: ZoneCreateManyInput | ZoneCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Zone update
+   */
+  export type ZoneUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Zone
+     */
+    select?: ZoneSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Zone
+     */
+    omit?: ZoneOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZoneInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Zone.
+     */
+    data: XOR<ZoneUpdateInput, ZoneUncheckedUpdateInput>
+    /**
+     * Choose, which Zone to update.
+     */
+    where: ZoneWhereUniqueInput
+  }
+
+  /**
+   * Zone updateMany
+   */
+  export type ZoneUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Zones.
+     */
+    data: XOR<ZoneUpdateManyMutationInput, ZoneUncheckedUpdateManyInput>
+    /**
+     * Filter which Zones to update
+     */
+    where?: ZoneWhereInput
+    /**
+     * Limit how many Zones to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Zone upsert
+   */
+  export type ZoneUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Zone
+     */
+    select?: ZoneSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Zone
+     */
+    omit?: ZoneOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZoneInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Zone to update in case it exists.
+     */
+    where: ZoneWhereUniqueInput
+    /**
+     * In case the Zone found by the `where` argument doesn't exist, create a new Zone with this data.
+     */
+    create: XOR<ZoneCreateInput, ZoneUncheckedCreateInput>
+    /**
+     * In case the Zone was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ZoneUpdateInput, ZoneUncheckedUpdateInput>
+  }
+
+  /**
+   * Zone delete
+   */
+  export type ZoneDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Zone
+     */
+    select?: ZoneSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Zone
+     */
+    omit?: ZoneOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZoneInclude<ExtArgs> | null
+    /**
+     * Filter which Zone to delete.
+     */
+    where: ZoneWhereUniqueInput
+  }
+
+  /**
+   * Zone deleteMany
+   */
+  export type ZoneDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Zones to delete
+     */
+    where?: ZoneWhereInput
+    /**
+     * Limit how many Zones to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Zone.computerLayouts
+   */
+  export type Zone$computerLayoutsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComputerLayout
+     */
+    select?: ComputerLayoutSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComputerLayout
+     */
+    omit?: ComputerLayoutOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComputerLayoutInclude<ExtArgs> | null
+    where?: ComputerLayoutWhereInput
+    orderBy?: ComputerLayoutOrderByWithRelationInput | ComputerLayoutOrderByWithRelationInput[]
+    cursor?: ComputerLayoutWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ComputerLayoutScalarFieldEnum | ComputerLayoutScalarFieldEnum[]
+  }
+
+  /**
+   * Zone without action
+   */
+  export type ZoneDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Zone
+     */
+    select?: ZoneSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Zone
+     */
+    omit?: ZoneOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZoneInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ComputerLayout
+   */
+
+  export type AggregateComputerLayout = {
+    _count: ComputerLayoutCountAggregateOutputType | null
+    _avg: ComputerLayoutAvgAggregateOutputType | null
+    _sum: ComputerLayoutSumAggregateOutputType | null
+    _min: ComputerLayoutMinAggregateOutputType | null
+    _max: ComputerLayoutMaxAggregateOutputType | null
+  }
+
+  export type ComputerLayoutAvgAggregateOutputType = {
+    id: number | null
+    zoneId: number | null
+    x: number | null
+    y: number | null
+    w: number | null
+    h: number | null
+  }
+
+  export type ComputerLayoutSumAggregateOutputType = {
+    id: number | null
+    zoneId: number | null
+    x: number | null
+    y: number | null
+    w: number | null
+    h: number | null
+  }
+
+  export type ComputerLayoutMinAggregateOutputType = {
+    id: number | null
+    zoneId: number | null
+    macAddress: string | null
+    x: number | null
+    y: number | null
+    w: number | null
+    h: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ComputerLayoutMaxAggregateOutputType = {
+    id: number | null
+    zoneId: number | null
+    macAddress: string | null
+    x: number | null
+    y: number | null
+    w: number | null
+    h: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ComputerLayoutCountAggregateOutputType = {
+    id: number
+    zoneId: number
+    macAddress: number
+    x: number
+    y: number
+    w: number
+    h: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ComputerLayoutAvgAggregateInputType = {
+    id?: true
+    zoneId?: true
+    x?: true
+    y?: true
+    w?: true
+    h?: true
+  }
+
+  export type ComputerLayoutSumAggregateInputType = {
+    id?: true
+    zoneId?: true
+    x?: true
+    y?: true
+    w?: true
+    h?: true
+  }
+
+  export type ComputerLayoutMinAggregateInputType = {
+    id?: true
+    zoneId?: true
+    macAddress?: true
+    x?: true
+    y?: true
+    w?: true
+    h?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ComputerLayoutMaxAggregateInputType = {
+    id?: true
+    zoneId?: true
+    macAddress?: true
+    x?: true
+    y?: true
+    w?: true
+    h?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ComputerLayoutCountAggregateInputType = {
+    id?: true
+    zoneId?: true
+    macAddress?: true
+    x?: true
+    y?: true
+    w?: true
+    h?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ComputerLayoutAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ComputerLayout to aggregate.
+     */
+    where?: ComputerLayoutWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ComputerLayouts to fetch.
+     */
+    orderBy?: ComputerLayoutOrderByWithRelationInput | ComputerLayoutOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ComputerLayoutWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ComputerLayouts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ComputerLayouts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ComputerLayouts
+    **/
+    _count?: true | ComputerLayoutCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ComputerLayoutAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ComputerLayoutSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ComputerLayoutMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ComputerLayoutMaxAggregateInputType
+  }
+
+  export type GetComputerLayoutAggregateType<T extends ComputerLayoutAggregateArgs> = {
+        [P in keyof T & keyof AggregateComputerLayout]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateComputerLayout[P]>
+      : GetScalarType<T[P], AggregateComputerLayout[P]>
+  }
+
+
+
+
+  export type ComputerLayoutGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ComputerLayoutWhereInput
+    orderBy?: ComputerLayoutOrderByWithAggregationInput | ComputerLayoutOrderByWithAggregationInput[]
+    by: ComputerLayoutScalarFieldEnum[] | ComputerLayoutScalarFieldEnum
+    having?: ComputerLayoutScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ComputerLayoutCountAggregateInputType | true
+    _avg?: ComputerLayoutAvgAggregateInputType
+    _sum?: ComputerLayoutSumAggregateInputType
+    _min?: ComputerLayoutMinAggregateInputType
+    _max?: ComputerLayoutMaxAggregateInputType
+  }
+
+  export type ComputerLayoutGroupByOutputType = {
+    id: number
+    zoneId: number
+    macAddress: string
+    x: number
+    y: number
+    w: number
+    h: number
+    createdAt: Date
+    updatedAt: Date
+    _count: ComputerLayoutCountAggregateOutputType | null
+    _avg: ComputerLayoutAvgAggregateOutputType | null
+    _sum: ComputerLayoutSumAggregateOutputType | null
+    _min: ComputerLayoutMinAggregateOutputType | null
+    _max: ComputerLayoutMaxAggregateOutputType | null
+  }
+
+  type GetComputerLayoutGroupByPayload<T extends ComputerLayoutGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ComputerLayoutGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ComputerLayoutGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ComputerLayoutGroupByOutputType[P]>
+            : GetScalarType<T[P], ComputerLayoutGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ComputerLayoutSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    zoneId?: boolean
+    macAddress?: boolean
+    x?: boolean
+    y?: boolean
+    w?: boolean
+    h?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    zone?: boolean | ZoneDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["computerLayout"]>
+
+
+
+  export type ComputerLayoutSelectScalar = {
+    id?: boolean
+    zoneId?: boolean
+    macAddress?: boolean
+    x?: boolean
+    y?: boolean
+    w?: boolean
+    h?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ComputerLayoutOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "zoneId" | "macAddress" | "x" | "y" | "w" | "h" | "createdAt" | "updatedAt", ExtArgs["result"]["computerLayout"]>
+  export type ComputerLayoutInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    zone?: boolean | ZoneDefaultArgs<ExtArgs>
+  }
+
+  export type $ComputerLayoutPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ComputerLayout"
+    objects: {
+      zone: Prisma.$ZonePayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      zoneId: number
+      macAddress: string
+      x: number
+      y: number
+      w: number
+      h: number
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["computerLayout"]>
+    composites: {}
+  }
+
+  type ComputerLayoutGetPayload<S extends boolean | null | undefined | ComputerLayoutDefaultArgs> = $Result.GetResult<Prisma.$ComputerLayoutPayload, S>
+
+  type ComputerLayoutCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ComputerLayoutFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ComputerLayoutCountAggregateInputType | true
+    }
+
+  export interface ComputerLayoutDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ComputerLayout'], meta: { name: 'ComputerLayout' } }
+    /**
+     * Find zero or one ComputerLayout that matches the filter.
+     * @param {ComputerLayoutFindUniqueArgs} args - Arguments to find a ComputerLayout
+     * @example
+     * // Get one ComputerLayout
+     * const computerLayout = await prisma.computerLayout.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ComputerLayoutFindUniqueArgs>(args: SelectSubset<T, ComputerLayoutFindUniqueArgs<ExtArgs>>): Prisma__ComputerLayoutClient<$Result.GetResult<Prisma.$ComputerLayoutPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ComputerLayout that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ComputerLayoutFindUniqueOrThrowArgs} args - Arguments to find a ComputerLayout
+     * @example
+     * // Get one ComputerLayout
+     * const computerLayout = await prisma.computerLayout.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ComputerLayoutFindUniqueOrThrowArgs>(args: SelectSubset<T, ComputerLayoutFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ComputerLayoutClient<$Result.GetResult<Prisma.$ComputerLayoutPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ComputerLayout that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComputerLayoutFindFirstArgs} args - Arguments to find a ComputerLayout
+     * @example
+     * // Get one ComputerLayout
+     * const computerLayout = await prisma.computerLayout.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ComputerLayoutFindFirstArgs>(args?: SelectSubset<T, ComputerLayoutFindFirstArgs<ExtArgs>>): Prisma__ComputerLayoutClient<$Result.GetResult<Prisma.$ComputerLayoutPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ComputerLayout that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComputerLayoutFindFirstOrThrowArgs} args - Arguments to find a ComputerLayout
+     * @example
+     * // Get one ComputerLayout
+     * const computerLayout = await prisma.computerLayout.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ComputerLayoutFindFirstOrThrowArgs>(args?: SelectSubset<T, ComputerLayoutFindFirstOrThrowArgs<ExtArgs>>): Prisma__ComputerLayoutClient<$Result.GetResult<Prisma.$ComputerLayoutPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ComputerLayouts that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComputerLayoutFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ComputerLayouts
+     * const computerLayouts = await prisma.computerLayout.findMany()
+     * 
+     * // Get first 10 ComputerLayouts
+     * const computerLayouts = await prisma.computerLayout.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const computerLayoutWithIdOnly = await prisma.computerLayout.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ComputerLayoutFindManyArgs>(args?: SelectSubset<T, ComputerLayoutFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ComputerLayoutPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ComputerLayout.
+     * @param {ComputerLayoutCreateArgs} args - Arguments to create a ComputerLayout.
+     * @example
+     * // Create one ComputerLayout
+     * const ComputerLayout = await prisma.computerLayout.create({
+     *   data: {
+     *     // ... data to create a ComputerLayout
+     *   }
+     * })
+     * 
+     */
+    create<T extends ComputerLayoutCreateArgs>(args: SelectSubset<T, ComputerLayoutCreateArgs<ExtArgs>>): Prisma__ComputerLayoutClient<$Result.GetResult<Prisma.$ComputerLayoutPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ComputerLayouts.
+     * @param {ComputerLayoutCreateManyArgs} args - Arguments to create many ComputerLayouts.
+     * @example
+     * // Create many ComputerLayouts
+     * const computerLayout = await prisma.computerLayout.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ComputerLayoutCreateManyArgs>(args?: SelectSubset<T, ComputerLayoutCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a ComputerLayout.
+     * @param {ComputerLayoutDeleteArgs} args - Arguments to delete one ComputerLayout.
+     * @example
+     * // Delete one ComputerLayout
+     * const ComputerLayout = await prisma.computerLayout.delete({
+     *   where: {
+     *     // ... filter to delete one ComputerLayout
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ComputerLayoutDeleteArgs>(args: SelectSubset<T, ComputerLayoutDeleteArgs<ExtArgs>>): Prisma__ComputerLayoutClient<$Result.GetResult<Prisma.$ComputerLayoutPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ComputerLayout.
+     * @param {ComputerLayoutUpdateArgs} args - Arguments to update one ComputerLayout.
+     * @example
+     * // Update one ComputerLayout
+     * const computerLayout = await prisma.computerLayout.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ComputerLayoutUpdateArgs>(args: SelectSubset<T, ComputerLayoutUpdateArgs<ExtArgs>>): Prisma__ComputerLayoutClient<$Result.GetResult<Prisma.$ComputerLayoutPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ComputerLayouts.
+     * @param {ComputerLayoutDeleteManyArgs} args - Arguments to filter ComputerLayouts to delete.
+     * @example
+     * // Delete a few ComputerLayouts
+     * const { count } = await prisma.computerLayout.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ComputerLayoutDeleteManyArgs>(args?: SelectSubset<T, ComputerLayoutDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ComputerLayouts.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComputerLayoutUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ComputerLayouts
+     * const computerLayout = await prisma.computerLayout.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ComputerLayoutUpdateManyArgs>(args: SelectSubset<T, ComputerLayoutUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one ComputerLayout.
+     * @param {ComputerLayoutUpsertArgs} args - Arguments to update or create a ComputerLayout.
+     * @example
+     * // Update or create a ComputerLayout
+     * const computerLayout = await prisma.computerLayout.upsert({
+     *   create: {
+     *     // ... data to create a ComputerLayout
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ComputerLayout we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ComputerLayoutUpsertArgs>(args: SelectSubset<T, ComputerLayoutUpsertArgs<ExtArgs>>): Prisma__ComputerLayoutClient<$Result.GetResult<Prisma.$ComputerLayoutPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ComputerLayouts.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComputerLayoutCountArgs} args - Arguments to filter ComputerLayouts to count.
+     * @example
+     * // Count the number of ComputerLayouts
+     * const count = await prisma.computerLayout.count({
+     *   where: {
+     *     // ... the filter for the ComputerLayouts we want to count
+     *   }
+     * })
+    **/
+    count<T extends ComputerLayoutCountArgs>(
+      args?: Subset<T, ComputerLayoutCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ComputerLayoutCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ComputerLayout.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComputerLayoutAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ComputerLayoutAggregateArgs>(args: Subset<T, ComputerLayoutAggregateArgs>): Prisma.PrismaPromise<GetComputerLayoutAggregateType<T>>
+
+    /**
+     * Group by ComputerLayout.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ComputerLayoutGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ComputerLayoutGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ComputerLayoutGroupByArgs['orderBy'] }
+        : { orderBy?: ComputerLayoutGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ComputerLayoutGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetComputerLayoutGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ComputerLayout model
+   */
+  readonly fields: ComputerLayoutFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ComputerLayout.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ComputerLayoutClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    zone<T extends ZoneDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ZoneDefaultArgs<ExtArgs>>): Prisma__ZoneClient<$Result.GetResult<Prisma.$ZonePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ComputerLayout model
+   */
+  interface ComputerLayoutFieldRefs {
+    readonly id: FieldRef<"ComputerLayout", 'Int'>
+    readonly zoneId: FieldRef<"ComputerLayout", 'Int'>
+    readonly macAddress: FieldRef<"ComputerLayout", 'String'>
+    readonly x: FieldRef<"ComputerLayout", 'Int'>
+    readonly y: FieldRef<"ComputerLayout", 'Int'>
+    readonly w: FieldRef<"ComputerLayout", 'Int'>
+    readonly h: FieldRef<"ComputerLayout", 'Int'>
+    readonly createdAt: FieldRef<"ComputerLayout", 'DateTime'>
+    readonly updatedAt: FieldRef<"ComputerLayout", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ComputerLayout findUnique
+   */
+  export type ComputerLayoutFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComputerLayout
+     */
+    select?: ComputerLayoutSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComputerLayout
+     */
+    omit?: ComputerLayoutOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComputerLayoutInclude<ExtArgs> | null
+    /**
+     * Filter, which ComputerLayout to fetch.
+     */
+    where: ComputerLayoutWhereUniqueInput
+  }
+
+  /**
+   * ComputerLayout findUniqueOrThrow
+   */
+  export type ComputerLayoutFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComputerLayout
+     */
+    select?: ComputerLayoutSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComputerLayout
+     */
+    omit?: ComputerLayoutOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComputerLayoutInclude<ExtArgs> | null
+    /**
+     * Filter, which ComputerLayout to fetch.
+     */
+    where: ComputerLayoutWhereUniqueInput
+  }
+
+  /**
+   * ComputerLayout findFirst
+   */
+  export type ComputerLayoutFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComputerLayout
+     */
+    select?: ComputerLayoutSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComputerLayout
+     */
+    omit?: ComputerLayoutOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComputerLayoutInclude<ExtArgs> | null
+    /**
+     * Filter, which ComputerLayout to fetch.
+     */
+    where?: ComputerLayoutWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ComputerLayouts to fetch.
+     */
+    orderBy?: ComputerLayoutOrderByWithRelationInput | ComputerLayoutOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ComputerLayouts.
+     */
+    cursor?: ComputerLayoutWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ComputerLayouts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ComputerLayouts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ComputerLayouts.
+     */
+    distinct?: ComputerLayoutScalarFieldEnum | ComputerLayoutScalarFieldEnum[]
+  }
+
+  /**
+   * ComputerLayout findFirstOrThrow
+   */
+  export type ComputerLayoutFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComputerLayout
+     */
+    select?: ComputerLayoutSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComputerLayout
+     */
+    omit?: ComputerLayoutOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComputerLayoutInclude<ExtArgs> | null
+    /**
+     * Filter, which ComputerLayout to fetch.
+     */
+    where?: ComputerLayoutWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ComputerLayouts to fetch.
+     */
+    orderBy?: ComputerLayoutOrderByWithRelationInput | ComputerLayoutOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ComputerLayouts.
+     */
+    cursor?: ComputerLayoutWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ComputerLayouts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ComputerLayouts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ComputerLayouts.
+     */
+    distinct?: ComputerLayoutScalarFieldEnum | ComputerLayoutScalarFieldEnum[]
+  }
+
+  /**
+   * ComputerLayout findMany
+   */
+  export type ComputerLayoutFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComputerLayout
+     */
+    select?: ComputerLayoutSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComputerLayout
+     */
+    omit?: ComputerLayoutOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComputerLayoutInclude<ExtArgs> | null
+    /**
+     * Filter, which ComputerLayouts to fetch.
+     */
+    where?: ComputerLayoutWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ComputerLayouts to fetch.
+     */
+    orderBy?: ComputerLayoutOrderByWithRelationInput | ComputerLayoutOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ComputerLayouts.
+     */
+    cursor?: ComputerLayoutWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ComputerLayouts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ComputerLayouts.
+     */
+    skip?: number
+    distinct?: ComputerLayoutScalarFieldEnum | ComputerLayoutScalarFieldEnum[]
+  }
+
+  /**
+   * ComputerLayout create
+   */
+  export type ComputerLayoutCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComputerLayout
+     */
+    select?: ComputerLayoutSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComputerLayout
+     */
+    omit?: ComputerLayoutOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComputerLayoutInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ComputerLayout.
+     */
+    data: XOR<ComputerLayoutCreateInput, ComputerLayoutUncheckedCreateInput>
+  }
+
+  /**
+   * ComputerLayout createMany
+   */
+  export type ComputerLayoutCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ComputerLayouts.
+     */
+    data: ComputerLayoutCreateManyInput | ComputerLayoutCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ComputerLayout update
+   */
+  export type ComputerLayoutUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComputerLayout
+     */
+    select?: ComputerLayoutSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComputerLayout
+     */
+    omit?: ComputerLayoutOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComputerLayoutInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ComputerLayout.
+     */
+    data: XOR<ComputerLayoutUpdateInput, ComputerLayoutUncheckedUpdateInput>
+    /**
+     * Choose, which ComputerLayout to update.
+     */
+    where: ComputerLayoutWhereUniqueInput
+  }
+
+  /**
+   * ComputerLayout updateMany
+   */
+  export type ComputerLayoutUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ComputerLayouts.
+     */
+    data: XOR<ComputerLayoutUpdateManyMutationInput, ComputerLayoutUncheckedUpdateManyInput>
+    /**
+     * Filter which ComputerLayouts to update
+     */
+    where?: ComputerLayoutWhereInput
+    /**
+     * Limit how many ComputerLayouts to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ComputerLayout upsert
+   */
+  export type ComputerLayoutUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComputerLayout
+     */
+    select?: ComputerLayoutSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComputerLayout
+     */
+    omit?: ComputerLayoutOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComputerLayoutInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ComputerLayout to update in case it exists.
+     */
+    where: ComputerLayoutWhereUniqueInput
+    /**
+     * In case the ComputerLayout found by the `where` argument doesn't exist, create a new ComputerLayout with this data.
+     */
+    create: XOR<ComputerLayoutCreateInput, ComputerLayoutUncheckedCreateInput>
+    /**
+     * In case the ComputerLayout was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ComputerLayoutUpdateInput, ComputerLayoutUncheckedUpdateInput>
+  }
+
+  /**
+   * ComputerLayout delete
+   */
+  export type ComputerLayoutDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComputerLayout
+     */
+    select?: ComputerLayoutSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComputerLayout
+     */
+    omit?: ComputerLayoutOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComputerLayoutInclude<ExtArgs> | null
+    /**
+     * Filter which ComputerLayout to delete.
+     */
+    where: ComputerLayoutWhereUniqueInput
+  }
+
+  /**
+   * ComputerLayout deleteMany
+   */
+  export type ComputerLayoutDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ComputerLayouts to delete
+     */
+    where?: ComputerLayoutWhereInput
+    /**
+     * Limit how many ComputerLayouts to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ComputerLayout without action
+   */
+  export type ComputerLayoutDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ComputerLayout
+     */
+    select?: ComputerLayoutSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ComputerLayout
+     */
+    omit?: ComputerLayoutOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ComputerLayoutInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -73243,6 +75456,32 @@ export namespace Prisma {
   export type StaffViolationScalarFieldEnum = (typeof StaffViolationScalarFieldEnum)[keyof typeof StaffViolationScalarFieldEnum]
 
 
+  export const ZoneScalarFieldEnum: {
+    id: 'id',
+    name: 'name',
+    description: 'description',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ZoneScalarFieldEnum = (typeof ZoneScalarFieldEnum)[keyof typeof ZoneScalarFieldEnum]
+
+
+  export const ComputerLayoutScalarFieldEnum: {
+    id: 'id',
+    zoneId: 'zoneId',
+    macAddress: 'macAddress',
+    x: 'x',
+    y: 'y',
+    w: 'w',
+    h: 'h',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ComputerLayoutScalarFieldEnum = (typeof ComputerLayoutScalarFieldEnum)[keyof typeof ComputerLayoutScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -73714,6 +75953,21 @@ export namespace Prisma {
   };
 
   export type StaffViolationOrderByRelevanceFieldEnum = (typeof StaffViolationOrderByRelevanceFieldEnum)[keyof typeof StaffViolationOrderByRelevanceFieldEnum]
+
+
+  export const ZoneOrderByRelevanceFieldEnum: {
+    name: 'name',
+    description: 'description'
+  };
+
+  export type ZoneOrderByRelevanceFieldEnum = (typeof ZoneOrderByRelevanceFieldEnum)[keyof typeof ZoneOrderByRelevanceFieldEnum]
+
+
+  export const ComputerLayoutOrderByRelevanceFieldEnum: {
+    macAddress: 'macAddress'
+  };
+
+  export type ComputerLayoutOrderByRelevanceFieldEnum = (typeof ComputerLayoutOrderByRelevanceFieldEnum)[keyof typeof ComputerLayoutOrderByRelevanceFieldEnum]
 
 
   /**
@@ -79179,6 +81433,142 @@ export namespace Prisma {
     occurrenceNumber?: IntWithAggregatesFilter<"StaffViolation"> | number
     amount?: DecimalNullableWithAggregatesFilter<"StaffViolation"> | Decimal | DecimalJsLike | number | string | null
     note?: StringNullableWithAggregatesFilter<"StaffViolation"> | string | null
+  }
+
+  export type ZoneWhereInput = {
+    AND?: ZoneWhereInput | ZoneWhereInput[]
+    OR?: ZoneWhereInput[]
+    NOT?: ZoneWhereInput | ZoneWhereInput[]
+    id?: IntFilter<"Zone"> | number
+    name?: StringFilter<"Zone"> | string
+    description?: StringNullableFilter<"Zone"> | string | null
+    createdAt?: DateTimeFilter<"Zone"> | Date | string
+    updatedAt?: DateTimeFilter<"Zone"> | Date | string
+    computerLayouts?: ComputerLayoutListRelationFilter
+  }
+
+  export type ZoneOrderByWithRelationInput = {
+    id?: SortOrder
+    name?: SortOrder
+    description?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    computerLayouts?: ComputerLayoutOrderByRelationAggregateInput
+    _relevance?: ZoneOrderByRelevanceInput
+  }
+
+  export type ZoneWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: ZoneWhereInput | ZoneWhereInput[]
+    OR?: ZoneWhereInput[]
+    NOT?: ZoneWhereInput | ZoneWhereInput[]
+    name?: StringFilter<"Zone"> | string
+    description?: StringNullableFilter<"Zone"> | string | null
+    createdAt?: DateTimeFilter<"Zone"> | Date | string
+    updatedAt?: DateTimeFilter<"Zone"> | Date | string
+    computerLayouts?: ComputerLayoutListRelationFilter
+  }, "id">
+
+  export type ZoneOrderByWithAggregationInput = {
+    id?: SortOrder
+    name?: SortOrder
+    description?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ZoneCountOrderByAggregateInput
+    _avg?: ZoneAvgOrderByAggregateInput
+    _max?: ZoneMaxOrderByAggregateInput
+    _min?: ZoneMinOrderByAggregateInput
+    _sum?: ZoneSumOrderByAggregateInput
+  }
+
+  export type ZoneScalarWhereWithAggregatesInput = {
+    AND?: ZoneScalarWhereWithAggregatesInput | ZoneScalarWhereWithAggregatesInput[]
+    OR?: ZoneScalarWhereWithAggregatesInput[]
+    NOT?: ZoneScalarWhereWithAggregatesInput | ZoneScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"Zone"> | number
+    name?: StringWithAggregatesFilter<"Zone"> | string
+    description?: StringNullableWithAggregatesFilter<"Zone"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"Zone"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Zone"> | Date | string
+  }
+
+  export type ComputerLayoutWhereInput = {
+    AND?: ComputerLayoutWhereInput | ComputerLayoutWhereInput[]
+    OR?: ComputerLayoutWhereInput[]
+    NOT?: ComputerLayoutWhereInput | ComputerLayoutWhereInput[]
+    id?: IntFilter<"ComputerLayout"> | number
+    zoneId?: IntFilter<"ComputerLayout"> | number
+    macAddress?: StringFilter<"ComputerLayout"> | string
+    x?: IntFilter<"ComputerLayout"> | number
+    y?: IntFilter<"ComputerLayout"> | number
+    w?: IntFilter<"ComputerLayout"> | number
+    h?: IntFilter<"ComputerLayout"> | number
+    createdAt?: DateTimeFilter<"ComputerLayout"> | Date | string
+    updatedAt?: DateTimeFilter<"ComputerLayout"> | Date | string
+    zone?: XOR<ZoneScalarRelationFilter, ZoneWhereInput>
+  }
+
+  export type ComputerLayoutOrderByWithRelationInput = {
+    id?: SortOrder
+    zoneId?: SortOrder
+    macAddress?: SortOrder
+    x?: SortOrder
+    y?: SortOrder
+    w?: SortOrder
+    h?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    zone?: ZoneOrderByWithRelationInput
+    _relevance?: ComputerLayoutOrderByRelevanceInput
+  }
+
+  export type ComputerLayoutWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    macAddress?: string
+    AND?: ComputerLayoutWhereInput | ComputerLayoutWhereInput[]
+    OR?: ComputerLayoutWhereInput[]
+    NOT?: ComputerLayoutWhereInput | ComputerLayoutWhereInput[]
+    zoneId?: IntFilter<"ComputerLayout"> | number
+    x?: IntFilter<"ComputerLayout"> | number
+    y?: IntFilter<"ComputerLayout"> | number
+    w?: IntFilter<"ComputerLayout"> | number
+    h?: IntFilter<"ComputerLayout"> | number
+    createdAt?: DateTimeFilter<"ComputerLayout"> | Date | string
+    updatedAt?: DateTimeFilter<"ComputerLayout"> | Date | string
+    zone?: XOR<ZoneScalarRelationFilter, ZoneWhereInput>
+  }, "id" | "macAddress">
+
+  export type ComputerLayoutOrderByWithAggregationInput = {
+    id?: SortOrder
+    zoneId?: SortOrder
+    macAddress?: SortOrder
+    x?: SortOrder
+    y?: SortOrder
+    w?: SortOrder
+    h?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ComputerLayoutCountOrderByAggregateInput
+    _avg?: ComputerLayoutAvgOrderByAggregateInput
+    _max?: ComputerLayoutMaxOrderByAggregateInput
+    _min?: ComputerLayoutMinOrderByAggregateInput
+    _sum?: ComputerLayoutSumOrderByAggregateInput
+  }
+
+  export type ComputerLayoutScalarWhereWithAggregatesInput = {
+    AND?: ComputerLayoutScalarWhereWithAggregatesInput | ComputerLayoutScalarWhereWithAggregatesInput[]
+    OR?: ComputerLayoutScalarWhereWithAggregatesInput[]
+    NOT?: ComputerLayoutScalarWhereWithAggregatesInput | ComputerLayoutScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"ComputerLayout"> | number
+    zoneId?: IntWithAggregatesFilter<"ComputerLayout"> | number
+    macAddress?: StringWithAggregatesFilter<"ComputerLayout"> | string
+    x?: IntWithAggregatesFilter<"ComputerLayout"> | number
+    y?: IntWithAggregatesFilter<"ComputerLayout"> | number
+    w?: IntWithAggregatesFilter<"ComputerLayout"> | number
+    h?: IntWithAggregatesFilter<"ComputerLayout"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"ComputerLayout"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ComputerLayout"> | Date | string
   }
 
   export type RankCreateInput = {
@@ -84810,6 +87200,143 @@ export namespace Prisma {
     note?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
+  export type ZoneCreateInput = {
+    name: string
+    description?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    computerLayouts?: ComputerLayoutCreateNestedManyWithoutZoneInput
+  }
+
+  export type ZoneUncheckedCreateInput = {
+    id?: number
+    name: string
+    description?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    computerLayouts?: ComputerLayoutUncheckedCreateNestedManyWithoutZoneInput
+  }
+
+  export type ZoneUpdateInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    computerLayouts?: ComputerLayoutUpdateManyWithoutZoneNestedInput
+  }
+
+  export type ZoneUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    computerLayouts?: ComputerLayoutUncheckedUpdateManyWithoutZoneNestedInput
+  }
+
+  export type ZoneCreateManyInput = {
+    id?: number
+    name: string
+    description?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ZoneUpdateManyMutationInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ZoneUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ComputerLayoutCreateInput = {
+    macAddress: string
+    x?: number
+    y?: number
+    w?: number
+    h?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    zone: ZoneCreateNestedOneWithoutComputerLayoutsInput
+  }
+
+  export type ComputerLayoutUncheckedCreateInput = {
+    id?: number
+    zoneId: number
+    macAddress: string
+    x?: number
+    y?: number
+    w?: number
+    h?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ComputerLayoutUpdateInput = {
+    macAddress?: StringFieldUpdateOperationsInput | string
+    x?: IntFieldUpdateOperationsInput | number
+    y?: IntFieldUpdateOperationsInput | number
+    w?: IntFieldUpdateOperationsInput | number
+    h?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    zone?: ZoneUpdateOneRequiredWithoutComputerLayoutsNestedInput
+  }
+
+  export type ComputerLayoutUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    zoneId?: IntFieldUpdateOperationsInput | number
+    macAddress?: StringFieldUpdateOperationsInput | string
+    x?: IntFieldUpdateOperationsInput | number
+    y?: IntFieldUpdateOperationsInput | number
+    w?: IntFieldUpdateOperationsInput | number
+    h?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ComputerLayoutCreateManyInput = {
+    id?: number
+    zoneId: number
+    macAddress: string
+    x?: number
+    y?: number
+    w?: number
+    h?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ComputerLayoutUpdateManyMutationInput = {
+    macAddress?: StringFieldUpdateOperationsInput | string
+    x?: IntFieldUpdateOperationsInput | number
+    y?: IntFieldUpdateOperationsInput | number
+    w?: IntFieldUpdateOperationsInput | number
+    h?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ComputerLayoutUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    zoneId?: IntFieldUpdateOperationsInput | number
+    macAddress?: StringFieldUpdateOperationsInput | string
+    x?: IntFieldUpdateOperationsInput | number
+    y?: IntFieldUpdateOperationsInput | number
+    w?: IntFieldUpdateOperationsInput | number
+    h?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[]
@@ -89619,6 +92146,119 @@ export namespace Prisma {
     amount?: SortOrder
   }
 
+  export type ComputerLayoutListRelationFilter = {
+    every?: ComputerLayoutWhereInput
+    some?: ComputerLayoutWhereInput
+    none?: ComputerLayoutWhereInput
+  }
+
+  export type ComputerLayoutOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ZoneOrderByRelevanceInput = {
+    fields: ZoneOrderByRelevanceFieldEnum | ZoneOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
+  }
+
+  export type ZoneCountOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    description?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ZoneAvgOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
+  export type ZoneMaxOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    description?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ZoneMinOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    description?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ZoneSumOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
+  export type ZoneScalarRelationFilter = {
+    is?: ZoneWhereInput
+    isNot?: ZoneWhereInput
+  }
+
+  export type ComputerLayoutOrderByRelevanceInput = {
+    fields: ComputerLayoutOrderByRelevanceFieldEnum | ComputerLayoutOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
+  }
+
+  export type ComputerLayoutCountOrderByAggregateInput = {
+    id?: SortOrder
+    zoneId?: SortOrder
+    macAddress?: SortOrder
+    x?: SortOrder
+    y?: SortOrder
+    w?: SortOrder
+    h?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ComputerLayoutAvgOrderByAggregateInput = {
+    id?: SortOrder
+    zoneId?: SortOrder
+    x?: SortOrder
+    y?: SortOrder
+    w?: SortOrder
+    h?: SortOrder
+  }
+
+  export type ComputerLayoutMaxOrderByAggregateInput = {
+    id?: SortOrder
+    zoneId?: SortOrder
+    macAddress?: SortOrder
+    x?: SortOrder
+    y?: SortOrder
+    w?: SortOrder
+    h?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ComputerLayoutMinOrderByAggregateInput = {
+    id?: SortOrder
+    zoneId?: SortOrder
+    macAddress?: SortOrder
+    x?: SortOrder
+    y?: SortOrder
+    w?: SortOrder
+    h?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ComputerLayoutSumOrderByAggregateInput = {
+    id?: SortOrder
+    zoneId?: SortOrder
+    x?: SortOrder
+    y?: SortOrder
+    w?: SortOrder
+    h?: SortOrder
+  }
+
   export type StringFieldUpdateOperationsInput = {
     set?: string
   }
@@ -91937,6 +94577,62 @@ export namespace Prisma {
     upsert?: StaffUpsertWithoutStaffViolationsInput
     connect?: StaffWhereUniqueInput
     update?: XOR<XOR<StaffUpdateToOneWithWhereWithoutStaffViolationsInput, StaffUpdateWithoutStaffViolationsInput>, StaffUncheckedUpdateWithoutStaffViolationsInput>
+  }
+
+  export type ComputerLayoutCreateNestedManyWithoutZoneInput = {
+    create?: XOR<ComputerLayoutCreateWithoutZoneInput, ComputerLayoutUncheckedCreateWithoutZoneInput> | ComputerLayoutCreateWithoutZoneInput[] | ComputerLayoutUncheckedCreateWithoutZoneInput[]
+    connectOrCreate?: ComputerLayoutCreateOrConnectWithoutZoneInput | ComputerLayoutCreateOrConnectWithoutZoneInput[]
+    createMany?: ComputerLayoutCreateManyZoneInputEnvelope
+    connect?: ComputerLayoutWhereUniqueInput | ComputerLayoutWhereUniqueInput[]
+  }
+
+  export type ComputerLayoutUncheckedCreateNestedManyWithoutZoneInput = {
+    create?: XOR<ComputerLayoutCreateWithoutZoneInput, ComputerLayoutUncheckedCreateWithoutZoneInput> | ComputerLayoutCreateWithoutZoneInput[] | ComputerLayoutUncheckedCreateWithoutZoneInput[]
+    connectOrCreate?: ComputerLayoutCreateOrConnectWithoutZoneInput | ComputerLayoutCreateOrConnectWithoutZoneInput[]
+    createMany?: ComputerLayoutCreateManyZoneInputEnvelope
+    connect?: ComputerLayoutWhereUniqueInput | ComputerLayoutWhereUniqueInput[]
+  }
+
+  export type ComputerLayoutUpdateManyWithoutZoneNestedInput = {
+    create?: XOR<ComputerLayoutCreateWithoutZoneInput, ComputerLayoutUncheckedCreateWithoutZoneInput> | ComputerLayoutCreateWithoutZoneInput[] | ComputerLayoutUncheckedCreateWithoutZoneInput[]
+    connectOrCreate?: ComputerLayoutCreateOrConnectWithoutZoneInput | ComputerLayoutCreateOrConnectWithoutZoneInput[]
+    upsert?: ComputerLayoutUpsertWithWhereUniqueWithoutZoneInput | ComputerLayoutUpsertWithWhereUniqueWithoutZoneInput[]
+    createMany?: ComputerLayoutCreateManyZoneInputEnvelope
+    set?: ComputerLayoutWhereUniqueInput | ComputerLayoutWhereUniqueInput[]
+    disconnect?: ComputerLayoutWhereUniqueInput | ComputerLayoutWhereUniqueInput[]
+    delete?: ComputerLayoutWhereUniqueInput | ComputerLayoutWhereUniqueInput[]
+    connect?: ComputerLayoutWhereUniqueInput | ComputerLayoutWhereUniqueInput[]
+    update?: ComputerLayoutUpdateWithWhereUniqueWithoutZoneInput | ComputerLayoutUpdateWithWhereUniqueWithoutZoneInput[]
+    updateMany?: ComputerLayoutUpdateManyWithWhereWithoutZoneInput | ComputerLayoutUpdateManyWithWhereWithoutZoneInput[]
+    deleteMany?: ComputerLayoutScalarWhereInput | ComputerLayoutScalarWhereInput[]
+  }
+
+  export type ComputerLayoutUncheckedUpdateManyWithoutZoneNestedInput = {
+    create?: XOR<ComputerLayoutCreateWithoutZoneInput, ComputerLayoutUncheckedCreateWithoutZoneInput> | ComputerLayoutCreateWithoutZoneInput[] | ComputerLayoutUncheckedCreateWithoutZoneInput[]
+    connectOrCreate?: ComputerLayoutCreateOrConnectWithoutZoneInput | ComputerLayoutCreateOrConnectWithoutZoneInput[]
+    upsert?: ComputerLayoutUpsertWithWhereUniqueWithoutZoneInput | ComputerLayoutUpsertWithWhereUniqueWithoutZoneInput[]
+    createMany?: ComputerLayoutCreateManyZoneInputEnvelope
+    set?: ComputerLayoutWhereUniqueInput | ComputerLayoutWhereUniqueInput[]
+    disconnect?: ComputerLayoutWhereUniqueInput | ComputerLayoutWhereUniqueInput[]
+    delete?: ComputerLayoutWhereUniqueInput | ComputerLayoutWhereUniqueInput[]
+    connect?: ComputerLayoutWhereUniqueInput | ComputerLayoutWhereUniqueInput[]
+    update?: ComputerLayoutUpdateWithWhereUniqueWithoutZoneInput | ComputerLayoutUpdateWithWhereUniqueWithoutZoneInput[]
+    updateMany?: ComputerLayoutUpdateManyWithWhereWithoutZoneInput | ComputerLayoutUpdateManyWithWhereWithoutZoneInput[]
+    deleteMany?: ComputerLayoutScalarWhereInput | ComputerLayoutScalarWhereInput[]
+  }
+
+  export type ZoneCreateNestedOneWithoutComputerLayoutsInput = {
+    create?: XOR<ZoneCreateWithoutComputerLayoutsInput, ZoneUncheckedCreateWithoutComputerLayoutsInput>
+    connectOrCreate?: ZoneCreateOrConnectWithoutComputerLayoutsInput
+    connect?: ZoneWhereUniqueInput
+  }
+
+  export type ZoneUpdateOneRequiredWithoutComputerLayoutsNestedInput = {
+    create?: XOR<ZoneCreateWithoutComputerLayoutsInput, ZoneUncheckedCreateWithoutComputerLayoutsInput>
+    connectOrCreate?: ZoneCreateOrConnectWithoutComputerLayoutsInput
+    upsert?: ZoneUpsertWithoutComputerLayoutsInput
+    connect?: ZoneWhereUniqueInput
+    update?: XOR<XOR<ZoneUpdateToOneWithWhereWithoutComputerLayoutsInput, ZoneUpdateWithoutComputerLayoutsInput>, ZoneUncheckedUpdateWithoutComputerLayoutsInput>
   }
 
   export type NestedIntFilter<$PrismaModel = never> = {
@@ -98817,6 +101513,114 @@ export namespace Prisma {
     staffRequests?: StaffRequestUncheckedUpdateManyWithoutStaffNestedInput
   }
 
+  export type ComputerLayoutCreateWithoutZoneInput = {
+    macAddress: string
+    x?: number
+    y?: number
+    w?: number
+    h?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ComputerLayoutUncheckedCreateWithoutZoneInput = {
+    id?: number
+    macAddress: string
+    x?: number
+    y?: number
+    w?: number
+    h?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ComputerLayoutCreateOrConnectWithoutZoneInput = {
+    where: ComputerLayoutWhereUniqueInput
+    create: XOR<ComputerLayoutCreateWithoutZoneInput, ComputerLayoutUncheckedCreateWithoutZoneInput>
+  }
+
+  export type ComputerLayoutCreateManyZoneInputEnvelope = {
+    data: ComputerLayoutCreateManyZoneInput | ComputerLayoutCreateManyZoneInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ComputerLayoutUpsertWithWhereUniqueWithoutZoneInput = {
+    where: ComputerLayoutWhereUniqueInput
+    update: XOR<ComputerLayoutUpdateWithoutZoneInput, ComputerLayoutUncheckedUpdateWithoutZoneInput>
+    create: XOR<ComputerLayoutCreateWithoutZoneInput, ComputerLayoutUncheckedCreateWithoutZoneInput>
+  }
+
+  export type ComputerLayoutUpdateWithWhereUniqueWithoutZoneInput = {
+    where: ComputerLayoutWhereUniqueInput
+    data: XOR<ComputerLayoutUpdateWithoutZoneInput, ComputerLayoutUncheckedUpdateWithoutZoneInput>
+  }
+
+  export type ComputerLayoutUpdateManyWithWhereWithoutZoneInput = {
+    where: ComputerLayoutScalarWhereInput
+    data: XOR<ComputerLayoutUpdateManyMutationInput, ComputerLayoutUncheckedUpdateManyWithoutZoneInput>
+  }
+
+  export type ComputerLayoutScalarWhereInput = {
+    AND?: ComputerLayoutScalarWhereInput | ComputerLayoutScalarWhereInput[]
+    OR?: ComputerLayoutScalarWhereInput[]
+    NOT?: ComputerLayoutScalarWhereInput | ComputerLayoutScalarWhereInput[]
+    id?: IntFilter<"ComputerLayout"> | number
+    zoneId?: IntFilter<"ComputerLayout"> | number
+    macAddress?: StringFilter<"ComputerLayout"> | string
+    x?: IntFilter<"ComputerLayout"> | number
+    y?: IntFilter<"ComputerLayout"> | number
+    w?: IntFilter<"ComputerLayout"> | number
+    h?: IntFilter<"ComputerLayout"> | number
+    createdAt?: DateTimeFilter<"ComputerLayout"> | Date | string
+    updatedAt?: DateTimeFilter<"ComputerLayout"> | Date | string
+  }
+
+  export type ZoneCreateWithoutComputerLayoutsInput = {
+    name: string
+    description?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ZoneUncheckedCreateWithoutComputerLayoutsInput = {
+    id?: number
+    name: string
+    description?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ZoneCreateOrConnectWithoutComputerLayoutsInput = {
+    where: ZoneWhereUniqueInput
+    create: XOR<ZoneCreateWithoutComputerLayoutsInput, ZoneUncheckedCreateWithoutComputerLayoutsInput>
+  }
+
+  export type ZoneUpsertWithoutComputerLayoutsInput = {
+    update: XOR<ZoneUpdateWithoutComputerLayoutsInput, ZoneUncheckedUpdateWithoutComputerLayoutsInput>
+    create: XOR<ZoneCreateWithoutComputerLayoutsInput, ZoneUncheckedCreateWithoutComputerLayoutsInput>
+    where?: ZoneWhereInput
+  }
+
+  export type ZoneUpdateToOneWithWhereWithoutComputerLayoutsInput = {
+    where?: ZoneWhereInput
+    data: XOR<ZoneUpdateWithoutComputerLayoutsInput, ZoneUncheckedUpdateWithoutComputerLayoutsInput>
+  }
+
+  export type ZoneUpdateWithoutComputerLayoutsInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ZoneUncheckedUpdateWithoutComputerLayoutsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type UserStarHistoryCreateManyGameResultInput = {
     id?: number
     userId?: number | null
@@ -100785,6 +103589,49 @@ export namespace Prisma {
     occurrenceNumber?: IntFieldUpdateOperationsInput | number
     amount?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     note?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type ComputerLayoutCreateManyZoneInput = {
+    id?: number
+    macAddress: string
+    x?: number
+    y?: number
+    w?: number
+    h?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ComputerLayoutUpdateWithoutZoneInput = {
+    macAddress?: StringFieldUpdateOperationsInput | string
+    x?: IntFieldUpdateOperationsInput | number
+    y?: IntFieldUpdateOperationsInput | number
+    w?: IntFieldUpdateOperationsInput | number
+    h?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ComputerLayoutUncheckedUpdateWithoutZoneInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    macAddress?: StringFieldUpdateOperationsInput | string
+    x?: IntFieldUpdateOperationsInput | number
+    y?: IntFieldUpdateOperationsInput | number
+    w?: IntFieldUpdateOperationsInput | number
+    h?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ComputerLayoutUncheckedUpdateManyWithoutZoneInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    macAddress?: StringFieldUpdateOperationsInput | string
+    x?: IntFieldUpdateOperationsInput | number
+    y?: IntFieldUpdateOperationsInput | number
+    w?: IntFieldUpdateOperationsInput | number
+    h?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 

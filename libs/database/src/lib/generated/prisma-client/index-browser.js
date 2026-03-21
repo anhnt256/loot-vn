@@ -934,6 +934,26 @@ exports.Prisma.StaffViolationScalarFieldEnum = {
   note: 'note'
 };
 
+exports.Prisma.ZoneScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ComputerLayoutScalarFieldEnum = {
+  id: 'id',
+  zoneId: 'zoneId',
+  macAddress: 'macAddress',
+  x: 'x',
+  y: 'y',
+  w: 'w',
+  h: 'h',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1247,6 +1267,15 @@ exports.Prisma.RewardPunishRuleOrderByRelevanceFieldEnum = {
 exports.Prisma.StaffViolationOrderByRelevanceFieldEnum = {
   note: 'note'
 };
+
+exports.Prisma.ZoneOrderByRelevanceFieldEnum = {
+  name: 'name',
+  description: 'description'
+};
+
+exports.Prisma.ComputerLayoutOrderByRelevanceFieldEnum = {
+  macAddress: 'macAddress'
+};
 exports.MissionType = exports.$Enums.MissionType = {
   HOURS: 'HOURS',
   ORDER: 'ORDER',
@@ -1490,7 +1519,9 @@ exports.Prisma.ModelName = {
   MomoCredential: 'MomoCredential',
   RewardPunishRule: 'RewardPunishRule',
   RuleSeverity: 'RuleSeverity',
-  StaffViolation: 'StaffViolation'
+  StaffViolation: 'StaffViolation',
+  Zone: 'Zone',
+  ComputerLayout: 'ComputerLayout'
 };
 
 /**

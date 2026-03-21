@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+/* Custom Scrollbar specifically for dark theme sections */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4b5563; /* gray-600 */
+  border-radius: 10px;
+  border: 2px solid transparent; 
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6b7280; /* gray-500 */
+  border: 2px solid transparent; 
+  background-clip: padding-box;
+}
+
+/* Firefox compatibility */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #4b5563 transparent;
+}

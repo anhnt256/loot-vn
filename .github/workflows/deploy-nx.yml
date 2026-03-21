@@ -83,6 +83,7 @@ jobs:
             VITE_TENANT_PREFIX=$TENANT_PREFIX
             BASE_DOMAIN=$BASE_DOMAIN
             API_PATH=api-${PROJECT_NAME}.${BASE_DOMAIN}
+            ADMIN_PATH=admin-${PROJECT_NAME}.${BASE_DOMAIN}
             HR_PATH=hr-${PROJECT_NAME}.${BASE_DOMAIN}
             HR_MANAGER_PATH=hr-manager-${PROJECT_NAME}.${BASE_DOMAIN}
             MASTER_PATH=${TENANT_PREFIX}.${BASE_DOMAIN}

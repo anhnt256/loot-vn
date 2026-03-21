@@ -43,7 +43,9 @@ export type {
   Material,
   Feedback,
   FnetHistory,
-  PromotionReward
+  PromotionReward,
+  Zone,
+  ComputerLayout
 } from './lib/generated/prisma-client';
 
 export { 

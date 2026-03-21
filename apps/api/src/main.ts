@@ -17,6 +17,8 @@ async function bootstrap() {
     'http://localhost:7400',
     'http://localhost:7500',
     'http://localhost:7600',
+    'http://localhost:7800',
+    'http://localhost:7900',
     'https://tenant-manage.loot.vn'
   ];
 

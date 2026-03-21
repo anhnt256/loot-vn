@@ -21,6 +21,27 @@ services:
 
   # Frontend Service (Next.js) - Removed as Next JS frontend is not in project.json list
   # frontend and fraud detection were removed from docker-compose.yml
+  # Admin App (Vite)
+  admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: admin-app
+        TENANT_PREFIX: ${TENANT_PREFIX:-}
+        VITE_API_URL: ${VITE_API_URL:-}
+        VITE_TENANT_PREFIX: ${VITE_TENANT_PREFIX:-}
+    container_name: ${TENANT_PREFIX:-}admin
+    environment:
+      - PORT=7800
+      - HOST=0.0.0.0
+    env_file:
+      - .env
+    restart: always
+    networks:
+      - internal-network
+      - proxy-network
+
   # Tenant Manage App (Vite)
   tenant-manage:
     build:

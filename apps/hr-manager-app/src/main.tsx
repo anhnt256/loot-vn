@@ -16,11 +16,26 @@ async function bootstrap() {
       try {
         const res = await apiClient.get('/auth/tenant-info');
         if (res.data?.success && res.data?.data) {
-          const { primaryColor } = res.data.data;
-          if (primaryColor) {
-            document.documentElement.style.setProperty('--primary-color', primaryColor);
+          const config = res.data.data;
+          if (config.primaryColor) {
+            document.documentElement.style.setProperty('--primary-color', config.primaryColor);
           }
-          (window as any).__TENANT_CONFIG__ = res.data.data;
+          if (config.name) {
+            document.title = config.name;
+          }
+          if (config.logo) {
+            const logoUrl = typeof config.logo === 'string' ? config.logo : config.logo.url;
+            if (logoUrl) {
+              let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+              if (!link) {
+                link = document.createElement('link');
+                link.rel = 'icon';
+                document.head.appendChild(link);
+              }
+              link.href = logoUrl;
+            }
+          }
+          (window as any).__TENANT_CONFIG__ = config;
         }
       } catch (err) {
         console.error('Failed to load tenant config during init', err);

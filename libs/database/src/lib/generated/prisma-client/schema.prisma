@@ -1230,3 +1230,32 @@ enum ResetCycle {
   YEARLY
   NEVER
 }
+
+model Zone {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  computerLayouts ComputerLayout[]
+
+  @@map("Zone")
+}
+
+model ComputerLayout {
+  id         Int      @id @default(autoincrement())
+  zoneId     Int
+  macAddress String   @unique @db.VarChar(100)
+  x          Int      @default(0)
+  y          Int      @default(0)
+  w          Int      @default(1)
+  h          Int      @default(1)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  zone Zone @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+
+  @@index([zoneId])
+  @@map("ComputerLayout")
+}

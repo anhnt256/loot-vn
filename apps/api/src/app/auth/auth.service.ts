@@ -27,7 +27,7 @@ export class AuthService {
       where: { tenantId },
       include: {
         organization: {
-          select: { primaryColor: true }
+          select: { primaryColor: true, secondaryColor: true }
         }
       }
     });
@@ -35,7 +35,8 @@ export class AuthService {
     return {
       name: tenant.name,
       logo: tenant.logo,
-      primaryColor: tenant.organization?.primaryColor
+      primaryColor: tenant.organization?.primaryColor,
+      secondaryColor: tenant.organization?.secondaryColor
     };
   }
 
@@ -52,14 +53,18 @@ export class AuthService {
       throw new BadRequestException('Tên đăng nhập và mật khẩu là bắt buộc');
     }
 
-    if (loginMethod === 'staff' || loginMethod === 'account' || !loginMethod) {
+    if (loginMethod === 'staff') {
       if (!tenantId?.trim()) {
         throw new BadRequestException('x-tenant-id header is required for staff login');
       }
       return this.loginStaff(userName, password, tenantId.trim());
     }
 
-    if (loginMethod === 'Admin' || loginMethod === 'admin') {
+    if (loginMethod === 'user') {
+      throw new BadRequestException('Đăng nhập dành cho user hiện đang được phát triển');
+    }
+
+    if (loginMethod === 'admin') {
       const staff = await (this.tenantPrisma as any).staff.findUnique({
         where: { userName },
       });

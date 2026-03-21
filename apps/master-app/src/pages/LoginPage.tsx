@@ -16,12 +16,27 @@ export default function LoginPage() {
     const fetchTenantInfo = async () => {
       try {
         const result = await apiClient.get('/auth/tenant-info');
-        if (result.data?.success && result.data?.data?.logo) {
-          let logo = result.data.data.logo;
-          if (typeof logo === 'object') {
-            logo = logo?.url || null;
+        if (result.data?.success && result.data?.data) {
+          const config = result.data.data;
+          if (config.name) {
+            document.title = config.name;
           }
-          setTenantLogo(logo);
+          if (config.logo) {
+            let logo = config.logo;
+            if (typeof logo === 'object') {
+              logo = logo?.url || null;
+            }
+            if (logo) {
+              let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+              if (!link) {
+                link = document.createElement('link');
+                link.rel = 'icon';
+                document.head.appendChild(link);
+              }
+              link.href = logo;
+            }
+            setTenantLogo(logo);
+          }
         }
       } catch (err) {
         console.error('Failed to fetch tenant info:', err);

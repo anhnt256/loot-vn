@@ -399,6 +399,19 @@ export async function calculateActiveUsersInfo(
     const todayDayOfWeek = getCurrentDayOfWeekVN();
 
     // Tối ưu: Gộp tất cả queries thành 4 query chính thay vì 6
+    const gateway = await db; // db is gatewayPrisma in user-calculator context
+    
+    // Đọc cấu hình từ SystemConfig
+    let spendPerRound = Number(process.env.VITE_SPEND_PER_ROUND || 30000);
+    try {
+      const configRes: any[] = await gateway.$queryRawUnsafe(`SELECT \`key\`, \`value\` FROM SystemConfig WHERE \`key\` = 'SPEND_PER_ROUND'`);
+      if (configRes && configRes.length > 0) {
+        spendPerRound = Number(configRes[0].value) || spendPerRound;
+      }
+    } catch(err) {
+      // Ignored if table doesn't exist
+    }
+
     const [
       userSessionsAndTopUps, // Gộp sessions + top ups
       userDataAndClaims, // Gộp user data + claims + gift rounds
@@ -770,7 +783,6 @@ export async function calculateActiveUsersInfo(
 
       // Tính rounds từ cache đã tính sẵn
       userTopUp = userTopUpsMap.get(userId) || 0;
-      const spendPerRound = Number(process.env.VITE_SPEND_PER_ROUND || 30000);
       const round = Math.floor(userTopUp ? userTopUp / spendPerRound : 0);
 
       // Lấy từ cache đã tính sẵn
@@ -778,7 +790,7 @@ export async function calculateActiveUsersInfo(
 
       if (userData?.id) {
         const usedRounds = userGameRoundsMap.get(userId) || 0;
-        totalRound = round - usedRounds;
+        totalRound = round + totalGiftRounds - usedRounds;
 
         // Cập nhật magicStone - chỉ update khi cần thiết
         if (userData.magicStone !== totalRound) {

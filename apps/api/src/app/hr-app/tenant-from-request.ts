@@ -29,6 +29,8 @@ export function getTenantSlugFromRequest(req: { headers: Record<string, string |
   const suffix = '.' + baseDomain;
   if (!hostname.endsWith(suffix)) return null;
   const subdomain = hostname.slice(0, -suffix.length);
-  if (!subdomain.startsWith('hr-')) return null;
-  return subdomain.slice(3) || null; // "hr-".length === 3
+  if (subdomain.startsWith('hr-')) return subdomain.slice(3) || null;
+  if (subdomain.startsWith('admin-')) return subdomain.slice(6) || null;
+  if (subdomain.startsWith('client-')) return subdomain.slice(7) || null;
+  return null;
 }
