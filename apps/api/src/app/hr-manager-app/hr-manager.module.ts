@@ -4,6 +4,8 @@ import { StaffManagementModule } from './staff-management/staff-management.modul
 import { DashboardModule } from './dashboard/dashboard.module';
 import { WorkShiftModule } from './work-shift/work-shift.module';
 import { RewardPunishRulesModule } from './reward-punish-rules/reward-punish-rules.module';
+import { StaffBonusPenaltyModule } from './staff-bonus-penalty/staff-bonus-penalty.module';
+import { PayrollModule } from './payroll/payroll.module';
 
 @Module({
   imports: [
@@ -12,6 +14,8 @@ import { RewardPunishRulesModule } from './reward-punish-rules/reward-punish-rul
     DashboardModule,
     WorkShiftModule,
     RewardPunishRulesModule,
+    StaffBonusPenaltyModule,
+    PayrollModule,
   ],
 })
 export class HrManagerModule {}

@@ -8,6 +8,8 @@ import WorkShiftManagement from './pages/settings/WorkShiftManagement';
 import RewardPunishRules from './pages/settings/RewardPunishRules';
 import AttendanceManagement from './pages/AttendanceManagement';
 import RequestManagement from './pages/RequestManagement';
+import RewardPunishManagement from './pages/RewardPunishManagement';
+import PayrollManagement from './pages/PayrollManagement';
 
 export function App() {
   return (
@@ -19,7 +21,9 @@ export function App() {
           <Route path="overview" element={<DashboardHome />} />
           <Route path="staff" element={<StaffManagement />} />
           <Route path="attendance" element={<AttendanceManagement />} />
+          <Route path="payroll" element={<PayrollManagement />} />
           <Route path="requests" element={<RequestManagement />} />
+          <Route path="rewards" element={<RewardPunishManagement />} />
           <Route path="settings/work-shifts" element={<WorkShiftManagement />} />
           <Route path="settings/reward-punish" element={<RewardPunishRules />} />
           <Route path="*" element={<DashboardHome />} />

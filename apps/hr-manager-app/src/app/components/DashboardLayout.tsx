@@ -11,9 +11,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
-  ClipboardList,
   ShieldAlert,
   Send,
+  Gift,
   Menu as MenuIcon,
   X
 } from 'lucide-react';
@@ -77,6 +77,7 @@ export const DashboardLayout = () => {
     ]},
     { category: 'Quản lý', items: [
       { id: 'requests', label: 'Yêu cầu', icon: Send, path: '/dashboard/requests' },
+      { id: 'rewards', label: 'Thưởng phạt', icon: Gift, path: '/dashboard/rewards' },
     ]},
     { category: 'Cài đặt', items: [
       { id: 'work-shifts', label: 'Ca làm việc', icon: Clock, path: '/dashboard/settings/work-shifts' },
