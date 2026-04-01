@@ -259,6 +259,9 @@ model Staff {
   counterStaffReports      Report[]         @relation("CounterStaff")
   kitchenStaffReports      Report[]         @relation("KitchenStaff")
   securityStaffReports     Report[]         @relation("SecurityStaff")
+  counterShiftReports      ShiftHandoverReport[] @relation("CounterShiftStaff")
+  kitchenShiftReports      ShiftHandoverReport[] @relation("KitchenShiftStaff")
+  securityShiftReports     ShiftHandoverReport[] @relation("SecurityShiftStaff")
   morningHandoverReports   HandoverReport[] @relation("MorningStaff")
   afternoonHandoverReports HandoverReport[] @relation("AfternoonStaff")
   eveningHandoverReports   HandoverReport[] @relation("EveningStaff")
@@ -320,6 +323,7 @@ model WorkShift {
   ffoodId     String?  @map("ffood_id") @db.Char(36)
   gcpId       String?  @map("gcp_id") @db.VarChar(255)
   staffs      Staff[]
+  shiftHandoverReports ShiftHandoverReport[]
 
   @@index([name])
   @@map("WorkShift")
@@ -660,6 +664,37 @@ model BirthdayTransaction {
   @@map("BirthdayTransaction")
 }
 
+
+model ShiftHandoverReport {
+  id              Int       @id @default(autoincrement())
+  date            DateTime  @db.Date
+  workShiftId     Int
+  workShift       WorkShift @relation(fields: [workShiftId], references: [id])
+
+  fnetRevenue     Float     @default(0) @db.Double
+  gcpRevenue      Float     @default(0) @db.Double
+  momoRevenue     Float     @default(0) @db.Double
+  cashRevenue     Float     @default(0) @db.Double
+
+  cashExpense     Float     @default(0) @db.Double
+  
+  actualReceived  Float     @default(0) @db.Double
+
+  note            String?   @db.Text
+  counterStaffId  Int?
+  kitchenStaffId  Int?
+  securityStaffId Int?
+
+  counterStaff    Staff?    @relation("CounterShiftStaff", fields: [counterStaffId], references: [id])
+  kitchenStaff    Staff?    @relation("KitchenShiftStaff", fields: [kitchenStaffId], references: [id])
+  securityStaff   Staff?    @relation("SecurityShiftStaff", fields: [securityStaffId], references: [id])
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([date, workShiftId]) 
+}
+
 model ReportDetail {
   id       Int              @id @default(autoincrement())
   reportId Int
@@ -685,11 +720,20 @@ model Report {
   securityStaff   Staff          @relation("SecurityStaff", fields: [securityStaffId], references: [id])
 }
 
+enum ReportDetailType {
+  GIO
+  DICH_VU
+  MOMO
+  CHI
+  TONG
+}
+
 model HandoverReport {
   id                       Int                @id @default(autoincrement())
   date                     DateTime
   reportType               HandoverReportType
   note                     String?
+  metadata                 Json?              @db.Json
   createdAt                DateTime           @default(now())
   updatedAt                DateTime           @updatedAt
   afternoonStaffId         Int?
@@ -1073,13 +1117,6 @@ enum Shift {
   TOI
 }
 
-enum ReportDetailType {
-  GIO
-  DICH_VU
-  MOMO
-  CHI
-  TONG
-}
 
 enum HandoverReportType {
   BAO_CAO_BEP

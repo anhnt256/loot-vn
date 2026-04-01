@@ -28,3 +28,15 @@
   scrollbar-width: thin;
   scrollbar-color: #4b5563 transparent;
 }
+
+/* Ensure sticky table header has a solid background */
+.ant-table-sticky-header,
+.ant-table-sticky-header .ant-table-cell {
+  background: #1f2937 !important; /* gray-800 */
+  z-index: 20 !important;
+}
+
+/* AntD Table Divider improvements */
+.ant-table-cell.shift-divider {
+  border-right: 2px solid #374151 !important;
+}

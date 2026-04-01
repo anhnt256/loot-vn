@@ -8,6 +8,7 @@ import { getTenantDbUrl } from '../database/tenant-gateway.service';
 import { signJWT } from '../lib/jwt';
 import dayjs from '../lib/dayjs';
 import * as crypto from 'crypto';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class AuthService {
@@ -19,6 +20,13 @@ export class AuthService {
 
   private hashPassword(pwd: string): string {
     return crypto.createHash('sha256').update(pwd).digest('hex');
+  }
+
+  private async verifyPassword(plain: string, stored: string): Promise<boolean> {
+    if (stored.startsWith('$2b$') || stored.startsWith('$2a$')) {
+      return bcrypt.compare(plain, stored);
+    }
+    return stored === this.hashPassword(plain);
   }
 
   async getTenantInfo(tenantId: string) {
@@ -65,25 +73,28 @@ export class AuthService {
     }
 
     if (loginMethod === 'admin') {
-      const staff = await (this.tenantPrisma as any).staff.findUnique({
-        where: { userName },
-      });
+      const staffList = await this.prisma.$queryRawUnsafe<any[]>(
+        `SELECT id, userName, fullName, isDeleted, isAdmin, password, staffType FROM Staff WHERE userName = ? AND isDeleted = false`,
+        userName,
+      );
 
-      if (!staff || staff.isDeleted) {
+      if (!staffList?.length) {
         throw new UnauthorizedException('Tên đăng nhập hoặc mật khẩu không đúng');
       }
+
+      const staff = staffList[0];
 
       if (!staff.isAdmin) {
         throw new UnauthorizedException('Chỉ có admin mới được phép truy cập bằng phương thức này');
       }
 
-      if (staff.password !== this.hashPassword(password)) {
+      if (!(await this.verifyPassword(password, staff.password))) {
         throw new UnauthorizedException('Tên đăng nhập hoặc mật khẩu không đúng');
       }
 
       const payload = {
-        userId: staff.id,
-        id: staff.id,
+        userId: Number(staff.id),
+        id: Number(staff.id),
         userName: staff.userName,
         fullName: staff.fullName,
         role: 'admin',
@@ -130,8 +141,7 @@ export class AuthService {
     const gateway = await this.gatewayPrisma.getClient(dbUrl);
 
     const staffList = await gateway.$queryRawUnsafe<any[]>(
-      `SELECT id, userName, fullName, isDeleted, isAdmin, password, staffType FROM Staff 
-       WHERE userName = ? AND isDeleted = false`,
+      `SELECT id, userName, fullName, isDeleted, isAdmin, password, staffType FROM Staff WHERE userName = ? AND isDeleted = false`,
       userName,
     );
 
@@ -140,12 +150,13 @@ export class AuthService {
     }
 
     const staff = staffList[0];
+
     const resetPasswordHash = this.hashPassword('RESET_PASSWORD_REQUIRED_' + staff.id);
     if (staff.password === resetPasswordHash) {
       return { requirePasswordReset: true, staffId: staff.id };
     }
 
-    if (staff.password !== this.hashPassword(password)) {
+    if (!(await this.verifyPassword(password, staff.password))) {
       throw new UnauthorizedException('Tên đăng nhập hoặc mật khẩu không đúng');
     }
 
@@ -162,8 +173,8 @@ export class AuthService {
     }));
 
     const payload = {
-      userId: staff.id,
-      id: staff.id,
+      userId: Number(staff.id),
+      id: Number(staff.id),
       userName: staff.userName,
       fullName: staff.fullName,
       role,
@@ -171,7 +182,7 @@ export class AuthService {
       loginType: 'account',
       workShifts,
       staffType: staff.staffType,
-      staffId: staff.id,
+      staffId: Number(staff.id),
     };
 
     const token = await signJWT(payload);

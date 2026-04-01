@@ -99,42 +99,82 @@ export default function HandoverReports() {
     document.body.removeChild(link);
   };
 
-  const columns: ColumnsType<any> = [
-    {
-       title: "Mặt hàng",
-       dataIndex: "materialName",
-       key: "materialName",
-       width: 200,
-       fixed: 'left',
-    },
-    {
-       title: 'Ca Sáng',
-       children: [
-          { title: "Tồn Đ.", dataIndex: ["morning", "beginning"], width: 80, align: 'center', render: val => val || 0 },
-          { title: "Nhập", dataIndex: ["morning", "received"], width: 80, align: 'center', render: val => val || 0 },
-          { title: "Xuất", dataIndex: ["morning", "issued"], width: 80, align: 'center', render: val => val || 0 },
-          { title: "Tồn C.", dataIndex: ["morning", "ending"], width: 80, align: 'center', render: val => val || 0 },
-       ]
-    },
-    {
-       title: 'Ca Chiều',
-       children: [
-          { title: "Tồn Đ.", dataIndex: ["afternoon", "beginning"], width: 80, align: 'center', render: val => val || 0 },
-          { title: "Nhập", dataIndex: ["afternoon", "received"], width: 80, align: 'center', render: val => val || 0 },
-          { title: "Xuất", dataIndex: ["afternoon", "issued"], width: 80, align: 'center', render: val => val || 0 },
-          { title: "Tồn C.", dataIndex: ["afternoon", "ending"], width: 80, align: 'center', render: val => val || 0 },
-       ]
-    },
-    {
-       title: 'Ca Tối',
-       children: [
-          { title: "Tồn Đ.", dataIndex: ["evening", "beginning"], width: 80, align: 'center', render: val => val || 0 },
-          { title: "Nhập", dataIndex: ["evening", "received"], width: 80, align: 'center', render: val => val || 0 },
-          { title: "Xuất", dataIndex: ["evening", "issued"], width: 80, align: 'center', render: val => val || 0 },
-          { title: "Tồn C.", dataIndex: ["evening", "ending"], width: 80, align: 'center', render: val => val || 0 },
-       ]
-    }
-  ];
+  const columns: ColumnsType<any> = useMemo(() => {
+    const report = reports[0];
+    const metadata = report?.metadata || {};
+
+    const renderShiftCell = (shift: string, field: string, val: any, record: any) => {
+      const isStarted = metadata[shift]?.start;
+      const isEnded = metadata[shift]?.end;
+
+      if (field === "beginning") {
+         if (!isStarted) return "";
+         
+         const beginningVal = val || 0;
+         let isDiff = false;
+         
+         // Compare with previous shift ending if available
+         if (shift === SHIFT_ENUM.CHIEU) {
+            const morningEnded = metadata[SHIFT_ENUM.SANG]?.end;
+            if (morningEnded && beginningVal !== (record.morning?.ending || 0)) {
+               isDiff = true;
+            }
+         } else if (shift === SHIFT_ENUM.TOI) {
+            const afternoonEnded = metadata[SHIFT_ENUM.CHIEU]?.end;
+            if (afternoonEnded && beginningVal !== (record.afternoon?.ending || 0)) {
+               isDiff = true;
+            }
+         }
+         
+         return (
+            <span style={isDiff ? { color: '#ff4d4f', fontWeight: 'bold' } : {}}>
+               {beginningVal}
+            </span>
+         );
+      }
+      
+      // For received, issued, ending, only show if shift is ended
+      return isEnded ? (val || 0) : "";
+    };
+
+    return [
+      {
+        title: "Mặt hàng",
+        dataIndex: "materialName",
+        key: "materialName",
+        width: 200,
+        fixed: 'left',
+        className: 'border-r-2 border-r-gray-600',
+      },
+      {
+        title: 'Ca Sáng',
+        children: [
+           { title: "Tồn Đ.", dataIndex: ["morning", "beginning"], width: 80, align: 'center', render: (val, record) => renderShiftCell(SHIFT_ENUM.SANG, "beginning", val, record) },
+           { title: "Nhập", dataIndex: ["morning", "received"], width: 80, align: 'center', render: (val, record) => renderShiftCell(SHIFT_ENUM.SANG, "received", val, record) },
+           { title: "Xuất", dataIndex: ["morning", "issued"], width: 80, align: 'center', render: (val, record) => renderShiftCell(SHIFT_ENUM.SANG, "issued", val, record) },
+           { title: "Tồn C.", dataIndex: ["morning", "ending"], width: 80, align: 'center', className: 'border-r-2 border-r-gray-600', render: (val, record) => renderShiftCell(SHIFT_ENUM.SANG, "ending", val, record) },
+        ]
+      },
+      {
+        title: 'Ca Chiều',
+        children: [
+           { title: "Tồn Đ.", dataIndex: ["afternoon", "beginning"], width: 80, align: 'center', render: (val, record) => renderShiftCell(SHIFT_ENUM.CHIEU, "beginning", val, record) },
+           { title: "Nhập", dataIndex: ["afternoon", "received"], width: 80, align: 'center', render: (val, record) => renderShiftCell(SHIFT_ENUM.CHIEU, "received", val, record) },
+           { title: "Xuất", dataIndex: ["afternoon", "issued"], width: 80, align: 'center', render: (val, record) => renderShiftCell(SHIFT_ENUM.CHIEU, "issued", val, record) },
+           { title: "Tồn C.", dataIndex: ["afternoon", "ending"], width: 80, align: 'center', className: 'border-r-2 border-r-gray-600', render: (val, record) => renderShiftCell(SHIFT_ENUM.CHIEU, "ending", val, record) },
+        ]
+      },
+      {
+        title: 'Ca Tối',
+        children: [
+           { title: "Tồn Đ.", dataIndex: ["evening", "beginning"], width: 80, align: 'center', render: (val, record) => renderShiftCell(SHIFT_ENUM.TOI, "beginning", val, record) },
+           { title: "Nhập", dataIndex: ["evening", "received"], width: 80, align: 'center', render: (val, record) => renderShiftCell(SHIFT_ENUM.TOI, "received", val, record) },
+           { title: "Xuất", dataIndex: ["evening", "issued"], width: 80, align: 'center', render: (val, record) => renderShiftCell(SHIFT_ENUM.TOI, "issued", val, record) },
+           { title: "Tồn C.", dataIndex: ["evening", "ending"], width: 80, align: 'center', render: (val, record) => renderShiftCell(SHIFT_ENUM.TOI, "ending", val, record) },
+        ]
+      }
+    ];
+  }, [reports]);
 
   return (
     <div className="p-0">
@@ -205,18 +245,29 @@ export default function HandoverReports() {
         ) : (
            <div>
              <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-3 bg-gray-900 border border-gray-700 rounded-md">
-                   <div className="text-sm text-gray-400">Người trực ca {SHIFT_LABELS[SHIFT_ENUM.SANG]}</div>
-                   <div className="font-semibold text-white">{reports[0].morningStaffName || "Chưa có"}</div>
-                </div>
-                <div className="p-3 bg-gray-900 border border-gray-700 rounded-md">
-                   <div className="text-sm text-gray-400">Người trực ca {SHIFT_LABELS[SHIFT_ENUM.CHIEU]}</div>
-                   <div className="font-semibold text-white">{reports[0].afternoonStaffName || "Chưa có"}</div>
-                </div>
-                <div className="p-3 bg-gray-900 border border-gray-700 rounded-md">
-                   <div className="text-sm text-gray-400">Người trực ca {SHIFT_LABELS[SHIFT_ENUM.TOI]}</div>
-                   <div className="font-semibold text-white">{reports[0].eveningStaffName || "Chưa có"}</div>
-                </div>
+                {[SHIFT_ENUM.SANG, SHIFT_ENUM.CHIEU, SHIFT_ENUM.TOI].map((shift) => {
+                   const m = reports[0].metadata || {};
+                   const startTime = m[shift]?.start?.at;
+                   const endTime = m[shift]?.end?.at;
+                   const staffName = shift === SHIFT_ENUM.SANG ? reports[0].morningStaffName :
+                                    shift === SHIFT_ENUM.CHIEU ? reports[0].afternoonStaffName :
+                                    reports[0].eveningStaffName;
+                                    
+                   return (
+                      <div key={shift} className="p-3 bg-gray-900 border border-gray-700 rounded-md">
+                         <div className="flex justify-between items-start mb-1">
+                            <div className="text-sm text-gray-400">Người trực ca {SHIFT_LABELS[shift as keyof typeof SHIFT_LABELS]}</div>
+                            <div className="text-[11px] text-gray-400 italic flex flex-col items-end leading-tight">
+                               <div>Đầu ca: <span className="text-white">{startTime ? format(new Date(startTime), "HH:mm:ss") : "--:--:--"}</span></div>
+                               <div>Kết ca: <span className="text-white">{endTime ? format(new Date(endTime), "HH:mm:ss") : "--:--:--"}</span></div>
+                            </div>
+                         </div>
+                         <div className="font-bold text-lg" style={{ color: 'var(--primary-color)' }}>
+                            {staffName || "Chưa có"}
+                         </div>
+                      </div>
+                   );
+                })}
              </div>
              <Table 
                 columns={columns} 
@@ -225,6 +276,7 @@ export default function HandoverReports() {
                 pagination={false}
                 bordered
                 scroll={{ x: 'max-content' }}
+                sticky={{ offsetHeader: 64 }}
              />
            </div>
         )}

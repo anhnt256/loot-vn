@@ -128,4 +128,63 @@ export class DeviceService {
       throw new InternalServerErrorException(error.message || 'Error updating device details');
     }
   }
+
+  async getAllDeviceHistory(tenantId: string, type?: string, startDate?: string, endDate?: string, page: number = 1, limit: number = 20) {
+    try {
+      const gatewayClient = await this.getGatewayClient(tenantId);
+      
+      const where: any = {};
+      if (type && type !== 'ALL') {
+        where.type = type;
+      }
+      if (startDate && endDate) {
+        where.createdAt = {
+          gte: new Date(`${startDate}T00:00:00.000Z`),
+          lt: new Date(`${endDate}T23:59:59.999Z`)
+        };
+      } else if (startDate) {
+        where.createdAt = {
+          gte: new Date(`${startDate}T00:00:00.000Z`),
+          lt: new Date(`${startDate}T23:59:59.999Z`)
+        };
+      }
+
+      // Safe bypass for dangling records that crash Prisma include
+      const validComputers = await gatewayClient.computer.findMany({ select: { id: true } });
+      const validComputerIds = validComputers.map((c: any) => c.id);
+      
+      if (validComputerIds.length > 0) {
+        where.computerId = { in: validComputerIds };
+      } else {
+        return { success: true, data: [], meta: { total: 0, page, limit, totalPages: 0 } };
+      }
+
+      const skip = (page - 1) * limit;
+
+      const [histories, total] = await Promise.all([
+        gatewayClient.deviceHistory.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take: limit,
+          include: {
+            computer: {
+              select: { id: true, name: true }
+            }
+          }
+        }),
+        gatewayClient.deviceHistory.count({ where })
+      ]);
+
+      return { 
+        success: true, 
+        data: histories,
+        meta: { total, page, limit, totalPages: Math.ceil(total / limit) }
+      };
+    } catch (error) {
+      console.error('Error fetching device histories:', error);
+      throw new InternalServerErrorException('Error fetching device histories');
+    }
+  }
 }
+// forces recompile of service types

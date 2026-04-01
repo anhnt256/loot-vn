@@ -43,7 +43,7 @@ export default function MaterialManagementDrawer({
       render: (text: string, record: Material) => (
         <span
           className={
-            record.isDeleted ? "line-through text-gray-500" : "text-gray-900"
+            record.isDeleted ? "line-through text-gray-500" : "text-gray-100"
           }
         >
           {text}

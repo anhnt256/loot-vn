@@ -14,6 +14,7 @@ import { UserModule } from './admin-app/user/user.module';
 import { DeviceModule } from './admin-app/device/device.module';
 import { HandoverReportModule } from './admin-app/handover-report/handover-report.module';
 import { GameModule } from './admin-app/game/game.module';
+import { ShiftHandoverReportModule } from './admin-app/shift-handover-report/shift-handover-report.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { GameModule } from './admin-app/game/game.module';
     DeviceModule,
     HandoverReportModule,
     GameModule,
+    ShiftHandoverReportModule,
   ],
   controllers: [AppController],
   providers: [AppService],

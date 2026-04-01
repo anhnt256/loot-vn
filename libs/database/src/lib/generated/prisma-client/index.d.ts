@@ -14,6 +14,11 @@ export type PrismaPromise<T> = $Public.PrismaPromise<T>
 
 
 /**
+ * Model SystemConfig
+ * 
+ */
+export type SystemConfig = $Result.DefaultSelection<Prisma.$SystemConfigPayload>
+/**
  * Model Rank
  * 
  */
@@ -224,6 +229,11 @@ export type UserBirthdayProgress = $Result.DefaultSelection<Prisma.$UserBirthday
  */
 export type BirthdayTransaction = $Result.DefaultSelection<Prisma.$BirthdayTransactionPayload>
 /**
+ * Model ShiftHandoverReport
+ * 
+ */
+export type ShiftHandoverReport = $Result.DefaultSelection<Prisma.$ShiftHandoverReportPayload>
+/**
  * Model ReportDetail
  * 
  */
@@ -343,7 +353,18 @@ export type ComputerLayout = $Result.DefaultSelection<Prisma.$ComputerLayoutPayl
  * Enums
  */
 export namespace $Enums {
-  export const ShiftRevenueType: {
+  export const ReportDetailType: {
+  GIO: 'GIO',
+  DICH_VU: 'DICH_VU',
+  MOMO: 'MOMO',
+  CHI: 'CHI',
+  TONG: 'TONG'
+};
+
+export type ReportDetailType = (typeof ReportDetailType)[keyof typeof ReportDetailType]
+
+
+export const ShiftRevenueType: {
   MORNING: 'MORNING',
   AFTERNOON: 'AFTERNOON',
   EVENING: 'EVENING'
@@ -427,17 +448,6 @@ export const Shift: {
 };
 
 export type Shift = (typeof Shift)[keyof typeof Shift]
-
-
-export const ReportDetailType: {
-  GIO: 'GIO',
-  DICH_VU: 'DICH_VU',
-  MOMO: 'MOMO',
-  CHI: 'CHI',
-  TONG: 'TONG'
-};
-
-export type ReportDetailType = (typeof ReportDetailType)[keyof typeof ReportDetailType]
 
 
 export const HandoverReportType: {
@@ -599,6 +609,10 @@ export type ResetCycle = (typeof ResetCycle)[keyof typeof ResetCycle]
 
 }
 
+export type ReportDetailType = $Enums.ReportDetailType
+
+export const ReportDetailType: typeof $Enums.ReportDetailType
+
 export type ShiftRevenueType = $Enums.ShiftRevenueType
 
 export const ShiftRevenueType: typeof $Enums.ShiftRevenueType
@@ -634,10 +648,6 @@ export const OrderStatus: typeof $Enums.OrderStatus
 export type Shift = $Enums.Shift
 
 export const Shift: typeof $Enums.Shift
-
-export type ReportDetailType = $Enums.ReportDetailType
-
-export const ReportDetailType: typeof $Enums.ReportDetailType
 
 export type HandoverReportType = $Enums.HandoverReportType
 
@@ -706,8 +716,8 @@ export const ResetCycle: typeof $Enums.ResetCycle
  * @example
  * ```
  * const prisma = new PrismaClient()
- * // Fetch zero or more Ranks
- * const ranks = await prisma.rank.findMany()
+ * // Fetch zero or more SystemConfigs
+ * const systemConfigs = await prisma.systemConfig.findMany()
  * ```
  *
  *
@@ -727,8 +737,8 @@ export class PrismaClient<
    * @example
    * ```
    * const prisma = new PrismaClient()
-   * // Fetch zero or more Ranks
-   * const ranks = await prisma.rank.findMany()
+   * // Fetch zero or more SystemConfigs
+   * const systemConfigs = await prisma.systemConfig.findMany()
    * ```
    *
    *
@@ -818,6 +828,16 @@ export class PrismaClient<
   }>>
 
       /**
+   * `prisma.systemConfig`: Exposes CRUD operations for the **SystemConfig** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more SystemConfigs
+    * const systemConfigs = await prisma.systemConfig.findMany()
+    * ```
+    */
+  get systemConfig(): Prisma.SystemConfigDelegate<ExtArgs, ClientOptions>;
+
+  /**
    * `prisma.rank`: Exposes CRUD operations for the **Rank** model.
     * Example usage:
     * ```ts
@@ -1236,6 +1256,16 @@ export class PrismaClient<
     * ```
     */
   get birthdayTransaction(): Prisma.BirthdayTransactionDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.shiftHandoverReport`: Exposes CRUD operations for the **ShiftHandoverReport** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ShiftHandoverReports
+    * const shiftHandoverReports = await prisma.shiftHandoverReport.findMany()
+    * ```
+    */
+  get shiftHandoverReport(): Prisma.ShiftHandoverReportDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.reportDetail`: Exposes CRUD operations for the **ReportDetail** model.
@@ -1907,6 +1937,7 @@ export namespace Prisma {
 
 
   export const ModelName: {
+    SystemConfig: 'SystemConfig',
     Rank: 'Rank',
     Game: 'Game',
     CheckInResult: 'CheckInResult',
@@ -1949,6 +1980,7 @@ export namespace Prisma {
     BirthdayTier: 'BirthdayTier',
     UserBirthdayProgress: 'UserBirthdayProgress',
     BirthdayTransaction: 'BirthdayTransaction',
+    ShiftHandoverReport: 'ShiftHandoverReport',
     ReportDetail: 'ReportDetail',
     Report: 'Report',
     HandoverReport: 'HandoverReport',
@@ -1990,10 +2022,76 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "rank" | "game" | "checkInResult" | "checkInItem" | "checkInPromotion" | "item" | "gameItemMap" | "gameResult" | "user" | "mission" | "userMissionCompletion" | "userRewardMap" | "reward" | "promotionCode" | "userStarHistory" | "savingPlan" | "computer" | "staff" | "request" | "staffRequest" | "staffTimeTracking" | "workShift" | "workShiftRevenueReport" | "fraudLoginAlert" | "staffSalary" | "staffBonus" | "staffPenalty" | "managerIncomeExpense" | "giftRound" | "device" | "deviceHistory" | "battlePassSeason" | "battlePassReward" | "userBattlePass" | "userBattlePassReward" | "battlePassPremiumPackage" | "promotionSetting" | "battlePassPremiumOrder" | "chatMessage" | "birthdayTier" | "userBirthdayProgress" | "birthdayTransaction" | "reportDetail" | "report" | "handoverReport" | "handoverMaterial" | "material" | "feedback" | "fnetHistory" | "promotionReward" | "gameAppointmentTier" | "gameAppointment" | "gameAppointmentMember" | "gameAppointmentReward" | "event" | "eventParticipant" | "eventReward" | "eventReport" | "ffoodCredential" | "momoCredential" | "rewardPunishRule" | "ruleSeverity" | "staffViolation" | "zone" | "computerLayout"
+      modelProps: "systemConfig" | "rank" | "game" | "checkInResult" | "checkInItem" | "checkInPromotion" | "item" | "gameItemMap" | "gameResult" | "user" | "mission" | "userMissionCompletion" | "userRewardMap" | "reward" | "promotionCode" | "userStarHistory" | "savingPlan" | "computer" | "staff" | "request" | "staffRequest" | "staffTimeTracking" | "workShift" | "workShiftRevenueReport" | "fraudLoginAlert" | "staffSalary" | "staffBonus" | "staffPenalty" | "managerIncomeExpense" | "giftRound" | "device" | "deviceHistory" | "battlePassSeason" | "battlePassReward" | "userBattlePass" | "userBattlePassReward" | "battlePassPremiumPackage" | "promotionSetting" | "battlePassPremiumOrder" | "chatMessage" | "birthdayTier" | "userBirthdayProgress" | "birthdayTransaction" | "shiftHandoverReport" | "reportDetail" | "report" | "handoverReport" | "handoverMaterial" | "material" | "feedback" | "fnetHistory" | "promotionReward" | "gameAppointmentTier" | "gameAppointment" | "gameAppointmentMember" | "gameAppointmentReward" | "event" | "eventParticipant" | "eventReward" | "eventReport" | "ffoodCredential" | "momoCredential" | "rewardPunishRule" | "ruleSeverity" | "staffViolation" | "zone" | "computerLayout"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
+      SystemConfig: {
+        payload: Prisma.$SystemConfigPayload<ExtArgs>
+        fields: Prisma.SystemConfigFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.SystemConfigFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemConfigPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.SystemConfigFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemConfigPayload>
+          }
+          findFirst: {
+            args: Prisma.SystemConfigFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemConfigPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.SystemConfigFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemConfigPayload>
+          }
+          findMany: {
+            args: Prisma.SystemConfigFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemConfigPayload>[]
+          }
+          create: {
+            args: Prisma.SystemConfigCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemConfigPayload>
+          }
+          createMany: {
+            args: Prisma.SystemConfigCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.SystemConfigDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemConfigPayload>
+          }
+          update: {
+            args: Prisma.SystemConfigUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemConfigPayload>
+          }
+          deleteMany: {
+            args: Prisma.SystemConfigDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.SystemConfigUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.SystemConfigUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemConfigPayload>
+          }
+          aggregate: {
+            args: Prisma.SystemConfigAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateSystemConfig>
+          }
+          groupBy: {
+            args: Prisma.SystemConfigGroupByArgs<ExtArgs>
+            result: $Utils.Optional<SystemConfigGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.SystemConfigCountArgs<ExtArgs>
+            result: $Utils.Optional<SystemConfigCountAggregateOutputType> | number
+          }
+        }
+      }
       Rank: {
         payload: Prisma.$RankPayload<ExtArgs>
         fields: Prisma.RankFieldRefs
@@ -4766,6 +4864,72 @@ export namespace Prisma {
           }
         }
       }
+      ShiftHandoverReport: {
+        payload: Prisma.$ShiftHandoverReportPayload<ExtArgs>
+        fields: Prisma.ShiftHandoverReportFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ShiftHandoverReportFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ShiftHandoverReportPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ShiftHandoverReportFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ShiftHandoverReportPayload>
+          }
+          findFirst: {
+            args: Prisma.ShiftHandoverReportFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ShiftHandoverReportPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ShiftHandoverReportFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ShiftHandoverReportPayload>
+          }
+          findMany: {
+            args: Prisma.ShiftHandoverReportFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ShiftHandoverReportPayload>[]
+          }
+          create: {
+            args: Prisma.ShiftHandoverReportCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ShiftHandoverReportPayload>
+          }
+          createMany: {
+            args: Prisma.ShiftHandoverReportCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.ShiftHandoverReportDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ShiftHandoverReportPayload>
+          }
+          update: {
+            args: Prisma.ShiftHandoverReportUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ShiftHandoverReportPayload>
+          }
+          deleteMany: {
+            args: Prisma.ShiftHandoverReportDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ShiftHandoverReportUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.ShiftHandoverReportUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ShiftHandoverReportPayload>
+          }
+          aggregate: {
+            args: Prisma.ShiftHandoverReportAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateShiftHandoverReport>
+          }
+          groupBy: {
+            args: Prisma.ShiftHandoverReportGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ShiftHandoverReportGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ShiftHandoverReportCountArgs<ExtArgs>
+            result: $Utils.Optional<ShiftHandoverReportCountAggregateOutputType> | number
+          }
+        }
+      }
       ReportDetail: {
         payload: Prisma.$ReportDetailPayload<ExtArgs>
         fields: Prisma.ReportDetailFieldRefs
@@ -6380,6 +6544,7 @@ export namespace Prisma {
     omit?: Prisma.GlobalOmitConfig
   }
   export type GlobalOmitConfig = {
+    systemConfig?: SystemConfigOmit
     rank?: RankOmit
     game?: GameOmit
     checkInResult?: CheckInResultOmit
@@ -6422,6 +6587,7 @@ export namespace Prisma {
     birthdayTier?: BirthdayTierOmit
     userBirthdayProgress?: UserBirthdayProgressOmit
     birthdayTransaction?: BirthdayTransactionOmit
+    shiftHandoverReport?: ShiftHandoverReportOmit
     reportDetail?: ReportDetailOmit
     report?: ReportOmit
     handoverReport?: HandoverReportOmit
@@ -6759,6 +6925,9 @@ export namespace Prisma {
     counterStaffReports: number
     kitchenStaffReports: number
     securityStaffReports: number
+    counterShiftReports: number
+    kitchenShiftReports: number
+    securityShiftReports: number
     morningHandoverReports: number
     afternoonHandoverReports: number
     eveningHandoverReports: number
@@ -6771,6 +6940,9 @@ export namespace Prisma {
     counterStaffReports?: boolean | StaffCountOutputTypeCountCounterStaffReportsArgs
     kitchenStaffReports?: boolean | StaffCountOutputTypeCountKitchenStaffReportsArgs
     securityStaffReports?: boolean | StaffCountOutputTypeCountSecurityStaffReportsArgs
+    counterShiftReports?: boolean | StaffCountOutputTypeCountCounterShiftReportsArgs
+    kitchenShiftReports?: boolean | StaffCountOutputTypeCountKitchenShiftReportsArgs
+    securityShiftReports?: boolean | StaffCountOutputTypeCountSecurityShiftReportsArgs
     morningHandoverReports?: boolean | StaffCountOutputTypeCountMorningHandoverReportsArgs
     afternoonHandoverReports?: boolean | StaffCountOutputTypeCountAfternoonHandoverReportsArgs
     eveningHandoverReports?: boolean | StaffCountOutputTypeCountEveningHandoverReportsArgs
@@ -6809,6 +6981,27 @@ export namespace Prisma {
    */
   export type StaffCountOutputTypeCountSecurityStaffReportsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ReportWhereInput
+  }
+
+  /**
+   * StaffCountOutputType without action
+   */
+  export type StaffCountOutputTypeCountCounterShiftReportsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ShiftHandoverReportWhereInput
+  }
+
+  /**
+   * StaffCountOutputType without action
+   */
+  export type StaffCountOutputTypeCountKitchenShiftReportsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ShiftHandoverReportWhereInput
+  }
+
+  /**
+   * StaffCountOutputType without action
+   */
+  export type StaffCountOutputTypeCountSecurityShiftReportsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ShiftHandoverReportWhereInput
   }
 
   /**
@@ -6860,10 +7053,12 @@ export namespace Prisma {
 
   export type WorkShiftCountOutputType = {
     staffs: number
+    shiftHandoverReports: number
   }
 
   export type WorkShiftCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     staffs?: boolean | WorkShiftCountOutputTypeCountStaffsArgs
+    shiftHandoverReports?: boolean | WorkShiftCountOutputTypeCountShiftHandoverReportsArgs
   }
 
   // Custom InputTypes
@@ -6882,6 +7077,13 @@ export namespace Prisma {
    */
   export type WorkShiftCountOutputTypeCountStaffsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: StaffWhereInput
+  }
+
+  /**
+   * WorkShiftCountOutputType without action
+   */
+  export type WorkShiftCountOutputTypeCountShiftHandoverReportsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ShiftHandoverReportWhereInput
   }
 
 
@@ -7305,6 +7507,922 @@ export namespace Prisma {
   /**
    * Models
    */
+
+  /**
+   * Model SystemConfig
+   */
+
+  export type AggregateSystemConfig = {
+    _count: SystemConfigCountAggregateOutputType | null
+    _avg: SystemConfigAvgAggregateOutputType | null
+    _sum: SystemConfigSumAggregateOutputType | null
+    _min: SystemConfigMinAggregateOutputType | null
+    _max: SystemConfigMaxAggregateOutputType | null
+  }
+
+  export type SystemConfigAvgAggregateOutputType = {
+    id: number | null
+  }
+
+  export type SystemConfigSumAggregateOutputType = {
+    id: number | null
+  }
+
+  export type SystemConfigMinAggregateOutputType = {
+    id: number | null
+    key: string | null
+    value: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type SystemConfigMaxAggregateOutputType = {
+    id: number | null
+    key: string | null
+    value: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type SystemConfigCountAggregateOutputType = {
+    id: number
+    key: number
+    value: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type SystemConfigAvgAggregateInputType = {
+    id?: true
+  }
+
+  export type SystemConfigSumAggregateInputType = {
+    id?: true
+  }
+
+  export type SystemConfigMinAggregateInputType = {
+    id?: true
+    key?: true
+    value?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type SystemConfigMaxAggregateInputType = {
+    id?: true
+    key?: true
+    value?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type SystemConfigCountAggregateInputType = {
+    id?: true
+    key?: true
+    value?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type SystemConfigAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SystemConfig to aggregate.
+     */
+    where?: SystemConfigWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SystemConfigs to fetch.
+     */
+    orderBy?: SystemConfigOrderByWithRelationInput | SystemConfigOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: SystemConfigWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SystemConfigs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SystemConfigs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned SystemConfigs
+    **/
+    _count?: true | SystemConfigCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: SystemConfigAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: SystemConfigSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: SystemConfigMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: SystemConfigMaxAggregateInputType
+  }
+
+  export type GetSystemConfigAggregateType<T extends SystemConfigAggregateArgs> = {
+        [P in keyof T & keyof AggregateSystemConfig]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateSystemConfig[P]>
+      : GetScalarType<T[P], AggregateSystemConfig[P]>
+  }
+
+
+
+
+  export type SystemConfigGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SystemConfigWhereInput
+    orderBy?: SystemConfigOrderByWithAggregationInput | SystemConfigOrderByWithAggregationInput[]
+    by: SystemConfigScalarFieldEnum[] | SystemConfigScalarFieldEnum
+    having?: SystemConfigScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: SystemConfigCountAggregateInputType | true
+    _avg?: SystemConfigAvgAggregateInputType
+    _sum?: SystemConfigSumAggregateInputType
+    _min?: SystemConfigMinAggregateInputType
+    _max?: SystemConfigMaxAggregateInputType
+  }
+
+  export type SystemConfigGroupByOutputType = {
+    id: number
+    key: string
+    value: string
+    createdAt: Date
+    updatedAt: Date
+    _count: SystemConfigCountAggregateOutputType | null
+    _avg: SystemConfigAvgAggregateOutputType | null
+    _sum: SystemConfigSumAggregateOutputType | null
+    _min: SystemConfigMinAggregateOutputType | null
+    _max: SystemConfigMaxAggregateOutputType | null
+  }
+
+  type GetSystemConfigGroupByPayload<T extends SystemConfigGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<SystemConfigGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof SystemConfigGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], SystemConfigGroupByOutputType[P]>
+            : GetScalarType<T[P], SystemConfigGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type SystemConfigSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    key?: boolean
+    value?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["systemConfig"]>
+
+
+
+  export type SystemConfigSelectScalar = {
+    id?: boolean
+    key?: boolean
+    value?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type SystemConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "key" | "value" | "createdAt" | "updatedAt", ExtArgs["result"]["systemConfig"]>
+
+  export type $SystemConfigPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "SystemConfig"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      key: string
+      value: string
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["systemConfig"]>
+    composites: {}
+  }
+
+  type SystemConfigGetPayload<S extends boolean | null | undefined | SystemConfigDefaultArgs> = $Result.GetResult<Prisma.$SystemConfigPayload, S>
+
+  type SystemConfigCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<SystemConfigFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: SystemConfigCountAggregateInputType | true
+    }
+
+  export interface SystemConfigDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['SystemConfig'], meta: { name: 'SystemConfig' } }
+    /**
+     * Find zero or one SystemConfig that matches the filter.
+     * @param {SystemConfigFindUniqueArgs} args - Arguments to find a SystemConfig
+     * @example
+     * // Get one SystemConfig
+     * const systemConfig = await prisma.systemConfig.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends SystemConfigFindUniqueArgs>(args: SelectSubset<T, SystemConfigFindUniqueArgs<ExtArgs>>): Prisma__SystemConfigClient<$Result.GetResult<Prisma.$SystemConfigPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one SystemConfig that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {SystemConfigFindUniqueOrThrowArgs} args - Arguments to find a SystemConfig
+     * @example
+     * // Get one SystemConfig
+     * const systemConfig = await prisma.systemConfig.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends SystemConfigFindUniqueOrThrowArgs>(args: SelectSubset<T, SystemConfigFindUniqueOrThrowArgs<ExtArgs>>): Prisma__SystemConfigClient<$Result.GetResult<Prisma.$SystemConfigPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first SystemConfig that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SystemConfigFindFirstArgs} args - Arguments to find a SystemConfig
+     * @example
+     * // Get one SystemConfig
+     * const systemConfig = await prisma.systemConfig.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends SystemConfigFindFirstArgs>(args?: SelectSubset<T, SystemConfigFindFirstArgs<ExtArgs>>): Prisma__SystemConfigClient<$Result.GetResult<Prisma.$SystemConfigPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first SystemConfig that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SystemConfigFindFirstOrThrowArgs} args - Arguments to find a SystemConfig
+     * @example
+     * // Get one SystemConfig
+     * const systemConfig = await prisma.systemConfig.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends SystemConfigFindFirstOrThrowArgs>(args?: SelectSubset<T, SystemConfigFindFirstOrThrowArgs<ExtArgs>>): Prisma__SystemConfigClient<$Result.GetResult<Prisma.$SystemConfigPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more SystemConfigs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SystemConfigFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all SystemConfigs
+     * const systemConfigs = await prisma.systemConfig.findMany()
+     * 
+     * // Get first 10 SystemConfigs
+     * const systemConfigs = await prisma.systemConfig.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const systemConfigWithIdOnly = await prisma.systemConfig.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends SystemConfigFindManyArgs>(args?: SelectSubset<T, SystemConfigFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SystemConfigPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a SystemConfig.
+     * @param {SystemConfigCreateArgs} args - Arguments to create a SystemConfig.
+     * @example
+     * // Create one SystemConfig
+     * const SystemConfig = await prisma.systemConfig.create({
+     *   data: {
+     *     // ... data to create a SystemConfig
+     *   }
+     * })
+     * 
+     */
+    create<T extends SystemConfigCreateArgs>(args: SelectSubset<T, SystemConfigCreateArgs<ExtArgs>>): Prisma__SystemConfigClient<$Result.GetResult<Prisma.$SystemConfigPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many SystemConfigs.
+     * @param {SystemConfigCreateManyArgs} args - Arguments to create many SystemConfigs.
+     * @example
+     * // Create many SystemConfigs
+     * const systemConfig = await prisma.systemConfig.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends SystemConfigCreateManyArgs>(args?: SelectSubset<T, SystemConfigCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a SystemConfig.
+     * @param {SystemConfigDeleteArgs} args - Arguments to delete one SystemConfig.
+     * @example
+     * // Delete one SystemConfig
+     * const SystemConfig = await prisma.systemConfig.delete({
+     *   where: {
+     *     // ... filter to delete one SystemConfig
+     *   }
+     * })
+     * 
+     */
+    delete<T extends SystemConfigDeleteArgs>(args: SelectSubset<T, SystemConfigDeleteArgs<ExtArgs>>): Prisma__SystemConfigClient<$Result.GetResult<Prisma.$SystemConfigPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one SystemConfig.
+     * @param {SystemConfigUpdateArgs} args - Arguments to update one SystemConfig.
+     * @example
+     * // Update one SystemConfig
+     * const systemConfig = await prisma.systemConfig.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends SystemConfigUpdateArgs>(args: SelectSubset<T, SystemConfigUpdateArgs<ExtArgs>>): Prisma__SystemConfigClient<$Result.GetResult<Prisma.$SystemConfigPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more SystemConfigs.
+     * @param {SystemConfigDeleteManyArgs} args - Arguments to filter SystemConfigs to delete.
+     * @example
+     * // Delete a few SystemConfigs
+     * const { count } = await prisma.systemConfig.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends SystemConfigDeleteManyArgs>(args?: SelectSubset<T, SystemConfigDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SystemConfigs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SystemConfigUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many SystemConfigs
+     * const systemConfig = await prisma.systemConfig.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends SystemConfigUpdateManyArgs>(args: SelectSubset<T, SystemConfigUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one SystemConfig.
+     * @param {SystemConfigUpsertArgs} args - Arguments to update or create a SystemConfig.
+     * @example
+     * // Update or create a SystemConfig
+     * const systemConfig = await prisma.systemConfig.upsert({
+     *   create: {
+     *     // ... data to create a SystemConfig
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the SystemConfig we want to update
+     *   }
+     * })
+     */
+    upsert<T extends SystemConfigUpsertArgs>(args: SelectSubset<T, SystemConfigUpsertArgs<ExtArgs>>): Prisma__SystemConfigClient<$Result.GetResult<Prisma.$SystemConfigPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of SystemConfigs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SystemConfigCountArgs} args - Arguments to filter SystemConfigs to count.
+     * @example
+     * // Count the number of SystemConfigs
+     * const count = await prisma.systemConfig.count({
+     *   where: {
+     *     // ... the filter for the SystemConfigs we want to count
+     *   }
+     * })
+    **/
+    count<T extends SystemConfigCountArgs>(
+      args?: Subset<T, SystemConfigCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], SystemConfigCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a SystemConfig.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SystemConfigAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends SystemConfigAggregateArgs>(args: Subset<T, SystemConfigAggregateArgs>): Prisma.PrismaPromise<GetSystemConfigAggregateType<T>>
+
+    /**
+     * Group by SystemConfig.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SystemConfigGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends SystemConfigGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: SystemConfigGroupByArgs['orderBy'] }
+        : { orderBy?: SystemConfigGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, SystemConfigGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetSystemConfigGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the SystemConfig model
+   */
+  readonly fields: SystemConfigFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for SystemConfig.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__SystemConfigClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the SystemConfig model
+   */
+  interface SystemConfigFieldRefs {
+    readonly id: FieldRef<"SystemConfig", 'Int'>
+    readonly key: FieldRef<"SystemConfig", 'String'>
+    readonly value: FieldRef<"SystemConfig", 'String'>
+    readonly createdAt: FieldRef<"SystemConfig", 'DateTime'>
+    readonly updatedAt: FieldRef<"SystemConfig", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * SystemConfig findUnique
+   */
+  export type SystemConfigFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SystemConfig
+     */
+    select?: SystemConfigSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SystemConfig
+     */
+    omit?: SystemConfigOmit<ExtArgs> | null
+    /**
+     * Filter, which SystemConfig to fetch.
+     */
+    where: SystemConfigWhereUniqueInput
+  }
+
+  /**
+   * SystemConfig findUniqueOrThrow
+   */
+  export type SystemConfigFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SystemConfig
+     */
+    select?: SystemConfigSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SystemConfig
+     */
+    omit?: SystemConfigOmit<ExtArgs> | null
+    /**
+     * Filter, which SystemConfig to fetch.
+     */
+    where: SystemConfigWhereUniqueInput
+  }
+
+  /**
+   * SystemConfig findFirst
+   */
+  export type SystemConfigFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SystemConfig
+     */
+    select?: SystemConfigSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SystemConfig
+     */
+    omit?: SystemConfigOmit<ExtArgs> | null
+    /**
+     * Filter, which SystemConfig to fetch.
+     */
+    where?: SystemConfigWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SystemConfigs to fetch.
+     */
+    orderBy?: SystemConfigOrderByWithRelationInput | SystemConfigOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SystemConfigs.
+     */
+    cursor?: SystemConfigWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SystemConfigs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SystemConfigs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SystemConfigs.
+     */
+    distinct?: SystemConfigScalarFieldEnum | SystemConfigScalarFieldEnum[]
+  }
+
+  /**
+   * SystemConfig findFirstOrThrow
+   */
+  export type SystemConfigFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SystemConfig
+     */
+    select?: SystemConfigSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SystemConfig
+     */
+    omit?: SystemConfigOmit<ExtArgs> | null
+    /**
+     * Filter, which SystemConfig to fetch.
+     */
+    where?: SystemConfigWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SystemConfigs to fetch.
+     */
+    orderBy?: SystemConfigOrderByWithRelationInput | SystemConfigOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SystemConfigs.
+     */
+    cursor?: SystemConfigWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SystemConfigs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SystemConfigs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SystemConfigs.
+     */
+    distinct?: SystemConfigScalarFieldEnum | SystemConfigScalarFieldEnum[]
+  }
+
+  /**
+   * SystemConfig findMany
+   */
+  export type SystemConfigFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SystemConfig
+     */
+    select?: SystemConfigSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SystemConfig
+     */
+    omit?: SystemConfigOmit<ExtArgs> | null
+    /**
+     * Filter, which SystemConfigs to fetch.
+     */
+    where?: SystemConfigWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SystemConfigs to fetch.
+     */
+    orderBy?: SystemConfigOrderByWithRelationInput | SystemConfigOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing SystemConfigs.
+     */
+    cursor?: SystemConfigWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SystemConfigs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SystemConfigs.
+     */
+    skip?: number
+    distinct?: SystemConfigScalarFieldEnum | SystemConfigScalarFieldEnum[]
+  }
+
+  /**
+   * SystemConfig create
+   */
+  export type SystemConfigCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SystemConfig
+     */
+    select?: SystemConfigSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SystemConfig
+     */
+    omit?: SystemConfigOmit<ExtArgs> | null
+    /**
+     * The data needed to create a SystemConfig.
+     */
+    data: XOR<SystemConfigCreateInput, SystemConfigUncheckedCreateInput>
+  }
+
+  /**
+   * SystemConfig createMany
+   */
+  export type SystemConfigCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many SystemConfigs.
+     */
+    data: SystemConfigCreateManyInput | SystemConfigCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * SystemConfig update
+   */
+  export type SystemConfigUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SystemConfig
+     */
+    select?: SystemConfigSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SystemConfig
+     */
+    omit?: SystemConfigOmit<ExtArgs> | null
+    /**
+     * The data needed to update a SystemConfig.
+     */
+    data: XOR<SystemConfigUpdateInput, SystemConfigUncheckedUpdateInput>
+    /**
+     * Choose, which SystemConfig to update.
+     */
+    where: SystemConfigWhereUniqueInput
+  }
+
+  /**
+   * SystemConfig updateMany
+   */
+  export type SystemConfigUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update SystemConfigs.
+     */
+    data: XOR<SystemConfigUpdateManyMutationInput, SystemConfigUncheckedUpdateManyInput>
+    /**
+     * Filter which SystemConfigs to update
+     */
+    where?: SystemConfigWhereInput
+    /**
+     * Limit how many SystemConfigs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * SystemConfig upsert
+   */
+  export type SystemConfigUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SystemConfig
+     */
+    select?: SystemConfigSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SystemConfig
+     */
+    omit?: SystemConfigOmit<ExtArgs> | null
+    /**
+     * The filter to search for the SystemConfig to update in case it exists.
+     */
+    where: SystemConfigWhereUniqueInput
+    /**
+     * In case the SystemConfig found by the `where` argument doesn't exist, create a new SystemConfig with this data.
+     */
+    create: XOR<SystemConfigCreateInput, SystemConfigUncheckedCreateInput>
+    /**
+     * In case the SystemConfig was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<SystemConfigUpdateInput, SystemConfigUncheckedUpdateInput>
+  }
+
+  /**
+   * SystemConfig delete
+   */
+  export type SystemConfigDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SystemConfig
+     */
+    select?: SystemConfigSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SystemConfig
+     */
+    omit?: SystemConfigOmit<ExtArgs> | null
+    /**
+     * Filter which SystemConfig to delete.
+     */
+    where: SystemConfigWhereUniqueInput
+  }
+
+  /**
+   * SystemConfig deleteMany
+   */
+  export type SystemConfigDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SystemConfigs to delete
+     */
+    where?: SystemConfigWhereInput
+    /**
+     * Limit how many SystemConfigs to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * SystemConfig without action
+   */
+  export type SystemConfigDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SystemConfig
+     */
+    select?: SystemConfigSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SystemConfig
+     */
+    omit?: SystemConfigOmit<ExtArgs> | null
+  }
+
 
   /**
    * Model Rank
@@ -24790,6 +25908,9 @@ export namespace Prisma {
     counterStaffReports?: boolean | Staff$counterStaffReportsArgs<ExtArgs>
     kitchenStaffReports?: boolean | Staff$kitchenStaffReportsArgs<ExtArgs>
     securityStaffReports?: boolean | Staff$securityStaffReportsArgs<ExtArgs>
+    counterShiftReports?: boolean | Staff$counterShiftReportsArgs<ExtArgs>
+    kitchenShiftReports?: boolean | Staff$kitchenShiftReportsArgs<ExtArgs>
+    securityShiftReports?: boolean | Staff$securityShiftReportsArgs<ExtArgs>
     morningHandoverReports?: boolean | Staff$morningHandoverReportsArgs<ExtArgs>
     afternoonHandoverReports?: boolean | Staff$afternoonHandoverReportsArgs<ExtArgs>
     eveningHandoverReports?: boolean | Staff$eveningHandoverReportsArgs<ExtArgs>
@@ -24836,6 +25957,9 @@ export namespace Prisma {
     counterStaffReports?: boolean | Staff$counterStaffReportsArgs<ExtArgs>
     kitchenStaffReports?: boolean | Staff$kitchenStaffReportsArgs<ExtArgs>
     securityStaffReports?: boolean | Staff$securityStaffReportsArgs<ExtArgs>
+    counterShiftReports?: boolean | Staff$counterShiftReportsArgs<ExtArgs>
+    kitchenShiftReports?: boolean | Staff$kitchenShiftReportsArgs<ExtArgs>
+    securityShiftReports?: boolean | Staff$securityShiftReportsArgs<ExtArgs>
     morningHandoverReports?: boolean | Staff$morningHandoverReportsArgs<ExtArgs>
     afternoonHandoverReports?: boolean | Staff$afternoonHandoverReportsArgs<ExtArgs>
     eveningHandoverReports?: boolean | Staff$eveningHandoverReportsArgs<ExtArgs>
@@ -24852,6 +25976,9 @@ export namespace Prisma {
       counterStaffReports: Prisma.$ReportPayload<ExtArgs>[]
       kitchenStaffReports: Prisma.$ReportPayload<ExtArgs>[]
       securityStaffReports: Prisma.$ReportPayload<ExtArgs>[]
+      counterShiftReports: Prisma.$ShiftHandoverReportPayload<ExtArgs>[]
+      kitchenShiftReports: Prisma.$ShiftHandoverReportPayload<ExtArgs>[]
+      securityShiftReports: Prisma.$ShiftHandoverReportPayload<ExtArgs>[]
       morningHandoverReports: Prisma.$HandoverReportPayload<ExtArgs>[]
       afternoonHandoverReports: Prisma.$HandoverReportPayload<ExtArgs>[]
       eveningHandoverReports: Prisma.$HandoverReportPayload<ExtArgs>[]
@@ -25230,6 +26357,9 @@ export namespace Prisma {
     counterStaffReports<T extends Staff$counterStaffReportsArgs<ExtArgs> = {}>(args?: Subset<T, Staff$counterStaffReportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     kitchenStaffReports<T extends Staff$kitchenStaffReportsArgs<ExtArgs> = {}>(args?: Subset<T, Staff$kitchenStaffReportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     securityStaffReports<T extends Staff$securityStaffReportsArgs<ExtArgs> = {}>(args?: Subset<T, Staff$securityStaffReportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    counterShiftReports<T extends Staff$counterShiftReportsArgs<ExtArgs> = {}>(args?: Subset<T, Staff$counterShiftReportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ShiftHandoverReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    kitchenShiftReports<T extends Staff$kitchenShiftReportsArgs<ExtArgs> = {}>(args?: Subset<T, Staff$kitchenShiftReportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ShiftHandoverReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    securityShiftReports<T extends Staff$securityShiftReportsArgs<ExtArgs> = {}>(args?: Subset<T, Staff$securityShiftReportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ShiftHandoverReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     morningHandoverReports<T extends Staff$morningHandoverReportsArgs<ExtArgs> = {}>(args?: Subset<T, Staff$morningHandoverReportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HandoverReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     afternoonHandoverReports<T extends Staff$afternoonHandoverReportsArgs<ExtArgs> = {}>(args?: Subset<T, Staff$afternoonHandoverReportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HandoverReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     eveningHandoverReports<T extends Staff$eveningHandoverReportsArgs<ExtArgs> = {}>(args?: Subset<T, Staff$eveningHandoverReportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HandoverReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -25704,6 +26834,78 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: ReportScalarFieldEnum | ReportScalarFieldEnum[]
+  }
+
+  /**
+   * Staff.counterShiftReports
+   */
+  export type Staff$counterShiftReportsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShiftHandoverReport
+     */
+    select?: ShiftHandoverReportSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShiftHandoverReport
+     */
+    omit?: ShiftHandoverReportOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShiftHandoverReportInclude<ExtArgs> | null
+    where?: ShiftHandoverReportWhereInput
+    orderBy?: ShiftHandoverReportOrderByWithRelationInput | ShiftHandoverReportOrderByWithRelationInput[]
+    cursor?: ShiftHandoverReportWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ShiftHandoverReportScalarFieldEnum | ShiftHandoverReportScalarFieldEnum[]
+  }
+
+  /**
+   * Staff.kitchenShiftReports
+   */
+  export type Staff$kitchenShiftReportsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShiftHandoverReport
+     */
+    select?: ShiftHandoverReportSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShiftHandoverReport
+     */
+    omit?: ShiftHandoverReportOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShiftHandoverReportInclude<ExtArgs> | null
+    where?: ShiftHandoverReportWhereInput
+    orderBy?: ShiftHandoverReportOrderByWithRelationInput | ShiftHandoverReportOrderByWithRelationInput[]
+    cursor?: ShiftHandoverReportWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ShiftHandoverReportScalarFieldEnum | ShiftHandoverReportScalarFieldEnum[]
+  }
+
+  /**
+   * Staff.securityShiftReports
+   */
+  export type Staff$securityShiftReportsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShiftHandoverReport
+     */
+    select?: ShiftHandoverReportSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShiftHandoverReport
+     */
+    omit?: ShiftHandoverReportOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShiftHandoverReportInclude<ExtArgs> | null
+    where?: ShiftHandoverReportWhereInput
+    orderBy?: ShiftHandoverReportOrderByWithRelationInput | ShiftHandoverReportOrderByWithRelationInput[]
+    cursor?: ShiftHandoverReportWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ShiftHandoverReportScalarFieldEnum | ShiftHandoverReportScalarFieldEnum[]
   }
 
   /**
@@ -29051,6 +30253,7 @@ export namespace Prisma {
     ffoodId?: boolean
     gcpId?: boolean
     staffs?: boolean | WorkShift$staffsArgs<ExtArgs>
+    shiftHandoverReports?: boolean | WorkShift$shiftHandoverReportsArgs<ExtArgs>
     _count?: boolean | WorkShiftCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["workShift"]>
 
@@ -29072,6 +30275,7 @@ export namespace Prisma {
   export type WorkShiftOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "startTime" | "endTime" | "FnetStaffId" | "createdAt" | "updatedAt" | "isOvernight" | "ffoodId" | "gcpId", ExtArgs["result"]["workShift"]>
   export type WorkShiftInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     staffs?: boolean | WorkShift$staffsArgs<ExtArgs>
+    shiftHandoverReports?: boolean | WorkShift$shiftHandoverReportsArgs<ExtArgs>
     _count?: boolean | WorkShiftCountOutputTypeDefaultArgs<ExtArgs>
   }
 
@@ -29079,6 +30283,7 @@ export namespace Prisma {
     name: "WorkShift"
     objects: {
       staffs: Prisma.$StaffPayload<ExtArgs>[]
+      shiftHandoverReports: Prisma.$ShiftHandoverReportPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -29432,6 +30637,7 @@ export namespace Prisma {
   export interface Prisma__WorkShiftClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     staffs<T extends WorkShift$staffsArgs<ExtArgs> = {}>(args?: Subset<T, WorkShift$staffsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StaffPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    shiftHandoverReports<T extends WorkShift$shiftHandoverReportsArgs<ExtArgs> = {}>(args?: Subset<T, WorkShift$shiftHandoverReportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ShiftHandoverReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -29835,6 +31041,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: StaffScalarFieldEnum | StaffScalarFieldEnum[]
+  }
+
+  /**
+   * WorkShift.shiftHandoverReports
+   */
+  export type WorkShift$shiftHandoverReportsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShiftHandoverReport
+     */
+    select?: ShiftHandoverReportSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShiftHandoverReport
+     */
+    omit?: ShiftHandoverReportOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShiftHandoverReportInclude<ExtArgs> | null
+    where?: ShiftHandoverReportWhereInput
+    orderBy?: ShiftHandoverReportOrderByWithRelationInput | ShiftHandoverReportOrderByWithRelationInput[]
+    cursor?: ShiftHandoverReportWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ShiftHandoverReportScalarFieldEnum | ShiftHandoverReportScalarFieldEnum[]
   }
 
   /**
@@ -50174,6 +51404,1188 @@ export namespace Prisma {
 
 
   /**
+   * Model ShiftHandoverReport
+   */
+
+  export type AggregateShiftHandoverReport = {
+    _count: ShiftHandoverReportCountAggregateOutputType | null
+    _avg: ShiftHandoverReportAvgAggregateOutputType | null
+    _sum: ShiftHandoverReportSumAggregateOutputType | null
+    _min: ShiftHandoverReportMinAggregateOutputType | null
+    _max: ShiftHandoverReportMaxAggregateOutputType | null
+  }
+
+  export type ShiftHandoverReportAvgAggregateOutputType = {
+    id: number | null
+    workShiftId: number | null
+    fnetRevenue: number | null
+    gcpRevenue: number | null
+    momoRevenue: number | null
+    cashRevenue: number | null
+    cashExpense: number | null
+    actualReceived: number | null
+    counterStaffId: number | null
+    kitchenStaffId: number | null
+    securityStaffId: number | null
+  }
+
+  export type ShiftHandoverReportSumAggregateOutputType = {
+    id: number | null
+    workShiftId: number | null
+    fnetRevenue: number | null
+    gcpRevenue: number | null
+    momoRevenue: number | null
+    cashRevenue: number | null
+    cashExpense: number | null
+    actualReceived: number | null
+    counterStaffId: number | null
+    kitchenStaffId: number | null
+    securityStaffId: number | null
+  }
+
+  export type ShiftHandoverReportMinAggregateOutputType = {
+    id: number | null
+    date: Date | null
+    workShiftId: number | null
+    fnetRevenue: number | null
+    gcpRevenue: number | null
+    momoRevenue: number | null
+    cashRevenue: number | null
+    cashExpense: number | null
+    actualReceived: number | null
+    note: string | null
+    counterStaffId: number | null
+    kitchenStaffId: number | null
+    securityStaffId: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ShiftHandoverReportMaxAggregateOutputType = {
+    id: number | null
+    date: Date | null
+    workShiftId: number | null
+    fnetRevenue: number | null
+    gcpRevenue: number | null
+    momoRevenue: number | null
+    cashRevenue: number | null
+    cashExpense: number | null
+    actualReceived: number | null
+    note: string | null
+    counterStaffId: number | null
+    kitchenStaffId: number | null
+    securityStaffId: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ShiftHandoverReportCountAggregateOutputType = {
+    id: number
+    date: number
+    workShiftId: number
+    fnetRevenue: number
+    gcpRevenue: number
+    momoRevenue: number
+    cashRevenue: number
+    cashExpense: number
+    actualReceived: number
+    note: number
+    counterStaffId: number
+    kitchenStaffId: number
+    securityStaffId: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ShiftHandoverReportAvgAggregateInputType = {
+    id?: true
+    workShiftId?: true
+    fnetRevenue?: true
+    gcpRevenue?: true
+    momoRevenue?: true
+    cashRevenue?: true
+    cashExpense?: true
+    actualReceived?: true
+    counterStaffId?: true
+    kitchenStaffId?: true
+    securityStaffId?: true
+  }
+
+  export type ShiftHandoverReportSumAggregateInputType = {
+    id?: true
+    workShiftId?: true
+    fnetRevenue?: true
+    gcpRevenue?: true
+    momoRevenue?: true
+    cashRevenue?: true
+    cashExpense?: true
+    actualReceived?: true
+    counterStaffId?: true
+    kitchenStaffId?: true
+    securityStaffId?: true
+  }
+
+  export type ShiftHandoverReportMinAggregateInputType = {
+    id?: true
+    date?: true
+    workShiftId?: true
+    fnetRevenue?: true
+    gcpRevenue?: true
+    momoRevenue?: true
+    cashRevenue?: true
+    cashExpense?: true
+    actualReceived?: true
+    note?: true
+    counterStaffId?: true
+    kitchenStaffId?: true
+    securityStaffId?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ShiftHandoverReportMaxAggregateInputType = {
+    id?: true
+    date?: true
+    workShiftId?: true
+    fnetRevenue?: true
+    gcpRevenue?: true
+    momoRevenue?: true
+    cashRevenue?: true
+    cashExpense?: true
+    actualReceived?: true
+    note?: true
+    counterStaffId?: true
+    kitchenStaffId?: true
+    securityStaffId?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ShiftHandoverReportCountAggregateInputType = {
+    id?: true
+    date?: true
+    workShiftId?: true
+    fnetRevenue?: true
+    gcpRevenue?: true
+    momoRevenue?: true
+    cashRevenue?: true
+    cashExpense?: true
+    actualReceived?: true
+    note?: true
+    counterStaffId?: true
+    kitchenStaffId?: true
+    securityStaffId?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ShiftHandoverReportAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ShiftHandoverReport to aggregate.
+     */
+    where?: ShiftHandoverReportWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ShiftHandoverReports to fetch.
+     */
+    orderBy?: ShiftHandoverReportOrderByWithRelationInput | ShiftHandoverReportOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ShiftHandoverReportWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ShiftHandoverReports from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ShiftHandoverReports.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ShiftHandoverReports
+    **/
+    _count?: true | ShiftHandoverReportCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ShiftHandoverReportAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ShiftHandoverReportSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ShiftHandoverReportMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ShiftHandoverReportMaxAggregateInputType
+  }
+
+  export type GetShiftHandoverReportAggregateType<T extends ShiftHandoverReportAggregateArgs> = {
+        [P in keyof T & keyof AggregateShiftHandoverReport]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateShiftHandoverReport[P]>
+      : GetScalarType<T[P], AggregateShiftHandoverReport[P]>
+  }
+
+
+
+
+  export type ShiftHandoverReportGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ShiftHandoverReportWhereInput
+    orderBy?: ShiftHandoverReportOrderByWithAggregationInput | ShiftHandoverReportOrderByWithAggregationInput[]
+    by: ShiftHandoverReportScalarFieldEnum[] | ShiftHandoverReportScalarFieldEnum
+    having?: ShiftHandoverReportScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ShiftHandoverReportCountAggregateInputType | true
+    _avg?: ShiftHandoverReportAvgAggregateInputType
+    _sum?: ShiftHandoverReportSumAggregateInputType
+    _min?: ShiftHandoverReportMinAggregateInputType
+    _max?: ShiftHandoverReportMaxAggregateInputType
+  }
+
+  export type ShiftHandoverReportGroupByOutputType = {
+    id: number
+    date: Date
+    workShiftId: number
+    fnetRevenue: number
+    gcpRevenue: number
+    momoRevenue: number
+    cashRevenue: number
+    cashExpense: number
+    actualReceived: number
+    note: string | null
+    counterStaffId: number | null
+    kitchenStaffId: number | null
+    securityStaffId: number | null
+    createdAt: Date
+    updatedAt: Date
+    _count: ShiftHandoverReportCountAggregateOutputType | null
+    _avg: ShiftHandoverReportAvgAggregateOutputType | null
+    _sum: ShiftHandoverReportSumAggregateOutputType | null
+    _min: ShiftHandoverReportMinAggregateOutputType | null
+    _max: ShiftHandoverReportMaxAggregateOutputType | null
+  }
+
+  type GetShiftHandoverReportGroupByPayload<T extends ShiftHandoverReportGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ShiftHandoverReportGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ShiftHandoverReportGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ShiftHandoverReportGroupByOutputType[P]>
+            : GetScalarType<T[P], ShiftHandoverReportGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ShiftHandoverReportSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    date?: boolean
+    workShiftId?: boolean
+    fnetRevenue?: boolean
+    gcpRevenue?: boolean
+    momoRevenue?: boolean
+    cashRevenue?: boolean
+    cashExpense?: boolean
+    actualReceived?: boolean
+    note?: boolean
+    counterStaffId?: boolean
+    kitchenStaffId?: boolean
+    securityStaffId?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    workShift?: boolean | WorkShiftDefaultArgs<ExtArgs>
+    counterStaff?: boolean | ShiftHandoverReport$counterStaffArgs<ExtArgs>
+    kitchenStaff?: boolean | ShiftHandoverReport$kitchenStaffArgs<ExtArgs>
+    securityStaff?: boolean | ShiftHandoverReport$securityStaffArgs<ExtArgs>
+  }, ExtArgs["result"]["shiftHandoverReport"]>
+
+
+
+  export type ShiftHandoverReportSelectScalar = {
+    id?: boolean
+    date?: boolean
+    workShiftId?: boolean
+    fnetRevenue?: boolean
+    gcpRevenue?: boolean
+    momoRevenue?: boolean
+    cashRevenue?: boolean
+    cashExpense?: boolean
+    actualReceived?: boolean
+    note?: boolean
+    counterStaffId?: boolean
+    kitchenStaffId?: boolean
+    securityStaffId?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ShiftHandoverReportOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "date" | "workShiftId" | "fnetRevenue" | "gcpRevenue" | "momoRevenue" | "cashRevenue" | "cashExpense" | "actualReceived" | "note" | "counterStaffId" | "kitchenStaffId" | "securityStaffId" | "createdAt" | "updatedAt", ExtArgs["result"]["shiftHandoverReport"]>
+  export type ShiftHandoverReportInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    workShift?: boolean | WorkShiftDefaultArgs<ExtArgs>
+    counterStaff?: boolean | ShiftHandoverReport$counterStaffArgs<ExtArgs>
+    kitchenStaff?: boolean | ShiftHandoverReport$kitchenStaffArgs<ExtArgs>
+    securityStaff?: boolean | ShiftHandoverReport$securityStaffArgs<ExtArgs>
+  }
+
+  export type $ShiftHandoverReportPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ShiftHandoverReport"
+    objects: {
+      workShift: Prisma.$WorkShiftPayload<ExtArgs>
+      counterStaff: Prisma.$StaffPayload<ExtArgs> | null
+      kitchenStaff: Prisma.$StaffPayload<ExtArgs> | null
+      securityStaff: Prisma.$StaffPayload<ExtArgs> | null
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      date: Date
+      workShiftId: number
+      fnetRevenue: number
+      gcpRevenue: number
+      momoRevenue: number
+      cashRevenue: number
+      cashExpense: number
+      actualReceived: number
+      note: string | null
+      counterStaffId: number | null
+      kitchenStaffId: number | null
+      securityStaffId: number | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["shiftHandoverReport"]>
+    composites: {}
+  }
+
+  type ShiftHandoverReportGetPayload<S extends boolean | null | undefined | ShiftHandoverReportDefaultArgs> = $Result.GetResult<Prisma.$ShiftHandoverReportPayload, S>
+
+  type ShiftHandoverReportCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ShiftHandoverReportFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ShiftHandoverReportCountAggregateInputType | true
+    }
+
+  export interface ShiftHandoverReportDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ShiftHandoverReport'], meta: { name: 'ShiftHandoverReport' } }
+    /**
+     * Find zero or one ShiftHandoverReport that matches the filter.
+     * @param {ShiftHandoverReportFindUniqueArgs} args - Arguments to find a ShiftHandoverReport
+     * @example
+     * // Get one ShiftHandoverReport
+     * const shiftHandoverReport = await prisma.shiftHandoverReport.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ShiftHandoverReportFindUniqueArgs>(args: SelectSubset<T, ShiftHandoverReportFindUniqueArgs<ExtArgs>>): Prisma__ShiftHandoverReportClient<$Result.GetResult<Prisma.$ShiftHandoverReportPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ShiftHandoverReport that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ShiftHandoverReportFindUniqueOrThrowArgs} args - Arguments to find a ShiftHandoverReport
+     * @example
+     * // Get one ShiftHandoverReport
+     * const shiftHandoverReport = await prisma.shiftHandoverReport.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ShiftHandoverReportFindUniqueOrThrowArgs>(args: SelectSubset<T, ShiftHandoverReportFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ShiftHandoverReportClient<$Result.GetResult<Prisma.$ShiftHandoverReportPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ShiftHandoverReport that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ShiftHandoverReportFindFirstArgs} args - Arguments to find a ShiftHandoverReport
+     * @example
+     * // Get one ShiftHandoverReport
+     * const shiftHandoverReport = await prisma.shiftHandoverReport.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ShiftHandoverReportFindFirstArgs>(args?: SelectSubset<T, ShiftHandoverReportFindFirstArgs<ExtArgs>>): Prisma__ShiftHandoverReportClient<$Result.GetResult<Prisma.$ShiftHandoverReportPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ShiftHandoverReport that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ShiftHandoverReportFindFirstOrThrowArgs} args - Arguments to find a ShiftHandoverReport
+     * @example
+     * // Get one ShiftHandoverReport
+     * const shiftHandoverReport = await prisma.shiftHandoverReport.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ShiftHandoverReportFindFirstOrThrowArgs>(args?: SelectSubset<T, ShiftHandoverReportFindFirstOrThrowArgs<ExtArgs>>): Prisma__ShiftHandoverReportClient<$Result.GetResult<Prisma.$ShiftHandoverReportPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ShiftHandoverReports that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ShiftHandoverReportFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ShiftHandoverReports
+     * const shiftHandoverReports = await prisma.shiftHandoverReport.findMany()
+     * 
+     * // Get first 10 ShiftHandoverReports
+     * const shiftHandoverReports = await prisma.shiftHandoverReport.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const shiftHandoverReportWithIdOnly = await prisma.shiftHandoverReport.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ShiftHandoverReportFindManyArgs>(args?: SelectSubset<T, ShiftHandoverReportFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ShiftHandoverReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ShiftHandoverReport.
+     * @param {ShiftHandoverReportCreateArgs} args - Arguments to create a ShiftHandoverReport.
+     * @example
+     * // Create one ShiftHandoverReport
+     * const ShiftHandoverReport = await prisma.shiftHandoverReport.create({
+     *   data: {
+     *     // ... data to create a ShiftHandoverReport
+     *   }
+     * })
+     * 
+     */
+    create<T extends ShiftHandoverReportCreateArgs>(args: SelectSubset<T, ShiftHandoverReportCreateArgs<ExtArgs>>): Prisma__ShiftHandoverReportClient<$Result.GetResult<Prisma.$ShiftHandoverReportPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ShiftHandoverReports.
+     * @param {ShiftHandoverReportCreateManyArgs} args - Arguments to create many ShiftHandoverReports.
+     * @example
+     * // Create many ShiftHandoverReports
+     * const shiftHandoverReport = await prisma.shiftHandoverReport.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ShiftHandoverReportCreateManyArgs>(args?: SelectSubset<T, ShiftHandoverReportCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a ShiftHandoverReport.
+     * @param {ShiftHandoverReportDeleteArgs} args - Arguments to delete one ShiftHandoverReport.
+     * @example
+     * // Delete one ShiftHandoverReport
+     * const ShiftHandoverReport = await prisma.shiftHandoverReport.delete({
+     *   where: {
+     *     // ... filter to delete one ShiftHandoverReport
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ShiftHandoverReportDeleteArgs>(args: SelectSubset<T, ShiftHandoverReportDeleteArgs<ExtArgs>>): Prisma__ShiftHandoverReportClient<$Result.GetResult<Prisma.$ShiftHandoverReportPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ShiftHandoverReport.
+     * @param {ShiftHandoverReportUpdateArgs} args - Arguments to update one ShiftHandoverReport.
+     * @example
+     * // Update one ShiftHandoverReport
+     * const shiftHandoverReport = await prisma.shiftHandoverReport.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ShiftHandoverReportUpdateArgs>(args: SelectSubset<T, ShiftHandoverReportUpdateArgs<ExtArgs>>): Prisma__ShiftHandoverReportClient<$Result.GetResult<Prisma.$ShiftHandoverReportPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ShiftHandoverReports.
+     * @param {ShiftHandoverReportDeleteManyArgs} args - Arguments to filter ShiftHandoverReports to delete.
+     * @example
+     * // Delete a few ShiftHandoverReports
+     * const { count } = await prisma.shiftHandoverReport.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ShiftHandoverReportDeleteManyArgs>(args?: SelectSubset<T, ShiftHandoverReportDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ShiftHandoverReports.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ShiftHandoverReportUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ShiftHandoverReports
+     * const shiftHandoverReport = await prisma.shiftHandoverReport.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ShiftHandoverReportUpdateManyArgs>(args: SelectSubset<T, ShiftHandoverReportUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one ShiftHandoverReport.
+     * @param {ShiftHandoverReportUpsertArgs} args - Arguments to update or create a ShiftHandoverReport.
+     * @example
+     * // Update or create a ShiftHandoverReport
+     * const shiftHandoverReport = await prisma.shiftHandoverReport.upsert({
+     *   create: {
+     *     // ... data to create a ShiftHandoverReport
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ShiftHandoverReport we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ShiftHandoverReportUpsertArgs>(args: SelectSubset<T, ShiftHandoverReportUpsertArgs<ExtArgs>>): Prisma__ShiftHandoverReportClient<$Result.GetResult<Prisma.$ShiftHandoverReportPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ShiftHandoverReports.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ShiftHandoverReportCountArgs} args - Arguments to filter ShiftHandoverReports to count.
+     * @example
+     * // Count the number of ShiftHandoverReports
+     * const count = await prisma.shiftHandoverReport.count({
+     *   where: {
+     *     // ... the filter for the ShiftHandoverReports we want to count
+     *   }
+     * })
+    **/
+    count<T extends ShiftHandoverReportCountArgs>(
+      args?: Subset<T, ShiftHandoverReportCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ShiftHandoverReportCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ShiftHandoverReport.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ShiftHandoverReportAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ShiftHandoverReportAggregateArgs>(args: Subset<T, ShiftHandoverReportAggregateArgs>): Prisma.PrismaPromise<GetShiftHandoverReportAggregateType<T>>
+
+    /**
+     * Group by ShiftHandoverReport.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ShiftHandoverReportGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ShiftHandoverReportGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ShiftHandoverReportGroupByArgs['orderBy'] }
+        : { orderBy?: ShiftHandoverReportGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ShiftHandoverReportGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetShiftHandoverReportGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ShiftHandoverReport model
+   */
+  readonly fields: ShiftHandoverReportFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ShiftHandoverReport.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ShiftHandoverReportClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    workShift<T extends WorkShiftDefaultArgs<ExtArgs> = {}>(args?: Subset<T, WorkShiftDefaultArgs<ExtArgs>>): Prisma__WorkShiftClient<$Result.GetResult<Prisma.$WorkShiftPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    counterStaff<T extends ShiftHandoverReport$counterStaffArgs<ExtArgs> = {}>(args?: Subset<T, ShiftHandoverReport$counterStaffArgs<ExtArgs>>): Prisma__StaffClient<$Result.GetResult<Prisma.$StaffPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    kitchenStaff<T extends ShiftHandoverReport$kitchenStaffArgs<ExtArgs> = {}>(args?: Subset<T, ShiftHandoverReport$kitchenStaffArgs<ExtArgs>>): Prisma__StaffClient<$Result.GetResult<Prisma.$StaffPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    securityStaff<T extends ShiftHandoverReport$securityStaffArgs<ExtArgs> = {}>(args?: Subset<T, ShiftHandoverReport$securityStaffArgs<ExtArgs>>): Prisma__StaffClient<$Result.GetResult<Prisma.$StaffPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ShiftHandoverReport model
+   */
+  interface ShiftHandoverReportFieldRefs {
+    readonly id: FieldRef<"ShiftHandoverReport", 'Int'>
+    readonly date: FieldRef<"ShiftHandoverReport", 'DateTime'>
+    readonly workShiftId: FieldRef<"ShiftHandoverReport", 'Int'>
+    readonly fnetRevenue: FieldRef<"ShiftHandoverReport", 'Float'>
+    readonly gcpRevenue: FieldRef<"ShiftHandoverReport", 'Float'>
+    readonly momoRevenue: FieldRef<"ShiftHandoverReport", 'Float'>
+    readonly cashRevenue: FieldRef<"ShiftHandoverReport", 'Float'>
+    readonly cashExpense: FieldRef<"ShiftHandoverReport", 'Float'>
+    readonly actualReceived: FieldRef<"ShiftHandoverReport", 'Float'>
+    readonly note: FieldRef<"ShiftHandoverReport", 'String'>
+    readonly counterStaffId: FieldRef<"ShiftHandoverReport", 'Int'>
+    readonly kitchenStaffId: FieldRef<"ShiftHandoverReport", 'Int'>
+    readonly securityStaffId: FieldRef<"ShiftHandoverReport", 'Int'>
+    readonly createdAt: FieldRef<"ShiftHandoverReport", 'DateTime'>
+    readonly updatedAt: FieldRef<"ShiftHandoverReport", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ShiftHandoverReport findUnique
+   */
+  export type ShiftHandoverReportFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShiftHandoverReport
+     */
+    select?: ShiftHandoverReportSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShiftHandoverReport
+     */
+    omit?: ShiftHandoverReportOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShiftHandoverReportInclude<ExtArgs> | null
+    /**
+     * Filter, which ShiftHandoverReport to fetch.
+     */
+    where: ShiftHandoverReportWhereUniqueInput
+  }
+
+  /**
+   * ShiftHandoverReport findUniqueOrThrow
+   */
+  export type ShiftHandoverReportFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShiftHandoverReport
+     */
+    select?: ShiftHandoverReportSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShiftHandoverReport
+     */
+    omit?: ShiftHandoverReportOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShiftHandoverReportInclude<ExtArgs> | null
+    /**
+     * Filter, which ShiftHandoverReport to fetch.
+     */
+    where: ShiftHandoverReportWhereUniqueInput
+  }
+
+  /**
+   * ShiftHandoverReport findFirst
+   */
+  export type ShiftHandoverReportFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShiftHandoverReport
+     */
+    select?: ShiftHandoverReportSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShiftHandoverReport
+     */
+    omit?: ShiftHandoverReportOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShiftHandoverReportInclude<ExtArgs> | null
+    /**
+     * Filter, which ShiftHandoverReport to fetch.
+     */
+    where?: ShiftHandoverReportWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ShiftHandoverReports to fetch.
+     */
+    orderBy?: ShiftHandoverReportOrderByWithRelationInput | ShiftHandoverReportOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ShiftHandoverReports.
+     */
+    cursor?: ShiftHandoverReportWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ShiftHandoverReports from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ShiftHandoverReports.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ShiftHandoverReports.
+     */
+    distinct?: ShiftHandoverReportScalarFieldEnum | ShiftHandoverReportScalarFieldEnum[]
+  }
+
+  /**
+   * ShiftHandoverReport findFirstOrThrow
+   */
+  export type ShiftHandoverReportFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShiftHandoverReport
+     */
+    select?: ShiftHandoverReportSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShiftHandoverReport
+     */
+    omit?: ShiftHandoverReportOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShiftHandoverReportInclude<ExtArgs> | null
+    /**
+     * Filter, which ShiftHandoverReport to fetch.
+     */
+    where?: ShiftHandoverReportWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ShiftHandoverReports to fetch.
+     */
+    orderBy?: ShiftHandoverReportOrderByWithRelationInput | ShiftHandoverReportOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ShiftHandoverReports.
+     */
+    cursor?: ShiftHandoverReportWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ShiftHandoverReports from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ShiftHandoverReports.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ShiftHandoverReports.
+     */
+    distinct?: ShiftHandoverReportScalarFieldEnum | ShiftHandoverReportScalarFieldEnum[]
+  }
+
+  /**
+   * ShiftHandoverReport findMany
+   */
+  export type ShiftHandoverReportFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShiftHandoverReport
+     */
+    select?: ShiftHandoverReportSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShiftHandoverReport
+     */
+    omit?: ShiftHandoverReportOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShiftHandoverReportInclude<ExtArgs> | null
+    /**
+     * Filter, which ShiftHandoverReports to fetch.
+     */
+    where?: ShiftHandoverReportWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ShiftHandoverReports to fetch.
+     */
+    orderBy?: ShiftHandoverReportOrderByWithRelationInput | ShiftHandoverReportOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ShiftHandoverReports.
+     */
+    cursor?: ShiftHandoverReportWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ShiftHandoverReports from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ShiftHandoverReports.
+     */
+    skip?: number
+    distinct?: ShiftHandoverReportScalarFieldEnum | ShiftHandoverReportScalarFieldEnum[]
+  }
+
+  /**
+   * ShiftHandoverReport create
+   */
+  export type ShiftHandoverReportCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShiftHandoverReport
+     */
+    select?: ShiftHandoverReportSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShiftHandoverReport
+     */
+    omit?: ShiftHandoverReportOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShiftHandoverReportInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ShiftHandoverReport.
+     */
+    data: XOR<ShiftHandoverReportCreateInput, ShiftHandoverReportUncheckedCreateInput>
+  }
+
+  /**
+   * ShiftHandoverReport createMany
+   */
+  export type ShiftHandoverReportCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ShiftHandoverReports.
+     */
+    data: ShiftHandoverReportCreateManyInput | ShiftHandoverReportCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ShiftHandoverReport update
+   */
+  export type ShiftHandoverReportUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShiftHandoverReport
+     */
+    select?: ShiftHandoverReportSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShiftHandoverReport
+     */
+    omit?: ShiftHandoverReportOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShiftHandoverReportInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ShiftHandoverReport.
+     */
+    data: XOR<ShiftHandoverReportUpdateInput, ShiftHandoverReportUncheckedUpdateInput>
+    /**
+     * Choose, which ShiftHandoverReport to update.
+     */
+    where: ShiftHandoverReportWhereUniqueInput
+  }
+
+  /**
+   * ShiftHandoverReport updateMany
+   */
+  export type ShiftHandoverReportUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ShiftHandoverReports.
+     */
+    data: XOR<ShiftHandoverReportUpdateManyMutationInput, ShiftHandoverReportUncheckedUpdateManyInput>
+    /**
+     * Filter which ShiftHandoverReports to update
+     */
+    where?: ShiftHandoverReportWhereInput
+    /**
+     * Limit how many ShiftHandoverReports to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ShiftHandoverReport upsert
+   */
+  export type ShiftHandoverReportUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShiftHandoverReport
+     */
+    select?: ShiftHandoverReportSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShiftHandoverReport
+     */
+    omit?: ShiftHandoverReportOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShiftHandoverReportInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ShiftHandoverReport to update in case it exists.
+     */
+    where: ShiftHandoverReportWhereUniqueInput
+    /**
+     * In case the ShiftHandoverReport found by the `where` argument doesn't exist, create a new ShiftHandoverReport with this data.
+     */
+    create: XOR<ShiftHandoverReportCreateInput, ShiftHandoverReportUncheckedCreateInput>
+    /**
+     * In case the ShiftHandoverReport was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ShiftHandoverReportUpdateInput, ShiftHandoverReportUncheckedUpdateInput>
+  }
+
+  /**
+   * ShiftHandoverReport delete
+   */
+  export type ShiftHandoverReportDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShiftHandoverReport
+     */
+    select?: ShiftHandoverReportSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShiftHandoverReport
+     */
+    omit?: ShiftHandoverReportOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShiftHandoverReportInclude<ExtArgs> | null
+    /**
+     * Filter which ShiftHandoverReport to delete.
+     */
+    where: ShiftHandoverReportWhereUniqueInput
+  }
+
+  /**
+   * ShiftHandoverReport deleteMany
+   */
+  export type ShiftHandoverReportDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ShiftHandoverReports to delete
+     */
+    where?: ShiftHandoverReportWhereInput
+    /**
+     * Limit how many ShiftHandoverReports to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ShiftHandoverReport.counterStaff
+   */
+  export type ShiftHandoverReport$counterStaffArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Staff
+     */
+    select?: StaffSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Staff
+     */
+    omit?: StaffOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffInclude<ExtArgs> | null
+    where?: StaffWhereInput
+  }
+
+  /**
+   * ShiftHandoverReport.kitchenStaff
+   */
+  export type ShiftHandoverReport$kitchenStaffArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Staff
+     */
+    select?: StaffSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Staff
+     */
+    omit?: StaffOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffInclude<ExtArgs> | null
+    where?: StaffWhereInput
+  }
+
+  /**
+   * ShiftHandoverReport.securityStaff
+   */
+  export type ShiftHandoverReport$securityStaffArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Staff
+     */
+    select?: StaffSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Staff
+     */
+    omit?: StaffOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffInclude<ExtArgs> | null
+    where?: StaffWhereInput
+  }
+
+  /**
+   * ShiftHandoverReport without action
+   */
+  export type ShiftHandoverReportDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ShiftHandoverReport
+     */
+    select?: ShiftHandoverReportSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ShiftHandoverReport
+     */
+    omit?: ShiftHandoverReportOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ShiftHandoverReportInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Model ReportDetail
    */
 
@@ -52274,6 +54686,7 @@ export namespace Prisma {
     date: number
     reportType: number
     note: number
+    metadata: number
     createdAt: number
     updatedAt: number
     afternoonStaffId: number
@@ -52350,6 +54763,7 @@ export namespace Prisma {
     date?: true
     reportType?: true
     note?: true
+    metadata?: true
     createdAt?: true
     updatedAt?: true
     afternoonStaffId?: true
@@ -52455,6 +54869,7 @@ export namespace Prisma {
     date: Date
     reportType: $Enums.HandoverReportType
     note: string | null
+    metadata: JsonValue | null
     createdAt: Date
     updatedAt: Date
     afternoonStaffId: number | null
@@ -52492,6 +54907,7 @@ export namespace Prisma {
     date?: boolean
     reportType?: boolean
     note?: boolean
+    metadata?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     afternoonStaffId?: boolean
@@ -52517,6 +54933,7 @@ export namespace Prisma {
     date?: boolean
     reportType?: boolean
     note?: boolean
+    metadata?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     afternoonStaffId?: boolean
@@ -52530,7 +54947,7 @@ export namespace Prisma {
     morningSubmissionCount?: boolean
   }
 
-  export type HandoverReportOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "date" | "reportType" | "note" | "createdAt" | "updatedAt" | "afternoonStaffId" | "eveningStaffId" | "morningStaffId" | "afternoonSubmissionCount" | "eveningSubmissionCount" | "isAfternoonComplete" | "isEveningComplete" | "isMorningComplete" | "morningSubmissionCount", ExtArgs["result"]["handoverReport"]>
+  export type HandoverReportOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "date" | "reportType" | "note" | "metadata" | "createdAt" | "updatedAt" | "afternoonStaffId" | "eveningStaffId" | "morningStaffId" | "afternoonSubmissionCount" | "eveningSubmissionCount" | "isAfternoonComplete" | "isEveningComplete" | "isMorningComplete" | "morningSubmissionCount", ExtArgs["result"]["handoverReport"]>
   export type HandoverReportInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     materials?: boolean | HandoverReport$materialsArgs<ExtArgs>
     morningStaff?: boolean | HandoverReport$morningStaffArgs<ExtArgs>
@@ -52552,6 +54969,7 @@ export namespace Prisma {
       date: Date
       reportType: $Enums.HandoverReportType
       note: string | null
+      metadata: Prisma.JsonValue | null
       createdAt: Date
       updatedAt: Date
       afternoonStaffId: number | null
@@ -52940,6 +55358,7 @@ export namespace Prisma {
     readonly date: FieldRef<"HandoverReport", 'DateTime'>
     readonly reportType: FieldRef<"HandoverReport", 'HandoverReportType'>
     readonly note: FieldRef<"HandoverReport", 'String'>
+    readonly metadata: FieldRef<"HandoverReport", 'Json'>
     readonly createdAt: FieldRef<"HandoverReport", 'DateTime'>
     readonly updatedAt: FieldRef<"HandoverReport", 'DateTime'>
     readonly afternoonStaffId: FieldRef<"HandoverReport", 'Int'>
@@ -74454,6 +76873,17 @@ export namespace Prisma {
   export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
 
 
+  export const SystemConfigScalarFieldEnum: {
+    id: 'id',
+    key: 'key',
+    value: 'value',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type SystemConfigScalarFieldEnum = (typeof SystemConfigScalarFieldEnum)[keyof typeof SystemConfigScalarFieldEnum]
+
+
   export const RankScalarFieldEnum: {
     id: 'id',
     name: 'name',
@@ -75095,6 +77525,27 @@ export namespace Prisma {
   export type BirthdayTransactionScalarFieldEnum = (typeof BirthdayTransactionScalarFieldEnum)[keyof typeof BirthdayTransactionScalarFieldEnum]
 
 
+  export const ShiftHandoverReportScalarFieldEnum: {
+    id: 'id',
+    date: 'date',
+    workShiftId: 'workShiftId',
+    fnetRevenue: 'fnetRevenue',
+    gcpRevenue: 'gcpRevenue',
+    momoRevenue: 'momoRevenue',
+    cashRevenue: 'cashRevenue',
+    cashExpense: 'cashExpense',
+    actualReceived: 'actualReceived',
+    note: 'note',
+    counterStaffId: 'counterStaffId',
+    kitchenStaffId: 'kitchenStaffId',
+    securityStaffId: 'securityStaffId',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ShiftHandoverReportScalarFieldEnum = (typeof ShiftHandoverReportScalarFieldEnum)[keyof typeof ShiftHandoverReportScalarFieldEnum]
+
+
   export const ReportDetailScalarFieldEnum: {
     id: 'id',
     reportId: 'reportId',
@@ -75126,6 +77577,7 @@ export namespace Prisma {
     date: 'date',
     reportType: 'reportType',
     note: 'note',
+    metadata: 'metadata',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
     afternoonStaffId: 'afternoonStaffId',
@@ -75498,6 +77950,14 @@ export namespace Prisma {
   export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
+  export const SystemConfigOrderByRelevanceFieldEnum: {
+    key: 'key',
+    value: 'value'
+  };
+
+  export type SystemConfigOrderByRelevanceFieldEnum = (typeof SystemConfigOrderByRelevanceFieldEnum)[keyof typeof SystemConfigOrderByRelevanceFieldEnum]
+
+
   export const NullsOrder: {
     first: 'first',
     last: 'last'
@@ -75783,6 +78243,13 @@ export namespace Prisma {
   export type BirthdayTransactionOrderByRelevanceFieldEnum = (typeof BirthdayTransactionOrderByRelevanceFieldEnum)[keyof typeof BirthdayTransactionOrderByRelevanceFieldEnum]
 
 
+  export const ShiftHandoverReportOrderByRelevanceFieldEnum: {
+    note: 'note'
+  };
+
+  export type ShiftHandoverReportOrderByRelevanceFieldEnum = (typeof ShiftHandoverReportOrderByRelevanceFieldEnum)[keyof typeof ShiftHandoverReportOrderByRelevanceFieldEnum]
+
+
   export const ReportOrderByRelevanceFieldEnum: {
     fileUrl: 'fileUrl',
     note: 'note'
@@ -75990,16 +78457,16 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'Float'
+   * Reference to a field of type 'DateTime'
    */
-  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+  export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
     
 
 
   /**
-   * Reference to a field of type 'DateTime'
+   * Reference to a field of type 'Float'
    */
-  export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
+  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
     
 
 
@@ -76208,6 +78675,61 @@ export namespace Prisma {
    * Deep Input Types
    */
 
+
+  export type SystemConfigWhereInput = {
+    AND?: SystemConfigWhereInput | SystemConfigWhereInput[]
+    OR?: SystemConfigWhereInput[]
+    NOT?: SystemConfigWhereInput | SystemConfigWhereInput[]
+    id?: IntFilter<"SystemConfig"> | number
+    key?: StringFilter<"SystemConfig"> | string
+    value?: StringFilter<"SystemConfig"> | string
+    createdAt?: DateTimeFilter<"SystemConfig"> | Date | string
+    updatedAt?: DateTimeFilter<"SystemConfig"> | Date | string
+  }
+
+  export type SystemConfigOrderByWithRelationInput = {
+    id?: SortOrder
+    key?: SortOrder
+    value?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _relevance?: SystemConfigOrderByRelevanceInput
+  }
+
+  export type SystemConfigWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    key?: string
+    AND?: SystemConfigWhereInput | SystemConfigWhereInput[]
+    OR?: SystemConfigWhereInput[]
+    NOT?: SystemConfigWhereInput | SystemConfigWhereInput[]
+    value?: StringFilter<"SystemConfig"> | string
+    createdAt?: DateTimeFilter<"SystemConfig"> | Date | string
+    updatedAt?: DateTimeFilter<"SystemConfig"> | Date | string
+  }, "id" | "key">
+
+  export type SystemConfigOrderByWithAggregationInput = {
+    id?: SortOrder
+    key?: SortOrder
+    value?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: SystemConfigCountOrderByAggregateInput
+    _avg?: SystemConfigAvgOrderByAggregateInput
+    _max?: SystemConfigMaxOrderByAggregateInput
+    _min?: SystemConfigMinOrderByAggregateInput
+    _sum?: SystemConfigSumOrderByAggregateInput
+  }
+
+  export type SystemConfigScalarWhereWithAggregatesInput = {
+    AND?: SystemConfigScalarWhereWithAggregatesInput | SystemConfigScalarWhereWithAggregatesInput[]
+    OR?: SystemConfigScalarWhereWithAggregatesInput[]
+    NOT?: SystemConfigScalarWhereWithAggregatesInput | SystemConfigScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"SystemConfig"> | number
+    key?: StringWithAggregatesFilter<"SystemConfig"> | string
+    value?: StringWithAggregatesFilter<"SystemConfig"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"SystemConfig"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"SystemConfig"> | Date | string
+  }
 
   export type RankWhereInput = {
     AND?: RankWhereInput | RankWhereInput[]
@@ -77460,6 +79982,9 @@ export namespace Prisma {
     counterStaffReports?: ReportListRelationFilter
     kitchenStaffReports?: ReportListRelationFilter
     securityStaffReports?: ReportListRelationFilter
+    counterShiftReports?: ShiftHandoverReportListRelationFilter
+    kitchenShiftReports?: ShiftHandoverReportListRelationFilter
+    securityShiftReports?: ShiftHandoverReportListRelationFilter
     morningHandoverReports?: HandoverReportListRelationFilter
     afternoonHandoverReports?: HandoverReportListRelationFilter
     eveningHandoverReports?: HandoverReportListRelationFilter
@@ -77499,6 +80024,9 @@ export namespace Prisma {
     counterStaffReports?: ReportOrderByRelationAggregateInput
     kitchenStaffReports?: ReportOrderByRelationAggregateInput
     securityStaffReports?: ReportOrderByRelationAggregateInput
+    counterShiftReports?: ShiftHandoverReportOrderByRelationAggregateInput
+    kitchenShiftReports?: ShiftHandoverReportOrderByRelationAggregateInput
+    securityShiftReports?: ShiftHandoverReportOrderByRelationAggregateInput
     morningHandoverReports?: HandoverReportOrderByRelationAggregateInput
     afternoonHandoverReports?: HandoverReportOrderByRelationAggregateInput
     eveningHandoverReports?: HandoverReportOrderByRelationAggregateInput
@@ -77542,6 +80070,9 @@ export namespace Prisma {
     counterStaffReports?: ReportListRelationFilter
     kitchenStaffReports?: ReportListRelationFilter
     securityStaffReports?: ReportListRelationFilter
+    counterShiftReports?: ShiftHandoverReportListRelationFilter
+    kitchenShiftReports?: ShiftHandoverReportListRelationFilter
+    securityShiftReports?: ShiftHandoverReportListRelationFilter
     morningHandoverReports?: HandoverReportListRelationFilter
     afternoonHandoverReports?: HandoverReportListRelationFilter
     eveningHandoverReports?: HandoverReportListRelationFilter
@@ -77807,6 +80338,7 @@ export namespace Prisma {
     ffoodId?: StringNullableFilter<"WorkShift"> | string | null
     gcpId?: StringNullableFilter<"WorkShift"> | string | null
     staffs?: StaffListRelationFilter
+    shiftHandoverReports?: ShiftHandoverReportListRelationFilter
   }
 
   export type WorkShiftOrderByWithRelationInput = {
@@ -77821,6 +80353,7 @@ export namespace Prisma {
     ffoodId?: SortOrderInput | SortOrder
     gcpId?: SortOrderInput | SortOrder
     staffs?: StaffOrderByRelationAggregateInput
+    shiftHandoverReports?: ShiftHandoverReportOrderByRelationAggregateInput
     _relevance?: WorkShiftOrderByRelevanceInput
   }
 
@@ -77839,6 +80372,7 @@ export namespace Prisma {
     ffoodId?: StringNullableFilter<"WorkShift"> | string | null
     gcpId?: StringNullableFilter<"WorkShift"> | string | null
     staffs?: StaffListRelationFilter
+    shiftHandoverReports?: ShiftHandoverReportListRelationFilter
   }, "id">
 
   export type WorkShiftOrderByWithAggregationInput = {
@@ -79536,6 +82070,124 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"BirthdayTransaction"> | Date | string
   }
 
+  export type ShiftHandoverReportWhereInput = {
+    AND?: ShiftHandoverReportWhereInput | ShiftHandoverReportWhereInput[]
+    OR?: ShiftHandoverReportWhereInput[]
+    NOT?: ShiftHandoverReportWhereInput | ShiftHandoverReportWhereInput[]
+    id?: IntFilter<"ShiftHandoverReport"> | number
+    date?: DateTimeFilter<"ShiftHandoverReport"> | Date | string
+    workShiftId?: IntFilter<"ShiftHandoverReport"> | number
+    fnetRevenue?: FloatFilter<"ShiftHandoverReport"> | number
+    gcpRevenue?: FloatFilter<"ShiftHandoverReport"> | number
+    momoRevenue?: FloatFilter<"ShiftHandoverReport"> | number
+    cashRevenue?: FloatFilter<"ShiftHandoverReport"> | number
+    cashExpense?: FloatFilter<"ShiftHandoverReport"> | number
+    actualReceived?: FloatFilter<"ShiftHandoverReport"> | number
+    note?: StringNullableFilter<"ShiftHandoverReport"> | string | null
+    counterStaffId?: IntNullableFilter<"ShiftHandoverReport"> | number | null
+    kitchenStaffId?: IntNullableFilter<"ShiftHandoverReport"> | number | null
+    securityStaffId?: IntNullableFilter<"ShiftHandoverReport"> | number | null
+    createdAt?: DateTimeFilter<"ShiftHandoverReport"> | Date | string
+    updatedAt?: DateTimeFilter<"ShiftHandoverReport"> | Date | string
+    workShift?: XOR<WorkShiftScalarRelationFilter, WorkShiftWhereInput>
+    counterStaff?: XOR<StaffNullableScalarRelationFilter, StaffWhereInput> | null
+    kitchenStaff?: XOR<StaffNullableScalarRelationFilter, StaffWhereInput> | null
+    securityStaff?: XOR<StaffNullableScalarRelationFilter, StaffWhereInput> | null
+  }
+
+  export type ShiftHandoverReportOrderByWithRelationInput = {
+    id?: SortOrder
+    date?: SortOrder
+    workShiftId?: SortOrder
+    fnetRevenue?: SortOrder
+    gcpRevenue?: SortOrder
+    momoRevenue?: SortOrder
+    cashRevenue?: SortOrder
+    cashExpense?: SortOrder
+    actualReceived?: SortOrder
+    note?: SortOrderInput | SortOrder
+    counterStaffId?: SortOrderInput | SortOrder
+    kitchenStaffId?: SortOrderInput | SortOrder
+    securityStaffId?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    workShift?: WorkShiftOrderByWithRelationInput
+    counterStaff?: StaffOrderByWithRelationInput
+    kitchenStaff?: StaffOrderByWithRelationInput
+    securityStaff?: StaffOrderByWithRelationInput
+    _relevance?: ShiftHandoverReportOrderByRelevanceInput
+  }
+
+  export type ShiftHandoverReportWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    date_workShiftId?: ShiftHandoverReportDateWorkShiftIdCompoundUniqueInput
+    AND?: ShiftHandoverReportWhereInput | ShiftHandoverReportWhereInput[]
+    OR?: ShiftHandoverReportWhereInput[]
+    NOT?: ShiftHandoverReportWhereInput | ShiftHandoverReportWhereInput[]
+    date?: DateTimeFilter<"ShiftHandoverReport"> | Date | string
+    workShiftId?: IntFilter<"ShiftHandoverReport"> | number
+    fnetRevenue?: FloatFilter<"ShiftHandoverReport"> | number
+    gcpRevenue?: FloatFilter<"ShiftHandoverReport"> | number
+    momoRevenue?: FloatFilter<"ShiftHandoverReport"> | number
+    cashRevenue?: FloatFilter<"ShiftHandoverReport"> | number
+    cashExpense?: FloatFilter<"ShiftHandoverReport"> | number
+    actualReceived?: FloatFilter<"ShiftHandoverReport"> | number
+    note?: StringNullableFilter<"ShiftHandoverReport"> | string | null
+    counterStaffId?: IntNullableFilter<"ShiftHandoverReport"> | number | null
+    kitchenStaffId?: IntNullableFilter<"ShiftHandoverReport"> | number | null
+    securityStaffId?: IntNullableFilter<"ShiftHandoverReport"> | number | null
+    createdAt?: DateTimeFilter<"ShiftHandoverReport"> | Date | string
+    updatedAt?: DateTimeFilter<"ShiftHandoverReport"> | Date | string
+    workShift?: XOR<WorkShiftScalarRelationFilter, WorkShiftWhereInput>
+    counterStaff?: XOR<StaffNullableScalarRelationFilter, StaffWhereInput> | null
+    kitchenStaff?: XOR<StaffNullableScalarRelationFilter, StaffWhereInput> | null
+    securityStaff?: XOR<StaffNullableScalarRelationFilter, StaffWhereInput> | null
+  }, "id" | "date_workShiftId">
+
+  export type ShiftHandoverReportOrderByWithAggregationInput = {
+    id?: SortOrder
+    date?: SortOrder
+    workShiftId?: SortOrder
+    fnetRevenue?: SortOrder
+    gcpRevenue?: SortOrder
+    momoRevenue?: SortOrder
+    cashRevenue?: SortOrder
+    cashExpense?: SortOrder
+    actualReceived?: SortOrder
+    note?: SortOrderInput | SortOrder
+    counterStaffId?: SortOrderInput | SortOrder
+    kitchenStaffId?: SortOrderInput | SortOrder
+    securityStaffId?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ShiftHandoverReportCountOrderByAggregateInput
+    _avg?: ShiftHandoverReportAvgOrderByAggregateInput
+    _max?: ShiftHandoverReportMaxOrderByAggregateInput
+    _min?: ShiftHandoverReportMinOrderByAggregateInput
+    _sum?: ShiftHandoverReportSumOrderByAggregateInput
+  }
+
+  export type ShiftHandoverReportScalarWhereWithAggregatesInput = {
+    AND?: ShiftHandoverReportScalarWhereWithAggregatesInput | ShiftHandoverReportScalarWhereWithAggregatesInput[]
+    OR?: ShiftHandoverReportScalarWhereWithAggregatesInput[]
+    NOT?: ShiftHandoverReportScalarWhereWithAggregatesInput | ShiftHandoverReportScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"ShiftHandoverReport"> | number
+    date?: DateTimeWithAggregatesFilter<"ShiftHandoverReport"> | Date | string
+    workShiftId?: IntWithAggregatesFilter<"ShiftHandoverReport"> | number
+    fnetRevenue?: FloatWithAggregatesFilter<"ShiftHandoverReport"> | number
+    gcpRevenue?: FloatWithAggregatesFilter<"ShiftHandoverReport"> | number
+    momoRevenue?: FloatWithAggregatesFilter<"ShiftHandoverReport"> | number
+    cashRevenue?: FloatWithAggregatesFilter<"ShiftHandoverReport"> | number
+    cashExpense?: FloatWithAggregatesFilter<"ShiftHandoverReport"> | number
+    actualReceived?: FloatWithAggregatesFilter<"ShiftHandoverReport"> | number
+    note?: StringNullableWithAggregatesFilter<"ShiftHandoverReport"> | string | null
+    counterStaffId?: IntNullableWithAggregatesFilter<"ShiftHandoverReport"> | number | null
+    kitchenStaffId?: IntNullableWithAggregatesFilter<"ShiftHandoverReport"> | number | null
+    securityStaffId?: IntNullableWithAggregatesFilter<"ShiftHandoverReport"> | number | null
+    createdAt?: DateTimeWithAggregatesFilter<"ShiftHandoverReport"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ShiftHandoverReport"> | Date | string
+  }
+
   export type ReportDetailWhereInput = {
     AND?: ReportDetailWhereInput | ReportDetailWhereInput[]
     OR?: ReportDetailWhereInput[]
@@ -79688,6 +82340,7 @@ export namespace Prisma {
     date?: DateTimeFilter<"HandoverReport"> | Date | string
     reportType?: EnumHandoverReportTypeFilter<"HandoverReport"> | $Enums.HandoverReportType
     note?: StringNullableFilter<"HandoverReport"> | string | null
+    metadata?: JsonNullableFilter<"HandoverReport">
     createdAt?: DateTimeFilter<"HandoverReport"> | Date | string
     updatedAt?: DateTimeFilter<"HandoverReport"> | Date | string
     afternoonStaffId?: IntNullableFilter<"HandoverReport"> | number | null
@@ -79710,6 +82363,7 @@ export namespace Prisma {
     date?: SortOrder
     reportType?: SortOrder
     note?: SortOrderInput | SortOrder
+    metadata?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     afternoonStaffId?: SortOrderInput | SortOrder
@@ -79736,6 +82390,7 @@ export namespace Prisma {
     date?: DateTimeFilter<"HandoverReport"> | Date | string
     reportType?: EnumHandoverReportTypeFilter<"HandoverReport"> | $Enums.HandoverReportType
     note?: StringNullableFilter<"HandoverReport"> | string | null
+    metadata?: JsonNullableFilter<"HandoverReport">
     createdAt?: DateTimeFilter<"HandoverReport"> | Date | string
     updatedAt?: DateTimeFilter<"HandoverReport"> | Date | string
     afternoonStaffId?: IntNullableFilter<"HandoverReport"> | number | null
@@ -79758,6 +82413,7 @@ export namespace Prisma {
     date?: SortOrder
     reportType?: SortOrder
     note?: SortOrderInput | SortOrder
+    metadata?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     afternoonStaffId?: SortOrderInput | SortOrder
@@ -79784,6 +82440,7 @@ export namespace Prisma {
     date?: DateTimeWithAggregatesFilter<"HandoverReport"> | Date | string
     reportType?: EnumHandoverReportTypeWithAggregatesFilter<"HandoverReport"> | $Enums.HandoverReportType
     note?: StringNullableWithAggregatesFilter<"HandoverReport"> | string | null
+    metadata?: JsonNullableWithAggregatesFilter<"HandoverReport">
     createdAt?: DateTimeWithAggregatesFilter<"HandoverReport"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"HandoverReport"> | Date | string
     afternoonStaffId?: IntNullableWithAggregatesFilter<"HandoverReport"> | number | null
@@ -81571,6 +84228,59 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"ComputerLayout"> | Date | string
   }
 
+  export type SystemConfigCreateInput = {
+    key: string
+    value: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SystemConfigUncheckedCreateInput = {
+    id?: number
+    key: string
+    value: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SystemConfigUpdateInput = {
+    key?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SystemConfigUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    key?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SystemConfigCreateManyInput = {
+    id?: number
+    key: string
+    value: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SystemConfigUpdateManyMutationInput = {
+    key?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SystemConfigUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    key?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type RankCreateInput = {
     name: string
     fromValue: number
@@ -82866,6 +85576,9 @@ export namespace Prisma {
     counterStaffReports?: ReportCreateNestedManyWithoutCounterStaffInput
     kitchenStaffReports?: ReportCreateNestedManyWithoutKitchenStaffInput
     securityStaffReports?: ReportCreateNestedManyWithoutSecurityStaffInput
+    counterShiftReports?: ShiftHandoverReportCreateNestedManyWithoutCounterStaffInput
+    kitchenShiftReports?: ShiftHandoverReportCreateNestedManyWithoutKitchenStaffInput
+    securityShiftReports?: ShiftHandoverReportCreateNestedManyWithoutSecurityStaffInput
     morningHandoverReports?: HandoverReportCreateNestedManyWithoutMorningStaffInput
     afternoonHandoverReports?: HandoverReportCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
@@ -82905,6 +85618,9 @@ export namespace Prisma {
     counterStaffReports?: ReportUncheckedCreateNestedManyWithoutCounterStaffInput
     kitchenStaffReports?: ReportUncheckedCreateNestedManyWithoutKitchenStaffInput
     securityStaffReports?: ReportUncheckedCreateNestedManyWithoutSecurityStaffInput
+    counterShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutCounterStaffInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutKitchenStaffInput
+    securityShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutSecurityStaffInput
     morningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutMorningStaffInput
     afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
@@ -82941,6 +85657,9 @@ export namespace Prisma {
     counterStaffReports?: ReportUpdateManyWithoutCounterStaffNestedInput
     kitchenStaffReports?: ReportUpdateManyWithoutKitchenStaffNestedInput
     securityStaffReports?: ReportUpdateManyWithoutSecurityStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUpdateManyWithoutCounterStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUpdateManyWithoutKitchenStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUpdateManyWithoutSecurityStaffNestedInput
     morningHandoverReports?: HandoverReportUpdateManyWithoutMorningStaffNestedInput
     afternoonHandoverReports?: HandoverReportUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
@@ -82980,6 +85699,9 @@ export namespace Prisma {
     counterStaffReports?: ReportUncheckedUpdateManyWithoutCounterStaffNestedInput
     kitchenStaffReports?: ReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
     securityStaffReports?: ReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutCounterStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
     morningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutMorningStaffNestedInput
     afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
@@ -83245,6 +85967,7 @@ export namespace Prisma {
     ffoodId?: string | null
     gcpId?: string | null
     staffs?: StaffCreateNestedManyWithoutWorkShiftInput
+    shiftHandoverReports?: ShiftHandoverReportCreateNestedManyWithoutWorkShiftInput
   }
 
   export type WorkShiftUncheckedCreateInput = {
@@ -83259,6 +85982,7 @@ export namespace Prisma {
     ffoodId?: string | null
     gcpId?: string | null
     staffs?: StaffUncheckedCreateNestedManyWithoutWorkShiftInput
+    shiftHandoverReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutWorkShiftInput
   }
 
   export type WorkShiftUpdateInput = {
@@ -83272,6 +85996,7 @@ export namespace Prisma {
     ffoodId?: NullableStringFieldUpdateOperationsInput | string | null
     gcpId?: NullableStringFieldUpdateOperationsInput | string | null
     staffs?: StaffUpdateManyWithoutWorkShiftNestedInput
+    shiftHandoverReports?: ShiftHandoverReportUpdateManyWithoutWorkShiftNestedInput
   }
 
   export type WorkShiftUncheckedUpdateInput = {
@@ -83286,6 +86011,7 @@ export namespace Prisma {
     ffoodId?: NullableStringFieldUpdateOperationsInput | string | null
     gcpId?: NullableStringFieldUpdateOperationsInput | string | null
     staffs?: StaffUncheckedUpdateManyWithoutWorkShiftNestedInput
+    shiftHandoverReports?: ShiftHandoverReportUncheckedUpdateManyWithoutWorkShiftNestedInput
   }
 
   export type WorkShiftCreateManyInput = {
@@ -85142,6 +87868,125 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type ShiftHandoverReportCreateInput = {
+    date: Date | string
+    fnetRevenue?: number
+    gcpRevenue?: number
+    momoRevenue?: number
+    cashRevenue?: number
+    cashExpense?: number
+    actualReceived?: number
+    note?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    workShift: WorkShiftCreateNestedOneWithoutShiftHandoverReportsInput
+    counterStaff?: StaffCreateNestedOneWithoutCounterShiftReportsInput
+    kitchenStaff?: StaffCreateNestedOneWithoutKitchenShiftReportsInput
+    securityStaff?: StaffCreateNestedOneWithoutSecurityShiftReportsInput
+  }
+
+  export type ShiftHandoverReportUncheckedCreateInput = {
+    id?: number
+    date: Date | string
+    workShiftId: number
+    fnetRevenue?: number
+    gcpRevenue?: number
+    momoRevenue?: number
+    cashRevenue?: number
+    cashExpense?: number
+    actualReceived?: number
+    note?: string | null
+    counterStaffId?: number | null
+    kitchenStaffId?: number | null
+    securityStaffId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ShiftHandoverReportUpdateInput = {
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    fnetRevenue?: FloatFieldUpdateOperationsInput | number
+    gcpRevenue?: FloatFieldUpdateOperationsInput | number
+    momoRevenue?: FloatFieldUpdateOperationsInput | number
+    cashRevenue?: FloatFieldUpdateOperationsInput | number
+    cashExpense?: FloatFieldUpdateOperationsInput | number
+    actualReceived?: FloatFieldUpdateOperationsInput | number
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    workShift?: WorkShiftUpdateOneRequiredWithoutShiftHandoverReportsNestedInput
+    counterStaff?: StaffUpdateOneWithoutCounterShiftReportsNestedInput
+    kitchenStaff?: StaffUpdateOneWithoutKitchenShiftReportsNestedInput
+    securityStaff?: StaffUpdateOneWithoutSecurityShiftReportsNestedInput
+  }
+
+  export type ShiftHandoverReportUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    workShiftId?: IntFieldUpdateOperationsInput | number
+    fnetRevenue?: FloatFieldUpdateOperationsInput | number
+    gcpRevenue?: FloatFieldUpdateOperationsInput | number
+    momoRevenue?: FloatFieldUpdateOperationsInput | number
+    cashRevenue?: FloatFieldUpdateOperationsInput | number
+    cashExpense?: FloatFieldUpdateOperationsInput | number
+    actualReceived?: FloatFieldUpdateOperationsInput | number
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    counterStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    kitchenStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    securityStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ShiftHandoverReportCreateManyInput = {
+    id?: number
+    date: Date | string
+    workShiftId: number
+    fnetRevenue?: number
+    gcpRevenue?: number
+    momoRevenue?: number
+    cashRevenue?: number
+    cashExpense?: number
+    actualReceived?: number
+    note?: string | null
+    counterStaffId?: number | null
+    kitchenStaffId?: number | null
+    securityStaffId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ShiftHandoverReportUpdateManyMutationInput = {
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    fnetRevenue?: FloatFieldUpdateOperationsInput | number
+    gcpRevenue?: FloatFieldUpdateOperationsInput | number
+    momoRevenue?: FloatFieldUpdateOperationsInput | number
+    cashRevenue?: FloatFieldUpdateOperationsInput | number
+    cashExpense?: FloatFieldUpdateOperationsInput | number
+    actualReceived?: FloatFieldUpdateOperationsInput | number
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ShiftHandoverReportUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    workShiftId?: IntFieldUpdateOperationsInput | number
+    fnetRevenue?: FloatFieldUpdateOperationsInput | number
+    gcpRevenue?: FloatFieldUpdateOperationsInput | number
+    momoRevenue?: FloatFieldUpdateOperationsInput | number
+    cashRevenue?: FloatFieldUpdateOperationsInput | number
+    cashExpense?: FloatFieldUpdateOperationsInput | number
+    actualReceived?: FloatFieldUpdateOperationsInput | number
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    counterStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    kitchenStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    securityStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type ReportDetailCreateInput = {
     type: $Enums.ReportDetailType
     value: number
@@ -85280,6 +88125,7 @@ export namespace Prisma {
     date: Date | string
     reportType: $Enums.HandoverReportType
     note?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     afternoonSubmissionCount?: number
@@ -85299,6 +88145,7 @@ export namespace Prisma {
     date: Date | string
     reportType: $Enums.HandoverReportType
     note?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     afternoonStaffId?: number | null
@@ -85317,6 +88164,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     reportType?: EnumHandoverReportTypeFieldUpdateOperationsInput | $Enums.HandoverReportType
     note?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     afternoonSubmissionCount?: IntFieldUpdateOperationsInput | number
@@ -85336,6 +88184,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     reportType?: EnumHandoverReportTypeFieldUpdateOperationsInput | $Enums.HandoverReportType
     note?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     afternoonStaffId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -85355,6 +88204,7 @@ export namespace Prisma {
     date: Date | string
     reportType: $Enums.HandoverReportType
     note?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     afternoonStaffId?: number | null
@@ -85372,6 +88222,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     reportType?: EnumHandoverReportTypeFieldUpdateOperationsInput | $Enums.HandoverReportType
     note?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     afternoonSubmissionCount?: IntFieldUpdateOperationsInput | number
@@ -85387,6 +88238,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     reportType?: EnumHandoverReportTypeFieldUpdateOperationsInput | $Enums.HandoverReportType
     note?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     afternoonStaffId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -87363,6 +90215,103 @@ export namespace Prisma {
     not?: NestedStringFilter<$PrismaModel> | string
   }
 
+  export type DateTimeFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[]
+    notIn?: Date[] | string[]
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeFilter<$PrismaModel> | Date | string
+  }
+
+  export type SystemConfigOrderByRelevanceInput = {
+    fields: SystemConfigOrderByRelevanceFieldEnum | SystemConfigOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
+  }
+
+  export type SystemConfigCountOrderByAggregateInput = {
+    id?: SortOrder
+    key?: SortOrder
+    value?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type SystemConfigAvgOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
+  export type SystemConfigMaxOrderByAggregateInput = {
+    id?: SortOrder
+    key?: SortOrder
+    value?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type SystemConfigMinOrderByAggregateInput = {
+    id?: SortOrder
+    key?: SortOrder
+    value?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type SystemConfigSumOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
+  export type IntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
+  export type StringWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel>
+    in?: string[]
+    notIn?: string[]
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    search?: string
+    not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedStringFilter<$PrismaModel>
+    _max?: NestedStringFilter<$PrismaModel>
+  }
+
+  export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[]
+    notIn?: Date[] | string[]
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedDateTimeFilter<$PrismaModel>
+    _max?: NestedDateTimeFilter<$PrismaModel>
+  }
+
   export type FloatFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel>
     in?: number[]
@@ -87394,17 +90343,6 @@ export namespace Prisma {
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
-  }
-
-  export type DateTimeFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
   export type SortOrderInput = {
@@ -87472,40 +90410,6 @@ export namespace Prisma {
     drinkVoucher?: SortOrder
   }
 
-  export type IntWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
-    _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedIntFilter<$PrismaModel>
-    _min?: NestedIntFilter<$PrismaModel>
-    _max?: NestedIntFilter<$PrismaModel>
-  }
-
-  export type StringWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel>
-    in?: string[]
-    notIn?: string[]
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
-    not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedStringFilter<$PrismaModel>
-    _max?: NestedStringFilter<$PrismaModel>
-  }
-
   export type FloatWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel>
     in?: number[]
@@ -87552,20 +90456,6 @@ export namespace Prisma {
     _sum?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedIntNullableFilter<$PrismaModel>
     _max?: NestedIntNullableFilter<$PrismaModel>
-  }
-
-  export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedDateTimeFilter<$PrismaModel>
-    _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
   export type GameOrderByRelevanceInput = {
@@ -88640,6 +91530,12 @@ export namespace Prisma {
     none?: ReportWhereInput
   }
 
+  export type ShiftHandoverReportListRelationFilter = {
+    every?: ShiftHandoverReportWhereInput
+    some?: ShiftHandoverReportWhereInput
+    none?: ShiftHandoverReportWhereInput
+  }
+
   export type HandoverReportListRelationFilter = {
     every?: HandoverReportWhereInput
     some?: HandoverReportWhereInput
@@ -88670,6 +91566,10 @@ export namespace Prisma {
   }
 
   export type ReportOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ShiftHandoverReportOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -90494,6 +93394,109 @@ export namespace Prisma {
     _max?: NestedEnumBirthdayTransactionTypeFilter<$PrismaModel>
   }
 
+  export type WorkShiftScalarRelationFilter = {
+    is?: WorkShiftWhereInput
+    isNot?: WorkShiftWhereInput
+  }
+
+  export type StaffNullableScalarRelationFilter = {
+    is?: StaffWhereInput | null
+    isNot?: StaffWhereInput | null
+  }
+
+  export type ShiftHandoverReportOrderByRelevanceInput = {
+    fields: ShiftHandoverReportOrderByRelevanceFieldEnum | ShiftHandoverReportOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
+  }
+
+  export type ShiftHandoverReportDateWorkShiftIdCompoundUniqueInput = {
+    date: Date | string
+    workShiftId: number
+  }
+
+  export type ShiftHandoverReportCountOrderByAggregateInput = {
+    id?: SortOrder
+    date?: SortOrder
+    workShiftId?: SortOrder
+    fnetRevenue?: SortOrder
+    gcpRevenue?: SortOrder
+    momoRevenue?: SortOrder
+    cashRevenue?: SortOrder
+    cashExpense?: SortOrder
+    actualReceived?: SortOrder
+    note?: SortOrder
+    counterStaffId?: SortOrder
+    kitchenStaffId?: SortOrder
+    securityStaffId?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ShiftHandoverReportAvgOrderByAggregateInput = {
+    id?: SortOrder
+    workShiftId?: SortOrder
+    fnetRevenue?: SortOrder
+    gcpRevenue?: SortOrder
+    momoRevenue?: SortOrder
+    cashRevenue?: SortOrder
+    cashExpense?: SortOrder
+    actualReceived?: SortOrder
+    counterStaffId?: SortOrder
+    kitchenStaffId?: SortOrder
+    securityStaffId?: SortOrder
+  }
+
+  export type ShiftHandoverReportMaxOrderByAggregateInput = {
+    id?: SortOrder
+    date?: SortOrder
+    workShiftId?: SortOrder
+    fnetRevenue?: SortOrder
+    gcpRevenue?: SortOrder
+    momoRevenue?: SortOrder
+    cashRevenue?: SortOrder
+    cashExpense?: SortOrder
+    actualReceived?: SortOrder
+    note?: SortOrder
+    counterStaffId?: SortOrder
+    kitchenStaffId?: SortOrder
+    securityStaffId?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ShiftHandoverReportMinOrderByAggregateInput = {
+    id?: SortOrder
+    date?: SortOrder
+    workShiftId?: SortOrder
+    fnetRevenue?: SortOrder
+    gcpRevenue?: SortOrder
+    momoRevenue?: SortOrder
+    cashRevenue?: SortOrder
+    cashExpense?: SortOrder
+    actualReceived?: SortOrder
+    note?: SortOrder
+    counterStaffId?: SortOrder
+    kitchenStaffId?: SortOrder
+    securityStaffId?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ShiftHandoverReportSumOrderByAggregateInput = {
+    id?: SortOrder
+    workShiftId?: SortOrder
+    fnetRevenue?: SortOrder
+    gcpRevenue?: SortOrder
+    momoRevenue?: SortOrder
+    cashRevenue?: SortOrder
+    cashExpense?: SortOrder
+    actualReceived?: SortOrder
+    counterStaffId?: SortOrder
+    kitchenStaffId?: SortOrder
+    securityStaffId?: SortOrder
+  }
+
   export type EnumReportDetailTypeFilter<$PrismaModel = never> = {
     equals?: $Enums.ReportDetailType | EnumReportDetailTypeFieldRefInput<$PrismaModel>
     in?: $Enums.ReportDetailType[]
@@ -90648,11 +93651,6 @@ export namespace Prisma {
     none?: HandoverMaterialWhereInput
   }
 
-  export type StaffNullableScalarRelationFilter = {
-    is?: StaffWhereInput | null
-    isNot?: StaffWhereInput | null
-  }
-
   export type HandoverMaterialOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -90668,6 +93666,7 @@ export namespace Prisma {
     date?: SortOrder
     reportType?: SortOrder
     note?: SortOrder
+    metadata?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     afternoonStaffId?: SortOrder
@@ -92263,6 +95262,18 @@ export namespace Prisma {
     set?: string
   }
 
+  export type DateTimeFieldUpdateOperationsInput = {
+    set?: Date | string
+  }
+
+  export type IntFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
   export type FloatFieldUpdateOperationsInput = {
     set?: number
     increment?: number
@@ -92281,18 +95292,6 @@ export namespace Prisma {
 
   export type NullableIntFieldUpdateOperationsInput = {
     set?: number | null
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
-  }
-
-  export type DateTimeFieldUpdateOperationsInput = {
-    set?: Date | string
-  }
-
-  export type IntFieldUpdateOperationsInput = {
-    set?: number
     increment?: number
     decrement?: number
     multiply?: number
@@ -92922,6 +95921,27 @@ export namespace Prisma {
     connect?: ReportWhereUniqueInput | ReportWhereUniqueInput[]
   }
 
+  export type ShiftHandoverReportCreateNestedManyWithoutCounterStaffInput = {
+    create?: XOR<ShiftHandoverReportCreateWithoutCounterStaffInput, ShiftHandoverReportUncheckedCreateWithoutCounterStaffInput> | ShiftHandoverReportCreateWithoutCounterStaffInput[] | ShiftHandoverReportUncheckedCreateWithoutCounterStaffInput[]
+    connectOrCreate?: ShiftHandoverReportCreateOrConnectWithoutCounterStaffInput | ShiftHandoverReportCreateOrConnectWithoutCounterStaffInput[]
+    createMany?: ShiftHandoverReportCreateManyCounterStaffInputEnvelope
+    connect?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+  }
+
+  export type ShiftHandoverReportCreateNestedManyWithoutKitchenStaffInput = {
+    create?: XOR<ShiftHandoverReportCreateWithoutKitchenStaffInput, ShiftHandoverReportUncheckedCreateWithoutKitchenStaffInput> | ShiftHandoverReportCreateWithoutKitchenStaffInput[] | ShiftHandoverReportUncheckedCreateWithoutKitchenStaffInput[]
+    connectOrCreate?: ShiftHandoverReportCreateOrConnectWithoutKitchenStaffInput | ShiftHandoverReportCreateOrConnectWithoutKitchenStaffInput[]
+    createMany?: ShiftHandoverReportCreateManyKitchenStaffInputEnvelope
+    connect?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+  }
+
+  export type ShiftHandoverReportCreateNestedManyWithoutSecurityStaffInput = {
+    create?: XOR<ShiftHandoverReportCreateWithoutSecurityStaffInput, ShiftHandoverReportUncheckedCreateWithoutSecurityStaffInput> | ShiftHandoverReportCreateWithoutSecurityStaffInput[] | ShiftHandoverReportUncheckedCreateWithoutSecurityStaffInput[]
+    connectOrCreate?: ShiftHandoverReportCreateOrConnectWithoutSecurityStaffInput | ShiftHandoverReportCreateOrConnectWithoutSecurityStaffInput[]
+    createMany?: ShiftHandoverReportCreateManySecurityStaffInputEnvelope
+    connect?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+  }
+
   export type HandoverReportCreateNestedManyWithoutMorningStaffInput = {
     create?: XOR<HandoverReportCreateWithoutMorningStaffInput, HandoverReportUncheckedCreateWithoutMorningStaffInput> | HandoverReportCreateWithoutMorningStaffInput[] | HandoverReportUncheckedCreateWithoutMorningStaffInput[]
     connectOrCreate?: HandoverReportCreateOrConnectWithoutMorningStaffInput | HandoverReportCreateOrConnectWithoutMorningStaffInput[]
@@ -92989,6 +96009,27 @@ export namespace Prisma {
     connectOrCreate?: ReportCreateOrConnectWithoutSecurityStaffInput | ReportCreateOrConnectWithoutSecurityStaffInput[]
     createMany?: ReportCreateManySecurityStaffInputEnvelope
     connect?: ReportWhereUniqueInput | ReportWhereUniqueInput[]
+  }
+
+  export type ShiftHandoverReportUncheckedCreateNestedManyWithoutCounterStaffInput = {
+    create?: XOR<ShiftHandoverReportCreateWithoutCounterStaffInput, ShiftHandoverReportUncheckedCreateWithoutCounterStaffInput> | ShiftHandoverReportCreateWithoutCounterStaffInput[] | ShiftHandoverReportUncheckedCreateWithoutCounterStaffInput[]
+    connectOrCreate?: ShiftHandoverReportCreateOrConnectWithoutCounterStaffInput | ShiftHandoverReportCreateOrConnectWithoutCounterStaffInput[]
+    createMany?: ShiftHandoverReportCreateManyCounterStaffInputEnvelope
+    connect?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+  }
+
+  export type ShiftHandoverReportUncheckedCreateNestedManyWithoutKitchenStaffInput = {
+    create?: XOR<ShiftHandoverReportCreateWithoutKitchenStaffInput, ShiftHandoverReportUncheckedCreateWithoutKitchenStaffInput> | ShiftHandoverReportCreateWithoutKitchenStaffInput[] | ShiftHandoverReportUncheckedCreateWithoutKitchenStaffInput[]
+    connectOrCreate?: ShiftHandoverReportCreateOrConnectWithoutKitchenStaffInput | ShiftHandoverReportCreateOrConnectWithoutKitchenStaffInput[]
+    createMany?: ShiftHandoverReportCreateManyKitchenStaffInputEnvelope
+    connect?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+  }
+
+  export type ShiftHandoverReportUncheckedCreateNestedManyWithoutSecurityStaffInput = {
+    create?: XOR<ShiftHandoverReportCreateWithoutSecurityStaffInput, ShiftHandoverReportUncheckedCreateWithoutSecurityStaffInput> | ShiftHandoverReportCreateWithoutSecurityStaffInput[] | ShiftHandoverReportUncheckedCreateWithoutSecurityStaffInput[]
+    connectOrCreate?: ShiftHandoverReportCreateOrConnectWithoutSecurityStaffInput | ShiftHandoverReportCreateOrConnectWithoutSecurityStaffInput[]
+    createMany?: ShiftHandoverReportCreateManySecurityStaffInputEnvelope
+    connect?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
   }
 
   export type HandoverReportUncheckedCreateNestedManyWithoutMorningStaffInput = {
@@ -93081,6 +96122,48 @@ export namespace Prisma {
     update?: ReportUpdateWithWhereUniqueWithoutSecurityStaffInput | ReportUpdateWithWhereUniqueWithoutSecurityStaffInput[]
     updateMany?: ReportUpdateManyWithWhereWithoutSecurityStaffInput | ReportUpdateManyWithWhereWithoutSecurityStaffInput[]
     deleteMany?: ReportScalarWhereInput | ReportScalarWhereInput[]
+  }
+
+  export type ShiftHandoverReportUpdateManyWithoutCounterStaffNestedInput = {
+    create?: XOR<ShiftHandoverReportCreateWithoutCounterStaffInput, ShiftHandoverReportUncheckedCreateWithoutCounterStaffInput> | ShiftHandoverReportCreateWithoutCounterStaffInput[] | ShiftHandoverReportUncheckedCreateWithoutCounterStaffInput[]
+    connectOrCreate?: ShiftHandoverReportCreateOrConnectWithoutCounterStaffInput | ShiftHandoverReportCreateOrConnectWithoutCounterStaffInput[]
+    upsert?: ShiftHandoverReportUpsertWithWhereUniqueWithoutCounterStaffInput | ShiftHandoverReportUpsertWithWhereUniqueWithoutCounterStaffInput[]
+    createMany?: ShiftHandoverReportCreateManyCounterStaffInputEnvelope
+    set?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    disconnect?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    delete?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    connect?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    update?: ShiftHandoverReportUpdateWithWhereUniqueWithoutCounterStaffInput | ShiftHandoverReportUpdateWithWhereUniqueWithoutCounterStaffInput[]
+    updateMany?: ShiftHandoverReportUpdateManyWithWhereWithoutCounterStaffInput | ShiftHandoverReportUpdateManyWithWhereWithoutCounterStaffInput[]
+    deleteMany?: ShiftHandoverReportScalarWhereInput | ShiftHandoverReportScalarWhereInput[]
+  }
+
+  export type ShiftHandoverReportUpdateManyWithoutKitchenStaffNestedInput = {
+    create?: XOR<ShiftHandoverReportCreateWithoutKitchenStaffInput, ShiftHandoverReportUncheckedCreateWithoutKitchenStaffInput> | ShiftHandoverReportCreateWithoutKitchenStaffInput[] | ShiftHandoverReportUncheckedCreateWithoutKitchenStaffInput[]
+    connectOrCreate?: ShiftHandoverReportCreateOrConnectWithoutKitchenStaffInput | ShiftHandoverReportCreateOrConnectWithoutKitchenStaffInput[]
+    upsert?: ShiftHandoverReportUpsertWithWhereUniqueWithoutKitchenStaffInput | ShiftHandoverReportUpsertWithWhereUniqueWithoutKitchenStaffInput[]
+    createMany?: ShiftHandoverReportCreateManyKitchenStaffInputEnvelope
+    set?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    disconnect?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    delete?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    connect?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    update?: ShiftHandoverReportUpdateWithWhereUniqueWithoutKitchenStaffInput | ShiftHandoverReportUpdateWithWhereUniqueWithoutKitchenStaffInput[]
+    updateMany?: ShiftHandoverReportUpdateManyWithWhereWithoutKitchenStaffInput | ShiftHandoverReportUpdateManyWithWhereWithoutKitchenStaffInput[]
+    deleteMany?: ShiftHandoverReportScalarWhereInput | ShiftHandoverReportScalarWhereInput[]
+  }
+
+  export type ShiftHandoverReportUpdateManyWithoutSecurityStaffNestedInput = {
+    create?: XOR<ShiftHandoverReportCreateWithoutSecurityStaffInput, ShiftHandoverReportUncheckedCreateWithoutSecurityStaffInput> | ShiftHandoverReportCreateWithoutSecurityStaffInput[] | ShiftHandoverReportUncheckedCreateWithoutSecurityStaffInput[]
+    connectOrCreate?: ShiftHandoverReportCreateOrConnectWithoutSecurityStaffInput | ShiftHandoverReportCreateOrConnectWithoutSecurityStaffInput[]
+    upsert?: ShiftHandoverReportUpsertWithWhereUniqueWithoutSecurityStaffInput | ShiftHandoverReportUpsertWithWhereUniqueWithoutSecurityStaffInput[]
+    createMany?: ShiftHandoverReportCreateManySecurityStaffInputEnvelope
+    set?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    disconnect?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    delete?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    connect?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    update?: ShiftHandoverReportUpdateWithWhereUniqueWithoutSecurityStaffInput | ShiftHandoverReportUpdateWithWhereUniqueWithoutSecurityStaffInput[]
+    updateMany?: ShiftHandoverReportUpdateManyWithWhereWithoutSecurityStaffInput | ShiftHandoverReportUpdateManyWithWhereWithoutSecurityStaffInput[]
+    deleteMany?: ShiftHandoverReportScalarWhereInput | ShiftHandoverReportScalarWhereInput[]
   }
 
   export type HandoverReportUpdateManyWithoutMorningStaffNestedInput = {
@@ -93217,6 +96300,48 @@ export namespace Prisma {
     update?: ReportUpdateWithWhereUniqueWithoutSecurityStaffInput | ReportUpdateWithWhereUniqueWithoutSecurityStaffInput[]
     updateMany?: ReportUpdateManyWithWhereWithoutSecurityStaffInput | ReportUpdateManyWithWhereWithoutSecurityStaffInput[]
     deleteMany?: ReportScalarWhereInput | ReportScalarWhereInput[]
+  }
+
+  export type ShiftHandoverReportUncheckedUpdateManyWithoutCounterStaffNestedInput = {
+    create?: XOR<ShiftHandoverReportCreateWithoutCounterStaffInput, ShiftHandoverReportUncheckedCreateWithoutCounterStaffInput> | ShiftHandoverReportCreateWithoutCounterStaffInput[] | ShiftHandoverReportUncheckedCreateWithoutCounterStaffInput[]
+    connectOrCreate?: ShiftHandoverReportCreateOrConnectWithoutCounterStaffInput | ShiftHandoverReportCreateOrConnectWithoutCounterStaffInput[]
+    upsert?: ShiftHandoverReportUpsertWithWhereUniqueWithoutCounterStaffInput | ShiftHandoverReportUpsertWithWhereUniqueWithoutCounterStaffInput[]
+    createMany?: ShiftHandoverReportCreateManyCounterStaffInputEnvelope
+    set?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    disconnect?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    delete?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    connect?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    update?: ShiftHandoverReportUpdateWithWhereUniqueWithoutCounterStaffInput | ShiftHandoverReportUpdateWithWhereUniqueWithoutCounterStaffInput[]
+    updateMany?: ShiftHandoverReportUpdateManyWithWhereWithoutCounterStaffInput | ShiftHandoverReportUpdateManyWithWhereWithoutCounterStaffInput[]
+    deleteMany?: ShiftHandoverReportScalarWhereInput | ShiftHandoverReportScalarWhereInput[]
+  }
+
+  export type ShiftHandoverReportUncheckedUpdateManyWithoutKitchenStaffNestedInput = {
+    create?: XOR<ShiftHandoverReportCreateWithoutKitchenStaffInput, ShiftHandoverReportUncheckedCreateWithoutKitchenStaffInput> | ShiftHandoverReportCreateWithoutKitchenStaffInput[] | ShiftHandoverReportUncheckedCreateWithoutKitchenStaffInput[]
+    connectOrCreate?: ShiftHandoverReportCreateOrConnectWithoutKitchenStaffInput | ShiftHandoverReportCreateOrConnectWithoutKitchenStaffInput[]
+    upsert?: ShiftHandoverReportUpsertWithWhereUniqueWithoutKitchenStaffInput | ShiftHandoverReportUpsertWithWhereUniqueWithoutKitchenStaffInput[]
+    createMany?: ShiftHandoverReportCreateManyKitchenStaffInputEnvelope
+    set?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    disconnect?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    delete?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    connect?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    update?: ShiftHandoverReportUpdateWithWhereUniqueWithoutKitchenStaffInput | ShiftHandoverReportUpdateWithWhereUniqueWithoutKitchenStaffInput[]
+    updateMany?: ShiftHandoverReportUpdateManyWithWhereWithoutKitchenStaffInput | ShiftHandoverReportUpdateManyWithWhereWithoutKitchenStaffInput[]
+    deleteMany?: ShiftHandoverReportScalarWhereInput | ShiftHandoverReportScalarWhereInput[]
+  }
+
+  export type ShiftHandoverReportUncheckedUpdateManyWithoutSecurityStaffNestedInput = {
+    create?: XOR<ShiftHandoverReportCreateWithoutSecurityStaffInput, ShiftHandoverReportUncheckedCreateWithoutSecurityStaffInput> | ShiftHandoverReportCreateWithoutSecurityStaffInput[] | ShiftHandoverReportUncheckedCreateWithoutSecurityStaffInput[]
+    connectOrCreate?: ShiftHandoverReportCreateOrConnectWithoutSecurityStaffInput | ShiftHandoverReportCreateOrConnectWithoutSecurityStaffInput[]
+    upsert?: ShiftHandoverReportUpsertWithWhereUniqueWithoutSecurityStaffInput | ShiftHandoverReportUpsertWithWhereUniqueWithoutSecurityStaffInput[]
+    createMany?: ShiftHandoverReportCreateManySecurityStaffInputEnvelope
+    set?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    disconnect?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    delete?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    connect?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    update?: ShiftHandoverReportUpdateWithWhereUniqueWithoutSecurityStaffInput | ShiftHandoverReportUpdateWithWhereUniqueWithoutSecurityStaffInput[]
+    updateMany?: ShiftHandoverReportUpdateManyWithWhereWithoutSecurityStaffInput | ShiftHandoverReportUpdateManyWithWhereWithoutSecurityStaffInput[]
+    deleteMany?: ShiftHandoverReportScalarWhereInput | ShiftHandoverReportScalarWhereInput[]
   }
 
   export type HandoverReportUncheckedUpdateManyWithoutMorningStaffNestedInput = {
@@ -93388,11 +96513,25 @@ export namespace Prisma {
     connect?: StaffWhereUniqueInput | StaffWhereUniqueInput[]
   }
 
+  export type ShiftHandoverReportCreateNestedManyWithoutWorkShiftInput = {
+    create?: XOR<ShiftHandoverReportCreateWithoutWorkShiftInput, ShiftHandoverReportUncheckedCreateWithoutWorkShiftInput> | ShiftHandoverReportCreateWithoutWorkShiftInput[] | ShiftHandoverReportUncheckedCreateWithoutWorkShiftInput[]
+    connectOrCreate?: ShiftHandoverReportCreateOrConnectWithoutWorkShiftInput | ShiftHandoverReportCreateOrConnectWithoutWorkShiftInput[]
+    createMany?: ShiftHandoverReportCreateManyWorkShiftInputEnvelope
+    connect?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+  }
+
   export type StaffUncheckedCreateNestedManyWithoutWorkShiftInput = {
     create?: XOR<StaffCreateWithoutWorkShiftInput, StaffUncheckedCreateWithoutWorkShiftInput> | StaffCreateWithoutWorkShiftInput[] | StaffUncheckedCreateWithoutWorkShiftInput[]
     connectOrCreate?: StaffCreateOrConnectWithoutWorkShiftInput | StaffCreateOrConnectWithoutWorkShiftInput[]
     createMany?: StaffCreateManyWorkShiftInputEnvelope
     connect?: StaffWhereUniqueInput | StaffWhereUniqueInput[]
+  }
+
+  export type ShiftHandoverReportUncheckedCreateNestedManyWithoutWorkShiftInput = {
+    create?: XOR<ShiftHandoverReportCreateWithoutWorkShiftInput, ShiftHandoverReportUncheckedCreateWithoutWorkShiftInput> | ShiftHandoverReportCreateWithoutWorkShiftInput[] | ShiftHandoverReportUncheckedCreateWithoutWorkShiftInput[]
+    connectOrCreate?: ShiftHandoverReportCreateOrConnectWithoutWorkShiftInput | ShiftHandoverReportCreateOrConnectWithoutWorkShiftInput[]
+    createMany?: ShiftHandoverReportCreateManyWorkShiftInputEnvelope
+    connect?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
   }
 
   export type StaffUpdateManyWithoutWorkShiftNestedInput = {
@@ -93409,6 +96548,20 @@ export namespace Prisma {
     deleteMany?: StaffScalarWhereInput | StaffScalarWhereInput[]
   }
 
+  export type ShiftHandoverReportUpdateManyWithoutWorkShiftNestedInput = {
+    create?: XOR<ShiftHandoverReportCreateWithoutWorkShiftInput, ShiftHandoverReportUncheckedCreateWithoutWorkShiftInput> | ShiftHandoverReportCreateWithoutWorkShiftInput[] | ShiftHandoverReportUncheckedCreateWithoutWorkShiftInput[]
+    connectOrCreate?: ShiftHandoverReportCreateOrConnectWithoutWorkShiftInput | ShiftHandoverReportCreateOrConnectWithoutWorkShiftInput[]
+    upsert?: ShiftHandoverReportUpsertWithWhereUniqueWithoutWorkShiftInput | ShiftHandoverReportUpsertWithWhereUniqueWithoutWorkShiftInput[]
+    createMany?: ShiftHandoverReportCreateManyWorkShiftInputEnvelope
+    set?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    disconnect?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    delete?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    connect?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    update?: ShiftHandoverReportUpdateWithWhereUniqueWithoutWorkShiftInput | ShiftHandoverReportUpdateWithWhereUniqueWithoutWorkShiftInput[]
+    updateMany?: ShiftHandoverReportUpdateManyWithWhereWithoutWorkShiftInput | ShiftHandoverReportUpdateManyWithWhereWithoutWorkShiftInput[]
+    deleteMany?: ShiftHandoverReportScalarWhereInput | ShiftHandoverReportScalarWhereInput[]
+  }
+
   export type StaffUncheckedUpdateManyWithoutWorkShiftNestedInput = {
     create?: XOR<StaffCreateWithoutWorkShiftInput, StaffUncheckedCreateWithoutWorkShiftInput> | StaffCreateWithoutWorkShiftInput[] | StaffUncheckedCreateWithoutWorkShiftInput[]
     connectOrCreate?: StaffCreateOrConnectWithoutWorkShiftInput | StaffCreateOrConnectWithoutWorkShiftInput[]
@@ -93421,6 +96574,20 @@ export namespace Prisma {
     update?: StaffUpdateWithWhereUniqueWithoutWorkShiftInput | StaffUpdateWithWhereUniqueWithoutWorkShiftInput[]
     updateMany?: StaffUpdateManyWithWhereWithoutWorkShiftInput | StaffUpdateManyWithWhereWithoutWorkShiftInput[]
     deleteMany?: StaffScalarWhereInput | StaffScalarWhereInput[]
+  }
+
+  export type ShiftHandoverReportUncheckedUpdateManyWithoutWorkShiftNestedInput = {
+    create?: XOR<ShiftHandoverReportCreateWithoutWorkShiftInput, ShiftHandoverReportUncheckedCreateWithoutWorkShiftInput> | ShiftHandoverReportCreateWithoutWorkShiftInput[] | ShiftHandoverReportUncheckedCreateWithoutWorkShiftInput[]
+    connectOrCreate?: ShiftHandoverReportCreateOrConnectWithoutWorkShiftInput | ShiftHandoverReportCreateOrConnectWithoutWorkShiftInput[]
+    upsert?: ShiftHandoverReportUpsertWithWhereUniqueWithoutWorkShiftInput | ShiftHandoverReportUpsertWithWhereUniqueWithoutWorkShiftInput[]
+    createMany?: ShiftHandoverReportCreateManyWorkShiftInputEnvelope
+    set?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    disconnect?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    delete?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    connect?: ShiftHandoverReportWhereUniqueInput | ShiftHandoverReportWhereUniqueInput[]
+    update?: ShiftHandoverReportUpdateWithWhereUniqueWithoutWorkShiftInput | ShiftHandoverReportUpdateWithWhereUniqueWithoutWorkShiftInput[]
+    updateMany?: ShiftHandoverReportUpdateManyWithWhereWithoutWorkShiftInput | ShiftHandoverReportUpdateManyWithWhereWithoutWorkShiftInput[]
+    deleteMany?: ShiftHandoverReportScalarWhereInput | ShiftHandoverReportScalarWhereInput[]
   }
 
   export type EnumShiftRevenueTypeFieldUpdateOperationsInput = {
@@ -93757,6 +96924,68 @@ export namespace Prisma {
 
   export type EnumBirthdayTransactionTypeFieldUpdateOperationsInput = {
     set?: $Enums.BirthdayTransactionType
+  }
+
+  export type WorkShiftCreateNestedOneWithoutShiftHandoverReportsInput = {
+    create?: XOR<WorkShiftCreateWithoutShiftHandoverReportsInput, WorkShiftUncheckedCreateWithoutShiftHandoverReportsInput>
+    connectOrCreate?: WorkShiftCreateOrConnectWithoutShiftHandoverReportsInput
+    connect?: WorkShiftWhereUniqueInput
+  }
+
+  export type StaffCreateNestedOneWithoutCounterShiftReportsInput = {
+    create?: XOR<StaffCreateWithoutCounterShiftReportsInput, StaffUncheckedCreateWithoutCounterShiftReportsInput>
+    connectOrCreate?: StaffCreateOrConnectWithoutCounterShiftReportsInput
+    connect?: StaffWhereUniqueInput
+  }
+
+  export type StaffCreateNestedOneWithoutKitchenShiftReportsInput = {
+    create?: XOR<StaffCreateWithoutKitchenShiftReportsInput, StaffUncheckedCreateWithoutKitchenShiftReportsInput>
+    connectOrCreate?: StaffCreateOrConnectWithoutKitchenShiftReportsInput
+    connect?: StaffWhereUniqueInput
+  }
+
+  export type StaffCreateNestedOneWithoutSecurityShiftReportsInput = {
+    create?: XOR<StaffCreateWithoutSecurityShiftReportsInput, StaffUncheckedCreateWithoutSecurityShiftReportsInput>
+    connectOrCreate?: StaffCreateOrConnectWithoutSecurityShiftReportsInput
+    connect?: StaffWhereUniqueInput
+  }
+
+  export type WorkShiftUpdateOneRequiredWithoutShiftHandoverReportsNestedInput = {
+    create?: XOR<WorkShiftCreateWithoutShiftHandoverReportsInput, WorkShiftUncheckedCreateWithoutShiftHandoverReportsInput>
+    connectOrCreate?: WorkShiftCreateOrConnectWithoutShiftHandoverReportsInput
+    upsert?: WorkShiftUpsertWithoutShiftHandoverReportsInput
+    connect?: WorkShiftWhereUniqueInput
+    update?: XOR<XOR<WorkShiftUpdateToOneWithWhereWithoutShiftHandoverReportsInput, WorkShiftUpdateWithoutShiftHandoverReportsInput>, WorkShiftUncheckedUpdateWithoutShiftHandoverReportsInput>
+  }
+
+  export type StaffUpdateOneWithoutCounterShiftReportsNestedInput = {
+    create?: XOR<StaffCreateWithoutCounterShiftReportsInput, StaffUncheckedCreateWithoutCounterShiftReportsInput>
+    connectOrCreate?: StaffCreateOrConnectWithoutCounterShiftReportsInput
+    upsert?: StaffUpsertWithoutCounterShiftReportsInput
+    disconnect?: StaffWhereInput | boolean
+    delete?: StaffWhereInput | boolean
+    connect?: StaffWhereUniqueInput
+    update?: XOR<XOR<StaffUpdateToOneWithWhereWithoutCounterShiftReportsInput, StaffUpdateWithoutCounterShiftReportsInput>, StaffUncheckedUpdateWithoutCounterShiftReportsInput>
+  }
+
+  export type StaffUpdateOneWithoutKitchenShiftReportsNestedInput = {
+    create?: XOR<StaffCreateWithoutKitchenShiftReportsInput, StaffUncheckedCreateWithoutKitchenShiftReportsInput>
+    connectOrCreate?: StaffCreateOrConnectWithoutKitchenShiftReportsInput
+    upsert?: StaffUpsertWithoutKitchenShiftReportsInput
+    disconnect?: StaffWhereInput | boolean
+    delete?: StaffWhereInput | boolean
+    connect?: StaffWhereUniqueInput
+    update?: XOR<XOR<StaffUpdateToOneWithWhereWithoutKitchenShiftReportsInput, StaffUpdateWithoutKitchenShiftReportsInput>, StaffUncheckedUpdateWithoutKitchenShiftReportsInput>
+  }
+
+  export type StaffUpdateOneWithoutSecurityShiftReportsNestedInput = {
+    create?: XOR<StaffCreateWithoutSecurityShiftReportsInput, StaffUncheckedCreateWithoutSecurityShiftReportsInput>
+    connectOrCreate?: StaffCreateOrConnectWithoutSecurityShiftReportsInput
+    upsert?: StaffUpsertWithoutSecurityShiftReportsInput
+    disconnect?: StaffWhereInput | boolean
+    delete?: StaffWhereInput | boolean
+    connect?: StaffWhereUniqueInput
+    update?: XOR<XOR<StaffUpdateToOneWithWhereWithoutSecurityShiftReportsInput, StaffUpdateWithoutSecurityShiftReportsInput>, StaffUncheckedUpdateWithoutSecurityShiftReportsInput>
   }
 
   export type ReportCreateNestedOneWithoutDetailsInput = {
@@ -94661,39 +97890,6 @@ export namespace Prisma {
     not?: NestedStringFilter<$PrismaModel> | string
   }
 
-  export type NestedFloatFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatFilter<$PrismaModel> | number
-  }
-
-  export type NestedFloatNullableFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | null
-    notIn?: number[] | null
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
-  }
-
-  export type NestedIntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | null
-    notIn?: number[] | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
-  }
-
   export type NestedDateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[]
@@ -94721,6 +97917,17 @@ export namespace Prisma {
     _max?: NestedIntFilter<$PrismaModel>
   }
 
+  export type NestedFloatFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[]
+    notIn?: number[]
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
   export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -94737,6 +97944,42 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedStringFilter<$PrismaModel>
     _max?: NestedStringFilter<$PrismaModel>
+  }
+
+  export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[]
+    notIn?: Date[] | string[]
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedDateTimeFilter<$PrismaModel>
+    _max?: NestedDateTimeFilter<$PrismaModel>
+  }
+
+  export type NestedFloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type NestedIntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
   export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
@@ -94785,20 +98028,6 @@ export namespace Prisma {
     _sum?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedIntNullableFilter<$PrismaModel>
     _max?: NestedIntNullableFilter<$PrismaModel>
-  }
-
-  export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedDateTimeFilter<$PrismaModel>
-    _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
   export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
@@ -96683,10 +99912,140 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type ShiftHandoverReportCreateWithoutCounterStaffInput = {
+    date: Date | string
+    fnetRevenue?: number
+    gcpRevenue?: number
+    momoRevenue?: number
+    cashRevenue?: number
+    cashExpense?: number
+    actualReceived?: number
+    note?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    workShift: WorkShiftCreateNestedOneWithoutShiftHandoverReportsInput
+    kitchenStaff?: StaffCreateNestedOneWithoutKitchenShiftReportsInput
+    securityStaff?: StaffCreateNestedOneWithoutSecurityShiftReportsInput
+  }
+
+  export type ShiftHandoverReportUncheckedCreateWithoutCounterStaffInput = {
+    id?: number
+    date: Date | string
+    workShiftId: number
+    fnetRevenue?: number
+    gcpRevenue?: number
+    momoRevenue?: number
+    cashRevenue?: number
+    cashExpense?: number
+    actualReceived?: number
+    note?: string | null
+    kitchenStaffId?: number | null
+    securityStaffId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ShiftHandoverReportCreateOrConnectWithoutCounterStaffInput = {
+    where: ShiftHandoverReportWhereUniqueInput
+    create: XOR<ShiftHandoverReportCreateWithoutCounterStaffInput, ShiftHandoverReportUncheckedCreateWithoutCounterStaffInput>
+  }
+
+  export type ShiftHandoverReportCreateManyCounterStaffInputEnvelope = {
+    data: ShiftHandoverReportCreateManyCounterStaffInput | ShiftHandoverReportCreateManyCounterStaffInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ShiftHandoverReportCreateWithoutKitchenStaffInput = {
+    date: Date | string
+    fnetRevenue?: number
+    gcpRevenue?: number
+    momoRevenue?: number
+    cashRevenue?: number
+    cashExpense?: number
+    actualReceived?: number
+    note?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    workShift: WorkShiftCreateNestedOneWithoutShiftHandoverReportsInput
+    counterStaff?: StaffCreateNestedOneWithoutCounterShiftReportsInput
+    securityStaff?: StaffCreateNestedOneWithoutSecurityShiftReportsInput
+  }
+
+  export type ShiftHandoverReportUncheckedCreateWithoutKitchenStaffInput = {
+    id?: number
+    date: Date | string
+    workShiftId: number
+    fnetRevenue?: number
+    gcpRevenue?: number
+    momoRevenue?: number
+    cashRevenue?: number
+    cashExpense?: number
+    actualReceived?: number
+    note?: string | null
+    counterStaffId?: number | null
+    securityStaffId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ShiftHandoverReportCreateOrConnectWithoutKitchenStaffInput = {
+    where: ShiftHandoverReportWhereUniqueInput
+    create: XOR<ShiftHandoverReportCreateWithoutKitchenStaffInput, ShiftHandoverReportUncheckedCreateWithoutKitchenStaffInput>
+  }
+
+  export type ShiftHandoverReportCreateManyKitchenStaffInputEnvelope = {
+    data: ShiftHandoverReportCreateManyKitchenStaffInput | ShiftHandoverReportCreateManyKitchenStaffInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ShiftHandoverReportCreateWithoutSecurityStaffInput = {
+    date: Date | string
+    fnetRevenue?: number
+    gcpRevenue?: number
+    momoRevenue?: number
+    cashRevenue?: number
+    cashExpense?: number
+    actualReceived?: number
+    note?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    workShift: WorkShiftCreateNestedOneWithoutShiftHandoverReportsInput
+    counterStaff?: StaffCreateNestedOneWithoutCounterShiftReportsInput
+    kitchenStaff?: StaffCreateNestedOneWithoutKitchenShiftReportsInput
+  }
+
+  export type ShiftHandoverReportUncheckedCreateWithoutSecurityStaffInput = {
+    id?: number
+    date: Date | string
+    workShiftId: number
+    fnetRevenue?: number
+    gcpRevenue?: number
+    momoRevenue?: number
+    cashRevenue?: number
+    cashExpense?: number
+    actualReceived?: number
+    note?: string | null
+    counterStaffId?: number | null
+    kitchenStaffId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ShiftHandoverReportCreateOrConnectWithoutSecurityStaffInput = {
+    where: ShiftHandoverReportWhereUniqueInput
+    create: XOR<ShiftHandoverReportCreateWithoutSecurityStaffInput, ShiftHandoverReportUncheckedCreateWithoutSecurityStaffInput>
+  }
+
+  export type ShiftHandoverReportCreateManySecurityStaffInputEnvelope = {
+    data: ShiftHandoverReportCreateManySecurityStaffInput | ShiftHandoverReportCreateManySecurityStaffInput[]
+    skipDuplicates?: boolean
+  }
+
   export type HandoverReportCreateWithoutMorningStaffInput = {
     date: Date | string
     reportType: $Enums.HandoverReportType
     note?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     afternoonSubmissionCount?: number
@@ -96705,6 +100064,7 @@ export namespace Prisma {
     date: Date | string
     reportType: $Enums.HandoverReportType
     note?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     afternoonStaffId?: number | null
@@ -96732,6 +100092,7 @@ export namespace Prisma {
     date: Date | string
     reportType: $Enums.HandoverReportType
     note?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     afternoonSubmissionCount?: number
@@ -96750,6 +100111,7 @@ export namespace Prisma {
     date: Date | string
     reportType: $Enums.HandoverReportType
     note?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     eveningStaffId?: number | null
@@ -96777,6 +100139,7 @@ export namespace Prisma {
     date: Date | string
     reportType: $Enums.HandoverReportType
     note?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     afternoonSubmissionCount?: number
@@ -96795,6 +100158,7 @@ export namespace Prisma {
     date: Date | string
     reportType: $Enums.HandoverReportType
     note?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     afternoonStaffId?: number | null
@@ -96828,6 +100192,7 @@ export namespace Prisma {
     isOvernight?: boolean
     ffoodId?: string | null
     gcpId?: string | null
+    shiftHandoverReports?: ShiftHandoverReportCreateNestedManyWithoutWorkShiftInput
   }
 
   export type WorkShiftUncheckedCreateWithoutStaffsInput = {
@@ -96841,6 +100206,7 @@ export namespace Prisma {
     isOvernight?: boolean
     ffoodId?: string | null
     gcpId?: string | null
+    shiftHandoverReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutWorkShiftInput
   }
 
   export type WorkShiftCreateOrConnectWithoutStaffsInput = {
@@ -96983,6 +100349,75 @@ export namespace Prisma {
     data: XOR<ReportUpdateManyMutationInput, ReportUncheckedUpdateManyWithoutSecurityStaffInput>
   }
 
+  export type ShiftHandoverReportUpsertWithWhereUniqueWithoutCounterStaffInput = {
+    where: ShiftHandoverReportWhereUniqueInput
+    update: XOR<ShiftHandoverReportUpdateWithoutCounterStaffInput, ShiftHandoverReportUncheckedUpdateWithoutCounterStaffInput>
+    create: XOR<ShiftHandoverReportCreateWithoutCounterStaffInput, ShiftHandoverReportUncheckedCreateWithoutCounterStaffInput>
+  }
+
+  export type ShiftHandoverReportUpdateWithWhereUniqueWithoutCounterStaffInput = {
+    where: ShiftHandoverReportWhereUniqueInput
+    data: XOR<ShiftHandoverReportUpdateWithoutCounterStaffInput, ShiftHandoverReportUncheckedUpdateWithoutCounterStaffInput>
+  }
+
+  export type ShiftHandoverReportUpdateManyWithWhereWithoutCounterStaffInput = {
+    where: ShiftHandoverReportScalarWhereInput
+    data: XOR<ShiftHandoverReportUpdateManyMutationInput, ShiftHandoverReportUncheckedUpdateManyWithoutCounterStaffInput>
+  }
+
+  export type ShiftHandoverReportScalarWhereInput = {
+    AND?: ShiftHandoverReportScalarWhereInput | ShiftHandoverReportScalarWhereInput[]
+    OR?: ShiftHandoverReportScalarWhereInput[]
+    NOT?: ShiftHandoverReportScalarWhereInput | ShiftHandoverReportScalarWhereInput[]
+    id?: IntFilter<"ShiftHandoverReport"> | number
+    date?: DateTimeFilter<"ShiftHandoverReport"> | Date | string
+    workShiftId?: IntFilter<"ShiftHandoverReport"> | number
+    fnetRevenue?: FloatFilter<"ShiftHandoverReport"> | number
+    gcpRevenue?: FloatFilter<"ShiftHandoverReport"> | number
+    momoRevenue?: FloatFilter<"ShiftHandoverReport"> | number
+    cashRevenue?: FloatFilter<"ShiftHandoverReport"> | number
+    cashExpense?: FloatFilter<"ShiftHandoverReport"> | number
+    actualReceived?: FloatFilter<"ShiftHandoverReport"> | number
+    note?: StringNullableFilter<"ShiftHandoverReport"> | string | null
+    counterStaffId?: IntNullableFilter<"ShiftHandoverReport"> | number | null
+    kitchenStaffId?: IntNullableFilter<"ShiftHandoverReport"> | number | null
+    securityStaffId?: IntNullableFilter<"ShiftHandoverReport"> | number | null
+    createdAt?: DateTimeFilter<"ShiftHandoverReport"> | Date | string
+    updatedAt?: DateTimeFilter<"ShiftHandoverReport"> | Date | string
+  }
+
+  export type ShiftHandoverReportUpsertWithWhereUniqueWithoutKitchenStaffInput = {
+    where: ShiftHandoverReportWhereUniqueInput
+    update: XOR<ShiftHandoverReportUpdateWithoutKitchenStaffInput, ShiftHandoverReportUncheckedUpdateWithoutKitchenStaffInput>
+    create: XOR<ShiftHandoverReportCreateWithoutKitchenStaffInput, ShiftHandoverReportUncheckedCreateWithoutKitchenStaffInput>
+  }
+
+  export type ShiftHandoverReportUpdateWithWhereUniqueWithoutKitchenStaffInput = {
+    where: ShiftHandoverReportWhereUniqueInput
+    data: XOR<ShiftHandoverReportUpdateWithoutKitchenStaffInput, ShiftHandoverReportUncheckedUpdateWithoutKitchenStaffInput>
+  }
+
+  export type ShiftHandoverReportUpdateManyWithWhereWithoutKitchenStaffInput = {
+    where: ShiftHandoverReportScalarWhereInput
+    data: XOR<ShiftHandoverReportUpdateManyMutationInput, ShiftHandoverReportUncheckedUpdateManyWithoutKitchenStaffInput>
+  }
+
+  export type ShiftHandoverReportUpsertWithWhereUniqueWithoutSecurityStaffInput = {
+    where: ShiftHandoverReportWhereUniqueInput
+    update: XOR<ShiftHandoverReportUpdateWithoutSecurityStaffInput, ShiftHandoverReportUncheckedUpdateWithoutSecurityStaffInput>
+    create: XOR<ShiftHandoverReportCreateWithoutSecurityStaffInput, ShiftHandoverReportUncheckedCreateWithoutSecurityStaffInput>
+  }
+
+  export type ShiftHandoverReportUpdateWithWhereUniqueWithoutSecurityStaffInput = {
+    where: ShiftHandoverReportWhereUniqueInput
+    data: XOR<ShiftHandoverReportUpdateWithoutSecurityStaffInput, ShiftHandoverReportUncheckedUpdateWithoutSecurityStaffInput>
+  }
+
+  export type ShiftHandoverReportUpdateManyWithWhereWithoutSecurityStaffInput = {
+    where: ShiftHandoverReportScalarWhereInput
+    data: XOR<ShiftHandoverReportUpdateManyMutationInput, ShiftHandoverReportUncheckedUpdateManyWithoutSecurityStaffInput>
+  }
+
   export type HandoverReportUpsertWithWhereUniqueWithoutMorningStaffInput = {
     where: HandoverReportWhereUniqueInput
     update: XOR<HandoverReportUpdateWithoutMorningStaffInput, HandoverReportUncheckedUpdateWithoutMorningStaffInput>
@@ -97007,6 +100442,7 @@ export namespace Prisma {
     date?: DateTimeFilter<"HandoverReport"> | Date | string
     reportType?: EnumHandoverReportTypeFilter<"HandoverReport"> | $Enums.HandoverReportType
     note?: StringNullableFilter<"HandoverReport"> | string | null
+    metadata?: JsonNullableFilter<"HandoverReport">
     createdAt?: DateTimeFilter<"HandoverReport"> | Date | string
     updatedAt?: DateTimeFilter<"HandoverReport"> | Date | string
     afternoonStaffId?: IntNullableFilter<"HandoverReport"> | number | null
@@ -97073,6 +100509,7 @@ export namespace Prisma {
     isOvernight?: BoolFieldUpdateOperationsInput | boolean
     ffoodId?: NullableStringFieldUpdateOperationsInput | string | null
     gcpId?: NullableStringFieldUpdateOperationsInput | string | null
+    shiftHandoverReports?: ShiftHandoverReportUpdateManyWithoutWorkShiftNestedInput
   }
 
   export type WorkShiftUncheckedUpdateWithoutStaffsInput = {
@@ -97086,6 +100523,7 @@ export namespace Prisma {
     isOvernight?: BoolFieldUpdateOperationsInput | boolean
     ffoodId?: NullableStringFieldUpdateOperationsInput | string | null
     gcpId?: NullableStringFieldUpdateOperationsInput | string | null
+    shiftHandoverReports?: ShiftHandoverReportUncheckedUpdateManyWithoutWorkShiftNestedInput
   }
 
   export type StaffViolationUpsertWithWhereUniqueWithoutStaffInput = {
@@ -97254,6 +100692,9 @@ export namespace Prisma {
     counterStaffReports?: ReportCreateNestedManyWithoutCounterStaffInput
     kitchenStaffReports?: ReportCreateNestedManyWithoutKitchenStaffInput
     securityStaffReports?: ReportCreateNestedManyWithoutSecurityStaffInput
+    counterShiftReports?: ShiftHandoverReportCreateNestedManyWithoutCounterStaffInput
+    kitchenShiftReports?: ShiftHandoverReportCreateNestedManyWithoutKitchenStaffInput
+    securityShiftReports?: ShiftHandoverReportCreateNestedManyWithoutSecurityStaffInput
     morningHandoverReports?: HandoverReportCreateNestedManyWithoutMorningStaffInput
     afternoonHandoverReports?: HandoverReportCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
@@ -97292,6 +100733,9 @@ export namespace Prisma {
     counterStaffReports?: ReportUncheckedCreateNestedManyWithoutCounterStaffInput
     kitchenStaffReports?: ReportUncheckedCreateNestedManyWithoutKitchenStaffInput
     securityStaffReports?: ReportUncheckedCreateNestedManyWithoutSecurityStaffInput
+    counterShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutCounterStaffInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutKitchenStaffInput
+    securityShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutSecurityStaffInput
     morningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutMorningStaffInput
     afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
@@ -97371,6 +100815,9 @@ export namespace Prisma {
     counterStaffReports?: ReportUpdateManyWithoutCounterStaffNestedInput
     kitchenStaffReports?: ReportUpdateManyWithoutKitchenStaffNestedInput
     securityStaffReports?: ReportUpdateManyWithoutSecurityStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUpdateManyWithoutCounterStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUpdateManyWithoutKitchenStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUpdateManyWithoutSecurityStaffNestedInput
     morningHandoverReports?: HandoverReportUpdateManyWithoutMorningStaffNestedInput
     afternoonHandoverReports?: HandoverReportUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
@@ -97409,6 +100856,9 @@ export namespace Prisma {
     counterStaffReports?: ReportUncheckedUpdateManyWithoutCounterStaffNestedInput
     kitchenStaffReports?: ReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
     securityStaffReports?: ReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutCounterStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
     morningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutMorningStaffNestedInput
     afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
@@ -97444,6 +100894,9 @@ export namespace Prisma {
     counterStaffReports?: ReportCreateNestedManyWithoutCounterStaffInput
     kitchenStaffReports?: ReportCreateNestedManyWithoutKitchenStaffInput
     securityStaffReports?: ReportCreateNestedManyWithoutSecurityStaffInput
+    counterShiftReports?: ShiftHandoverReportCreateNestedManyWithoutCounterStaffInput
+    kitchenShiftReports?: ShiftHandoverReportCreateNestedManyWithoutKitchenStaffInput
+    securityShiftReports?: ShiftHandoverReportCreateNestedManyWithoutSecurityStaffInput
     morningHandoverReports?: HandoverReportCreateNestedManyWithoutMorningStaffInput
     afternoonHandoverReports?: HandoverReportCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
@@ -97482,6 +100935,9 @@ export namespace Prisma {
     counterStaffReports?: ReportUncheckedCreateNestedManyWithoutCounterStaffInput
     kitchenStaffReports?: ReportUncheckedCreateNestedManyWithoutKitchenStaffInput
     securityStaffReports?: ReportUncheckedCreateNestedManyWithoutSecurityStaffInput
+    counterShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutCounterStaffInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutKitchenStaffInput
+    securityShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutSecurityStaffInput
     morningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutMorningStaffInput
     afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
@@ -97533,6 +100989,9 @@ export namespace Prisma {
     counterStaffReports?: ReportUpdateManyWithoutCounterStaffNestedInput
     kitchenStaffReports?: ReportUpdateManyWithoutKitchenStaffNestedInput
     securityStaffReports?: ReportUpdateManyWithoutSecurityStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUpdateManyWithoutCounterStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUpdateManyWithoutKitchenStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUpdateManyWithoutSecurityStaffNestedInput
     morningHandoverReports?: HandoverReportUpdateManyWithoutMorningStaffNestedInput
     afternoonHandoverReports?: HandoverReportUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
@@ -97571,6 +101030,9 @@ export namespace Prisma {
     counterStaffReports?: ReportUncheckedUpdateManyWithoutCounterStaffNestedInput
     kitchenStaffReports?: ReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
     securityStaffReports?: ReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutCounterStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
     morningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutMorningStaffNestedInput
     afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
@@ -97606,6 +101068,9 @@ export namespace Prisma {
     counterStaffReports?: ReportCreateNestedManyWithoutCounterStaffInput
     kitchenStaffReports?: ReportCreateNestedManyWithoutKitchenStaffInput
     securityStaffReports?: ReportCreateNestedManyWithoutSecurityStaffInput
+    counterShiftReports?: ShiftHandoverReportCreateNestedManyWithoutCounterStaffInput
+    kitchenShiftReports?: ShiftHandoverReportCreateNestedManyWithoutKitchenStaffInput
+    securityShiftReports?: ShiftHandoverReportCreateNestedManyWithoutSecurityStaffInput
     morningHandoverReports?: HandoverReportCreateNestedManyWithoutMorningStaffInput
     afternoonHandoverReports?: HandoverReportCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
@@ -97643,6 +101108,9 @@ export namespace Prisma {
     counterStaffReports?: ReportUncheckedCreateNestedManyWithoutCounterStaffInput
     kitchenStaffReports?: ReportUncheckedCreateNestedManyWithoutKitchenStaffInput
     securityStaffReports?: ReportUncheckedCreateNestedManyWithoutSecurityStaffInput
+    counterShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutCounterStaffInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutKitchenStaffInput
+    securityShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutSecurityStaffInput
     morningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutMorningStaffInput
     afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
@@ -97658,6 +101126,49 @@ export namespace Prisma {
 
   export type StaffCreateManyWorkShiftInputEnvelope = {
     data: StaffCreateManyWorkShiftInput | StaffCreateManyWorkShiftInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ShiftHandoverReportCreateWithoutWorkShiftInput = {
+    date: Date | string
+    fnetRevenue?: number
+    gcpRevenue?: number
+    momoRevenue?: number
+    cashRevenue?: number
+    cashExpense?: number
+    actualReceived?: number
+    note?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    counterStaff?: StaffCreateNestedOneWithoutCounterShiftReportsInput
+    kitchenStaff?: StaffCreateNestedOneWithoutKitchenShiftReportsInput
+    securityStaff?: StaffCreateNestedOneWithoutSecurityShiftReportsInput
+  }
+
+  export type ShiftHandoverReportUncheckedCreateWithoutWorkShiftInput = {
+    id?: number
+    date: Date | string
+    fnetRevenue?: number
+    gcpRevenue?: number
+    momoRevenue?: number
+    cashRevenue?: number
+    cashExpense?: number
+    actualReceived?: number
+    note?: string | null
+    counterStaffId?: number | null
+    kitchenStaffId?: number | null
+    securityStaffId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ShiftHandoverReportCreateOrConnectWithoutWorkShiftInput = {
+    where: ShiftHandoverReportWhereUniqueInput
+    create: XOR<ShiftHandoverReportCreateWithoutWorkShiftInput, ShiftHandoverReportUncheckedCreateWithoutWorkShiftInput>
+  }
+
+  export type ShiftHandoverReportCreateManyWorkShiftInputEnvelope = {
+    data: ShiftHandoverReportCreateManyWorkShiftInput | ShiftHandoverReportCreateManyWorkShiftInput[]
     skipDuplicates?: boolean
   }
 
@@ -97707,6 +101218,22 @@ export namespace Prisma {
     bankName?: StringNullableFilter<"Staff"> | string | null
     baseSalary?: FloatFilter<"Staff"> | number
     workShiftId?: IntNullableFilter<"Staff"> | number | null
+  }
+
+  export type ShiftHandoverReportUpsertWithWhereUniqueWithoutWorkShiftInput = {
+    where: ShiftHandoverReportWhereUniqueInput
+    update: XOR<ShiftHandoverReportUpdateWithoutWorkShiftInput, ShiftHandoverReportUncheckedUpdateWithoutWorkShiftInput>
+    create: XOR<ShiftHandoverReportCreateWithoutWorkShiftInput, ShiftHandoverReportUncheckedCreateWithoutWorkShiftInput>
+  }
+
+  export type ShiftHandoverReportUpdateWithWhereUniqueWithoutWorkShiftInput = {
+    where: ShiftHandoverReportWhereUniqueInput
+    data: XOR<ShiftHandoverReportUpdateWithoutWorkShiftInput, ShiftHandoverReportUncheckedUpdateWithoutWorkShiftInput>
+  }
+
+  export type ShiftHandoverReportUpdateManyWithWhereWithoutWorkShiftInput = {
+    where: ShiftHandoverReportScalarWhereInput
+    data: XOR<ShiftHandoverReportUpdateManyMutationInput, ShiftHandoverReportUncheckedUpdateManyWithoutWorkShiftInput>
   }
 
   export type ComputerCreateWithoutDevicesInput = {
@@ -98433,6 +101960,598 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type WorkShiftCreateWithoutShiftHandoverReportsInput = {
+    name: string
+    startTime: Date | string
+    endTime: Date | string
+    FnetStaffId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isOvernight?: boolean
+    ffoodId?: string | null
+    gcpId?: string | null
+    staffs?: StaffCreateNestedManyWithoutWorkShiftInput
+  }
+
+  export type WorkShiftUncheckedCreateWithoutShiftHandoverReportsInput = {
+    id?: number
+    name: string
+    startTime: Date | string
+    endTime: Date | string
+    FnetStaffId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isOvernight?: boolean
+    ffoodId?: string | null
+    gcpId?: string | null
+    staffs?: StaffUncheckedCreateNestedManyWithoutWorkShiftInput
+  }
+
+  export type WorkShiftCreateOrConnectWithoutShiftHandoverReportsInput = {
+    where: WorkShiftWhereUniqueInput
+    create: XOR<WorkShiftCreateWithoutShiftHandoverReportsInput, WorkShiftUncheckedCreateWithoutShiftHandoverReportsInput>
+  }
+
+  export type StaffCreateWithoutCounterShiftReportsInput = {
+    userName: string
+    password: string
+    isDeleted?: boolean
+    isAdmin?: boolean
+    createdAt?: Date | string
+    updatedAt: Date | string
+    address?: string | null
+    dateOfBirth?: Date | string | null
+    email?: string | null
+    fullName: string
+    gender?: $Enums.Staff_gender
+    hireDate?: Date | string | null
+    idCard?: string | null
+    idCardExpiryDate?: Date | string | null
+    idCardIssueDate?: Date | string | null
+    note?: string | null
+    phone?: string | null
+    resignDate?: Date | string | null
+    staffType?: $Enums.Staff_staffType
+    needCheckMacAddress?: boolean
+    bankAccountName?: string | null
+    bankAccountNumber?: string | null
+    bankName?: string | null
+    baseSalary?: number
+    counterStaffReports?: ReportCreateNestedManyWithoutCounterStaffInput
+    kitchenStaffReports?: ReportCreateNestedManyWithoutKitchenStaffInput
+    securityStaffReports?: ReportCreateNestedManyWithoutSecurityStaffInput
+    kitchenShiftReports?: ShiftHandoverReportCreateNestedManyWithoutKitchenStaffInput
+    securityShiftReports?: ShiftHandoverReportCreateNestedManyWithoutSecurityStaffInput
+    morningHandoverReports?: HandoverReportCreateNestedManyWithoutMorningStaffInput
+    afternoonHandoverReports?: HandoverReportCreateNestedManyWithoutAfternoonStaffInput
+    eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
+    workShift?: WorkShiftCreateNestedOneWithoutStaffsInput
+    staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
+    staffTimeTrackings?: StaffTimeTrackingCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestCreateNestedManyWithoutStaffInput
+  }
+
+  export type StaffUncheckedCreateWithoutCounterShiftReportsInput = {
+    id?: number
+    userName: string
+    password: string
+    isDeleted?: boolean
+    isAdmin?: boolean
+    createdAt?: Date | string
+    updatedAt: Date | string
+    address?: string | null
+    dateOfBirth?: Date | string | null
+    email?: string | null
+    fullName: string
+    gender?: $Enums.Staff_gender
+    hireDate?: Date | string | null
+    idCard?: string | null
+    idCardExpiryDate?: Date | string | null
+    idCardIssueDate?: Date | string | null
+    note?: string | null
+    phone?: string | null
+    resignDate?: Date | string | null
+    staffType?: $Enums.Staff_staffType
+    needCheckMacAddress?: boolean
+    bankAccountName?: string | null
+    bankAccountNumber?: string | null
+    bankName?: string | null
+    baseSalary?: number
+    workShiftId?: number | null
+    counterStaffReports?: ReportUncheckedCreateNestedManyWithoutCounterStaffInput
+    kitchenStaffReports?: ReportUncheckedCreateNestedManyWithoutKitchenStaffInput
+    securityStaffReports?: ReportUncheckedCreateNestedManyWithoutSecurityStaffInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutKitchenStaffInput
+    securityShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutSecurityStaffInput
+    morningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutMorningStaffInput
+    afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
+    eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
+    staffViolations?: StaffViolationUncheckedCreateNestedManyWithoutStaffInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestUncheckedCreateNestedManyWithoutStaffInput
+  }
+
+  export type StaffCreateOrConnectWithoutCounterShiftReportsInput = {
+    where: StaffWhereUniqueInput
+    create: XOR<StaffCreateWithoutCounterShiftReportsInput, StaffUncheckedCreateWithoutCounterShiftReportsInput>
+  }
+
+  export type StaffCreateWithoutKitchenShiftReportsInput = {
+    userName: string
+    password: string
+    isDeleted?: boolean
+    isAdmin?: boolean
+    createdAt?: Date | string
+    updatedAt: Date | string
+    address?: string | null
+    dateOfBirth?: Date | string | null
+    email?: string | null
+    fullName: string
+    gender?: $Enums.Staff_gender
+    hireDate?: Date | string | null
+    idCard?: string | null
+    idCardExpiryDate?: Date | string | null
+    idCardIssueDate?: Date | string | null
+    note?: string | null
+    phone?: string | null
+    resignDate?: Date | string | null
+    staffType?: $Enums.Staff_staffType
+    needCheckMacAddress?: boolean
+    bankAccountName?: string | null
+    bankAccountNumber?: string | null
+    bankName?: string | null
+    baseSalary?: number
+    counterStaffReports?: ReportCreateNestedManyWithoutCounterStaffInput
+    kitchenStaffReports?: ReportCreateNestedManyWithoutKitchenStaffInput
+    securityStaffReports?: ReportCreateNestedManyWithoutSecurityStaffInput
+    counterShiftReports?: ShiftHandoverReportCreateNestedManyWithoutCounterStaffInput
+    securityShiftReports?: ShiftHandoverReportCreateNestedManyWithoutSecurityStaffInput
+    morningHandoverReports?: HandoverReportCreateNestedManyWithoutMorningStaffInput
+    afternoonHandoverReports?: HandoverReportCreateNestedManyWithoutAfternoonStaffInput
+    eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
+    workShift?: WorkShiftCreateNestedOneWithoutStaffsInput
+    staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
+    staffTimeTrackings?: StaffTimeTrackingCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestCreateNestedManyWithoutStaffInput
+  }
+
+  export type StaffUncheckedCreateWithoutKitchenShiftReportsInput = {
+    id?: number
+    userName: string
+    password: string
+    isDeleted?: boolean
+    isAdmin?: boolean
+    createdAt?: Date | string
+    updatedAt: Date | string
+    address?: string | null
+    dateOfBirth?: Date | string | null
+    email?: string | null
+    fullName: string
+    gender?: $Enums.Staff_gender
+    hireDate?: Date | string | null
+    idCard?: string | null
+    idCardExpiryDate?: Date | string | null
+    idCardIssueDate?: Date | string | null
+    note?: string | null
+    phone?: string | null
+    resignDate?: Date | string | null
+    staffType?: $Enums.Staff_staffType
+    needCheckMacAddress?: boolean
+    bankAccountName?: string | null
+    bankAccountNumber?: string | null
+    bankName?: string | null
+    baseSalary?: number
+    workShiftId?: number | null
+    counterStaffReports?: ReportUncheckedCreateNestedManyWithoutCounterStaffInput
+    kitchenStaffReports?: ReportUncheckedCreateNestedManyWithoutKitchenStaffInput
+    securityStaffReports?: ReportUncheckedCreateNestedManyWithoutSecurityStaffInput
+    counterShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutCounterStaffInput
+    securityShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutSecurityStaffInput
+    morningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutMorningStaffInput
+    afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
+    eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
+    staffViolations?: StaffViolationUncheckedCreateNestedManyWithoutStaffInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestUncheckedCreateNestedManyWithoutStaffInput
+  }
+
+  export type StaffCreateOrConnectWithoutKitchenShiftReportsInput = {
+    where: StaffWhereUniqueInput
+    create: XOR<StaffCreateWithoutKitchenShiftReportsInput, StaffUncheckedCreateWithoutKitchenShiftReportsInput>
+  }
+
+  export type StaffCreateWithoutSecurityShiftReportsInput = {
+    userName: string
+    password: string
+    isDeleted?: boolean
+    isAdmin?: boolean
+    createdAt?: Date | string
+    updatedAt: Date | string
+    address?: string | null
+    dateOfBirth?: Date | string | null
+    email?: string | null
+    fullName: string
+    gender?: $Enums.Staff_gender
+    hireDate?: Date | string | null
+    idCard?: string | null
+    idCardExpiryDate?: Date | string | null
+    idCardIssueDate?: Date | string | null
+    note?: string | null
+    phone?: string | null
+    resignDate?: Date | string | null
+    staffType?: $Enums.Staff_staffType
+    needCheckMacAddress?: boolean
+    bankAccountName?: string | null
+    bankAccountNumber?: string | null
+    bankName?: string | null
+    baseSalary?: number
+    counterStaffReports?: ReportCreateNestedManyWithoutCounterStaffInput
+    kitchenStaffReports?: ReportCreateNestedManyWithoutKitchenStaffInput
+    securityStaffReports?: ReportCreateNestedManyWithoutSecurityStaffInput
+    counterShiftReports?: ShiftHandoverReportCreateNestedManyWithoutCounterStaffInput
+    kitchenShiftReports?: ShiftHandoverReportCreateNestedManyWithoutKitchenStaffInput
+    morningHandoverReports?: HandoverReportCreateNestedManyWithoutMorningStaffInput
+    afternoonHandoverReports?: HandoverReportCreateNestedManyWithoutAfternoonStaffInput
+    eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
+    workShift?: WorkShiftCreateNestedOneWithoutStaffsInput
+    staffViolations?: StaffViolationCreateNestedManyWithoutStaffInput
+    staffTimeTrackings?: StaffTimeTrackingCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestCreateNestedManyWithoutStaffInput
+  }
+
+  export type StaffUncheckedCreateWithoutSecurityShiftReportsInput = {
+    id?: number
+    userName: string
+    password: string
+    isDeleted?: boolean
+    isAdmin?: boolean
+    createdAt?: Date | string
+    updatedAt: Date | string
+    address?: string | null
+    dateOfBirth?: Date | string | null
+    email?: string | null
+    fullName: string
+    gender?: $Enums.Staff_gender
+    hireDate?: Date | string | null
+    idCard?: string | null
+    idCardExpiryDate?: Date | string | null
+    idCardIssueDate?: Date | string | null
+    note?: string | null
+    phone?: string | null
+    resignDate?: Date | string | null
+    staffType?: $Enums.Staff_staffType
+    needCheckMacAddress?: boolean
+    bankAccountName?: string | null
+    bankAccountNumber?: string | null
+    bankName?: string | null
+    baseSalary?: number
+    workShiftId?: number | null
+    counterStaffReports?: ReportUncheckedCreateNestedManyWithoutCounterStaffInput
+    kitchenStaffReports?: ReportUncheckedCreateNestedManyWithoutKitchenStaffInput
+    securityStaffReports?: ReportUncheckedCreateNestedManyWithoutSecurityStaffInput
+    counterShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutCounterStaffInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutKitchenStaffInput
+    morningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutMorningStaffInput
+    afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
+    eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
+    staffViolations?: StaffViolationUncheckedCreateNestedManyWithoutStaffInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedCreateNestedManyWithoutStaffInput
+    staffRequests?: StaffRequestUncheckedCreateNestedManyWithoutStaffInput
+  }
+
+  export type StaffCreateOrConnectWithoutSecurityShiftReportsInput = {
+    where: StaffWhereUniqueInput
+    create: XOR<StaffCreateWithoutSecurityShiftReportsInput, StaffUncheckedCreateWithoutSecurityShiftReportsInput>
+  }
+
+  export type WorkShiftUpsertWithoutShiftHandoverReportsInput = {
+    update: XOR<WorkShiftUpdateWithoutShiftHandoverReportsInput, WorkShiftUncheckedUpdateWithoutShiftHandoverReportsInput>
+    create: XOR<WorkShiftCreateWithoutShiftHandoverReportsInput, WorkShiftUncheckedCreateWithoutShiftHandoverReportsInput>
+    where?: WorkShiftWhereInput
+  }
+
+  export type WorkShiftUpdateToOneWithWhereWithoutShiftHandoverReportsInput = {
+    where?: WorkShiftWhereInput
+    data: XOR<WorkShiftUpdateWithoutShiftHandoverReportsInput, WorkShiftUncheckedUpdateWithoutShiftHandoverReportsInput>
+  }
+
+  export type WorkShiftUpdateWithoutShiftHandoverReportsInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    endTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    FnetStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isOvernight?: BoolFieldUpdateOperationsInput | boolean
+    ffoodId?: NullableStringFieldUpdateOperationsInput | string | null
+    gcpId?: NullableStringFieldUpdateOperationsInput | string | null
+    staffs?: StaffUpdateManyWithoutWorkShiftNestedInput
+  }
+
+  export type WorkShiftUncheckedUpdateWithoutShiftHandoverReportsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    endTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    FnetStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isOvernight?: BoolFieldUpdateOperationsInput | boolean
+    ffoodId?: NullableStringFieldUpdateOperationsInput | string | null
+    gcpId?: NullableStringFieldUpdateOperationsInput | string | null
+    staffs?: StaffUncheckedUpdateManyWithoutWorkShiftNestedInput
+  }
+
+  export type StaffUpsertWithoutCounterShiftReportsInput = {
+    update: XOR<StaffUpdateWithoutCounterShiftReportsInput, StaffUncheckedUpdateWithoutCounterShiftReportsInput>
+    create: XOR<StaffCreateWithoutCounterShiftReportsInput, StaffUncheckedCreateWithoutCounterShiftReportsInput>
+    where?: StaffWhereInput
+  }
+
+  export type StaffUpdateToOneWithWhereWithoutCounterShiftReportsInput = {
+    where?: StaffWhereInput
+    data: XOR<StaffUpdateWithoutCounterShiftReportsInput, StaffUncheckedUpdateWithoutCounterShiftReportsInput>
+  }
+
+  export type StaffUpdateWithoutCounterShiftReportsInput = {
+    userName?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    isAdmin?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    fullName?: StringFieldUpdateOperationsInput | string
+    gender?: EnumStaff_genderFieldUpdateOperationsInput | $Enums.Staff_gender
+    hireDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCard?: NullableStringFieldUpdateOperationsInput | string | null
+    idCardExpiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCardIssueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    resignDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    staffType?: EnumStaff_staffTypeFieldUpdateOperationsInput | $Enums.Staff_staffType
+    needCheckMacAddress?: BoolFieldUpdateOperationsInput | boolean
+    bankAccountName?: NullableStringFieldUpdateOperationsInput | string | null
+    bankAccountNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    bankName?: NullableStringFieldUpdateOperationsInput | string | null
+    baseSalary?: FloatFieldUpdateOperationsInput | number
+    counterStaffReports?: ReportUpdateManyWithoutCounterStaffNestedInput
+    kitchenStaffReports?: ReportUpdateManyWithoutKitchenStaffNestedInput
+    securityStaffReports?: ReportUpdateManyWithoutSecurityStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUpdateManyWithoutKitchenStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUpdateManyWithoutSecurityStaffNestedInput
+    morningHandoverReports?: HandoverReportUpdateManyWithoutMorningStaffNestedInput
+    afternoonHandoverReports?: HandoverReportUpdateManyWithoutAfternoonStaffNestedInput
+    eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
+    workShift?: WorkShiftUpdateOneWithoutStaffsNestedInput
+    staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUpdateManyWithoutStaffNestedInput
+  }
+
+  export type StaffUncheckedUpdateWithoutCounterShiftReportsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    userName?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    isAdmin?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    fullName?: StringFieldUpdateOperationsInput | string
+    gender?: EnumStaff_genderFieldUpdateOperationsInput | $Enums.Staff_gender
+    hireDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCard?: NullableStringFieldUpdateOperationsInput | string | null
+    idCardExpiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCardIssueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    resignDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    staffType?: EnumStaff_staffTypeFieldUpdateOperationsInput | $Enums.Staff_staffType
+    needCheckMacAddress?: BoolFieldUpdateOperationsInput | boolean
+    bankAccountName?: NullableStringFieldUpdateOperationsInput | string | null
+    bankAccountNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    bankName?: NullableStringFieldUpdateOperationsInput | string | null
+    baseSalary?: FloatFieldUpdateOperationsInput | number
+    workShiftId?: NullableIntFieldUpdateOperationsInput | number | null
+    counterStaffReports?: ReportUncheckedUpdateManyWithoutCounterStaffNestedInput
+    kitchenStaffReports?: ReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
+    securityStaffReports?: ReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
+    morningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutMorningStaffNestedInput
+    afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
+    eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
+    staffViolations?: StaffViolationUncheckedUpdateManyWithoutStaffNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUncheckedUpdateManyWithoutStaffNestedInput
+  }
+
+  export type StaffUpsertWithoutKitchenShiftReportsInput = {
+    update: XOR<StaffUpdateWithoutKitchenShiftReportsInput, StaffUncheckedUpdateWithoutKitchenShiftReportsInput>
+    create: XOR<StaffCreateWithoutKitchenShiftReportsInput, StaffUncheckedCreateWithoutKitchenShiftReportsInput>
+    where?: StaffWhereInput
+  }
+
+  export type StaffUpdateToOneWithWhereWithoutKitchenShiftReportsInput = {
+    where?: StaffWhereInput
+    data: XOR<StaffUpdateWithoutKitchenShiftReportsInput, StaffUncheckedUpdateWithoutKitchenShiftReportsInput>
+  }
+
+  export type StaffUpdateWithoutKitchenShiftReportsInput = {
+    userName?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    isAdmin?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    fullName?: StringFieldUpdateOperationsInput | string
+    gender?: EnumStaff_genderFieldUpdateOperationsInput | $Enums.Staff_gender
+    hireDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCard?: NullableStringFieldUpdateOperationsInput | string | null
+    idCardExpiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCardIssueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    resignDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    staffType?: EnumStaff_staffTypeFieldUpdateOperationsInput | $Enums.Staff_staffType
+    needCheckMacAddress?: BoolFieldUpdateOperationsInput | boolean
+    bankAccountName?: NullableStringFieldUpdateOperationsInput | string | null
+    bankAccountNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    bankName?: NullableStringFieldUpdateOperationsInput | string | null
+    baseSalary?: FloatFieldUpdateOperationsInput | number
+    counterStaffReports?: ReportUpdateManyWithoutCounterStaffNestedInput
+    kitchenStaffReports?: ReportUpdateManyWithoutKitchenStaffNestedInput
+    securityStaffReports?: ReportUpdateManyWithoutSecurityStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUpdateManyWithoutCounterStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUpdateManyWithoutSecurityStaffNestedInput
+    morningHandoverReports?: HandoverReportUpdateManyWithoutMorningStaffNestedInput
+    afternoonHandoverReports?: HandoverReportUpdateManyWithoutAfternoonStaffNestedInput
+    eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
+    workShift?: WorkShiftUpdateOneWithoutStaffsNestedInput
+    staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUpdateManyWithoutStaffNestedInput
+  }
+
+  export type StaffUncheckedUpdateWithoutKitchenShiftReportsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    userName?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    isAdmin?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    fullName?: StringFieldUpdateOperationsInput | string
+    gender?: EnumStaff_genderFieldUpdateOperationsInput | $Enums.Staff_gender
+    hireDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCard?: NullableStringFieldUpdateOperationsInput | string | null
+    idCardExpiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCardIssueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    resignDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    staffType?: EnumStaff_staffTypeFieldUpdateOperationsInput | $Enums.Staff_staffType
+    needCheckMacAddress?: BoolFieldUpdateOperationsInput | boolean
+    bankAccountName?: NullableStringFieldUpdateOperationsInput | string | null
+    bankAccountNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    bankName?: NullableStringFieldUpdateOperationsInput | string | null
+    baseSalary?: FloatFieldUpdateOperationsInput | number
+    workShiftId?: NullableIntFieldUpdateOperationsInput | number | null
+    counterStaffReports?: ReportUncheckedUpdateManyWithoutCounterStaffNestedInput
+    kitchenStaffReports?: ReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
+    securityStaffReports?: ReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutCounterStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
+    morningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutMorningStaffNestedInput
+    afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
+    eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
+    staffViolations?: StaffViolationUncheckedUpdateManyWithoutStaffNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUncheckedUpdateManyWithoutStaffNestedInput
+  }
+
+  export type StaffUpsertWithoutSecurityShiftReportsInput = {
+    update: XOR<StaffUpdateWithoutSecurityShiftReportsInput, StaffUncheckedUpdateWithoutSecurityShiftReportsInput>
+    create: XOR<StaffCreateWithoutSecurityShiftReportsInput, StaffUncheckedCreateWithoutSecurityShiftReportsInput>
+    where?: StaffWhereInput
+  }
+
+  export type StaffUpdateToOneWithWhereWithoutSecurityShiftReportsInput = {
+    where?: StaffWhereInput
+    data: XOR<StaffUpdateWithoutSecurityShiftReportsInput, StaffUncheckedUpdateWithoutSecurityShiftReportsInput>
+  }
+
+  export type StaffUpdateWithoutSecurityShiftReportsInput = {
+    userName?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    isAdmin?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    fullName?: StringFieldUpdateOperationsInput | string
+    gender?: EnumStaff_genderFieldUpdateOperationsInput | $Enums.Staff_gender
+    hireDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCard?: NullableStringFieldUpdateOperationsInput | string | null
+    idCardExpiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCardIssueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    resignDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    staffType?: EnumStaff_staffTypeFieldUpdateOperationsInput | $Enums.Staff_staffType
+    needCheckMacAddress?: BoolFieldUpdateOperationsInput | boolean
+    bankAccountName?: NullableStringFieldUpdateOperationsInput | string | null
+    bankAccountNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    bankName?: NullableStringFieldUpdateOperationsInput | string | null
+    baseSalary?: FloatFieldUpdateOperationsInput | number
+    counterStaffReports?: ReportUpdateManyWithoutCounterStaffNestedInput
+    kitchenStaffReports?: ReportUpdateManyWithoutKitchenStaffNestedInput
+    securityStaffReports?: ReportUpdateManyWithoutSecurityStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUpdateManyWithoutCounterStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUpdateManyWithoutKitchenStaffNestedInput
+    morningHandoverReports?: HandoverReportUpdateManyWithoutMorningStaffNestedInput
+    afternoonHandoverReports?: HandoverReportUpdateManyWithoutAfternoonStaffNestedInput
+    eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
+    workShift?: WorkShiftUpdateOneWithoutStaffsNestedInput
+    staffViolations?: StaffViolationUpdateManyWithoutStaffNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUpdateManyWithoutStaffNestedInput
+  }
+
+  export type StaffUncheckedUpdateWithoutSecurityShiftReportsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    userName?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    isAdmin?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    fullName?: StringFieldUpdateOperationsInput | string
+    gender?: EnumStaff_genderFieldUpdateOperationsInput | $Enums.Staff_gender
+    hireDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCard?: NullableStringFieldUpdateOperationsInput | string | null
+    idCardExpiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    idCardIssueDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    resignDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    staffType?: EnumStaff_staffTypeFieldUpdateOperationsInput | $Enums.Staff_staffType
+    needCheckMacAddress?: BoolFieldUpdateOperationsInput | boolean
+    bankAccountName?: NullableStringFieldUpdateOperationsInput | string | null
+    bankAccountNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    bankName?: NullableStringFieldUpdateOperationsInput | string | null
+    baseSalary?: FloatFieldUpdateOperationsInput | number
+    workShiftId?: NullableIntFieldUpdateOperationsInput | number | null
+    counterStaffReports?: ReportUncheckedUpdateManyWithoutCounterStaffNestedInput
+    kitchenStaffReports?: ReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
+    securityStaffReports?: ReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutCounterStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
+    morningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutMorningStaffNestedInput
+    afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
+    eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
+    staffViolations?: StaffViolationUncheckedUpdateManyWithoutStaffNestedInput
+    staffTimeTrackings?: StaffTimeTrackingUncheckedUpdateManyWithoutStaffNestedInput
+    staffRequests?: StaffRequestUncheckedUpdateManyWithoutStaffNestedInput
+  }
+
   export type ReportCreateWithoutDetailsInput = {
     date: Date | string
     shift: $Enums.Shift
@@ -98547,6 +102666,9 @@ export namespace Prisma {
     baseSalary?: number
     kitchenStaffReports?: ReportCreateNestedManyWithoutKitchenStaffInput
     securityStaffReports?: ReportCreateNestedManyWithoutSecurityStaffInput
+    counterShiftReports?: ShiftHandoverReportCreateNestedManyWithoutCounterStaffInput
+    kitchenShiftReports?: ShiftHandoverReportCreateNestedManyWithoutKitchenStaffInput
+    securityShiftReports?: ShiftHandoverReportCreateNestedManyWithoutSecurityStaffInput
     morningHandoverReports?: HandoverReportCreateNestedManyWithoutMorningStaffInput
     afternoonHandoverReports?: HandoverReportCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
@@ -98585,6 +102707,9 @@ export namespace Prisma {
     workShiftId?: number | null
     kitchenStaffReports?: ReportUncheckedCreateNestedManyWithoutKitchenStaffInput
     securityStaffReports?: ReportUncheckedCreateNestedManyWithoutSecurityStaffInput
+    counterShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutCounterStaffInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutKitchenStaffInput
+    securityShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutSecurityStaffInput
     morningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutMorningStaffInput
     afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
@@ -98625,6 +102750,9 @@ export namespace Prisma {
     baseSalary?: number
     counterStaffReports?: ReportCreateNestedManyWithoutCounterStaffInput
     securityStaffReports?: ReportCreateNestedManyWithoutSecurityStaffInput
+    counterShiftReports?: ShiftHandoverReportCreateNestedManyWithoutCounterStaffInput
+    kitchenShiftReports?: ShiftHandoverReportCreateNestedManyWithoutKitchenStaffInput
+    securityShiftReports?: ShiftHandoverReportCreateNestedManyWithoutSecurityStaffInput
     morningHandoverReports?: HandoverReportCreateNestedManyWithoutMorningStaffInput
     afternoonHandoverReports?: HandoverReportCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
@@ -98663,6 +102791,9 @@ export namespace Prisma {
     workShiftId?: number | null
     counterStaffReports?: ReportUncheckedCreateNestedManyWithoutCounterStaffInput
     securityStaffReports?: ReportUncheckedCreateNestedManyWithoutSecurityStaffInput
+    counterShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutCounterStaffInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutKitchenStaffInput
+    securityShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutSecurityStaffInput
     morningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutMorningStaffInput
     afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
@@ -98703,6 +102834,9 @@ export namespace Prisma {
     baseSalary?: number
     counterStaffReports?: ReportCreateNestedManyWithoutCounterStaffInput
     kitchenStaffReports?: ReportCreateNestedManyWithoutKitchenStaffInput
+    counterShiftReports?: ShiftHandoverReportCreateNestedManyWithoutCounterStaffInput
+    kitchenShiftReports?: ShiftHandoverReportCreateNestedManyWithoutKitchenStaffInput
+    securityShiftReports?: ShiftHandoverReportCreateNestedManyWithoutSecurityStaffInput
     morningHandoverReports?: HandoverReportCreateNestedManyWithoutMorningStaffInput
     afternoonHandoverReports?: HandoverReportCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
@@ -98741,6 +102875,9 @@ export namespace Prisma {
     workShiftId?: number | null
     counterStaffReports?: ReportUncheckedCreateNestedManyWithoutCounterStaffInput
     kitchenStaffReports?: ReportUncheckedCreateNestedManyWithoutKitchenStaffInput
+    counterShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutCounterStaffInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutKitchenStaffInput
+    securityShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutSecurityStaffInput
     morningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutMorningStaffInput
     afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
@@ -98818,6 +102955,9 @@ export namespace Prisma {
     baseSalary?: FloatFieldUpdateOperationsInput | number
     kitchenStaffReports?: ReportUpdateManyWithoutKitchenStaffNestedInput
     securityStaffReports?: ReportUpdateManyWithoutSecurityStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUpdateManyWithoutCounterStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUpdateManyWithoutKitchenStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUpdateManyWithoutSecurityStaffNestedInput
     morningHandoverReports?: HandoverReportUpdateManyWithoutMorningStaffNestedInput
     afternoonHandoverReports?: HandoverReportUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
@@ -98856,6 +102996,9 @@ export namespace Prisma {
     workShiftId?: NullableIntFieldUpdateOperationsInput | number | null
     kitchenStaffReports?: ReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
     securityStaffReports?: ReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutCounterStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
     morningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutMorningStaffNestedInput
     afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
@@ -98902,6 +103045,9 @@ export namespace Prisma {
     baseSalary?: FloatFieldUpdateOperationsInput | number
     counterStaffReports?: ReportUpdateManyWithoutCounterStaffNestedInput
     securityStaffReports?: ReportUpdateManyWithoutSecurityStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUpdateManyWithoutCounterStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUpdateManyWithoutKitchenStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUpdateManyWithoutSecurityStaffNestedInput
     morningHandoverReports?: HandoverReportUpdateManyWithoutMorningStaffNestedInput
     afternoonHandoverReports?: HandoverReportUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
@@ -98940,6 +103086,9 @@ export namespace Prisma {
     workShiftId?: NullableIntFieldUpdateOperationsInput | number | null
     counterStaffReports?: ReportUncheckedUpdateManyWithoutCounterStaffNestedInput
     securityStaffReports?: ReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutCounterStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
     morningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutMorningStaffNestedInput
     afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
@@ -98986,6 +103135,9 @@ export namespace Prisma {
     baseSalary?: FloatFieldUpdateOperationsInput | number
     counterStaffReports?: ReportUpdateManyWithoutCounterStaffNestedInput
     kitchenStaffReports?: ReportUpdateManyWithoutKitchenStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUpdateManyWithoutCounterStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUpdateManyWithoutKitchenStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUpdateManyWithoutSecurityStaffNestedInput
     morningHandoverReports?: HandoverReportUpdateManyWithoutMorningStaffNestedInput
     afternoonHandoverReports?: HandoverReportUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
@@ -99024,6 +103176,9 @@ export namespace Prisma {
     workShiftId?: NullableIntFieldUpdateOperationsInput | number | null
     counterStaffReports?: ReportUncheckedUpdateManyWithoutCounterStaffNestedInput
     kitchenStaffReports?: ReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutCounterStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
     morningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutMorningStaffNestedInput
     afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
@@ -99107,6 +103262,9 @@ export namespace Prisma {
     counterStaffReports?: ReportCreateNestedManyWithoutCounterStaffInput
     kitchenStaffReports?: ReportCreateNestedManyWithoutKitchenStaffInput
     securityStaffReports?: ReportCreateNestedManyWithoutSecurityStaffInput
+    counterShiftReports?: ShiftHandoverReportCreateNestedManyWithoutCounterStaffInput
+    kitchenShiftReports?: ShiftHandoverReportCreateNestedManyWithoutKitchenStaffInput
+    securityShiftReports?: ShiftHandoverReportCreateNestedManyWithoutSecurityStaffInput
     afternoonHandoverReports?: HandoverReportCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
     workShift?: WorkShiftCreateNestedOneWithoutStaffsInput
@@ -99145,6 +103303,9 @@ export namespace Prisma {
     counterStaffReports?: ReportUncheckedCreateNestedManyWithoutCounterStaffInput
     kitchenStaffReports?: ReportUncheckedCreateNestedManyWithoutKitchenStaffInput
     securityStaffReports?: ReportUncheckedCreateNestedManyWithoutSecurityStaffInput
+    counterShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutCounterStaffInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutKitchenStaffInput
+    securityShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutSecurityStaffInput
     afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
     staffViolations?: StaffViolationUncheckedCreateNestedManyWithoutStaffInput
@@ -99185,6 +103346,9 @@ export namespace Prisma {
     counterStaffReports?: ReportCreateNestedManyWithoutCounterStaffInput
     kitchenStaffReports?: ReportCreateNestedManyWithoutKitchenStaffInput
     securityStaffReports?: ReportCreateNestedManyWithoutSecurityStaffInput
+    counterShiftReports?: ShiftHandoverReportCreateNestedManyWithoutCounterStaffInput
+    kitchenShiftReports?: ShiftHandoverReportCreateNestedManyWithoutKitchenStaffInput
+    securityShiftReports?: ShiftHandoverReportCreateNestedManyWithoutSecurityStaffInput
     morningHandoverReports?: HandoverReportCreateNestedManyWithoutMorningStaffInput
     eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
     workShift?: WorkShiftCreateNestedOneWithoutStaffsInput
@@ -99223,6 +103387,9 @@ export namespace Prisma {
     counterStaffReports?: ReportUncheckedCreateNestedManyWithoutCounterStaffInput
     kitchenStaffReports?: ReportUncheckedCreateNestedManyWithoutKitchenStaffInput
     securityStaffReports?: ReportUncheckedCreateNestedManyWithoutSecurityStaffInput
+    counterShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutCounterStaffInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutKitchenStaffInput
+    securityShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutSecurityStaffInput
     morningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutMorningStaffInput
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
     staffViolations?: StaffViolationUncheckedCreateNestedManyWithoutStaffInput
@@ -99263,6 +103430,9 @@ export namespace Prisma {
     counterStaffReports?: ReportCreateNestedManyWithoutCounterStaffInput
     kitchenStaffReports?: ReportCreateNestedManyWithoutKitchenStaffInput
     securityStaffReports?: ReportCreateNestedManyWithoutSecurityStaffInput
+    counterShiftReports?: ShiftHandoverReportCreateNestedManyWithoutCounterStaffInput
+    kitchenShiftReports?: ShiftHandoverReportCreateNestedManyWithoutKitchenStaffInput
+    securityShiftReports?: ShiftHandoverReportCreateNestedManyWithoutSecurityStaffInput
     morningHandoverReports?: HandoverReportCreateNestedManyWithoutMorningStaffInput
     afternoonHandoverReports?: HandoverReportCreateNestedManyWithoutAfternoonStaffInput
     workShift?: WorkShiftCreateNestedOneWithoutStaffsInput
@@ -99301,6 +103471,9 @@ export namespace Prisma {
     counterStaffReports?: ReportUncheckedCreateNestedManyWithoutCounterStaffInput
     kitchenStaffReports?: ReportUncheckedCreateNestedManyWithoutKitchenStaffInput
     securityStaffReports?: ReportUncheckedCreateNestedManyWithoutSecurityStaffInput
+    counterShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutCounterStaffInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutKitchenStaffInput
+    securityShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutSecurityStaffInput
     morningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutMorningStaffInput
     afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
     staffViolations?: StaffViolationUncheckedCreateNestedManyWithoutStaffInput
@@ -99391,6 +103564,9 @@ export namespace Prisma {
     counterStaffReports?: ReportUpdateManyWithoutCounterStaffNestedInput
     kitchenStaffReports?: ReportUpdateManyWithoutKitchenStaffNestedInput
     securityStaffReports?: ReportUpdateManyWithoutSecurityStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUpdateManyWithoutCounterStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUpdateManyWithoutKitchenStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUpdateManyWithoutSecurityStaffNestedInput
     afternoonHandoverReports?: HandoverReportUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
     workShift?: WorkShiftUpdateOneWithoutStaffsNestedInput
@@ -99429,6 +103605,9 @@ export namespace Prisma {
     counterStaffReports?: ReportUncheckedUpdateManyWithoutCounterStaffNestedInput
     kitchenStaffReports?: ReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
     securityStaffReports?: ReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutCounterStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
     afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
     staffViolations?: StaffViolationUncheckedUpdateManyWithoutStaffNestedInput
@@ -99475,6 +103654,9 @@ export namespace Prisma {
     counterStaffReports?: ReportUpdateManyWithoutCounterStaffNestedInput
     kitchenStaffReports?: ReportUpdateManyWithoutKitchenStaffNestedInput
     securityStaffReports?: ReportUpdateManyWithoutSecurityStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUpdateManyWithoutCounterStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUpdateManyWithoutKitchenStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUpdateManyWithoutSecurityStaffNestedInput
     morningHandoverReports?: HandoverReportUpdateManyWithoutMorningStaffNestedInput
     eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
     workShift?: WorkShiftUpdateOneWithoutStaffsNestedInput
@@ -99513,6 +103695,9 @@ export namespace Prisma {
     counterStaffReports?: ReportUncheckedUpdateManyWithoutCounterStaffNestedInput
     kitchenStaffReports?: ReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
     securityStaffReports?: ReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutCounterStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
     morningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutMorningStaffNestedInput
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
     staffViolations?: StaffViolationUncheckedUpdateManyWithoutStaffNestedInput
@@ -99559,6 +103744,9 @@ export namespace Prisma {
     counterStaffReports?: ReportUpdateManyWithoutCounterStaffNestedInput
     kitchenStaffReports?: ReportUpdateManyWithoutKitchenStaffNestedInput
     securityStaffReports?: ReportUpdateManyWithoutSecurityStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUpdateManyWithoutCounterStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUpdateManyWithoutKitchenStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUpdateManyWithoutSecurityStaffNestedInput
     morningHandoverReports?: HandoverReportUpdateManyWithoutMorningStaffNestedInput
     afternoonHandoverReports?: HandoverReportUpdateManyWithoutAfternoonStaffNestedInput
     workShift?: WorkShiftUpdateOneWithoutStaffsNestedInput
@@ -99597,6 +103785,9 @@ export namespace Prisma {
     counterStaffReports?: ReportUncheckedUpdateManyWithoutCounterStaffNestedInput
     kitchenStaffReports?: ReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
     securityStaffReports?: ReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutCounterStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
     morningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutMorningStaffNestedInput
     afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
     staffViolations?: StaffViolationUncheckedUpdateManyWithoutStaffNestedInput
@@ -99608,6 +103799,7 @@ export namespace Prisma {
     date: Date | string
     reportType: $Enums.HandoverReportType
     note?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     afternoonSubmissionCount?: number
@@ -99626,6 +103818,7 @@ export namespace Prisma {
     date: Date | string
     reportType: $Enums.HandoverReportType
     note?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     afternoonStaffId?: number | null
@@ -99683,6 +103876,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     reportType?: EnumHandoverReportTypeFieldUpdateOperationsInput | $Enums.HandoverReportType
     note?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     afternoonSubmissionCount?: IntFieldUpdateOperationsInput | number
@@ -99701,6 +103895,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     reportType?: EnumHandoverReportTypeFieldUpdateOperationsInput | $Enums.HandoverReportType
     note?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     afternoonStaffId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -101343,6 +105538,9 @@ export namespace Prisma {
     counterStaffReports?: ReportCreateNestedManyWithoutCounterStaffInput
     kitchenStaffReports?: ReportCreateNestedManyWithoutKitchenStaffInput
     securityStaffReports?: ReportCreateNestedManyWithoutSecurityStaffInput
+    counterShiftReports?: ShiftHandoverReportCreateNestedManyWithoutCounterStaffInput
+    kitchenShiftReports?: ShiftHandoverReportCreateNestedManyWithoutKitchenStaffInput
+    securityShiftReports?: ShiftHandoverReportCreateNestedManyWithoutSecurityStaffInput
     morningHandoverReports?: HandoverReportCreateNestedManyWithoutMorningStaffInput
     afternoonHandoverReports?: HandoverReportCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportCreateNestedManyWithoutEveningStaffInput
@@ -101381,6 +105579,9 @@ export namespace Prisma {
     counterStaffReports?: ReportUncheckedCreateNestedManyWithoutCounterStaffInput
     kitchenStaffReports?: ReportUncheckedCreateNestedManyWithoutKitchenStaffInput
     securityStaffReports?: ReportUncheckedCreateNestedManyWithoutSecurityStaffInput
+    counterShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutCounterStaffInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutKitchenStaffInput
+    securityShiftReports?: ShiftHandoverReportUncheckedCreateNestedManyWithoutSecurityStaffInput
     morningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutMorningStaffInput
     afternoonHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutAfternoonStaffInput
     eveningHandoverReports?: HandoverReportUncheckedCreateNestedManyWithoutEveningStaffInput
@@ -101468,6 +105669,9 @@ export namespace Prisma {
     counterStaffReports?: ReportUpdateManyWithoutCounterStaffNestedInput
     kitchenStaffReports?: ReportUpdateManyWithoutKitchenStaffNestedInput
     securityStaffReports?: ReportUpdateManyWithoutSecurityStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUpdateManyWithoutCounterStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUpdateManyWithoutKitchenStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUpdateManyWithoutSecurityStaffNestedInput
     morningHandoverReports?: HandoverReportUpdateManyWithoutMorningStaffNestedInput
     afternoonHandoverReports?: HandoverReportUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
@@ -101506,6 +105710,9 @@ export namespace Prisma {
     counterStaffReports?: ReportUncheckedUpdateManyWithoutCounterStaffNestedInput
     kitchenStaffReports?: ReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
     securityStaffReports?: ReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutCounterStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
     morningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutMorningStaffNestedInput
     afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
@@ -102230,11 +106437,63 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type ShiftHandoverReportCreateManyCounterStaffInput = {
+    id?: number
+    date: Date | string
+    workShiftId: number
+    fnetRevenue?: number
+    gcpRevenue?: number
+    momoRevenue?: number
+    cashRevenue?: number
+    cashExpense?: number
+    actualReceived?: number
+    note?: string | null
+    kitchenStaffId?: number | null
+    securityStaffId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ShiftHandoverReportCreateManyKitchenStaffInput = {
+    id?: number
+    date: Date | string
+    workShiftId: number
+    fnetRevenue?: number
+    gcpRevenue?: number
+    momoRevenue?: number
+    cashRevenue?: number
+    cashExpense?: number
+    actualReceived?: number
+    note?: string | null
+    counterStaffId?: number | null
+    securityStaffId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ShiftHandoverReportCreateManySecurityStaffInput = {
+    id?: number
+    date: Date | string
+    workShiftId: number
+    fnetRevenue?: number
+    gcpRevenue?: number
+    momoRevenue?: number
+    cashRevenue?: number
+    cashExpense?: number
+    actualReceived?: number
+    note?: string | null
+    counterStaffId?: number | null
+    kitchenStaffId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type HandoverReportCreateManyMorningStaffInput = {
     id?: number
     date: Date | string
     reportType: $Enums.HandoverReportType
     note?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     afternoonStaffId?: number | null
@@ -102252,6 +106511,7 @@ export namespace Prisma {
     date: Date | string
     reportType: $Enums.HandoverReportType
     note?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     eveningStaffId?: number | null
@@ -102269,6 +106529,7 @@ export namespace Prisma {
     date: Date | string
     reportType: $Enums.HandoverReportType
     note?: string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     afternoonStaffId?: number | null
@@ -102414,10 +106675,161 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type ShiftHandoverReportUpdateWithoutCounterStaffInput = {
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    fnetRevenue?: FloatFieldUpdateOperationsInput | number
+    gcpRevenue?: FloatFieldUpdateOperationsInput | number
+    momoRevenue?: FloatFieldUpdateOperationsInput | number
+    cashRevenue?: FloatFieldUpdateOperationsInput | number
+    cashExpense?: FloatFieldUpdateOperationsInput | number
+    actualReceived?: FloatFieldUpdateOperationsInput | number
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    workShift?: WorkShiftUpdateOneRequiredWithoutShiftHandoverReportsNestedInput
+    kitchenStaff?: StaffUpdateOneWithoutKitchenShiftReportsNestedInput
+    securityStaff?: StaffUpdateOneWithoutSecurityShiftReportsNestedInput
+  }
+
+  export type ShiftHandoverReportUncheckedUpdateWithoutCounterStaffInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    workShiftId?: IntFieldUpdateOperationsInput | number
+    fnetRevenue?: FloatFieldUpdateOperationsInput | number
+    gcpRevenue?: FloatFieldUpdateOperationsInput | number
+    momoRevenue?: FloatFieldUpdateOperationsInput | number
+    cashRevenue?: FloatFieldUpdateOperationsInput | number
+    cashExpense?: FloatFieldUpdateOperationsInput | number
+    actualReceived?: FloatFieldUpdateOperationsInput | number
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    kitchenStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    securityStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ShiftHandoverReportUncheckedUpdateManyWithoutCounterStaffInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    workShiftId?: IntFieldUpdateOperationsInput | number
+    fnetRevenue?: FloatFieldUpdateOperationsInput | number
+    gcpRevenue?: FloatFieldUpdateOperationsInput | number
+    momoRevenue?: FloatFieldUpdateOperationsInput | number
+    cashRevenue?: FloatFieldUpdateOperationsInput | number
+    cashExpense?: FloatFieldUpdateOperationsInput | number
+    actualReceived?: FloatFieldUpdateOperationsInput | number
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    kitchenStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    securityStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ShiftHandoverReportUpdateWithoutKitchenStaffInput = {
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    fnetRevenue?: FloatFieldUpdateOperationsInput | number
+    gcpRevenue?: FloatFieldUpdateOperationsInput | number
+    momoRevenue?: FloatFieldUpdateOperationsInput | number
+    cashRevenue?: FloatFieldUpdateOperationsInput | number
+    cashExpense?: FloatFieldUpdateOperationsInput | number
+    actualReceived?: FloatFieldUpdateOperationsInput | number
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    workShift?: WorkShiftUpdateOneRequiredWithoutShiftHandoverReportsNestedInput
+    counterStaff?: StaffUpdateOneWithoutCounterShiftReportsNestedInput
+    securityStaff?: StaffUpdateOneWithoutSecurityShiftReportsNestedInput
+  }
+
+  export type ShiftHandoverReportUncheckedUpdateWithoutKitchenStaffInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    workShiftId?: IntFieldUpdateOperationsInput | number
+    fnetRevenue?: FloatFieldUpdateOperationsInput | number
+    gcpRevenue?: FloatFieldUpdateOperationsInput | number
+    momoRevenue?: FloatFieldUpdateOperationsInput | number
+    cashRevenue?: FloatFieldUpdateOperationsInput | number
+    cashExpense?: FloatFieldUpdateOperationsInput | number
+    actualReceived?: FloatFieldUpdateOperationsInput | number
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    counterStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    securityStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ShiftHandoverReportUncheckedUpdateManyWithoutKitchenStaffInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    workShiftId?: IntFieldUpdateOperationsInput | number
+    fnetRevenue?: FloatFieldUpdateOperationsInput | number
+    gcpRevenue?: FloatFieldUpdateOperationsInput | number
+    momoRevenue?: FloatFieldUpdateOperationsInput | number
+    cashRevenue?: FloatFieldUpdateOperationsInput | number
+    cashExpense?: FloatFieldUpdateOperationsInput | number
+    actualReceived?: FloatFieldUpdateOperationsInput | number
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    counterStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    securityStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ShiftHandoverReportUpdateWithoutSecurityStaffInput = {
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    fnetRevenue?: FloatFieldUpdateOperationsInput | number
+    gcpRevenue?: FloatFieldUpdateOperationsInput | number
+    momoRevenue?: FloatFieldUpdateOperationsInput | number
+    cashRevenue?: FloatFieldUpdateOperationsInput | number
+    cashExpense?: FloatFieldUpdateOperationsInput | number
+    actualReceived?: FloatFieldUpdateOperationsInput | number
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    workShift?: WorkShiftUpdateOneRequiredWithoutShiftHandoverReportsNestedInput
+    counterStaff?: StaffUpdateOneWithoutCounterShiftReportsNestedInput
+    kitchenStaff?: StaffUpdateOneWithoutKitchenShiftReportsNestedInput
+  }
+
+  export type ShiftHandoverReportUncheckedUpdateWithoutSecurityStaffInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    workShiftId?: IntFieldUpdateOperationsInput | number
+    fnetRevenue?: FloatFieldUpdateOperationsInput | number
+    gcpRevenue?: FloatFieldUpdateOperationsInput | number
+    momoRevenue?: FloatFieldUpdateOperationsInput | number
+    cashRevenue?: FloatFieldUpdateOperationsInput | number
+    cashExpense?: FloatFieldUpdateOperationsInput | number
+    actualReceived?: FloatFieldUpdateOperationsInput | number
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    counterStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    kitchenStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ShiftHandoverReportUncheckedUpdateManyWithoutSecurityStaffInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    workShiftId?: IntFieldUpdateOperationsInput | number
+    fnetRevenue?: FloatFieldUpdateOperationsInput | number
+    gcpRevenue?: FloatFieldUpdateOperationsInput | number
+    momoRevenue?: FloatFieldUpdateOperationsInput | number
+    cashRevenue?: FloatFieldUpdateOperationsInput | number
+    cashExpense?: FloatFieldUpdateOperationsInput | number
+    actualReceived?: FloatFieldUpdateOperationsInput | number
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    counterStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    kitchenStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type HandoverReportUpdateWithoutMorningStaffInput = {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     reportType?: EnumHandoverReportTypeFieldUpdateOperationsInput | $Enums.HandoverReportType
     note?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     afternoonSubmissionCount?: IntFieldUpdateOperationsInput | number
@@ -102436,6 +106848,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     reportType?: EnumHandoverReportTypeFieldUpdateOperationsInput | $Enums.HandoverReportType
     note?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     afternoonStaffId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -102454,6 +106867,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     reportType?: EnumHandoverReportTypeFieldUpdateOperationsInput | $Enums.HandoverReportType
     note?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     afternoonStaffId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -102470,6 +106884,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     reportType?: EnumHandoverReportTypeFieldUpdateOperationsInput | $Enums.HandoverReportType
     note?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     afternoonSubmissionCount?: IntFieldUpdateOperationsInput | number
@@ -102488,6 +106903,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     reportType?: EnumHandoverReportTypeFieldUpdateOperationsInput | $Enums.HandoverReportType
     note?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eveningStaffId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -102506,6 +106922,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     reportType?: EnumHandoverReportTypeFieldUpdateOperationsInput | $Enums.HandoverReportType
     note?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     eveningStaffId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -102522,6 +106939,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     reportType?: EnumHandoverReportTypeFieldUpdateOperationsInput | $Enums.HandoverReportType
     note?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     afternoonSubmissionCount?: IntFieldUpdateOperationsInput | number
@@ -102540,6 +106958,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     reportType?: EnumHandoverReportTypeFieldUpdateOperationsInput | $Enums.HandoverReportType
     note?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     afternoonStaffId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -102558,6 +106977,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     reportType?: EnumHandoverReportTypeFieldUpdateOperationsInput | $Enums.HandoverReportType
     note?: NullableStringFieldUpdateOperationsInput | string | null
+    metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     afternoonStaffId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -102661,6 +107081,23 @@ export namespace Prisma {
     baseSalary?: number
   }
 
+  export type ShiftHandoverReportCreateManyWorkShiftInput = {
+    id?: number
+    date: Date | string
+    fnetRevenue?: number
+    gcpRevenue?: number
+    momoRevenue?: number
+    cashRevenue?: number
+    cashExpense?: number
+    actualReceived?: number
+    note?: string | null
+    counterStaffId?: number | null
+    kitchenStaffId?: number | null
+    securityStaffId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type StaffUpdateWithoutWorkShiftInput = {
     userName?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
@@ -102689,6 +107126,9 @@ export namespace Prisma {
     counterStaffReports?: ReportUpdateManyWithoutCounterStaffNestedInput
     kitchenStaffReports?: ReportUpdateManyWithoutKitchenStaffNestedInput
     securityStaffReports?: ReportUpdateManyWithoutSecurityStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUpdateManyWithoutCounterStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUpdateManyWithoutKitchenStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUpdateManyWithoutSecurityStaffNestedInput
     morningHandoverReports?: HandoverReportUpdateManyWithoutMorningStaffNestedInput
     afternoonHandoverReports?: HandoverReportUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUpdateManyWithoutEveningStaffNestedInput
@@ -102726,6 +107166,9 @@ export namespace Prisma {
     counterStaffReports?: ReportUncheckedUpdateManyWithoutCounterStaffNestedInput
     kitchenStaffReports?: ReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
     securityStaffReports?: ReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
+    counterShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutCounterStaffNestedInput
+    kitchenShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutKitchenStaffNestedInput
+    securityShiftReports?: ShiftHandoverReportUncheckedUpdateManyWithoutSecurityStaffNestedInput
     morningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutMorningStaffNestedInput
     afternoonHandoverReports?: HandoverReportUncheckedUpdateManyWithoutAfternoonStaffNestedInput
     eveningHandoverReports?: HandoverReportUncheckedUpdateManyWithoutEveningStaffNestedInput
@@ -102760,6 +107203,56 @@ export namespace Prisma {
     bankAccountNumber?: NullableStringFieldUpdateOperationsInput | string | null
     bankName?: NullableStringFieldUpdateOperationsInput | string | null
     baseSalary?: FloatFieldUpdateOperationsInput | number
+  }
+
+  export type ShiftHandoverReportUpdateWithoutWorkShiftInput = {
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    fnetRevenue?: FloatFieldUpdateOperationsInput | number
+    gcpRevenue?: FloatFieldUpdateOperationsInput | number
+    momoRevenue?: FloatFieldUpdateOperationsInput | number
+    cashRevenue?: FloatFieldUpdateOperationsInput | number
+    cashExpense?: FloatFieldUpdateOperationsInput | number
+    actualReceived?: FloatFieldUpdateOperationsInput | number
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    counterStaff?: StaffUpdateOneWithoutCounterShiftReportsNestedInput
+    kitchenStaff?: StaffUpdateOneWithoutKitchenShiftReportsNestedInput
+    securityStaff?: StaffUpdateOneWithoutSecurityShiftReportsNestedInput
+  }
+
+  export type ShiftHandoverReportUncheckedUpdateWithoutWorkShiftInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    fnetRevenue?: FloatFieldUpdateOperationsInput | number
+    gcpRevenue?: FloatFieldUpdateOperationsInput | number
+    momoRevenue?: FloatFieldUpdateOperationsInput | number
+    cashRevenue?: FloatFieldUpdateOperationsInput | number
+    cashExpense?: FloatFieldUpdateOperationsInput | number
+    actualReceived?: FloatFieldUpdateOperationsInput | number
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    counterStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    kitchenStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    securityStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ShiftHandoverReportUncheckedUpdateManyWithoutWorkShiftInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    fnetRevenue?: FloatFieldUpdateOperationsInput | number
+    gcpRevenue?: FloatFieldUpdateOperationsInput | number
+    momoRevenue?: FloatFieldUpdateOperationsInput | number
+    cashRevenue?: FloatFieldUpdateOperationsInput | number
+    cashExpense?: FloatFieldUpdateOperationsInput | number
+    actualReceived?: FloatFieldUpdateOperationsInput | number
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    counterStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    kitchenStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    securityStaffId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type DeviceHistoryCreateManyDeviceInput = {

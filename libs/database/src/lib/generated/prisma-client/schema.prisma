@@ -10,6 +10,14 @@ datasource db {
   relationMode = "prisma"
 }
 
+model SystemConfig {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique @db.VarChar(100)
+  value     String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Rank {
   id           Int      @id @default(autoincrement())
   name         String
@@ -223,39 +231,42 @@ model Computer {
 }
 
 model Staff {
-  id                       Int                 @id @default(autoincrement())
-  userName                 String              @unique
+  id                       Int                   @id @default(autoincrement())
+  userName                 String                @unique
   password                 String
-  isDeleted                Boolean             @default(false)
-  isAdmin                  Boolean             @default(false)
-  createdAt                DateTime            @default(now())
+  isDeleted                Boolean               @default(false)
+  isAdmin                  Boolean               @default(false)
+  createdAt                DateTime              @default(now())
   updatedAt                DateTime
-  address                  String?             @db.Text
+  address                  String?               @db.Text
   dateOfBirth              DateTime?
-  email                    String?             @db.VarChar(255)
-  fullName                 String              @db.VarChar(255)
-  gender                   Staff_gender        @default(OTHER)
+  email                    String?               @db.VarChar(255)
+  fullName                 String                @db.VarChar(255)
+  gender                   Staff_gender          @default(OTHER)
   hireDate                 DateTime?
-  idCard                   String?             @db.VarChar(20)
+  idCard                   String?               @db.VarChar(20)
   idCardExpiryDate         DateTime?
   idCardIssueDate          DateTime?
-  note                     String?             @db.Text
-  phone                    String?             @db.VarChar(15)
+  note                     String?               @db.Text
+  phone                    String?               @db.VarChar(15)
   resignDate               DateTime?
-  staffType                Staff_staffType     @default(STAFF)
-  needCheckMacAddress      Boolean             @default(true)
-  bankAccountName          String?             @db.VarChar(255)
-  bankAccountNumber        String?             @db.VarChar(50)
-  bankName                 String?             @db.VarChar(255)
-  baseSalary               Float               @default(0)
-  counterStaffReports      Report[]            @relation("CounterStaff")
-  kitchenStaffReports      Report[]            @relation("KitchenStaff")
-  securityStaffReports     Report[]            @relation("SecurityStaff")
-  morningHandoverReports   HandoverReport[]    @relation("MorningStaff")
-  afternoonHandoverReports HandoverReport[]    @relation("AfternoonStaff")
-  eveningHandoverReports   HandoverReport[]    @relation("EveningStaff")
+  staffType                Staff_staffType       @default(STAFF)
+  needCheckMacAddress      Boolean               @default(true)
+  bankAccountName          String?               @db.VarChar(255)
+  bankAccountNumber        String?               @db.VarChar(50)
+  bankName                 String?               @db.VarChar(255)
+  baseSalary               Float                 @default(0)
+  counterStaffReports      Report[]              @relation("CounterStaff")
+  kitchenStaffReports      Report[]              @relation("KitchenStaff")
+  securityStaffReports     Report[]              @relation("SecurityStaff")
+  counterShiftReports      ShiftHandoverReport[] @relation("CounterShiftStaff")
+  kitchenShiftReports      ShiftHandoverReport[] @relation("KitchenShiftStaff")
+  securityShiftReports     ShiftHandoverReport[] @relation("SecurityShiftStaff")
+  morningHandoverReports   HandoverReport[]      @relation("MorningStaff")
+  afternoonHandoverReports HandoverReport[]      @relation("AfternoonStaff")
+  eveningHandoverReports   HandoverReport[]      @relation("EveningStaff")
   workShiftId              Int?
-  workShift                WorkShift?          @relation(fields: [workShiftId], references: [id])
+  workShift                WorkShift?            @relation(fields: [workShiftId], references: [id])
   staffViolations          StaffViolation[]
   staffTimeTrackings       StaffTimeTracking[]
   staffRequests            StaffRequest[]
@@ -301,17 +312,18 @@ model StaffTimeTracking {
 }
 
 model WorkShift {
-  id          Int      @id @default(autoincrement())
-  name        String   @db.VarChar(255)
-  startTime   DateTime @db.Time(0)
-  endTime     DateTime @db.Time(0)
-  FnetStaffId Int?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  isOvernight Boolean  @default(false)
-  ffoodId     String?  @map("ffood_id") @db.Char(36)
-  gcpId       String?  @map("gcp_id") @db.VarChar(255)
-  staffs      Staff[]
+  id                   Int                   @id @default(autoincrement())
+  name                 String                @db.VarChar(255)
+  startTime            DateTime              @db.Time(0)
+  endTime              DateTime              @db.Time(0)
+  FnetStaffId          Int?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  isOvernight          Boolean               @default(false)
+  ffoodId              String?               @map("ffood_id") @db.Char(36)
+  gcpId                String?               @map("gcp_id") @db.VarChar(255)
+  staffs               Staff[]
+  shiftHandoverReports ShiftHandoverReport[]
 
   @@index([name])
   @@map("WorkShift")
@@ -652,6 +664,36 @@ model BirthdayTransaction {
   @@map("BirthdayTransaction")
 }
 
+model ShiftHandoverReport {
+  id          Int       @id @default(autoincrement())
+  date        DateTime  @db.Date
+  workShiftId Int
+  workShift   WorkShift @relation(fields: [workShiftId], references: [id])
+
+  fnetRevenue Float @default(0) @db.Double
+  gcpRevenue  Float @default(0) @db.Double
+  momoRevenue Float @default(0) @db.Double
+  cashRevenue Float @default(0) @db.Double
+
+  cashExpense Float @default(0) @db.Double
+
+  actualReceived Float @default(0) @db.Double
+
+  note            String? @db.Text
+  counterStaffId  Int?
+  kitchenStaffId  Int?
+  securityStaffId Int?
+
+  counterStaff  Staff? @relation("CounterShiftStaff", fields: [counterStaffId], references: [id])
+  kitchenStaff  Staff? @relation("KitchenShiftStaff", fields: [kitchenStaffId], references: [id])
+  securityStaff Staff? @relation("SecurityShiftStaff", fields: [securityStaffId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([date, workShiftId])
+}
+
 model ReportDetail {
   id       Int              @id @default(autoincrement())
   reportId Int
@@ -677,11 +719,20 @@ model Report {
   securityStaff   Staff          @relation("SecurityStaff", fields: [securityStaffId], references: [id])
 }
 
+enum ReportDetailType {
+  GIO
+  DICH_VU
+  MOMO
+  CHI
+  TONG
+}
+
 model HandoverReport {
   id                       Int                @id @default(autoincrement())
   date                     DateTime
   reportType               HandoverReportType
   note                     String?
+  metadata                 Json?              @db.Json
   createdAt                DateTime           @default(now())
   updatedAt                DateTime           @updatedAt
   afternoonStaffId         Int?
@@ -1063,14 +1114,6 @@ enum Shift {
   SANG
   CHIEU
   TOI
-}
-
-enum ReportDetailType {
-  GIO
-  DICH_VU
-  MOMO
-  CHI
-  TONG
 }
 
 enum HandoverReportType {

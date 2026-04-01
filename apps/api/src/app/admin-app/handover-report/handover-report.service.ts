@@ -96,6 +96,7 @@ export class HandoverReportService {
         afternoonStaffName: report.afternoonStaff?.fullName || null,
         eveningStaffId: report.eveningStaffId,
         eveningStaffName: report.eveningStaff?.fullName || null,
+        metadata: report.metadata,
         materials: report.materials
           .filter((material: any) => material.material?.reportType === report.reportType)
           .map((material: any) => ({
@@ -189,14 +190,14 @@ export class HandoverReportService {
     }
   }
 
-  async createMaterial(tenantId: string, body: any) {
+  async createMaterial(tenantId: string, payload: any) {
     try {
       const {
         materialName,
         materialType,
         isDeleted = false,
         isFood = true,
-      } = body;
+      } = payload;
 
       const gatewayClient = await this.getGatewayClient(tenantId);
 
@@ -237,7 +238,7 @@ export class HandoverReportService {
     }
   }
 
-  async updateMaterial(tenantId: string, body: any) {
+  async updateMaterial(tenantId: string, payload: any) {
     try {
       const {
         id,
@@ -245,7 +246,7 @@ export class HandoverReportService {
         materialType,
         isDeleted = false,
         isFood = true,
-      } = body;
+      } = payload;
 
       const gatewayClient = await this.getGatewayClient(tenantId);
 
@@ -321,32 +322,45 @@ export class HandoverReportService {
       let availableMaterials: any[] = [];
 
       if (currentReportResult.length > 0) {
-        const handoverReportId = currentReportResult[0].id;
-        
-        const reportStaffInfo = await gatewayClient.$queryRaw`
+      const reportStaffInfo = currentReportResult.length > 0 ? await gatewayClient.$queryRaw`
           SELECT 
             morningStaffId, afternoonStaffId, eveningStaffId,
             morningSubmissionCount, afternoonSubmissionCount, eveningSubmissionCount,
-            isMorningComplete, isAfternoonComplete, isEveningComplete
+            isMorningComplete, isAfternoonComplete, isEveningComplete,
+            metadata
           FROM HandoverReport
-          WHERE id = ${handoverReportId}
-        ` as any[];
+          WHERE id = ${currentReportResult[0].id}
+        ` as any[] : [];
 
-        staffInfo = reportStaffInfo[0] || {
-          morningStaffId: null,
-          afternoonStaffId: null,
-          eveningStaffId: null,
-        };
+      staffInfo = reportStaffInfo[0] || {
+        morningStaffId: null,
+        afternoonStaffId: null,
+        eveningStaffId: null,
+      };
 
-        submissionTracking = reportStaffInfo[0] ? {
-          morningSubmissionCount: reportStaffInfo[0].morningSubmissionCount,
-          afternoonSubmissionCount: reportStaffInfo[0].afternoonSubmissionCount,
-          eveningSubmissionCount: reportStaffInfo[0].eveningSubmissionCount,
-          isMorningComplete: reportStaffInfo[0].isMorningComplete,
-          isAfternoonComplete: reportStaffInfo[0].isAfternoonComplete,
-          isEveningComplete: reportStaffInfo[0].isEveningComplete,
-        } : null;
+      let metadata = reportStaffInfo[0]?.metadata || {};
+      if (typeof metadata === 'string') {
+        try {
+          metadata = JSON.parse(metadata);
+        } catch (e) {
+          metadata = {};
+        }
+      }
 
+      submissionTracking = reportStaffInfo[0] ? {
+        morningSubmissionCount: reportStaffInfo[0].morningSubmissionCount,
+        afternoonSubmissionCount: reportStaffInfo[0].afternoonSubmissionCount,
+        eveningSubmissionCount: reportStaffInfo[0].eveningSubmissionCount,
+        isMorningComplete: reportStaffInfo[0].isMorningComplete,
+        isAfternoonComplete: reportStaffInfo[0].isAfternoonComplete,
+        isEveningComplete: reportStaffInfo[0].isEveningComplete,
+        metadata: metadata
+      } : { metadata: {} };
+      }
+
+      if (currentReportResult.length > 0) {
+        const handoverReportId = currentReportResult[0].id;
+        
         const currentMaterialsResult = await gatewayClient.$queryRaw`
           SELECT 
             m.id as materialId,
@@ -409,80 +423,43 @@ export class HandoverReportService {
         evening: { beginning: 0, received: 0, issued: 0, ending: 0 },
       }));
 
+      // Fetch suggested beginning balances (from previous shift or previous day)
       const previousDate = new Date(currentDate);
       previousDate.setDate(previousDate.getDate() - 1);
       const formattedPreviousDate = previousDate.toISOString().split('T')[0];
 
-      const previousReportResult = await gatewayClient.$queryRaw`
+      const previousDayReport = await gatewayClient.$queryRaw`
         SELECT id FROM HandoverReport 
         WHERE DATE(date) = ${formattedPreviousDate}
         AND reportType = ${reportType}
         LIMIT 1
       ` as any[];
 
-      let previousEveningData: any[] = [];
-      if (previousReportResult.length > 0) {
-        const previousHandoverReportId = previousReportResult[0].id;
-        const previousMaterialsResult = await gatewayClient.$queryRaw`
-          SELECT 
-            m.id as materialId,
-            m.name as materialName,
-            hm.eveningEnding
+      let previousDayEveningEnding: any[] = [];
+      if (previousDayReport.length > 0) {
+        const results = await gatewayClient.$queryRaw`
+          SELECT m.id as materialId, hm.eveningEnding
           FROM HandoverMaterial hm
-          LEFT JOIN Material m ON hm.materialId = m.id
-          WHERE hm.handoverReportId = ${previousHandoverReportId}
-          AND m.reportType = ${reportType}
+          JOIN Material m ON hm.materialId = m.id
+          WHERE hm.handoverReportId = ${previousDayReport[0].id} AND m.reportType = ${reportType}
         ` as any[];
-        previousEveningData = previousMaterialsResult.map((material) => ({
-          id: material.materialId,
-          materialName: material.materialName,
-          ending: material.eveningEnding || 0,
-        }));
+        previousDayEveningEnding = results;
       }
-
-      let currentMorningData: any[] = [];
-      let currentAfternoonData: any[] = [];
-      if (currentReportResult.length > 0) {
-        const handoverReportId = currentReportResult[0].id;
-        const currentShiftMaterialsResult = await gatewayClient.$queryRaw`
-          SELECT 
-            m.id as materialId,
-            m.name as materialName,
-            hm.morningEnding,
-            hm.afternoonEnding
-          FROM HandoverMaterial hm
-          LEFT JOIN Material m ON hm.materialId = m.id
-          WHERE hm.handoverReportId = ${handoverReportId}
-          AND m.reportType = ${reportType}
-        ` as any[];
-
-        currentMorningData = currentShiftMaterialsResult.map((material) => ({
-          id: material.materialId,
-          materialName: material.materialName,
-          ending: material.morningEnding || 0,
-        }));
-        currentAfternoonData = currentShiftMaterialsResult.map((material) => ({
-          id: material.materialId,
-          materialName: material.materialName,
-          ending: material.afternoonEnding || 0,
-        }));
-      }
-
-      const isInitialData = currentReportResult.length === 0 && previousReportResult.length === 0;
 
       return {
         success: true,
         data: {
           materials: {
             currentDay: currentDayData,
-            previousDay: previousEveningData,
-            currentMorning: currentMorningData,
-            currentAfternoon: currentAfternoonData,
             availableMaterials: availableMaterials,
+            suggestedBeginning: {
+              SANG: previousDayEveningEnding.map(m => ({ id: m.materialId, ending: m.eveningEnding || 0 })),
+              CHIEU: currentDayData.map(m => ({ id: m.id, ending: m.morning.ending || 0 })),
+              TOI: currentDayData.map(m => ({ id: m.id, ending: m.afternoon.ending || 0 })),
+            }
           },
           staffInfo: staffInfo,
           submissionTracking: submissionTracking,
-          isInitialData: isInitialData,
         },
       };
 
@@ -492,270 +469,115 @@ export class HandoverReportService {
     }
   }
 
-  async submitReport(tenantId: string, body: any) {
+  async submitReport(tenantId: string, payload: any) {
     try {
-      const { date, shift, reportType, staffId, materials } = body;
+      const { date, shift, reportType, staffId, materials, step } = payload;
       const gatewayClient = await this.getGatewayClient(tenantId);
 
-      if (!date || !shift || !reportType || !staffId || !materials) {
-        throw new BadRequestException("Missing required fields");
-      }
-      if (isNaN(Number(staffId)) || Number(staffId) <= 0) {
-        throw new BadRequestException("Invalid staffId");
+      if (!date || !shift || !reportType || !staffId || !materials || !step) {
+        throw new BadRequestException("Missing required fields (including step)");
       }
 
       const currentTime = new Date();
       const dateVN = date;
 
       const existingReports = await gatewayClient.$queryRaw`
-        SELECT hr.id, hr.date, hr.reportType, DATE(hr.date) as dateVN
+        SELECT hr.id, hr.metadata
         FROM HandoverReport hr
         WHERE hr.reportType = ${reportType} AND DATE(hr.date) = ${dateVN}
-        ORDER BY hr.createdAt DESC
+        LIMIT 1
       ` as any[];
 
-      const existingReport = existingReports[0];
       let handoverReportId: number = 0;
+      let metadata: any = existingReports[0]?.metadata || {};
+      if (typeof metadata === 'string') {
+        try {
+          metadata = JSON.parse(metadata);
+        } catch (e) {
+          metadata = {};
+        }
+      }
 
       await gatewayClient.$transaction(async (tx) => {
-        if (existingReport) {
-          handoverReportId = existingReport.id;
-          
-          const currentReport = await tx.$queryRaw`
-            SELECT 
-              morningSubmissionCount, afternoonSubmissionCount, eveningSubmissionCount,
-              isMorningComplete, isAfternoonComplete, isEveningComplete
-            FROM HandoverReport 
-            WHERE id = ${handoverReportId}
-          ` as any[];
-
-          const reportData = currentReport[0];
-          const currentSubmissionCount =
-            shift === SHIFT_ENUM.SANG ? reportData.morningSubmissionCount :
-            shift === SHIFT_ENUM.CHIEU ? reportData.afternoonSubmissionCount : reportData.eveningSubmissionCount;
-
-          if (currentSubmissionCount >= 2) {
-            const isShiftComplete =
-              shift === SHIFT_ENUM.SANG ? reportData.isMorningComplete :
-              shift === SHIFT_ENUM.CHIEU ? reportData.isAfternoonComplete : reportData.isEveningComplete;
-
-            if (isShiftComplete) {
-              throw new BadRequestException(`Ca làm việc ${shift} cho ngày ${date} đã hoàn tất.`);
-            }
-          }
-
-          if (currentSubmissionCount >= 3) {
-            throw new BadRequestException(`Ca làm việc ${shift} cho ngày ${date} đạt tối đa.`);
-          }
-
-          const newSubmissionCount = currentSubmissionCount + 1;
-          const willBeComplete = newSubmissionCount >= 2;
-
-          if (shift === SHIFT_ENUM.SANG) {
-            await tx.$executeRaw`
-              UPDATE HandoverReport SET 
-                morningStaffId = ${Number(staffId)}, 
-                morningSubmissionCount = ${newSubmissionCount},
-                isMorningComplete = ${willBeComplete},
-                updatedAt = ${currentTime}
-              WHERE id = ${handoverReportId}
-            `;
-          } else if (shift === SHIFT_ENUM.CHIEU) {
-            await tx.$executeRaw`
-              UPDATE HandoverReport SET 
-                afternoonStaffId = ${Number(staffId)}, 
-                afternoonSubmissionCount = ${newSubmissionCount},
-                isAfternoonComplete = ${willBeComplete},
-                updatedAt = ${currentTime}
-              WHERE id = ${handoverReportId}
-            `;
-          } else {
-            await tx.$executeRaw`
-              UPDATE HandoverReport SET 
-                eveningStaffId = ${Number(staffId)}, 
-                eveningSubmissionCount = ${newSubmissionCount},
-                isEveningComplete = ${willBeComplete},
-                updatedAt = ${currentTime}
-              WHERE id = ${handoverReportId}
-            `;
-          }
-
-          if (currentSubmissionCount >= 2) {
-            const existingMaterials = await tx.$queryRaw`
-              SELECT hm.id, hm.materialId, m.name as materialName,
-                CASE 
-                  WHEN ${shift} = 'SANG' THEN (
-                    hm.morningBeginning IS NOT NULL AND 
-                    hm.morningReceived IS NOT NULL AND 
-                    hm.morningIssued IS NOT NULL AND 
-                    hm.morningEnding IS NOT NULL
-                  )
-                  WHEN ${shift} = 'CHIEU' THEN (
-                    hm.afternoonBeginning IS NOT NULL AND 
-                    hm.afternoonReceived IS NOT NULL AND 
-                    hm.afternoonIssued IS NOT NULL AND 
-                    hm.afternoonEnding IS NOT NULL
-                  )
-                  WHEN ${shift} = 'TOI' THEN (
-                    hm.eveningBeginning IS NOT NULL AND 
-                    hm.eveningReceived IS NOT NULL AND 
-                    hm.eveningIssued IS NOT NULL AND 
-                    hm.eveningEnding IS NOT NULL
-                  )
-                END as hasCompleteShiftData
-              FROM HandoverMaterial hm
-              LEFT JOIN Material m ON hm.materialId = m.id
-              WHERE hm.handoverReportId = ${handoverReportId}
-            ` as any[];
-
-            const hasCompleteData = existingMaterials.some((mat: any) => mat.hasCompleteShiftData);
-            if (hasCompleteData) {
-              throw new BadRequestException(`Ca làm việc ${shift} đã có dữ liệu hoàn tất.`);
-            }
-          }
-
-          for (const materialData of materials) {
-            if (!materialData.materialName) throw new BadRequestException('Material name required');
-
-            const mats = await tx.$queryRaw`SELECT id FROM Material WHERE name = ${materialData.materialName} LIMIT 1` as any[];
-            const materialRecord = mats[0];
-            if (!materialRecord?.id) throw new BadRequestException('Material not found: ' + materialData.materialName);
-
-            const existingMaterial = await tx.$queryRaw`
-              SELECT id FROM HandoverMaterial 
-              WHERE handoverReportId = ${handoverReportId} AND materialId = ${materialRecord.id}
-              LIMIT 1
-            ` as any[];
-
-            const beginning = parseFloat(materialData.beginning || 0);
-            const received = materialData.received === null || materialData.received === undefined ? 0 : parseFloat(materialData.received);
-            const issued = materialData.issued === null || materialData.issued === undefined ? 0 : parseFloat(materialData.issued);
-            const calculatedEnding = beginning + received - issued;
-
-            if (existingMaterial.length > 0) {
-              if (shift === SHIFT_ENUM.SANG) {
-                await tx.$executeRaw`
-                  UPDATE HandoverMaterial SET
-                    morningBeginning = ${beginning},
-                    morningReceived = ${materialData.received === null || materialData.received === undefined ? null : received},
-                    morningIssued = ${materialData.issued === null || materialData.issued === undefined ? null : issued},
-                    morningEnding = ${calculatedEnding},
-                    updatedAt = ${currentTime}
-                  WHERE id = ${existingMaterial[0].id}
-                `;
-              } else if (shift === SHIFT_ENUM.CHIEU) {
-                await tx.$executeRaw`
-                  UPDATE HandoverMaterial SET
-                    afternoonBeginning = ${beginning},
-                    afternoonReceived = ${materialData.received === null || materialData.received === undefined ? null : received},
-                    afternoonIssued = ${materialData.issued === null || materialData.issued === undefined ? null : issued},
-                    afternoonEnding = ${calculatedEnding},
-                    updatedAt = ${currentTime}
-                  WHERE id = ${existingMaterial[0].id}
-                `;
-              } else {
-                await tx.$executeRaw`
-                  UPDATE HandoverMaterial SET
-                    eveningBeginning = ${beginning},
-                    eveningReceived = ${materialData.received === null || materialData.received === undefined ? null : received},
-                    eveningIssued = ${materialData.issued === null || materialData.issued === undefined ? null : issued},
-                    eveningEnding = ${calculatedEnding},
-                    updatedAt = ${currentTime}
-                  WHERE id = ${existingMaterial[0].id}
-                `;
-              }
-            } else {
-              await tx.$executeRaw`
-                INSERT INTO HandoverMaterial (
-                  handoverReportId, materialId, 
-                  morningBeginning, morningReceived, morningIssued, morningEnding,
-                  afternoonBeginning, afternoonReceived, afternoonIssued, afternoonEnding,
-                  eveningBeginning, eveningReceived, eveningIssued, eveningEnding,
-                  createdAt, updatedAt
-                ) VALUES (
-                  ${handoverReportId}, ${materialRecord.id},
-                  ${shift === SHIFT_ENUM.SANG ? beginning : null},
-                  ${shift === SHIFT_ENUM.SANG ? (materialData.received === null || materialData.received === undefined ? null : received) : null},
-                  ${shift === SHIFT_ENUM.SANG ? (materialData.issued === null || materialData.issued === undefined ? null : issued) : null},
-                  ${shift === SHIFT_ENUM.SANG ? calculatedEnding : null},
-                  ${shift === SHIFT_ENUM.CHIEU ? beginning : null},
-                  ${shift === SHIFT_ENUM.CHIEU ? (materialData.received === null || materialData.received === undefined ? null : received) : null},
-                  ${shift === SHIFT_ENUM.CHIEU ? (materialData.issued === null || materialData.issued === undefined ? null : issued) : null},
-                  ${shift === SHIFT_ENUM.CHIEU ? calculatedEnding : null},
-                  ${shift === SHIFT_ENUM.TOI ? beginning : null},
-                  ${shift === SHIFT_ENUM.TOI ? (materialData.received === null || materialData.received === undefined ? null : received) : null},
-                  ${shift === SHIFT_ENUM.TOI ? (materialData.issued === null || materialData.issued === undefined ? null : issued) : null},
-                  ${shift === SHIFT_ENUM.TOI ? calculatedEnding : null},
-                  ${currentTime}, ${currentTime}
-                )
-              `;
-            }
-          }
+        if (existingReports.length > 0) {
+          handoverReportId = existingReports[0].id;
         } else {
+          // Create new report if not exists
           const tdate = new Date(date);
-          if (shift === SHIFT_ENUM.SANG) {
-            await tx.$executeRaw`
-              INSERT INTO HandoverReport (
-                date, reportType, note, morningStaffId, 
-                morningSubmissionCount, createdAt, updatedAt
-              ) VALUES (${tdate}, ${reportType}, NULL, ${Number(staffId)}, 1, ${currentTime}, ${currentTime})
-            `;
-          } else if (shift === SHIFT_ENUM.CHIEU) {
-            await tx.$executeRaw`
-              INSERT INTO HandoverReport (
-                date, reportType, note, afternoonStaffId, 
-                afternoonSubmissionCount, createdAt, updatedAt
-              ) VALUES (${tdate}, ${reportType}, NULL, ${Number(staffId)}, 1, ${currentTime}, ${currentTime})
-            `;
+          await tx.$executeRaw`
+            INSERT INTO HandoverReport (date, reportType, createdAt, updatedAt)
+            VALUES (${tdate}, ${reportType}, ${currentTime}, ${currentTime})
+          `;
+          const created = await tx.$queryRaw`SELECT id FROM HandoverReport WHERE DATE(date) = ${dateVN} AND reportType = ${reportType} ORDER BY id DESC LIMIT 1` as any[];
+          handoverReportId = created[0].id;
+        }
+
+        // Update Metadata
+        if (!metadata[shift]) metadata[shift] = { start: null, end: null };
+        if (step === 'START') {
+          metadata[shift].start = { staffId, at: currentTime, note: payload.note || '' };
+        } else {
+          metadata[shift].end = { staffId, at: currentTime, note: payload.note || '' };
+        }
+
+        // Update specific Staff ID columns for backward compatibility if possible
+        let updateFields = "";
+        if (shift === SHIFT_ENUM.SANG) {
+          updateFields = `morningStaffId = ${staffId}, morningSubmissionCount = morningSubmissionCount + 1, isMorningComplete = ${step === 'END'}`;
+        } else if (shift === SHIFT_ENUM.CHIEU) {
+          updateFields = `afternoonStaffId = ${staffId}, afternoonSubmissionCount = afternoonSubmissionCount + 1, isAfternoonComplete = ${step === 'END'}`;
+        } else {
+          updateFields = `eveningStaffId = ${staffId}, eveningSubmissionCount = eveningSubmissionCount + 1, isEveningComplete = ${step === 'END'}`;
+        }
+
+        await tx.$executeRawUnsafe(`UPDATE HandoverReport SET ${updateFields}, metadata = ?, updatedAt = ? WHERE id = ?`, 
+          JSON.stringify(metadata), currentTime, handoverReportId
+        );
+
+        for (const materialData of materials) {
+          const materialId = materialData.id;
+          const beginning = parseFloat(materialData.beginning || 0);
+          const received = parseFloat(materialData.received || 0);
+          const issued = parseFloat(materialData.issued || 0);
+          
+          if (received < 0 || issued < 0) throw new BadRequestException(`Amount cannot be negative for ${materialData.materialName || materialId}`);
+          
+          const ending = beginning + received - issued;
+          if (ending < 0 && step === 'END') throw new BadRequestException(`Ending balance cannot be negative for ${materialData.materialName || materialId}`);
+
+          const existingHM = await tx.$queryRaw`SELECT id FROM HandoverMaterial WHERE handoverReportId = ${handoverReportId} AND materialId = ${materialId} LIMIT 1` as any[];
+
+          if (existingHM.length > 0) {
+            let sql = "";
+            if (shift === SHIFT_ENUM.SANG) {
+               sql = step === 'START' 
+                 ? `UPDATE HandoverMaterial SET morningBeginning = ${beginning}, updatedAt = NOW() WHERE id = ${existingHM[0].id}`
+                 : `UPDATE HandoverMaterial SET morningBeginning = ${beginning}, morningReceived = ${received}, morningIssued = ${issued}, morningEnding = ${ending}, updatedAt = NOW() WHERE id = ${existingHM[0].id}`;
+            } else if (shift === SHIFT_ENUM.CHIEU) {
+               sql = step === 'START'
+                 ? `UPDATE HandoverMaterial SET afternoonBeginning = ${beginning}, updatedAt = NOW() WHERE id = ${existingHM[0].id}`
+                 : `UPDATE HandoverMaterial SET afternoonBeginning = ${beginning}, afternoonReceived = ${received}, afternoonIssued = ${issued}, afternoonEnding = ${ending}, updatedAt = NOW() WHERE id = ${existingHM[0].id}`;
+            } else {
+               sql = step === 'START'
+                 ? `UPDATE HandoverMaterial SET eveningBeginning = ${beginning}, updatedAt = NOW() WHERE id = ${existingHM[0].id}`
+                 : `UPDATE HandoverMaterial SET eveningBeginning = ${beginning}, eveningReceived = ${received}, eveningIssued = ${issued}, eveningEnding = ${ending}, updatedAt = NOW() WHERE id = ${existingHM[0].id}`;
+            }
+            await tx.$executeRawUnsafe(sql);
           } else {
-            await tx.$executeRaw`
-              INSERT INTO HandoverReport (
-                date, reportType, note, eveningStaffId, 
-                eveningSubmissionCount, createdAt, updatedAt
-              ) VALUES (${tdate}, ${reportType}, NULL, ${Number(staffId)}, 1, ${currentTime}, ${currentTime})
-            `;
-          }
-
-          const createdReport = await tx.$queryRaw`
-            SELECT id FROM HandoverReport 
-            WHERE DATE(date) = ${dateVN} AND reportType = ${reportType}
-            ORDER BY createdAt DESC LIMIT 1
-          ` as any[];
-          handoverReportId = createdReport[0].id;
-
-          for (const materialData of materials) {
-            const mats = await tx.$queryRaw`SELECT id FROM Material WHERE name = ${materialData.materialName} LIMIT 1` as any[];
-            const materialRecord = mats[0];
-            
-            const beginning = parseFloat(materialData.beginning || 0);
-            const received = materialData.received === null || materialData.received === undefined ? 0 : parseFloat(materialData.received);
-            const issued = materialData.issued === null || materialData.issued === undefined ? 0 : parseFloat(materialData.issued);
-            const calculatedEnding = beginning + received - issued;
-
-            await tx.$executeRaw`
-              INSERT INTO HandoverMaterial (
-                handoverReportId, materialId, 
-                morningBeginning, morningReceived, morningIssued, morningEnding,
-                afternoonBeginning, afternoonReceived, afternoonIssued, afternoonEnding,
-                eveningBeginning, eveningReceived, eveningIssued, eveningEnding,
-                createdAt, updatedAt
-              ) VALUES (
-                ${handoverReportId}, ${materialRecord?.id || null},
-                ${shift === SHIFT_ENUM.SANG ? beginning : null},
-                ${shift === SHIFT_ENUM.SANG ? (materialData.received === null || materialData.received === undefined ? null : received) : null},
-                ${shift === SHIFT_ENUM.SANG ? (materialData.issued === null || materialData.issued === undefined ? null : issued) : null},
-                ${shift === SHIFT_ENUM.SANG ? calculatedEnding : null},
-                ${shift === SHIFT_ENUM.CHIEU ? beginning : null},
-                ${shift === SHIFT_ENUM.CHIEU ? (materialData.received === null || materialData.received === undefined ? null : received) : null},
-                ${shift === SHIFT_ENUM.CHIEU ? (materialData.issued === null || materialData.issued === undefined ? null : issued) : null},
-                ${shift === SHIFT_ENUM.CHIEU ? calculatedEnding : null},
-                ${shift === SHIFT_ENUM.TOI ? beginning : null},
-                ${shift === SHIFT_ENUM.TOI ? (materialData.received === null || materialData.received === undefined ? null : received) : null},
-                ${shift === SHIFT_ENUM.TOI ? (materialData.issued === null || materialData.issued === undefined ? null : issued) : null},
-                ${shift === SHIFT_ENUM.TOI ? calculatedEnding : null},
-                ${currentTime}, ${currentTime}
-              )
-            `;
+            // Insert new HandoverMaterial
+            let cols = "handoverReportId, materialId, createdAt, updatedAt";
+            let vals = `${handoverReportId}, ${materialId}, NOW(), NOW()`;
+            if (shift === SHIFT_ENUM.SANG) {
+              cols += ", morningBeginning" + (step === 'END' ? ", morningReceived, morningIssued, morningEnding" : "");
+              vals += `, ${beginning}` + (step === 'END' ? `, ${received}, ${issued}, ${ending}` : "");
+            } else if (shift === SHIFT_ENUM.CHIEU) {
+              cols += ", afternoonBeginning" + (step === 'END' ? ", afternoonReceived, afternoonIssued, afternoonEnding" : "");
+              vals += `, ${beginning}` + (step === 'END' ? `, ${received}, ${issued}, ${ending}` : "");
+            } else {
+              cols += ", eveningBeginning" + (step === 'END' ? ", eveningReceived, eveningIssued, eveningEnding" : "");
+              vals += `, ${beginning}` + (step === 'END' ? `, ${received}, ${issued}, ${ending}` : "");
+            }
+            await tx.$executeRawUnsafe(`INSERT INTO HandoverMaterial (${cols}) VALUES (${vals})`);
           }
         }
       });

@@ -121,6 +121,14 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
+exports.Prisma.SystemConfigScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  value: 'value',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.RankScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -636,6 +644,24 @@ exports.Prisma.BirthdayTransactionScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.ShiftHandoverReportScalarFieldEnum = {
+  id: 'id',
+  date: 'date',
+  workShiftId: 'workShiftId',
+  fnetRevenue: 'fnetRevenue',
+  gcpRevenue: 'gcpRevenue',
+  momoRevenue: 'momoRevenue',
+  cashRevenue: 'cashRevenue',
+  cashExpense: 'cashExpense',
+  actualReceived: 'actualReceived',
+  note: 'note',
+  counterStaffId: 'counterStaffId',
+  kitchenStaffId: 'kitchenStaffId',
+  securityStaffId: 'securityStaffId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.ReportDetailScalarFieldEnum = {
   id: 'id',
   reportId: 'reportId',
@@ -661,6 +687,7 @@ exports.Prisma.HandoverReportScalarFieldEnum = {
   date: 'date',
   reportType: 'reportType',
   note: 'note',
+  metadata: 'metadata',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   afternoonStaffId: 'afternoonStaffId',
@@ -964,6 +991,11 @@ exports.Prisma.NullableJsonNullValueInput = {
   JsonNull: Prisma.JsonNull
 };
 
+exports.Prisma.SystemConfigOrderByRelevanceFieldEnum = {
+  key: 'key',
+  value: 'value'
+};
+
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
@@ -1148,6 +1180,10 @@ exports.Prisma.BirthdayTierOrderByRelevanceFieldEnum = {
 
 exports.Prisma.BirthdayTransactionOrderByRelevanceFieldEnum = {
   description: 'description'
+};
+
+exports.Prisma.ShiftHandoverReportOrderByRelevanceFieldEnum = {
+  note: 'note'
 };
 
 exports.Prisma.ReportOrderByRelevanceFieldEnum = {
@@ -1457,6 +1493,7 @@ exports.RuleActionType = exports.$Enums.RuleActionType = {
 };
 
 exports.Prisma.ModelName = {
+  SystemConfig: 'SystemConfig',
   Rank: 'Rank',
   Game: 'Game',
   CheckInResult: 'CheckInResult',
@@ -1499,6 +1536,7 @@ exports.Prisma.ModelName = {
   BirthdayTier: 'BirthdayTier',
   UserBirthdayProgress: 'UserBirthdayProgress',
   BirthdayTransaction: 'BirthdayTransaction',
+  ShiftHandoverReport: 'ShiftHandoverReport',
   ReportDetail: 'ReportDetail',
   Report: 'Report',
   HandoverReport: 'HandoverReport',

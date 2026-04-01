@@ -33,20 +33,20 @@ export class HandoverReportController {
 
   @Post('materials')
   async createMaterial(
-    @Body() body: any,
+    @Body() payload: any,
     @Headers('x-tenant-id') tenantId: string,
   ) {
     if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
-    return this.handoverReportService.createMaterial(tenantId, body);
+    return this.handoverReportService.createMaterial(tenantId, payload);
   }
 
   @Put('materials')
   async updateMaterial(
-    @Body() body: any,
+    @Body() payload: any,
     @Headers('x-tenant-id') tenantId: string,
   ) {
     if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
-    return this.handoverReportService.updateMaterial(tenantId, body);
+    return this.handoverReportService.updateMaterial(tenantId, payload);
   }
 
   @Get('get-report-data')
@@ -64,10 +64,10 @@ export class HandoverReportController {
 
   @Post('submit-report')
   async submitReport(
-    @Body() body: any,
+    @Body() payload: any,
     @Headers('x-tenant-id') tenantId: string,
   ) {
     if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
-    return this.handoverReportService.submitReport(tenantId, body);
+    return this.handoverReportService.submitReport(tenantId, payload);
   }
 }
