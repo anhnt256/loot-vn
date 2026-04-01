@@ -57,9 +57,9 @@ export class ConfigService {
     for (const [key, value] of Object.entries(updates)) {
       const valStr = String(value);
       await gateway.$executeRawUnsafe(`
-        INSERT INTO SystemConfig (\`key\`, \`value\`) 
-        VALUES (?, ?) 
-        ON DUPLICATE KEY UPDATE \`value\` = ?
+        INSERT INTO SystemConfig (\`key\`, \`value\`, \`createdAt\`, \`updatedAt\`) 
+        VALUES (?, ?, NOW(), NOW()) 
+        ON DUPLICATE KEY UPDATE \`value\` = ?, \`updatedAt\` = NOW()
       `, key, valStr, valStr);
     }
 

@@ -161,9 +161,15 @@ const ComputerDetailDrawer: React.FC<ComputerDetailDrawerProps> = ({ computer, o
   };
 
   // Helper values
-  const memTotal = Number(netInfo.mem_total || 0) / 1024;
-  const memUsed = Number(netInfo.mem_used || 0) / 1024;
-  const memAvailable = Number(netInfo.mem_available || 0) / 1024;
+  const rawUsed = netInfo.ram_used || netInfo.mem_used || 0;
+  const rawAvailable = netInfo.ram_available || netInfo.mem_available || 0;
+  
+  // Decide unit based on value (if > 100, assume MB and convert to GB; if < 100, assume already in GB)
+  const memUsed = Number(rawUsed) > 100 ? Number(rawUsed) / 1024 : Number(rawUsed);
+  const memAvailable = Number(rawAvailable) > 100 ? Number(rawAvailable) / 1024 : Number(rawAvailable);
+
+  const netDownload = netInfo.net_download || netInfo.net_download_rate || '0';
+  const netUpload = netInfo.net_upload || netInfo.net_upload_rate || '0';
 
   const Tab1Content = () => (
     <div className="mt-4">
@@ -215,7 +221,7 @@ const ComputerDetailDrawer: React.FC<ComputerDetailDrawerProps> = ({ computer, o
             {netInfo.Memory || 'Generic Memory'}
           </div>
           <div className="text-[11px] text-gray-300">
-            Load: <span className="text-pink-400 font-bold">{netInfo.mem_load || '0'}%</span>
+            Load: <span className="text-pink-400 font-bold">{netInfo.ram_load || netInfo.mem_load || '0'}%</span>
           </div>
           <div className="text-[11px] text-gray-300">
             Đã dùng: <span className="text-yellow-500 font-bold">{memUsed > 0 ? memUsed.toFixed(2) : '0'}GB</span>
@@ -260,10 +266,10 @@ const ComputerDetailDrawer: React.FC<ComputerDetailDrawerProps> = ({ computer, o
             {netInfo.Network || 'Ethernet'}
           </div>
           <div className="text-[11px] text-gray-300">
-            Download: <span className="text-green-400 font-bold">{netInfo.net_download_rate || '0'}</span>
+            Download: <span className="text-green-400 font-bold">{netDownload}</span>
           </div>
           <div className="text-[11px] text-gray-300">
-            Upload: <span className="text-blue-400 font-bold">{netInfo.net_upload_rate || '0'}</span>
+            Upload: <span className="text-blue-400 font-bold">{netUpload}</span>
           </div>
         </div>
 

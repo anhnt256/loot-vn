@@ -16,6 +16,6 @@ export class ComputerController {
     // Determine the branch to use (priority: query param -> cookie -> x-tenant-id -> default)
     const resolvedBranch = branch || req.cookies?.['branch'] || tenantId || 'default';
     
-    return this.computerService.getComputers(tenantId, resolvedBranch);
+    return this.computerService.getComputers(tenantId);
   }
 }

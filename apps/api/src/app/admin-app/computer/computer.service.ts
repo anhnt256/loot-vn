@@ -50,7 +50,7 @@ export class ComputerService {
     return { gateway: gateway as any, fnet };
   }
 
-  private async calculateActiveUsersInfo(fnetDB: any, gatewayDB: any, listUsers: number[], branch: string, spendPerRound: number, isDebug = false, debugUsers: number[] = []) {
+  private async calculateActiveUsersInfo(fnetDB: any, gatewayDB: any, listUsers: number[], spendPerRound: number, isDebug = false, debugUsers: number[] = []) {
     const finalListUsers = isDebug ? [...new Set([...listUsers, ...debugUsers])] : listUsers;
     if (finalListUsers.length === 0) return [];
 
@@ -301,7 +301,7 @@ export class ComputerService {
     return results;
   }
 
-  async getComputers(tenantId: string, branch: string) {
+  async getComputers(tenantId: string) {
     const { gateway, fnet } = await this.getClients(tenantId);
     
     const configs = await this.configService.getConfigs(tenantId);
@@ -315,19 +315,19 @@ export class ComputerService {
       executeQueryWithTimeout(async () => {
         return (await fnet.$queryRawUnsafe(`
         SELECT 
-          s.MachineName, s.EnterDate, s.EnterTime, s.Status, s.UserId, u.UserType, cs.NetInfo, mg.MachineGroupName, mg.PriceDefault, pm.Price
+          s.MachineName, s.EnterDate, s.EnterTime, s.Status, s.UserId, u.UserType, cs.NetInfo, mg.MachineGroupName, mg.PriceDefault, pm.Price, d.Status as DeviceStatus
         FROM systemlogtb s
         LEFT JOIN usertb u ON s.UserId = u.UserId
         LEFT JOIN clientsystb cs ON s.MachineName = cs.PCName
         LEFT JOIN machinegrouptb mg ON u.MachineGroupId = mg.MachineGroupId
         LEFT JOIN pricemachinetb pm ON mg.MachineGroupId = pm.MachineGroupId AND pm.PriceId = 1
+        LEFT JOIN dptb d ON s.MachineName = d.ComputerName
         INNER JOIN (
           SELECT MachineName, MAX(SystemLogId) AS MaxSystemLogId
           FROM systemlogtb
           WHERE MachineName NOT LIKE '${computerPrefix}-%' AND EnterDate >= DATE_SUB(CURDATE(), INTERVAL 1 DAY)
           GROUP BY MachineName
         ) latest_log ON s.MachineName = latest_log.MachineName AND s.SystemLogId = latest_log.MaxSystemLogId
-        WHERE s.MachineName NOT LIKE '${computerPrefix}-%' AND s.EnterDate >= DATE_SUB(CURDATE(), INTERVAL 1 DAY)
         ORDER BY s.MachineName ASC;
       `)) as any[];
       }, 8000),
@@ -395,9 +395,9 @@ export class ComputerService {
       : [];
 
     let usersInfo: any[] = [];
-    if (activeUserIds.length > 0 && branch) {
+    if (activeUserIds.length > 0) {
       try {
-        usersInfo = (await executeQueryWithTimeout(() => this.calculateActiveUsersInfo(fnet, gateway, activeUserIds, branch, spendPerRound), 10000)) || [];
+        usersInfo = (await executeQueryWithTimeout(() => this.calculateActiveUsersInfo(fnet, gateway, activeUserIds, spendPerRound), 10000)) || [];
       } catch (error) {
         usersInfo = [];
       }
@@ -425,7 +425,7 @@ export class ComputerService {
       const computerStatusData = Array.isArray(computerStatus) && computerStatus.length > 0
         ? computerStatus.find((status: any) => status.MachineName === name)
         : null;
-      const { UserId, Status, UserType, NetInfo } = computerStatusData || {};
+      const { UserId, Status, UserType, NetInfo, DeviceStatus } = computerStatusData || {};
 
       const userInfo = UserId ? userInfoMap.get(parseInt(UserId, 10)) : null;
       const machineDetail = machineDetailsMap.get(name) || {};
@@ -441,7 +441,7 @@ export class ComputerService {
       results.push({
         id: gatewayComputer?.id || null,
         name: computer.name,
-        status: Status || "UNKNOWN",
+        status: Status !== undefined && Status !== null ? Status : (DeviceStatus !== undefined && DeviceStatus !== null ? DeviceStatus : "UNKNOWN"),
         userId: UserId || null,
         userName: userInfo?.userName || null,
         userType: userInfo?.userType ?? UserType ?? null,
