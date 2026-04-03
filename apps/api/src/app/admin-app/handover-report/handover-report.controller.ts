@@ -27,7 +27,6 @@ export class HandoverReportController {
     @Headers('x-tenant-id') tenantId: string,
   ) {
     if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
-    if (!reportType) throw new BadRequestException('reportType is missing');
     return this.handoverReportService.getMaterials(tenantId, reportType);
   }
 

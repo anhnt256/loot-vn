@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { format } from "date-fns";
-import { SearchOutlined, DownloadOutlined, PlusOutlined, SettingOutlined } from "@ant-design/icons";
+import { SearchOutlined, DownloadOutlined, PlusOutlined } from "@ant-design/icons";
 import { DatePicker, Select, Button, Table, Tabs } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 
 import { REPORT_TYPE_ENUM, REPORT_TYPE_LABELS, SHIFT_LABELS, SHIFT_ENUM, ReportType } from "./constants";
-import MaterialManagementDrawer from "./components/MaterialManagementDrawer";
 import SendReportDrawer from "./components/SendReportDrawer";
 import { apiClient } from "@gateway-workspace/shared/utils/client";
 
@@ -34,7 +33,6 @@ export default function HandoverReports() {
   const [reports, setReports] = useState<ReportData[]>([]);
   const [loading, setLoading] = useState(false);
   
-  const [isMaterialDrawerOpen, setIsMaterialDrawerOpen] = useState(false);
   const [isSendReportDrawerOpen, setIsSendReportDrawerOpen] = useState(false);
 
   const fetchReports = async () => {
@@ -184,13 +182,6 @@ export default function HandoverReports() {
         </h1>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <Button 
-            type="default" 
-            icon={<SettingOutlined />} 
-            onClick={() => setIsMaterialDrawerOpen(true)}
-          >
-            Quản lý Nguyên vật liệu
-          </Button>
-          <Button 
             onClick={handleExportCSV}
             icon={<DownloadOutlined />}
             disabled={!reports || reports.length === 0}
@@ -282,10 +273,6 @@ export default function HandoverReports() {
         )}
       </div>
 
-      <MaterialManagementDrawer
-        isOpen={isMaterialDrawerOpen}
-        onClose={() => setIsMaterialDrawerOpen(false)}
-      />
 
       <SendReportDrawer
         isOpen={isSendReportDrawerOpen}

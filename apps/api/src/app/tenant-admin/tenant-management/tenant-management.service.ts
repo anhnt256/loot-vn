@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import * as crypto from 'crypto';
-import { TenantPrismaService } from '../../database/prisma.service';
+import { MasterPrismaService } from '../../database/prisma.service';
 
 @Injectable()
 export class TenantManagementService {
-  constructor(private prisma: TenantPrismaService) {}
+  constructor(private masterPrisma: MasterPrismaService) {}
 
   async findAll() {
-    const list = await this.prisma.tenant.findMany({
+    const list = await this.masterPrisma.tenant.findMany({
       where: { deletedAt: null },
       orderBy: { createdAt: 'desc' },
     });
@@ -18,7 +18,7 @@ export class TenantManagementService {
   }
 
   async findOne(id: string) {
-    const tenant = await this.prisma.tenant.findUnique({ where: { id } });
+    const tenant = await this.masterPrisma.tenant.findUnique({ where: { id } });
     if (!tenant) return null;
     const normalized = this.normalizeClients(tenant.clients);
     return this.toTenantResponse(tenant, normalized);
@@ -57,7 +57,7 @@ export class TenantManagementService {
     const { status, dbUrl, fnetUrl, domainPrefix, ...rest } = data;
     const { keyId, fullKey, secretHash } = this.generateStripeStyleKey();
 
-    const tenant = await this.prisma.tenant.create({
+    const tenant = await this.masterPrisma.tenant.create({
       data: {
         ...rest,
         dbUrl: dbUrl !== undefined && dbUrl !== '' ? dbUrl : null,
@@ -70,7 +70,7 @@ export class TenantManagementService {
       },
     });
 
-    await this.prisma.apiKey.create({
+    await this.masterPrisma.apiKey.create({
       data: {
         keyId,
         secretHash,
@@ -90,7 +90,7 @@ export class TenantManagementService {
 
   async update(id: string, data: any) {
     const { status, dbUrl, fnetUrl, domainPrefix, clients: clientsPayload, ...rest } = data;
-    const existing = await this.prisma.tenant.findUnique({ where: { id }, select: { clients: true } });
+    const existing = await this.masterPrisma.tenant.findUnique({ where: { id }, select: { clients: true } });
     const current = this.normalizeClients(existing?.clients);
 
     const updateData: Record<string, unknown> = { ...rest, updatedAt: new Date() };
@@ -115,7 +115,7 @@ export class TenantManagementService {
       };
     }
 
-    await this.prisma.tenant.update({
+    await this.masterPrisma.tenant.update({
       where: { id },
       data: updateData,
     });
@@ -124,7 +124,7 @@ export class TenantManagementService {
   }
 
   async remove(id: string) {
-    return this.prisma.tenant.update({
+    return this.masterPrisma.tenant.update({
       where: { id },
       data: {
         deletedAt: new Date(),
@@ -133,14 +133,14 @@ export class TenantManagementService {
   }
 
   async generateApiKey(id: string) {
-    const tenant = await this.prisma.tenant.findUnique({ where: { id } });
+    const tenant = await this.masterPrisma.tenant.findUnique({ where: { id } });
     if (!tenant) throw new Error('Tenant not found');
 
     const { keyId, fullKey, secretHash } = this.generateStripeStyleKey();
 
     // Revoke old keys for this tenant if needed, or just add a new one
     // For now, we'll just add a new one and update the tenant's primary key
-    await this.prisma.tenant.update({
+    await this.masterPrisma.tenant.update({
       where: { id },
       data: {
         apiKey: fullKey,
@@ -148,7 +148,7 @@ export class TenantManagementService {
       },
     });
 
-    await this.prisma.apiKey.create({
+    await this.masterPrisma.apiKey.create({
       data: {
         keyId,
         secretHash,

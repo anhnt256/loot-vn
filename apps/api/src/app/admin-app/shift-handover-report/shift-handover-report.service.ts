@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common';
-import { GatewayPrismaService, TenantPrismaService } from '../../database/prisma.service';
+import { TenantPrismaService, MasterPrismaService } from '../../database/prisma.service';
 import { getTenantDbUrl } from '../../database/tenant-gateway.service';
 import { CreateShiftReportDto } from './dto/create-shift-report.dto';
 import { FilterShiftReportDto } from './dto/filter-shift-report.dto';
@@ -12,16 +12,16 @@ import { getFnetDB } from '../../lib/db';
 @Injectable()
 export class ShiftHandoverReportService {
   constructor(
-    private readonly tenantPrisma: TenantPrismaService,
-    private readonly gatewayPrisma: GatewayPrismaService
+    private readonly masterPrisma: MasterPrismaService,
+    private readonly tenantPrisma: TenantPrismaService
   ) {}
 
   private async getGatewayClient(tenantId: string) {
-    let tenant = await this.tenantPrisma.tenant.findUnique({
+    let tenant = await this.masterPrisma.tenant.findUnique({
       where: { id: tenantId, deletedAt: null },
     });
     if (!tenant) {
-      tenant = await this.tenantPrisma.tenant.findFirst({
+      tenant = await this.masterPrisma.tenant.findFirst({
         where: { tenantId: tenantId, deletedAt: null },
       });
     }
@@ -30,7 +30,7 @@ export class ShiftHandoverReportService {
     const dbUrl = getTenantDbUrl(tenant);
     if (!dbUrl) throw new BadRequestException('Tenant chưa cấu hình DB URL');
 
-    return await this.gatewayPrisma.getClient(dbUrl);
+    return await this.tenantPrisma.getClient(dbUrl);
   }
 
   async create(tenantId: string, payload: CreateShiftReportDto) {
@@ -71,8 +71,8 @@ export class ShiftHandoverReportService {
 
   async getAutofillData(tenantId: string, dateStr: string, workShiftId: number) {
     try {
-      const tenant = await this.tenantPrisma.tenant.findUnique({ where: { id: tenantId, deletedAt: null } })
-        || await this.tenantPrisma.tenant.findFirst({ where: { tenantId: tenantId, deletedAt: null } });
+      const tenant = await this.masterPrisma.tenant.findUnique({ where: { id: tenantId, deletedAt: null } })
+        || await this.masterPrisma.tenant.findFirst({ where: { tenantId: tenantId, deletedAt: null } });
       if (!tenant) throw new BadRequestException('Tenant không hợp lệ');
 
       const gatewayClient = await this.getGatewayClient(tenantId);

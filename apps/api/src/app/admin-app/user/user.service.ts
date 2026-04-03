@@ -1,20 +1,20 @@
 import { Injectable, InternalServerErrorException, NotFoundException, BadRequestException } from '@nestjs/common';
-import { GatewayPrismaService, TenantPrismaService } from '../../database/prisma.service';
+import { TenantPrismaService, MasterPrismaService } from '../../database/prisma.service';
 import { getTenantDbUrl } from '../../database/tenant-gateway.service';
 
 @Injectable()
 export class UserService {
   constructor(
-    private readonly tenantPrisma: TenantPrismaService,
-    private readonly gatewayPrisma: GatewayPrismaService
+    private readonly masterPrisma: MasterPrismaService,
+    private readonly tenantPrisma: TenantPrismaService
   ) {}
 
   private async getGatewayClient(tenantId: string) {
-    let tenant = await this.tenantPrisma.tenant.findUnique({
+    let tenant = await this.masterPrisma.tenant.findUnique({
       where: { id: tenantId, deletedAt: null },
     });
     if (!tenant) {
-      tenant = await this.tenantPrisma.tenant.findFirst({
+      tenant = await this.masterPrisma.tenant.findFirst({
         where: { tenantId: tenantId, deletedAt: null },
       });
     }
@@ -23,7 +23,7 @@ export class UserService {
     const dbUrl = getTenantDbUrl(tenant);
     if (!dbUrl) throw new BadRequestException('Tenant chưa cấu hình DB URL');
 
-    return await this.gatewayPrisma.getClient(dbUrl);
+    return await this.tenantPrisma.getClient(dbUrl);
   }
 
   async updateNote(tenantId: string, userId: number, note: string) {
@@ -52,7 +52,7 @@ export class UserService {
       }
 
       const updatedUser = await gatewayClient.user.update({
-        where: { id: user.id },
+        where: { userId: user.userId },
         data: { note },
       });
 
@@ -86,7 +86,7 @@ export class UserService {
       }
 
       const updatedUser = await gatewayClient.user.update({
-        where: { id: user.id },
+        where: { userId: user.userId },
         data: { isUseApp },
       });
 

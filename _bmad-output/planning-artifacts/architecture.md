@@ -8,15 +8,97 @@ stepsCompleted:
   - step-06-structure.md
   - step-07-validation.md
   - step-08-complete.md
+  - step-01b-continue.md
+  - step-02-context-v2.md
+  - step-04-decisions-v2.md
 inputDocuments:
   - _bmad-output/planning-artifacts/prd.md
 workflowType: 'architecture'
 project_name: 'loot-vn'
 user_name: 'ChickFool'
 date: '2026-03-26T03:09:00+07:00'
-status: 'complete'
-completedAt: '2026-03-26T03:31:00+07:00'
+status: 'in-progress'
+updatedAt: '2026-04-03T13:30:00+07:00'
+lastStep: 'step-04'
+feature: 'Material & Inventory Management Refactor'
 ---
+
+# (Existing content continues...)
+
+## Core Architectural Decisions (Phase 2: Inventory)
+
+### 1. Decision Priority Analysis
+
+**Critical Decisions (Block Implementation):**
+- **Temporal Modeling (Chốt hạ Versioning):** Tất cả 'Công thức' (Recipe) và 'Giá bán' (Product Price) đều phải sử dụng version dựa trên thời gian (`effectiveFrom`) để bảo vệ tính chính xác của báo cáo lịch sử.
+- **Atomic Stock Deduction:** Luồng trừ tồn kho được tích hợp real-time vào `Order Completion Workflow`, bọc trong Database Transaction (`$transaction`) để tránh Race Condition.
+- **Database Location:** Toàn bộ bảng mới nằm trong Schema `new/schema.prisma` (Gateway DB).
+
+### 2. Data Architecture Details
+
+Theo yêu cầu của ChickFool, đây là bản vẽ kỹ thuật cho các Model Prisma nghiệp vụ:
+
+#### Draft Schema Prisma (Phase 2)
+```prisma
+// Material: Nguyên vật liệu thô (Unit: gam, ml, chai, ...)
+model Material {
+  id                String   @id @default(uuid())
+  tenantId          String   @map("tenant_id")
+  sku               String   @unique
+  name              String
+  baseUnit          String   @map("base_unit") 
+  quantityInStock   Decimal  @default(0) @map("quantity_in_stock") @db.Decimal(10, 2)
+  minStockLevel     Decimal  @default(0) @map("min_stock_level") @db.Decimal(10, 2)
+  isActive          Boolean  @default(true) @map("is_active")
+  
+  conversions       MaterialUnitConversion[]
+  recipeItems       RecipeItem[]
+  receipts          InventoryReceipt[]
+}
+
+// RecipeVersion: Công thức món ăn thay đổi theo thời gian
+model RecipeVersion {
+  id            String   @id @default(uuid())
+  productId     String   @map("product_id")
+  effectiveFrom DateTime @default(now()) @map("effective_from")
+  effectiveTo   DateTime? @map("effective_to")
+  isActive      Boolean  @default(true) @map("is_active")
+  
+  items         RecipeItem[]
+}
+
+// ProductPriceVersion: Lịch sử giá bán (Versioning cho Giá bán)
+model ProductPriceVersion {
+  id            String   @id @default(uuid())
+  productId     String   @map("product_id")
+  price         Decimal  @db.Decimal(10, 2)
+  effectiveFrom DateTime @default(now()) @map("effective_from")
+  effectiveTo   DateTime? @map("effective_to")
+}
+
+// InventoryReceipt: Nhật ký nhập hàng (Tracking giá vốn COGS)
+model InventoryReceipt {
+  id          String   @id @default(uuid())
+  materialId  String   @map("material_id")
+  quantity    Decimal  @db.Decimal(10, 2)
+  unitPrice   Decimal  @map("unit_price") @db.Decimal(10, 2) 
+  receivedAt  DateTime @default(now()) @map("received_at")
+  
+  material    Material @relation(fields: [materialId], references: [id])
+}
+```
+
+### 3. API & Communication Patterns (Phase 2)
+
+- **Inventory Trigger Interceptor:** Xây dựng một Global Interceptor hoặc Service Hook lắng nghe event `ORDER_PAID` để kích hoạt trừ kho ngầm định trong cùng thread transaction.
+- **Error Standard:** Cấu hình mã lỗi riêng cho Kho (VD: `INV_ERR_OUT_OF_STOCK` - ném ra khi số lượng Materials trong Recipe không đủ).
+
+### Decision Impact Analysis
+
+**Implementation Sequence:**
+1.  **Migrate Schema:** Cập nhật `new/schema.prisma` và thực hiện migration cho chi nhánh.
+2.  **Inventory-Logic Lib:** Xây dựng `libs/shared/business-logic/inventory-engine` để xử lý định lượng.
+3.  **Order Integration:** Hook engine vào luồng thanh toán hiện có.
 
 # Architecture Decision Document
 
@@ -257,4 +339,34 @@ loot-vn/
 - Tuyệt đối tuân thủ việc bọc Transaction và `FOR UPDATE` cho các hàm đổi thưởng.
 - Mọi logic tính toán mới phải được đặt trong `libs/shared/business-logic`.
 - Luôn sử dụng API trung tâm, không cho phép Frontend gọi trực tiếp Database.
-```
+
+---
+
+## Phase 2: Material & Inventory Management
+
+### Project Context Analysis (Module Kho & Định lượng)
+
+#### Requirements Overview
+
+**Functional Requirements:**
+- **FR_INV_1 (Integrated Materials):** Quản lý nguyên vật liệu thô (Materials) với thuộc tính SKU, Đơn vị cơ sở, Tồn kho hiện tại và Định mức cảnh báo tối thiểu.
+- **FR_INV_2 (Unit Scaling):** Cho phép thiết lập bảng quy đổi đơn vị (Unit Conversions) để quản lý nhập hành theo đơn vị lớn (Thùng/Lốc) và tiêu thụ theo đơn vị nhỏ (Chai/Gam).
+- **FR_INV_3 (Recipe Management):** Xây dựng định lượng (Recipes/BOM) cho từng sản phẩm (Products) trên menu, xác định lượng tiêu tốn nguyên vật liệu cho mỗi đơn vị sản phẩm.
+- **FR_INV_4 (Inventory History):** Lưu vết mọi lần nhập kho (Inventory Receipts) với thông tin Nhà cung cấp, số lượng nhập và đơn giá đầu vào để tính toán COGS (Giá vốn).
+
+**Non-Functional Requirements:**
+- **Atomic Stock Management (Data Integrity):** Việc cập nhật `quantity_in_stock` phải được bọc trong các Database Transaction chặt chẽ nhằm tránh sai lệch tồn kho khi nhiều máy trạm hoặc web dashboard thực hiện thao tác cùng lúc.
+- **Unit Calculation Accuracy:** Hệ thống phải đảm bảo độ chính xác của các phép tính quy đổi đơn vị qua các lớp decimals (thông qua DECIMAL(10, 2)).
+- **Automatic Multi-Tenant Isolation:** Tất cả dữ liệu kho phải được tự động cô lập theo `tenant_id` lấy từ request context (The Shield).
+
+**Scale & Complexity:**
+- Độ phức tạp kỹ thuật: **Trung bình - Cao** (Do có sự kết hợp giữa Business logic định lượng và quản lý trạng thái tồn kho real-time).
+- Ước tính số lượng Component chính: 3 (Inventory Service, Recipe Engine, Stock Adjustment Interceptor).
+
+### Technical Constraints & Dependencies
+- **Phụ thuộc vào hệ thống Order hiện có:** Logic trừ kho (Stock deduction) phụ thuộc vào luồng hoàn tất đơn hàng (Order Completion) để kích hoạt.
+- **Ranh giới Monorepo:** Tuân thủ việc bóc tách logic tính toán ra `libs/shared/business-logic` để tăng tính tái sử dụng và kiểm thử.
+
+### Cross-Cutting Concerns Identified
+- **Global Transaction Tracking:** Cần một cơ chế ghi log (Audit Trail) cho mọi lần biến động kho (`quantity_on_hand` change).
+- **Tenant Context Consistency:** Đảm bảo `AsyncLocalStorage` cung cấp context nhất quán ngay cả trong các hàm xử lý nền (Background jobs) trừ kho.

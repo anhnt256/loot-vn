@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException, NotFoundException, InternalServerErrorException, UnauthorizedException, Logger } from '@nestjs/common';
-import { PrismaService, TenantPrismaService, GatewayPrismaService } from '../database/prisma.service';
+import { MasterPrismaService, TenantPrismaService } from '../database/prisma.service';
 import { TenantGatewayService } from '../database/tenant-gateway.service';
 import { dayjs, getCurrentTimeVNISO, getCurrentTimeVNDB } from '@gateway-workspace/shared/utils';
 
@@ -7,9 +7,8 @@ import { dayjs, getCurrentTimeVNISO, getCurrentTimeVNDB } from '@gateway-workspa
 export class HrAppService {
   private readonly logger = new Logger(HrAppService.name);
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly masterPrisma: MasterPrismaService,
     private readonly tenantPrisma: TenantPrismaService,
-    private readonly gatewayPrisma: GatewayPrismaService,
     private readonly tenantGateway: TenantGatewayService,
   ) {}
 

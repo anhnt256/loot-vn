@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
-import { GatewayPrismaService, TenantPrismaService } from '../../database/prisma.service';
+import { TenantPrismaService, MasterPrismaService } from '../../database/prisma.service';
 import { getTenantDbUrl } from '../../database/tenant-gateway.service';
 
 export interface UpdateDeviceDto {
@@ -19,16 +19,16 @@ export interface UpdateDeviceDto {
 @Injectable()
 export class DeviceService {
   constructor(
-    private readonly tenantPrisma: TenantPrismaService,
-    private readonly gatewayPrisma: GatewayPrismaService
+    private readonly masterPrisma: MasterPrismaService,
+    private readonly tenantPrisma: TenantPrismaService
   ) {}
 
   private async getGatewayClient(tenantId: string) {
-    let tenant = await this.tenantPrisma.tenant.findUnique({
+    let tenant = await this.masterPrisma.tenant.findUnique({
       where: { id: tenantId, deletedAt: null },
     });
     if (!tenant) {
-      tenant = await this.tenantPrisma.tenant.findFirst({
+      tenant = await this.masterPrisma.tenant.findFirst({
         where: { tenantId: tenantId, deletedAt: null },
       });
     }
@@ -37,7 +37,7 @@ export class DeviceService {
     const dbUrl = getTenantDbUrl(tenant);
     if (!dbUrl) throw new BadRequestException('Tenant chưa cấu hình DB URL');
 
-    return await this.gatewayPrisma.getClient(dbUrl);
+    return await this.tenantPrisma.getClient(dbUrl);
   }
 
   async reportOrUpdateDevice(tenantId: string, computerId: number, body: UpdateDeviceDto) {

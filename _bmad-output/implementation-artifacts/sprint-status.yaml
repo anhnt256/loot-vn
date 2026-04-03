@@ -1,0 +1,57 @@
+# generated: 2026-04-03T14:50:00+07:00
+# last_updated: 2026-04-03T14:50:00+07:00
+# project: loot-vn
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+
+generated: 2026-04-03T14:50:00+07:00
+last_updated: 2026-04-03T14:50:00+07:00
+project: loot-vn
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  epic-1: in-progress
+  1-1-quan-tri-danh-muc-nguyen-vat-lieu-crud: ready-for-dev
+  1-2-thiet-lap-bang-quy-doi-don-vi-conversions: backlog
+  1-3-dashboard-ton-kho-admin-stock-overview: backlog
+  epic-1-retrospective: optional
+  epic-2: backlog
+  2-1-khoi-tao-cong-thuc-recipe-theo-phien-ban: backlog
+  2-2-quan-ly-vong-doi-cong-thuc-activation: backlog
+  2-3-theo-doi-lich-su-gia-ban-price-versioning: backlog
+  epic-2-retrospective: optional
+  epic-3: backlog
+  3-1-ghi-nhan-nhap-kho-inventory-receipt: backlog
+  3-2-tu-dong-tru-kho-khi-hoan-thanh-don-hang-step-4: backlog
+  3-3-nhat-ky-bien-dong-kho-audit-logging: backlog
+  epic-3-retrospective: optional
+  epic-4: backlog
+  4-1-tra-cuu-nhat-ky-bien-dong-kho-transaction-view: backlog
+  4-2-dieu-chinh-kho-thu-cong-manual-adjustment: backlog
+  4-3-bao-cao-hao-hut-huy-do-waste-report: backlog
+  epic-4-retrospective: optional

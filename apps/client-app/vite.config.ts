@@ -12,6 +12,7 @@ export default defineConfig(({ mode }) => {
 
     define: {
       'process.env.VITE_TENANT_PREFIX': JSON.stringify(tenantPrefix),
+      'import.meta.env.VITE_TENANT_PREFIX': JSON.stringify(tenantPrefix),
       'import.meta.env.VITE_API_URL': JSON.stringify(apiUrl),
       'process.env.VITE_API_URL': JSON.stringify(apiUrl),
     },

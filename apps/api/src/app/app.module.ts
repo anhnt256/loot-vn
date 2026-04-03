@@ -15,6 +15,8 @@ import { DeviceModule } from './admin-app/device/device.module';
 import { HandoverReportModule } from './admin-app/handover-report/handover-report.module';
 import { GameModule } from './admin-app/game/game.module';
 import { ShiftHandoverReportModule } from './admin-app/shift-handover-report/shift-handover-report.module';
+import { MaterialModule } from './admin-app/material/material.module';
+import { MenuModule } from './admin-app/menu/menu.module';
 
 @Module({
   imports: [
@@ -32,6 +34,8 @@ import { ShiftHandoverReportModule } from './admin-app/shift-handover-report/shi
     HandoverReportModule,
     GameModule,
     ShiftHandoverReportModule,
+    MaterialModule,
+    MenuModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -5,9 +5,10 @@ import {
   TenantPrismaClient,
 } from '@gateway-workspace/database';
 
+/** MasterDB: GMS database (DATABASE_GMS_URL) - quản lý tenant, org, api key */
 @Injectable()
 // @ts-ignore: PrismaClient missing index signature
-export class TenantPrismaService
+export class MasterPrismaService
   extends TenantPrismaClient
   implements OnModuleInit
 {
@@ -16,22 +17,14 @@ export class TenantPrismaService
   }
 }
 
+/** TenantDB: Dynamic per-tenant database (from tenant.dbUrl) */
 @Injectable()
-// @ts-ignore: PrismaClient missing index signature
-export class PrismaService extends PrismaClient implements OnModuleInit {
-  async onModuleInit() {
-    await this.$connect();
-  }
-}
-
-/** Gateway DB client by tenant dbUrl (from tenant table, not env). */
-@Injectable()
-export class GatewayPrismaService implements OnApplicationShutdown {
+export class TenantPrismaService implements OnApplicationShutdown {
   private clientCache: Record<string, PrismaClient> = {};
 
   async getClient(dbUrl: string): Promise<PrismaClient> {
     if (!dbUrl || dbUrl.trim() === '') {
-      throw new Error('Gateway dbUrl is required (use tenant.dbUrl from tenant table)');
+      throw new Error('Tenant dbUrl is required (use tenant.dbUrl from MasterDB)');
     }
     const key = dbUrl.trim();
     if (!this.clientCache[key]) {
@@ -53,8 +46,9 @@ export class GatewayPrismaService implements OnApplicationShutdown {
   }
 }
 
+/** FnetDB: Dynamic per-tenant fnet database (from tenant.fnetUrl) */
 @Injectable()
-export class FnetPrismaService {
+export class FnetPrismaService implements OnApplicationShutdown {
   private clientCache: Record<string, FnetPrismaClient> = {};
 
   async getClient(fnetUrl: string): Promise<FnetPrismaClient> {

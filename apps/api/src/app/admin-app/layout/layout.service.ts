@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { TenantPrismaService, GatewayPrismaService, FnetPrismaService } from '../../database/prisma.service';
+import { MasterPrismaService, TenantPrismaService, FnetPrismaService } from '../../database/prisma.service';
 import { getTenantDbUrl } from '../../database/tenant-gateway.service';
 
 import { ConfigService } from '../config/config.service';
@@ -7,18 +7,18 @@ import { ConfigService } from '../config/config.service';
 @Injectable()
 export class LayoutService {
   constructor(
+    private readonly masterPrisma: MasterPrismaService,
     private readonly tenantPrisma: TenantPrismaService,
-    private readonly gatewayPrisma: GatewayPrismaService,
     private readonly fnetPrisma: FnetPrismaService,
     private readonly configService: ConfigService,
   ) {}
 
   private async getClients(tenantId: string) {
-    let tenant = await this.tenantPrisma.tenant.findUnique({
+    let tenant = await this.masterPrisma.tenant.findUnique({
       where: { id: tenantId, deletedAt: null },
     });
     if (!tenant) {
-      tenant = await this.tenantPrisma.tenant.findFirst({
+      tenant = await this.masterPrisma.tenant.findFirst({
         where: { tenantId: tenantId, deletedAt: null },
       });
     }
@@ -27,7 +27,7 @@ export class LayoutService {
     const dbUrl = getTenantDbUrl(tenant);
     if (!dbUrl) throw new BadRequestException('Tenant chưa cấu hình DB URL');
     
-    const gateway = await this.gatewayPrisma.getClient(dbUrl);
+    const gateway = await this.tenantPrisma.getClient(dbUrl);
     
     const fnetUrl = tenant.fnetUrl;
     if (!fnetUrl) throw new BadRequestException('Tenant chưa cấu hình fnetUrl');

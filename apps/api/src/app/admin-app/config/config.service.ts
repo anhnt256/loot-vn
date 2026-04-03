@@ -1,20 +1,20 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { TenantPrismaService, GatewayPrismaService } from '../../database/prisma.service';
+import { MasterPrismaService, TenantPrismaService } from '../../database/prisma.service';
 import { getTenantDbUrl } from '../../database/tenant-gateway.service';
 
 @Injectable()
 export class ConfigService {
   constructor(
-    private readonly tenantPrisma: TenantPrismaService,
-    private readonly gatewayPrisma: GatewayPrismaService
+    private readonly masterPrisma: MasterPrismaService,
+    private readonly tenantPrisma: TenantPrismaService
   ) {}
 
   private async getGatewayDb(tenantId: string) {
-    let tenant = await this.tenantPrisma.tenant.findUnique({
+    let tenant = await this.masterPrisma.tenant.findUnique({
       where: { id: tenantId, deletedAt: null },
     });
     if (!tenant) {
-      tenant = await this.tenantPrisma.tenant.findFirst({
+      tenant = await this.masterPrisma.tenant.findFirst({
         where: { tenantId: tenantId, deletedAt: null },
       });
     }
@@ -23,7 +23,7 @@ export class ConfigService {
     const dbUrl = getTenantDbUrl(tenant);
     if (!dbUrl) throw new BadRequestException('Tenant chưa cấu hình DB URL');
 
-    const gateway = await this.gatewayPrisma.getClient(dbUrl);
+    const gateway = await this.tenantPrisma.getClient(dbUrl);
     
     // Auto-create table if not exists using Raw SQL to prevent Prisma client sync issues
     await gateway.$executeRawUnsafe(`

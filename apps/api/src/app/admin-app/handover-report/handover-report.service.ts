@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
-import { GatewayPrismaService, TenantPrismaService } from '../../database/prisma.service';
+import { TenantPrismaService, MasterPrismaService } from '../../database/prisma.service';
 import { getTenantDbUrl } from '../../database/tenant-gateway.service';
 
 const SHIFT_ENUM = {
@@ -16,16 +16,16 @@ function getCurrentTimeVNDB() {
 @Injectable()
 export class HandoverReportService {
   constructor(
-    private readonly tenantPrisma: TenantPrismaService,
-    private readonly gatewayPrisma: GatewayPrismaService
+    private readonly masterPrisma: MasterPrismaService,
+    private readonly tenantPrisma: TenantPrismaService
   ) {}
 
   private async getGatewayClient(tenantId: string) {
-    let tenant = await this.tenantPrisma.tenant.findUnique({
+    let tenant = await this.masterPrisma.tenant.findUnique({
       where: { id: tenantId, deletedAt: null },
     });
     if (!tenant) {
-      tenant = await this.tenantPrisma.tenant.findFirst({
+      tenant = await this.masterPrisma.tenant.findFirst({
         where: { tenantId: tenantId, deletedAt: null },
       });
     }
@@ -34,7 +34,7 @@ export class HandoverReportService {
     const dbUrl = getTenantDbUrl(tenant);
     if (!dbUrl) throw new BadRequestException('Tenant chưa cấu hình DB URL');
 
-    return await this.gatewayPrisma.getClient(dbUrl);
+    return await this.tenantPrisma.getClient(dbUrl);
   }
 
   // Thay vì dùng `getBranchFromCookie()`, ta sẽ dùng `tenantId` như tham số đại diện cho branch
@@ -157,31 +157,33 @@ export class HandoverReportService {
     }
   }
 
-  async getMaterials(tenantId: string, reportType: string) {
+  async getMaterials(tenantId: string, reportType?: string) {
     try {
       const gatewayClient = await this.getGatewayClient(tenantId);
       
-      const materials = await gatewayClient.$queryRaw`
-        SELECT 
-          id,
-          name,
-          reportType,
-          isActive,
-          isOnFood
-        FROM Material
-        WHERE reportType = ${reportType}
-          AND isActive = true
-        ORDER BY name ASC
-      `;
+      let query = "SELECT id, name as materialName, reportType as materialType, isActive, isOnFood FROM Material WHERE 1=1 ";
+      const params: any[] = [];
+      
+      if (reportType && reportType !== "") {
+        query += " AND reportType = ?";
+        params.push(reportType);
+      }
+      
+      query += " ORDER BY name ASC";
+      
+      console.log(`[DEBUG] Executing SQL: ${query} with params:`, params);
+      const materials = await (gatewayClient as any).$queryRawUnsafe(query, ...params);
+      
+      console.log(`[DEBUG] Found ${materials?.length || 0} materials in DB.`);
 
       return {
         success: true,
-        data: (materials as any[]).map((material) => ({
-          id: material.id,
-          materialName: material.name,
-          materialType: material.reportType,
-          isDeleted: !material.isActive,
-          isFood: material.isOnFood,
+        data: (materials as any[]).map((m) => ({
+          id: m.id,
+          materialName: m.materialName,
+          materialType: m.materialType,
+          isDeleted: m.isActive === 0 || m.isActive === false,
+          isFood: m.isOnFood === 1 || m.isOnFood === true,
         })),
       };
     } catch (error) {

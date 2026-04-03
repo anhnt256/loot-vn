@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { TenantPrismaService } from '../../database/prisma.service';
+import { MasterPrismaService } from '../../database/prisma.service';
 
 @Injectable()
 export class OrgManagementService {
-  constructor(private prisma: TenantPrismaService) {}
+  constructor(private masterPrisma: MasterPrismaService) {}
 
   async findAll() {
-    return this.prisma.organization.findMany({
+    return this.masterPrisma.organization.findMany({
       where: {
         deletedAt: null,
       },
@@ -22,7 +22,7 @@ export class OrgManagementService {
   }
 
   async findOne(id: string) {
-    const org = await this.prisma.organization.findUnique({
+    const org = await this.masterPrisma.organization.findUnique({
       where: { id },
       include: {
         tenants: {
@@ -64,7 +64,7 @@ export class OrgManagementService {
     if (!rootDomain?.trim()) {
       throw new NotFoundException('rootDomain is required');
     }
-    const org = await this.prisma.organization.findFirst({
+    const org = await this.masterPrisma.organization.findFirst({
       where: {
         rootDomain: rootDomain.trim(),
         deletedAt: null,
@@ -115,7 +115,7 @@ export class OrgManagementService {
 
   async create(data: any) {
     const tenantIds: string[] = data.tenantIds ?? [];
-    const org = await this.prisma.organization.create({
+    const org = await this.masterPrisma.organization.create({
       data: {
         name: data.name,
         description: data.description ?? null,
@@ -126,7 +126,7 @@ export class OrgManagementService {
       },
     });
     if (tenantIds.length > 0) {
-      await this.prisma.tenant.updateMany({
+      await this.masterPrisma.tenant.updateMany({
         where: { id: { in: tenantIds }, deletedAt: null },
         data: { organizationId: org.id, updatedAt: new Date() },
       });
@@ -139,12 +139,12 @@ export class OrgManagementService {
 
     const tenantIds: string[] | undefined = data.tenantIds;
     if (Array.isArray(tenantIds)) {
-      await this.prisma.tenant.updateMany({
+      await this.masterPrisma.tenant.updateMany({
         where: { organizationId: id },
         data: { organizationId: null, updatedAt: new Date() },
       });
       if (tenantIds.length > 0) {
-        await this.prisma.tenant.updateMany({
+        await this.masterPrisma.tenant.updateMany({
           where: { id: { in: tenantIds }, deletedAt: null },
           data: { organizationId: id, updatedAt: new Date() },
         });
@@ -159,7 +159,7 @@ export class OrgManagementService {
     if (data.primaryColor !== undefined) orgData.primaryColor = data.primaryColor ?? null;
     if (data.secondaryColor !== undefined) orgData.secondaryColor = data.secondaryColor ?? null;
     if (Object.keys(orgData).length > 0) {
-      await this.prisma.organization.update({ where: { id }, data: orgData });
+      await this.masterPrisma.organization.update({ where: { id }, data: orgData });
     }
     return this.findOne(id);
   }
@@ -168,7 +168,7 @@ export class OrgManagementService {
     // Ensure org exists and is not deleted
     await this.findOne(id);
 
-    return this.prisma.organization.update({
+    return this.masterPrisma.organization.update({
       where: { id },
       data: {
         deletedAt: new Date(),

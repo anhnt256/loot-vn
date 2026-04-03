@@ -75,7 +75,9 @@ Dự án nhằm mục tiêu nâng cấp toàn diện hệ thống quản lý chu
   - Phân tách 100% logic kinh doanh cũ (Fnet, Vòng quay, Event) thành `libs/shared/business`.
   - Hoàn thiện Node.js Middleware nhận diện chính xác `tenant_id` qua `X-API-Key` 100%.
 
-### Growth (Phase 2)
+### Growth (Phase 2) - Advanced Operations & Inventory
+- **Material Management Refactor:** Triển khai hệ thống quản lý kho & định lượng nguyên liệu (Inventory & Recipes) với cơ chế Versioning bảo toàn lịch sử.
+- **Deduction Engine:** Tự động trừ tồn kho dựa trên quy trình vận hành 5 bước (Trừ tại Step 4).
 - Cổng Self-Service Management phân quyền tạo tài khoản Tenant & tự động sinh API-Key an toàn.
 - Tích hợp công cụ Health-check theo dõi kết nối tới máy chủ Fnet DB cục bộ.
 
@@ -142,6 +144,13 @@ Game thủ nhập mã voucher vào `client-app`. API tiếp nhận request cùng
 - **FR16:** Game thủ có thể thực hiện thao tác đổi/sử dụng Voucher/Điểm thưởng.
 - **FR17:** Hệ thống có năng lực đối chiếu tính hợp lệ của mã Voucher hoặc quy tắc Battle Pass với cấu hình sự kiện do Tenant thiết lập.
 - **FR18:** Hệ thống tự động đẩy lệnh nạp tiền/trừ điểm ở ví Fnet tài khoản hội viên Game thủ trên hệ thống máy trạm Local khi có kết quả trả thưởng.
+
+### 6. Material & Inventory Management (Phase 2 expansion)
+- **FR19:** Quản lý có thể định nghĩa danh mục Nguyên vật liệu (Material Core) với SKU, Đơn vị gốc (Base Unit) và Định mức tồn kho tối thiểu.
+- **FR20:** Hệ thống hỗ trợ Bảng quy đổi đơn vị (Unit Conversion) đa cấp để tự động tính toán giữa đơn vị nhập hàng và đơn vị tiêu thụ thực tế.
+- **FR21:** Quản lý có thể thiết lập Công thức (Recipe/BOM) cho từng sản phẩm trên menu, hỗ trợ cơ chế lưu vết phiên bản (Versioning) theo thời gian (`effectiveFrom/To`).
+- **FR22:** Hệ thống tự động thực hiện lệnh trừ tồn kho (Deduction) theo thời gian thực ngay khi Đơn hàng đạt trạng thái **4 (Hoàn Thành)** trong quy trình vận hành.
+- **FR23:** Mọi biến động kho (Bán hàng, Nhập kho, Hủy, Refund, Waste, Adjustment) đều phải được ghi lại vào Nhật ký biến động (Inventory Transaction) để đối soát.
 
 ## Non-Functional Requirements
 

@@ -5,6 +5,7 @@ import {
   DashboardOutlined,
   GiftOutlined,
   PlaySquareOutlined,
+  CoffeeOutlined,
   CrownOutlined,
   ShoppingCartOutlined,
   SwapOutlined,
@@ -19,7 +20,8 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   HistoryOutlined,
-  LogoutOutlined
+  LogoutOutlined,
+  InboxOutlined
 } from '@ant-design/icons';
 import { deleteCookie } from 'cookies-next';
 import { ACCESS_TOKEN_KEY, apiClient } from '@gateway-workspace/shared/utils/client';
@@ -74,7 +76,19 @@ const AdminLayout: React.FC = () => {
     { key: '/dashboard', icon: <DashboardOutlined />, label: 'Dashboard' },
     { key: '/dashboard/battle-pass-orders', icon: <ShoppingCartOutlined />, label: 'Đơn hàng Premium BP' },
     { key: '/dashboard/reward-exchange', icon: <SwapOutlined />, label: 'Quản lý đổi thưởng' },
+    { key: '/dashboard/menu-management', icon: <CoffeeOutlined />, label: 'Quản lý Menu' },
     { key: '/dashboard/handover-reports', icon: <FileTextOutlined />, label: 'Báo cáo bàn giao' },
+    {
+      key: 'inventory',
+      icon: <InboxOutlined />,
+      label: 'Quản lý kho',
+      children: [
+        { key: '/dashboard/material-management', label: 'Danh mục nguyên liệu' },
+        { key: '/dashboard/recipe-management', label: 'Công thức & Định mức (BOM)' },
+        { key: '/dashboard/inventory-audit', label: 'Nhật ký biến động' },
+        { key: '/dashboard/profit-analysis', label: 'Phân tích lợi nhuận' },
+      ],
+    },
     { key: '/dashboard/reports', icon: <SnippetsOutlined />, label: 'Báo cáo kết ca' },
     { key: '/dashboard/device-history', icon: <HistoryOutlined />, label: 'Quản lý lịch sử máy' },
     {

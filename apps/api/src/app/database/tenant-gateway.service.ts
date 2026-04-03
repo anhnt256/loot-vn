@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
-import { TenantPrismaService, GatewayPrismaService } from './prisma.service';
+import { MasterPrismaService, TenantPrismaService } from './prisma.service';
 import type { PrismaClient } from '@gateway-workspace/database';
 
 /** Resolve gateway DB URL from tenant (table column or clients JSON). Never use env. */
@@ -12,21 +12,21 @@ export function getTenantDbUrl(tenant: { dbUrl?: string | null; clients?: unknow
   return null;
 }
 
-/** Returns gateway Prisma client for tenant. Uses tenant.dbUrl from DB, not env. */
+/** Returns tenant Prisma client. Uses tenant.dbUrl from MasterDB, not env. */
 @Injectable()
 export class TenantGatewayService {
   constructor(
+    private readonly masterPrisma: MasterPrismaService,
     private readonly tenantPrisma: TenantPrismaService,
-    private readonly gatewayPrisma: GatewayPrismaService,
   ) {}
 
   async getGatewayClient(tenantId: string): Promise<PrismaClient> {
-    let tenant = await this.tenantPrisma.tenant.findUnique({
+    let tenant = await this.masterPrisma.tenant.findUnique({
       where: { id: tenantId, deletedAt: null },
       select: { dbUrl: true, clients: true },
     });
     if (!tenant) {
-      tenant = await this.tenantPrisma.tenant.findFirst({
+      tenant = await this.masterPrisma.tenant.findFirst({
         where: { tenantId: tenantId, deletedAt: null },
         select: { dbUrl: true, clients: true },
       });
@@ -36,6 +36,6 @@ export class TenantGatewayService {
     if (!dbUrl) {
       throw new BadRequestException('Tenant chưa cấu hình DB URL. Vui lòng cập nhật trong quản lý tenant.');
     }
-    return this.gatewayPrisma.getClient(dbUrl);
+    return this.tenantPrisma.getClient(dbUrl);
   }
 }

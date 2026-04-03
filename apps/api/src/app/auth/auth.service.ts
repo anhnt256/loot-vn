@@ -3,7 +3,7 @@ import {
   UnauthorizedException,
   BadRequestException,
 } from '@nestjs/common';
-import { PrismaService, TenantPrismaService, GatewayPrismaService } from '../database/prisma.service';
+import { MasterPrismaService, TenantPrismaService, FnetPrismaService } from '../database/prisma.service';
 import { getTenantDbUrl } from '../database/tenant-gateway.service';
 import { signJWT } from '../lib/jwt';
 import dayjs from '../lib/dayjs';
@@ -13,9 +13,9 @@ import * as bcrypt from 'bcryptjs';
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly masterPrisma: MasterPrismaService,
     private readonly tenantPrisma: TenantPrismaService,
-    private readonly gatewayPrisma: GatewayPrismaService,
+    private readonly fnetPrisma: FnetPrismaService,
   ) {}
 
   private hashPassword(pwd: string): string {
@@ -29,9 +29,42 @@ export class AuthService {
     return stored === this.hashPassword(plain);
   }
 
+  /** Resolve tenant from MasterDB and return tenant record + dbUrl */
+  private async resolveTenant(tenantId: string) {
+    let tenant = await this.masterPrisma.tenant.findUnique({
+      where: { id: tenantId, deletedAt: null },
+    });
+    if (!tenant) {
+      tenant = await this.masterPrisma.tenant.findFirst({
+        where: { tenantId: tenantId, deletedAt: null },
+      });
+    }
+    if (!tenant) {
+      throw new UnauthorizedException('Tenant không hợp lệ');
+    }
+
+    const apiKey = await this.masterPrisma.apiKey.findFirst({
+      where: { tenantId: tenant.id, deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (!apiKey) {
+      throw new UnauthorizedException('Tenant chưa cấu hình API key');
+    }
+    if (apiKey.expiresAt && new Date() > new Date(apiKey.expiresAt)) {
+      throw new UnauthorizedException('Hệ thống đã hết hạn, vui lòng gia hạn để sử dụng');
+    }
+
+    const dbUrl = getTenantDbUrl(tenant);
+    if (!dbUrl) {
+      throw new BadRequestException('Tenant chưa cấu hình DB URL. Vui lòng cập nhật trong quản lý tenant.');
+    }
+
+    return { tenant, dbUrl };
+  }
+
   async getTenantInfo(tenantId: string) {
     if (!tenantId) return null;
-    const tenant = await this.tenantPrisma.tenant.findFirst({
+    const tenant = await this.masterPrisma.tenant.findFirst({
       where: { tenantId },
       include: {
         organization: {
@@ -48,12 +81,20 @@ export class AuthService {
     };
   }
 
-  /**
-   * Single entry for login. For staff/account: requires tenantId, uses tenant DB + API key check.
-   * For other methods (future): may use central DB.
-   */
   async login(body: any, tenantId?: string | null) {
     const loginMethod = body.loginMethod;
+
+    if (loginMethod === 'client') {
+      if (!tenantId?.trim()) {
+        throw new BadRequestException('x-tenant-id header is required for client login');
+      }
+      const macAddress = (body.macAddress ?? '').trim();
+      if (!macAddress) {
+        throw new BadRequestException('macAddress là bắt buộc cho phương thức đăng nhập client');
+      }
+      return this.loginClient(macAddress, tenantId.trim());
+    }
+
     const userName = (body.userName ?? body.user ?? '').trim();
     const password = body.password;
 
@@ -68,77 +109,57 @@ export class AuthService {
       return this.loginStaff(userName, password, tenantId.trim());
     }
 
-    if (loginMethod === 'user') {
-      throw new BadRequestException('Đăng nhập dành cho user hiện đang được phát triển');
-    }
-
     if (loginMethod === 'admin') {
-      const staffList = await this.prisma.$queryRawUnsafe<any[]>(
-        `SELECT id, userName, fullName, isDeleted, isAdmin, password, staffType FROM Staff WHERE userName = ? AND isDeleted = false`,
-        userName,
-      );
-
-      if (!staffList?.length) {
-        throw new UnauthorizedException('Tên đăng nhập hoặc mật khẩu không đúng');
+      if (!tenantId?.trim()) {
+        throw new BadRequestException('x-tenant-id header is required for admin login');
       }
-
-      const staff = staffList[0];
-
-      if (!staff.isAdmin) {
-        throw new UnauthorizedException('Chỉ có admin mới được phép truy cập bằng phương thức này');
-      }
-
-      if (!(await this.verifyPassword(password, staff.password))) {
-        throw new UnauthorizedException('Tên đăng nhập hoặc mật khẩu không đúng');
-      }
-
-      const payload = {
-        userId: Number(staff.id),
-        id: Number(staff.id),
-        userName: staff.userName,
-        fullName: staff.fullName,
-        role: 'admin',
-        isAdmin: true,
-        loginType: 'admin',
-        staffType: staff.staffType,
-      };
-
-      const token = await signJWT(payload);
-      return { token, ...payload };
+      return this.loginAdmin(userName, password, tenantId.trim());
     }
 
-    throw new BadRequestException('Phương thức đăng nhập không hợp lệ. Dùng Admin, staff hoặc account.');
+    throw new BadRequestException('Phương thức đăng nhập không hợp lệ. Dùng admin, staff hoặc client.');
+  }
+
+  private async loginAdmin(userName: string, password: string, tenantId: string) {
+    const { dbUrl } = await this.resolveTenant(tenantId);
+    const gateway = await this.tenantPrisma.getClient(dbUrl);
+
+    const staffList = await gateway.$queryRawUnsafe<any[]>(
+      `SELECT id, userName, fullName, isDeleted, isAdmin, password, staffType FROM Staff WHERE userName = ? AND isDeleted = false`,
+      userName,
+    );
+
+    if (!staffList?.length) {
+      throw new UnauthorizedException('Tên đăng nhập hoặc mật khẩu không đúng');
+    }
+
+    const staff = staffList[0];
+
+    if (!staff.isAdmin) {
+      throw new UnauthorizedException('Chỉ có admin mới được phép truy cập bằng phương thức này');
+    }
+
+    if (!(await this.verifyPassword(password, staff.password))) {
+      throw new UnauthorizedException('Tên đăng nhập hoặc mật khẩu không đúng');
+    }
+
+    const payload = {
+      userId: Number(staff.id),
+      id: Number(staff.id),
+      userName: staff.userName,
+      fullName: staff.fullName,
+      role: 'admin',
+      isAdmin: true,
+      loginType: 'admin',
+      staffType: staff.staffType,
+    };
+
+    const token = await signJWT(payload);
+    return { token, ...payload };
   }
 
   private async loginStaff(userName: string, password: string, tenantId: string) {
-    let tenant = await this.tenantPrisma.tenant.findUnique({
-      where: { id: tenantId, deletedAt: null },
-    });
-    if (!tenant) {
-      tenant = await this.tenantPrisma.tenant.findFirst({
-        where: { tenantId: tenantId, deletedAt: null },
-      });
-    }
-    if (!tenant) {
-      throw new UnauthorizedException('Tenant không hợp lệ');
-    }
-
-    const apiKey = await this.tenantPrisma.apiKey.findFirst({
-      where: { tenantId: tenant.id, deletedAt: null },
-      orderBy: { createdAt: 'desc' },
-    });
-    if (!apiKey) {
-      throw new UnauthorizedException('Tenant chưa cấu hình API key');
-    }
-    if (apiKey.expiresAt && new Date() > new Date(apiKey.expiresAt)) {
-      throw new UnauthorizedException('Hệ thống đã hết hạn, vui lòng gia hạn để sử dụng');
-    }
-
-    const dbUrl = getTenantDbUrl(tenant);
-    if (!dbUrl) {
-      throw new BadRequestException('Tenant chưa cấu hình DB URL. Vui lòng cập nhật trong quản lý tenant.');
-    }
-    const gateway = await this.gatewayPrisma.getClient(dbUrl);
+    const { tenant, dbUrl } = await this.resolveTenant(tenantId);
+    const gateway = await this.tenantPrisma.getClient(dbUrl);
 
     const staffList = await gateway.$queryRawUnsafe<any[]>(
       `SELECT id, userName, fullName, isDeleted, isAdmin, password, staffType FROM Staff WHERE userName = ? AND isDeleted = false`,
@@ -183,6 +204,91 @@ export class AuthService {
       workShifts,
       staffType: staff.staffType,
       staffId: Number(staff.id),
+    };
+
+    const token = await signJWT(payload);
+    return { token, ...payload };
+  }
+
+  /**
+   * Client login: macAddress → Computer (mainDB) → IP → systemlogtb (fnetDB) → userId
+   * Auto-create User in mainDB if not exists.
+   */
+  private async loginClient(macAddress: string, tenantId: string) {
+    const { tenant, dbUrl } = await this.resolveTenant(tenantId);
+    const gateway = await this.tenantPrisma.getClient(dbUrl);
+
+    // 1. Tìm Computer trong mainDB theo macAddress → lấy IP
+    const computers = await gateway.$queryRawUnsafe<any[]>(
+      `SELECT id, macAddress, ip, name, localIp FROM Computer WHERE macAddress = ? AND status = 1 LIMIT 1`,
+      macAddress,
+    );
+    if (!computers?.length) {
+      throw new BadRequestException('Không tìm thấy máy tính với MAC address này');
+    }
+    const computer = computers[0];
+    const computerIp = computer.ip || computer.localIp;
+    if (!computerIp) {
+      throw new BadRequestException('Máy tính chưa có thông tin IP');
+    }
+
+    // 2. Tìm trong systemlogtb (fnetDB) theo IP → lấy userId đang login
+    const fnetUrl = tenant.fnetUrl;
+    if (!fnetUrl) {
+      throw new BadRequestException('Tenant chưa cấu hình Fnet URL');
+    }
+    const fnet = await this.fnetPrisma.getClient(fnetUrl);
+
+    const sessions = await fnet.$queryRawUnsafe<any[]>(
+      `SELECT UserId, MachineName, IPAddress, EnterDate, EnterTime FROM systemlogtb WHERE IPAddress = ? AND Status = 3 ORDER BY SystemLogId DESC LIMIT 1`,
+      computerIp,
+    );
+    if (!sessions?.length) {
+      throw new UnauthorizedException('Không tìm thấy phiên đăng nhập nào trên máy này');
+    }
+    const session = sessions[0];
+    const fnetUserId = Number(session.UserId);
+
+    // 3. Lấy thông tin user từ usertb (fnetDB)
+    const fnetUsers = await fnet.$queryRawUnsafe<any[]>(
+      `SELECT UserId, UserName, FirstName, LastName FROM usertb WHERE UserId = ? LIMIT 1`,
+      fnetUserId,
+    );
+    const fnetUser = fnetUsers?.[0];
+    const fnetUserName = fnetUser?.UserName || `user_${fnetUserId}`;
+    const fnetFullName = fnetUser
+      ? [fnetUser.LastName, fnetUser.FirstName].filter(Boolean).join(' ') || fnetUserName
+      : fnetUserName;
+
+    // 4. Auto-create / update User trong mainDB (userId là PK, đồng bộ từ fnet)
+    const existingUsers = await gateway.$queryRawUnsafe<any[]>(
+      `SELECT userId FROM User WHERE userId = ? LIMIT 1`,
+      fnetUserId,
+    );
+    if (!existingUsers?.length) {
+      await gateway.$executeRawUnsafe(
+        `INSERT INTO User (userId, userName, rankId, stars, magicStone, isUseApp, createdAt, updatedAt) VALUES (?, ?, 1, 0, 0, true, NOW(), NOW())`,
+        fnetUserId,
+        fnetUserName,
+      );
+    } else {
+      await gateway.$executeRawUnsafe(
+        `UPDATE User SET userName = ?, updatedAt = NOW() WHERE userId = ?`,
+        fnetUserName,
+        fnetUserId,
+      );
+    }
+
+    // 5. Tạo JWT token
+    const payload = {
+      userId: fnetUserId,
+      userName: fnetUserName,
+      fullName: fnetFullName,
+      role: 'client',
+      loginType: 'client',
+      computerId: computer.id,
+      computerName: computer.name,
+      macAddress,
     };
 
     const token = await signJWT(payload);

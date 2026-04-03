@@ -208,9 +208,8 @@ exports.Prisma.GameResultScalarFieldEnum = {
 };
 
 exports.Prisma.UserScalarFieldEnum = {
-  id: 'id',
-  userName: 'userName',
   userId: 'userId',
+  userName: 'userName',
   rankId: 'rankId',
   stars: 'stars',
   createdAt: 'createdAt',
@@ -218,7 +217,10 @@ exports.Prisma.UserScalarFieldEnum = {
   magicStone: 'magicStone',
   totalPayment: 'totalPayment',
   note: 'note',
-  isUseApp: 'isUseApp'
+  isUseApp: 'isUseApp',
+  totalFoodPayment: 'totalFoodPayment',
+  totalSpend: 'totalSpend',
+  lastLogin: 'lastLogin'
 };
 
 exports.Prisma.MissionScalarFieldEnum = {
@@ -306,6 +308,7 @@ exports.Prisma.SavingPlanScalarFieldEnum = {
 exports.Prisma.ComputerScalarFieldEnum = {
   id: 'id',
   fingerprintId: 'fingerprintId',
+  macAddress: 'macAddress',
   ip: 'ip',
   name: 'name',
   status: 'status',
@@ -723,12 +726,80 @@ exports.Prisma.HandoverMaterialScalarFieldEnum = {
 
 exports.Prisma.MaterialScalarFieldEnum = {
   id: 'id',
+  sku: 'sku',
   name: 'name',
+  baseUnit: 'baseUnit',
+  quantityInStock: 'quantityInStock',
+  minStockLevel: 'minStockLevel',
+  costPrice: 'costPrice',
   isActive: 'isActive',
   isOnFood: 'isOnFood',
+  tenantId: 'tenantId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   reportType: 'reportType'
+};
+
+exports.Prisma.MaterialUnitConversionScalarFieldEnum = {
+  id: 'id',
+  materialId: 'materialId',
+  fromUnit: 'fromUnit',
+  toUnit: 'toUnit',
+  multiplyFactor: 'multiplyFactor',
+  tenantId: 'tenantId'
+};
+
+exports.Prisma.MenuCategoryScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  sortOrder: 'sortOrder',
+  isActive: 'isActive',
+  tenantId: 'tenantId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.RecipeScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  salePrice: 'salePrice',
+  imageUrl: 'imageUrl',
+  isActive: 'isActive',
+  categoryId: 'categoryId',
+  tenantId: 'tenantId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.RecipeVersionScalarFieldEnum = {
+  id: 'id',
+  recipeId: 'recipeId',
+  versionName: 'versionName',
+  effectiveFrom: 'effectiveFrom',
+  effectiveTo: 'effectiveTo',
+  isActive: 'isActive',
+  tenantId: 'tenantId'
+};
+
+exports.Prisma.RecipeItemScalarFieldEnum = {
+  id: 'id',
+  recipeVersionId: 'recipeVersionId',
+  materialId: 'materialId',
+  quantity: 'quantity',
+  unit: 'unit',
+  tenantId: 'tenantId'
+};
+
+exports.Prisma.InventoryTransactionScalarFieldEnum = {
+  id: 'id',
+  materialId: 'materialId',
+  type: 'type',
+  quantityChange: 'quantityChange',
+  reason: 'reason',
+  referenceId: 'referenceId',
+  staffId: 'staffId',
+  tenantId: 'tenantId',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.FeedbackScalarFieldEnum = {
@@ -1054,6 +1125,7 @@ exports.Prisma.SavingPlanOrderByRelevanceFieldEnum = {
 
 exports.Prisma.ComputerOrderByRelevanceFieldEnum = {
   fingerprintId: 'fingerprintId',
+  macAddress: 'macAddress',
   ip: 'ip',
   name: 'name',
   localIp: 'localIp'
@@ -1196,7 +1268,37 @@ exports.Prisma.HandoverReportOrderByRelevanceFieldEnum = {
 };
 
 exports.Prisma.MaterialOrderByRelevanceFieldEnum = {
+  sku: 'sku',
+  name: 'name',
+  baseUnit: 'baseUnit'
+};
+
+exports.Prisma.MaterialUnitConversionOrderByRelevanceFieldEnum = {
+  fromUnit: 'fromUnit',
+  toUnit: 'toUnit'
+};
+
+exports.Prisma.MenuCategoryOrderByRelevanceFieldEnum = {
   name: 'name'
+};
+
+exports.Prisma.RecipeOrderByRelevanceFieldEnum = {
+  name: 'name',
+  imageUrl: 'imageUrl'
+};
+
+exports.Prisma.RecipeVersionOrderByRelevanceFieldEnum = {
+  versionName: 'versionName'
+};
+
+exports.Prisma.RecipeItemOrderByRelevanceFieldEnum = {
+  unit: 'unit'
+};
+
+exports.Prisma.InventoryTransactionOrderByRelevanceFieldEnum = {
+  type: 'type',
+  reason: 'reason',
+  referenceId: 'referenceId'
 };
 
 exports.Prisma.FeedbackOrderByRelevanceFieldEnum = {
@@ -1542,6 +1644,12 @@ exports.Prisma.ModelName = {
   HandoverReport: 'HandoverReport',
   HandoverMaterial: 'HandoverMaterial',
   Material: 'Material',
+  MaterialUnitConversion: 'MaterialUnitConversion',
+  MenuCategory: 'MenuCategory',
+  Recipe: 'Recipe',
+  RecipeVersion: 'RecipeVersion',
+  RecipeItem: 'RecipeItem',
+  InventoryTransaction: 'InventoryTransaction',
   Feedback: 'Feedback',
   FnetHistory: 'FnetHistory',
   PromotionReward: 'PromotionReward',

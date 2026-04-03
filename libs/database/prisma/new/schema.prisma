@@ -95,15 +95,14 @@ model GameResult {
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   userStarHistory UserStarHistory[]
-  users           User              @relation(fields: [userId], references: [id])
+  users           User              @relation(fields: [userId], references: [userId])
 
   @@index([userId])
 }
 
 model User {
-  id                Int                @id @default(autoincrement())
+  userId            Int                @id
   userName          String?            @db.VarChar(45)
-  userId            Int
   rankId            Int
   stars             Int
   createdAt         DateTime           @default(now())
@@ -112,6 +111,9 @@ model User {
   totalPayment      Float?             @db.Float
   note              String?            @default("") @db.VarChar(1000)
   isUseApp          Boolean            @default(true)
+  totalFoodPayment  Float?             @db.Float
+  totalSpend        Float?             @db.Float
+  lastLogin         DateTime?
   UserRewardMap     UserRewardMap[]
   GameResults       GameResult[]
   feedbacks         Feedback[]
@@ -157,7 +159,7 @@ model UserRewardMap {
   status          UserRewardMapStatus? @default(INITIAL)
   type            UserRewardMap_type   @default(STARS)
   promotionCode   PromotionCode?       @relation(fields: [promotionCodeId], references: [id])
-  user            User?                @relation(fields: [userId], references: [id])
+  user            User?                @relation(fields: [userId], references: [userId])
   reward          Reward?              @relation(fields: [rewardId], references: [id])
 
   @@index([promotionCodeId])
@@ -221,6 +223,7 @@ model SavingPlan {
 model Computer {
   id            Int             @id @default(autoincrement())
   fingerprintId String
+  macAddress    String?         @db.VarChar(50)
   ip            String?
   name          String          @db.VarChar(45)
   status        Int
@@ -779,15 +782,123 @@ model HandoverMaterial {
 
 model Material {
   id                Int                @id @default(autoincrement())
-  name              String             @unique
+  sku               String?            @db.VarChar(50)
+  name              String             @db.VarChar(255)
+  baseUnit          String?            @default("Cái") @db.VarChar(50)
+  quantityInStock   Decimal            @default(0) @db.Decimal(10, 2)
+  minStockLevel     Decimal            @default(0) @db.Decimal(10, 2)
+  costPrice         Decimal            @default(0) @db.Decimal(10, 2) // Giá nhập trung bình cho mỗi đơn vị gốc
   isActive          Boolean            @default(true)
   isOnFood          Boolean            @default(false)
+  tenantId          Int?               @default(1)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
-  reportType        HandoverReportType
+  reportType        HandoverReportType?
   handoverMaterials HandoverMaterial[]
+  conversions       MaterialUnitConversion[]
+  recipeItems       RecipeItem[]
+  transactions      InventoryTransaction[]
 
+  @@unique([sku, tenantId])
+  @@index([tenantId])
   @@index([name])
+  @@map("Material")
+}
+
+model MaterialUnitConversion {
+  id              Int      @id @default(autoincrement())
+  materialId      Int
+  fromUnit        String   @db.VarChar(50)
+  toUnit          String   @db.VarChar(50)
+  multiplyFactor  Decimal  @db.Decimal(10, 4) // Ví dụ: 1 Thùng = 24 Chai -> factor = 24
+  tenantId        Int
+  material        Material @relation(fields: [materialId], references: [id])
+
+  @@index([materialId])
+  @@index([tenantId])
+  @@map("MaterialUnitConversion")
+}
+
+model MenuCategory {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  tenantId  Int
+  recipes   Recipe[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("MenuCategory")
+}
+
+model Recipe {
+  id            Int             @id @default(autoincrement())
+  name          String          @db.VarChar(255)
+  salePrice     Decimal         @default(0) @db.Decimal(12, 2)
+  imageUrl      String?         @db.VarChar(500)
+  isActive      Boolean         @default(true)
+  categoryId    Int?
+  tenantId      Int
+  category      MenuCategory?   @relation(fields: [categoryId], references: [id])
+  versions      RecipeVersion[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([tenantId])
+  @@index([categoryId])
+  @@map("Recipe")
+}
+
+model RecipeVersion {
+  id            Int          @id @default(autoincrement())
+  recipeId      Int
+  versionName   String?      @db.VarChar(50)
+  effectiveFrom DateTime     @default(now())
+  effectiveTo   DateTime?
+  isActive      Boolean      @default(true)
+  tenantId      Int
+  recipe        Recipe       @relation(fields: [recipeId], references: [id])
+  items         RecipeItem[]
+
+  @@index([recipeId])
+  @@index([tenantId])
+  @@map("RecipeVersion")
+}
+
+model RecipeItem {
+  id              Int           @id @default(autoincrement())
+  recipeVersionId Int
+  materialId      Int
+  quantity        Decimal       @db.Decimal(10, 4)
+  unit            String?       @db.VarChar(50) // Đơn vị sử dụng trong công thức (có thể khác baseUnit)
+  tenantId        Int
+  recipeVersion   RecipeVersion @relation(fields: [recipeVersionId], references: [id])
+  material        Material      @relation(fields: [materialId], references: [id])
+
+  @@index([recipeVersionId])
+  @@index([materialId])
+  @@index([tenantId])
+  @@map("RecipeItem")
+}
+
+model InventoryTransaction {
+  id              Int      @id @default(autoincrement())
+  materialId      Int
+  type            String   @db.VarChar(20) // SALE, RECEIPT, REFUND, ADJUST, WASTE
+  quantityChange  Decimal  @db.Decimal(10, 2)
+  reason          String?  @db.VarChar(255)
+  referenceId     String?  @db.VarChar(100) // OrderId hoặc ReceiptId
+  staffId         Int?
+  tenantId        Int
+  createdAt       DateTime @default(now())
+  material        Material @relation(fields: [materialId], references: [id])
+
+  @@index([materialId])
+  @@index([tenantId])
+  @@index([type])
+  @@map("InventoryTransaction")
 }
 
 model Feedback {
@@ -808,7 +919,7 @@ model Feedback {
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
   computerId  Int?
-  user        User?          @relation(fields: [userId], references: [id])
+  user        User?          @relation(fields: [userId], references: [userId])
   computer    Computer?      @relation(fields: [computerId], references: [id])
 
   @@index([userId])
@@ -983,7 +1094,7 @@ model EventParticipant {
   rewardsReceived   String?           @db.LongText
   totalSpent        Int               @default(0)
   event             Event             @relation(fields: [eventId], references: [id])
-  user              User?             @relation(fields: [userId], references: [id])
+  user              User?             @relation(fields: [userId], references: [userId])
 
   @@unique([eventId, userId])
   @@index([eventId])

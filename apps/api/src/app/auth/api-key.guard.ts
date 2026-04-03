@@ -5,11 +5,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import * as crypto from 'crypto';
-import { TenantPrismaService } from '../database/prisma.service';
+import { MasterPrismaService } from '../database/prisma.service';
 
 @Injectable()
 export class ApiKeyGuard implements CanActivate {
-  constructor(private prisma: TenantPrismaService) {}
+  constructor(private masterPrisma: MasterPrismaService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
@@ -32,7 +32,7 @@ export class ApiKeyGuard implements CanActivate {
     // Extract tenant ID from header for verification
     const requestedTenantId = request.headers['x-tenant-id'];
 
-    const apiKeyRecord = await this.prisma.apiKey.findUnique({
+    const apiKeyRecord = await this.masterPrisma.apiKey.findUnique({
       where: { keyId, deletedAt: null },
     });
 
