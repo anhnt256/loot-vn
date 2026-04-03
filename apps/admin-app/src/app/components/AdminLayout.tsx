@@ -25,6 +25,8 @@ import {
 } from '@ant-design/icons';
 import { deleteCookie } from 'cookies-next';
 import { ACCESS_TOKEN_KEY, apiClient } from '@gateway-workspace/shared/utils/client';
+import OrderDrawer from './OrderDrawer';
+import PauseOrderButton from './PauseOrderButton';
 
 const { Header, Sider, Content } = Layout;
 
@@ -74,7 +76,8 @@ const AdminLayout: React.FC = () => {
 
   const menuItems = [
     { key: '/dashboard', icon: <DashboardOutlined />, label: 'Dashboard' },
-    { key: '/dashboard/battle-pass-orders', icon: <ShoppingCartOutlined />, label: 'Đơn hàng Premium BP' },
+    { key: '/dashboard/order-management', icon: <ShoppingCartOutlined />, label: 'Quản lý Đơn hàng' },
+    { key: '/dashboard/battle-pass-orders', icon: <CrownOutlined />, label: 'Đơn hàng Premium BP' },
     { key: '/dashboard/reward-exchange', icon: <SwapOutlined />, label: 'Quản lý đổi thưởng' },
     { key: '/dashboard/menu-management', icon: <CoffeeOutlined />, label: 'Quản lý Menu' },
     { key: '/dashboard/handover-reports', icon: <FileTextOutlined />, label: 'Báo cáo bàn giao' },
@@ -151,13 +154,24 @@ const AdminLayout: React.FC = () => {
               </div>
             )}
           </div>
-          <Menu 
-            theme="dark" 
-            mode="inline" 
-            selectedKeys={[location.pathname]} 
-            items={menuItems} 
+          <Menu
+            theme="dark"
+            mode="inline"
+            selectedKeys={[location.pathname]}
+            items={menuItems}
             onClick={({ key }) => navigate(key)}
           />
+          <div className="px-3 py-3 border-t border-gray-700">
+            <Button
+              type="text"
+              icon={<LogoutOutlined />}
+              onClick={handleLogout}
+              className="text-gray-400 hover:text-red-400 w-full"
+              style={{ textAlign: collapsed ? 'center' : 'left' }}
+            >
+              {!collapsed && 'Đăng xuất'}
+            </Button>
+          </div>
         </Sider>
         <Layout className="min-w-0 transition-all duration-200 relative">
           <Header className="flex items-center justify-between px-2 sm:px-6 border-b border-gray-700 bg-gray-800 sticky top-0 z-50">
@@ -185,10 +199,9 @@ const AdminLayout: React.FC = () => {
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-4">
-              <Button type="primary" icon={<LogoutOutlined />} onClick={handleLogout}>
-                Đăng xuất
-              </Button>
+            <div className="flex items-center gap-3">
+              <PauseOrderButton />
+              <OrderDrawer tenantId={apiClient.defaults.headers.common['x-tenant-id'] as string ?? ''} />
             </div>
           </Header>
           <Content id="main-content" className="p-4 sm:p-6 bg-gray-900 min-h-screen">

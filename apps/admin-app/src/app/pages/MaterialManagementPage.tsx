@@ -283,11 +283,7 @@ export default function MaterialManagementPage() {
     <div className="p-0">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <Breadcrumb className="mb-2">
-            <Breadcrumb.Item>Dashboard</Breadcrumb.Item>
-            <Breadcrumb.Item>Quản lý kho</Breadcrumb.Item>
-            <Breadcrumb.Item>Danh mục nguyên liệu</Breadcrumb.Item>
-          </Breadcrumb>
+          <Breadcrumb className="mb-2" items={[{ title: "Dashboard" }, { title: "Quản lý kho" }, { title: "Danh mục nguyên liệu" }]} />
           <h1 className="text-2xl font-bold text-white m-0">
             Danh mục Nguyên vật liệu
           </h1>
@@ -354,7 +350,7 @@ export default function MaterialManagementPage() {
         onCancel={handleModalCancel}
         footer={null}
         width={600}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit} className="mt-4">
           <div className="grid grid-cols-2 gap-4">
@@ -399,7 +395,7 @@ export default function MaterialManagementPage() {
         onCancel={() => setStockManagerVisible(false)}
         footer={null}
         width={900}
-        destroyOnClose
+        destroyOnHidden
       >
         <div className="mb-4">
           <Input.Search
@@ -427,7 +423,7 @@ export default function MaterialManagementPage() {
         onCancel={() => setStockModalVisible(false)}
         footer={null}
         width={500}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={stockForm} layout="vertical" onFinish={handleStockSubmit} className="mt-4">
           <Form.Item name="materialId" hidden><Input /></Form.Item>

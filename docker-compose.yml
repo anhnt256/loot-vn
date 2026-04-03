@@ -1,4 +1,20 @@
 services:
+  # Redis - dùng chung cho tất cả tenant, bật AOF persistence để không mất data khi restart
+  redis:
+    image: redis:7-alpine
+    container_name: ${TENANT_PREFIX:-}redis
+    restart: always
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    networks:
+      - internal-network
+
   # API Service
   api:
     build:
@@ -12,9 +28,12 @@ services:
       - TZ=Asia/Ho_Chi_Minh
       - PORT=7300
       - HOST=0.0.0.0
+      - REDIS_HOST=redis  # trỏ vào Redis container nội bộ, override REDIS_HOST trong .env
     env_file:
       - .env
     restart: always
+    depends_on:
+      - redis
     networks:
       - internal-network
       - proxy-network # Để Nginx Proxy Manager nhìn thấy API này
@@ -128,6 +147,10 @@ services:
       - proxy-network
 
 
+
+volumes:
+  redis-data:
+    name: ${TENANT_PREFIX:-}redis-data
 
 networks:
   # Mạng nội bộ: Tự động tạo tên duy nhất trên VPS (VD: lootvn-govap-internal)

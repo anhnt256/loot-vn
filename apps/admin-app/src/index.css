@@ -40,3 +40,15 @@
 .ant-table-cell.shift-divider {
   border-right: 2px solid #374151 !important;
 }
+
+/* Order table alternating row colors per order group */
+.order-row-even > td {
+  background: #111827 !important; /* gray-900 */
+}
+.order-row-odd > td {
+  background: #1a2332 !important; /* slightly lighter */
+}
+.order-row-even:hover > td,
+.order-row-odd:hover > td {
+  background: #1f2937 !important; /* gray-800 on hover */
+}

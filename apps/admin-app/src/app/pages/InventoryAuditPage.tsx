@@ -107,11 +107,7 @@ export default function InventoryAuditPage() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <Breadcrumb className="mb-2">
-            <Breadcrumb.Item>Dashboard</Breadcrumb.Item>
-            <Breadcrumb.Item>Quản lý kho</Breadcrumb.Item>
-            <Breadcrumb.Item>Nhật ký biến động</Breadcrumb.Item>
-          </Breadcrumb>
+          <Breadcrumb className="mb-2" items={[{ title: "Dashboard" }, { title: "Quản lý kho" }, { title: "Nhật ký biến động" }]} />
           <h1 className="text-2xl font-bold text-white m-0">Nhật ký & Audit Kho</h1>
         </div>
         <Space>

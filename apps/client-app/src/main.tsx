@@ -20,6 +20,9 @@ async function bootstrap() {
           if (config.primaryColor) {
             document.documentElement.style.setProperty('--primary-color', config.primaryColor);
           }
+          if (config.secondaryColor) {
+            document.documentElement.style.setProperty('--secondary-color', config.secondaryColor);
+          }
           if (config.name) {
             document.title = config.name;
           }

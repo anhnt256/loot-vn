@@ -1,146 +1,116 @@
-import React, { useState } from 'react';
-import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { 
-  Users, 
-  Flag, 
-  Building,
-  Key, 
-  Zap, 
-  BarChart3, 
-  LayoutGrid, 
-  Settings, 
-  Package, 
-  LogOut,
-  ChevronLeft,
-  ChevronRight
-} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { apiClient, ACCESS_TOKEN_KEY } from '@gateway-workspace/shared/utils/client';
+import { deleteCookie } from 'cookies-next';
+import { clearCurrentUser, getCurrentUser, setCurrentUser, CurrentUser } from '../constants';
 import { cn } from '../../lib/utils';
+import ChatPanel from './ChatPanel';
+import { CartProvider } from '../contexts/CartContext';
 
-const SidebarItem = ({ 
-  icon: Icon, 
-  label, 
-  active, 
-  onClick 
-}: { 
-  icon: any, 
-  label: string, 
-  active?: boolean, 
-  onClick?: () => void 
-}) => (
-  <div 
-    onClick={onClick}
-    className={cn(
-      "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 group",
-      active 
-        ? "bg-[#e2eafc] text-[#003594] font-medium" 
-        : "text-[#4b5563] hover:bg-[#f3f4f6] hover:text-[#111827]"
-    )}
-  >
-    <Icon size={18} className={cn(active ? "text-[#003594]" : "text-[#9ca3af] group-hover:text-[#4b5563]")} />
-    <span className="text-sm">{label}</span>
-  </div>
-);
+const navLinks = [
+  { href: '/dashboard/check-in', label: 'Điểm danh' },
+  { href: '/dashboard/games', label: 'Trò chơi' },
+  { href: '/dashboard/order', label: 'Đặt hàng' },
+  { href: '/dashboard/store', label: 'Đổi thưởng' },
+  { href: '/dashboard/feedback', label: 'Phản hồi đã gửi' },
+  { href: '/dashboard/battle-pass', label: 'Battle Pass' },
+  { href: '/dashboard/voucher', label: 'Voucher' },
+];
 
-const SidebarCategory = ({ label }: { label: string }) => (
-  <div className="px-3 mt-6 mb-2">
-    <span className="text-[10px] font-bold uppercase tracking-wider text-[#9ca3af]">{label}</span>
-  </div>
-);
-
-export const DashboardLayout = () => {
-  const navigate = useNavigate();
+const DashboardLayout: React.FC = () => {
   const location = useLocation();
-  const [collapsed, setCollapsed] = useState(false);
+  const navigate = useNavigate();
+  const [currentUser, setUser] = useState<CurrentUser>(getCurrentUser()!);
 
-  const menuItems = [
-    { category: 'Business', items: [
-      { id: 'org', label: 'Organization Management', icon: Building, path: '/dashboard/organization' },
-      { id: 'tenant', label: 'Tenant Management', icon: Users, path: '/dashboard/tenant' },
-      { id: 'flags', label: 'Feature Flags', icon: Flag, path: '/dashboard/flags' },
-      { id: 'access', label: 'Endpoint Access', icon: Key, path: '/dashboard/access' },
-      { id: 'vertex', label: 'Vertex Usage', icon: Zap, path: '/dashboard/vertex' },
-      { id: 'metrics', label: 'IDP Usage Metrics', icon: BarChart3, path: '/dashboard/metrics' },
-    ]},
-    { category: 'Administration', items: [
-      { id: 'categories', label: 'Illustration Categories', icon: LayoutGrid, path: '/dashboard/illustration-categories' },
-      { id: 'settings', label: 'Illustration Settings', icon: Settings, path: '/dashboard/illustration-settings' },
-      { id: 'products', label: 'Illustration Products', icon: Package, path: '/dashboard/illustration-products' },
-    ]}
-  ];
+  // Refresh user stats from server once on mount
+  useEffect(() => {
+    const user = getCurrentUser();
+    if (!user) return;
+    const userId = user.userId || user.id;
+    if (!userId) return;
 
-  const handleLogout = () => {
+    apiClient
+      .post('/dashboard/user-calculator', { listUsers: [userId] })
+      .then((res) => {
+        const fresh = Array.isArray(res.data?.data) ? res.data.data[0] : null;
+        if (fresh) {
+          const updated = { ...user, ...fresh };
+          setCurrentUser(updated);
+          setUser(updated);
+        }
+      })
+      .catch(() => {/* silent */});
+  }, []);
+
+  const handleLogout = async () => {
+    try { await apiClient.delete('/dashboard/cart'); } catch { /* ignore */ }
+    try { await apiClient.post('/auth/logout'); } catch { /* ignore */ }
+    clearCurrentUser();
+    deleteCookie(ACCESS_TOKEN_KEY);
     navigate('/login');
   };
 
   return (
-    <div className="flex h-screen bg-[#f8fafc] overflow-hidden">
-      {/* Sidebar */}
-      <div 
-        className={cn(
-          "bg-white border-r border-[#e2e8f0] flex flex-col transition-all duration-300 relative",
-          collapsed ? "w-20" : "w-64"
-        )}
-      >
-        {/* Logo */}
-        <div className="p-6 flex items-center gap-2">
-          <img 
-            src="https://covergo.ai/wp-content/uploads/2021/04/CoverGo-Logo-Dark.png" 
-            alt="CoverGo" 
-            className="h-8 object-contain"
-            onError={(e) => {
-               (e.target as HTMLImageElement).src = '/logo.png';
-            }}
-          />
-        </div>
-
-        {/* Navigation */}
-        <div className="flex-1 overflow-y-auto px-3">
-          {menuItems.map((group) => (
-            <React.Fragment key={group.category}>
-              {!collapsed && <SidebarCategory label={group.category} />}
-              <div className="space-y-1">
-                {group.items.map((item) => (
-                  <SidebarItem 
-                    key={item.id}
-                    icon={item.icon}
-                    label={collapsed ? "" : item.label}
-                    active={location.pathname === item.path}
-                    onClick={() => navigate(item.path)}
-                  />
-                ))}
-              </div>
-            </React.Fragment>
-          ))}
-        </div>
-
-        {/* Footer */}
-        <div className="p-3 border-t border-[#f1f5f9]">
-          <div className="mb-2 p-2 bg-[#f8fafc] rounded-lg">
-             <div className="w-8 h-8 rounded-full bg-[#003594] border-2 border-white shadow-sm" />
+    <CartProvider>
+    <div className="flex h-screen bg-gray-200 overflow-hidden">
+      {/* Left Sidebar */}
+      <div className="bg-gray-800 text-white w-64 flex-shrink-0 py-7 px-2">
+        <nav>
+          {/* User info */}
+          <div className="flex justify-between items-center mb-5 px-2">
+            <span className="font-sans font-bold text-primary uppercase tracking-wider text-base truncate max-w-[110px]">
+              {currentUser.userName}
+            </span>
+            <div className="flex items-center bg-gray-700 rounded-full px-3 py-1 gap-1">
+              <span className="font-gaming font-bold text-yellow-400 text-base">
+                {(currentUser.stars ?? 0).toLocaleString()}
+              </span>
+              <span className="text-yellow-400 text-sm">⭐</span>
+            </div>
           </div>
-          <SidebarItem 
-            icon={LogOut} 
-            label={collapsed ? "" : "Log out"} 
-            onClick={handleLogout}
-          />
-        </div>
 
-        {/* Toggle Button */}
-        <button 
-          onClick={() => setCollapsed(!collapsed)}
-          className="absolute -right-3 top-10 w-6 h-6 rounded-full bg-white border border-[#e2e8f0] flex items-center justify-center shadow-sm text-[#9ca3af] hover:text-[#4b5563]"
-        >
-          {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-        </button>
+          <div className="border-t border-gray-700 mb-3" />
+
+          {navLinks.map(({ href, label }) => (
+            <Link
+              key={href}
+              to={href}
+              className={cn(
+                'block py-2.5 px-4 rounded-lg transition duration-200 hover:bg-gray-700 text-gray-300 hover:text-white no-underline font-medium text-[15px] mb-0.5',
+                location.pathname === href ? 'nav-active' : ''
+              )}
+            >
+              {label}
+            </Link>
+          ))}
+
+          <div className="border-t border-gray-700 mt-3 mb-3" />
+
+          <div
+            onClick={handleLogout}
+            className="block py-2.5 px-4 rounded-lg transition duration-200 hover:bg-red-900/40 hover:text-red-400 cursor-pointer text-gray-400 font-medium text-[15px]"
+          >
+            Thoát
+          </div>
+        </nav>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <main className="flex-1 overflow-y-auto p-8">
-           <Outlet />
-        </main>
+      <div className="flex-1 overflow-hidden">
+        <div className="h-full overflow-auto">
+          <Outlet />
+        </div>
+      </div>
+
+      {/* Right Chat Panel */}
+      <div className="w-80 bg-gray-900 border-l border-gray-700 shadow-lg flex-shrink-0">
+        <ChatPanel
+          machineName={currentUser.machineName}
+          defaultTab={location.pathname.includes('order') ? 'cart' : 'chat'}
+        />
       </div>
     </div>
+    </CartProvider>
   );
 };
 

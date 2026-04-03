@@ -755,6 +755,13 @@ exports.Prisma.MenuCategoryScalarFieldEnum = {
   sortOrder: 'sortOrder',
   isActive: 'isActive',
   tenantId: 'tenantId',
+  scheduleEnabled: 'scheduleEnabled',
+  scheduleTimeStart: 'scheduleTimeStart',
+  scheduleTimeEnd: 'scheduleTimeEnd',
+  scheduleDateStart: 'scheduleDateStart',
+  scheduleDateEnd: 'scheduleDateEnd',
+  scheduleMachineGroupIds: 'scheduleMachineGroupIds',
+  requiredCategoryIds: 'requiredCategoryIds',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -802,9 +809,58 @@ exports.Prisma.InventoryTransactionScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.FoodOrderScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  macAddress: 'macAddress',
+  computerName: 'computerName',
+  tenantId: 'tenantId',
+  status: 'status',
+  totalAmount: 'totalAmount',
+  note: 'note',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.FoodOrderStatusHistoryScalarFieldEnum = {
+  id: 'id',
+  orderId: 'orderId',
+  status: 'status',
+  changedBy: 'changedBy',
+  note: 'note',
+  changedAt: 'changedAt'
+};
+
+exports.Prisma.FoodOrderDetailScalarFieldEnum = {
+  id: 'id',
+  orderId: 'orderId',
+  recipeId: 'recipeId',
+  recipeVersionId: 'recipeVersionId',
+  recipeName: 'recipeName',
+  salePrice: 'salePrice',
+  quantity: 'quantity',
+  subtotal: 'subtotal',
+  note: 'note',
+  recipeSnapshot: 'recipeSnapshot'
+};
+
+exports.Prisma.StaffShiftScalarFieldEnum = {
+  id: 'id',
+  staffId: 'staffId',
+  staffName: 'staffName',
+  tenantId: 'tenantId',
+  startedAt: 'startedAt',
+  endedAt: 'endedAt',
+  isActive: 'isActive',
+  note: 'note',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.FeedbackScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
+  itemId: 'itemId',
   type: 'type',
   title: 'title',
   description: 'description',
@@ -1279,7 +1335,11 @@ exports.Prisma.MaterialUnitConversionOrderByRelevanceFieldEnum = {
 };
 
 exports.Prisma.MenuCategoryOrderByRelevanceFieldEnum = {
-  name: 'name'
+  name: 'name',
+  scheduleTimeStart: 'scheduleTimeStart',
+  scheduleTimeEnd: 'scheduleTimeEnd',
+  scheduleMachineGroupIds: 'scheduleMachineGroupIds',
+  requiredCategoryIds: 'requiredCategoryIds'
 };
 
 exports.Prisma.RecipeOrderByRelevanceFieldEnum = {
@@ -1299,6 +1359,28 @@ exports.Prisma.InventoryTransactionOrderByRelevanceFieldEnum = {
   type: 'type',
   reason: 'reason',
   referenceId: 'referenceId'
+};
+
+exports.Prisma.FoodOrderOrderByRelevanceFieldEnum = {
+  macAddress: 'macAddress',
+  computerName: 'computerName',
+  note: 'note'
+};
+
+exports.Prisma.FoodOrderStatusHistoryOrderByRelevanceFieldEnum = {
+  status: 'status',
+  note: 'note'
+};
+
+exports.Prisma.FoodOrderDetailOrderByRelevanceFieldEnum = {
+  recipeName: 'recipeName',
+  note: 'note',
+  recipeSnapshot: 'recipeSnapshot'
+};
+
+exports.Prisma.StaffShiftOrderByRelevanceFieldEnum = {
+  staffName: 'staffName',
+  note: 'note'
 };
 
 exports.Prisma.FeedbackOrderByRelevanceFieldEnum = {
@@ -1519,11 +1601,21 @@ exports.HandoverReportType = exports.$Enums.HandoverReportType = {
   BAO_CAO_NUOC: 'BAO_CAO_NUOC'
 };
 
+exports.FoodOrderStatus = exports.$Enums.FoodOrderStatus = {
+  PENDING: 'PENDING',
+  CHAP_NHAN: 'CHAP_NHAN',
+  THU_TIEN: 'THU_TIEN',
+  PHUC_VU: 'PHUC_VU',
+  HOAN_THANH: 'HOAN_THANH',
+  HUY: 'HUY'
+};
+
 exports.FeedbackType = exports.$Enums.FeedbackType = {
   IMPROVEMENT: 'IMPROVEMENT',
   BUG_REPORT: 'BUG_REPORT',
   FEATURE_REQUEST: 'FEATURE_REQUEST',
-  GENERAL: 'GENERAL'
+  GENERAL: 'GENERAL',
+  RESTOCK_REQUEST: 'RESTOCK_REQUEST'
 };
 
 exports.FeedbackStatus = exports.$Enums.FeedbackStatus = {
@@ -1650,6 +1742,10 @@ exports.Prisma.ModelName = {
   RecipeVersion: 'RecipeVersion',
   RecipeItem: 'RecipeItem',
   InventoryTransaction: 'InventoryTransaction',
+  FoodOrder: 'FoodOrder',
+  FoodOrderStatusHistory: 'FoodOrderStatusHistory',
+  FoodOrderDetail: 'FoodOrderDetail',
+  StaffShift: 'StaffShift',
   Feedback: 'Feedback',
   FnetHistory: 'FnetHistory',
   PromotionReward: 'PromotionReward',

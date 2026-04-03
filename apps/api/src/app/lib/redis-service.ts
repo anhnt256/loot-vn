@@ -135,6 +135,19 @@ export class RedisService {
   }
 
   /**
+   * Set a key-value pair without TTL (persists until manually deleted)
+   */
+  async set(key: string, value: any): Promise<void> {
+    try {
+      const valueStr = typeof value === 'string' ? value : JSON.stringify(value);
+      await this.publisher.set(key, valueStr);
+    } catch (error) {
+      console.error('Error setting key:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Set a key-value pair with TTL
    */
   async setex(key: string, seconds: number, value: any): Promise<void> {
@@ -228,6 +241,41 @@ export class RedisService {
       return await this.publisher.scard(key);
     } catch (error) {
       console.error('Error getting set count:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Acquire a distributed lock using SET NX EX.
+   * Returns true if lock was acquired, false if already held.
+   */
+  async acquireLock(key: string, ttlSeconds: number, lockValue: string): Promise<boolean> {
+    try {
+      const result = await this.publisher.set(key, lockValue, 'EX', ttlSeconds, 'NX');
+      return result === 'OK';
+    } catch (error) {
+      console.error('Error acquiring lock:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Release a distributed lock atomically (only if we own it).
+   * Uses Lua script to prevent releasing another owner's lock.
+   */
+  async releaseLock(key: string, lockValue: string): Promise<boolean> {
+    try {
+      const script = `
+        if redis.call("get", KEYS[1]) == ARGV[1] then
+          return redis.call("del", KEYS[1])
+        else
+          return 0
+        end
+      `;
+      const result = await this.publisher.eval(script, 1, key, lockValue);
+      return result === 1;
+    } catch (error) {
+      console.error('Error releasing lock:', error);
       throw error;
     }
   }

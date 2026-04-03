@@ -22,6 +22,7 @@ const DashboardOverview: React.FC = () => {
   const [computers, setComputers] = useState<any[]>([]);
   const [zones, setZones] = useState<any[]>([]);
   const [layouts, setLayouts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [countdown, setCountdown] = useState(90);
   const [activeTab, setActiveTab] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -38,6 +39,7 @@ const DashboardOverview: React.FC = () => {
   }, []);
 
   const fetchComputers = async () => {
+    setLoading(true);
     try {
       const [compRes, zoneRes, layoutRes] = await Promise.all([
         apiClient.get('/computer').catch(() => ({ data: [] })),
@@ -52,6 +54,8 @@ const DashboardOverview: React.FC = () => {
       setCountdown(90);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -167,20 +171,32 @@ const DashboardOverview: React.FC = () => {
         <div className="flex-1 min-h-0 relative">
           {(activeTab === 'all' || viewMode === 'list' || isMobile) ? (
             <div className="flex flex-wrap justify-start items-start gap-2 h-full overflow-y-auto content-start pr-1 sm:pr-2">
-            {(activeTab === 'all' ? mergedComputers : mergedComputers.filter(c => String(c.zoneId) === activeTab)).map((item, index) => (
-              <ComputerCard
-                key={item.name || index}
-                computer={item}
-                onClick={() => {
-                  setCurrentComputer(item);
-                  setShowDetailDrawer(true);
-                }}
-              />
-            ))}
-            {(activeTab === 'all' ? mergedComputers : mergedComputers.filter(c => String(c.zoneId) === activeTab)).length === 0 && (
-              <div className="w-full py-20 text-center text-gray-500">
-                Không có dữ liệu máy tính
-              </div>
+            {loading ? (
+              Array.from({ length: 20 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="animate-pulse rounded-lg bg-gray-700/60 border border-gray-600/40"
+                  style={{ width: 90, height: 72 }}
+                />
+              ))
+            ) : (
+              <>
+                {(activeTab === 'all' ? mergedComputers : mergedComputers.filter(c => String(c.zoneId) === activeTab)).map((item, index) => (
+                  <ComputerCard
+                    key={item.name || index}
+                    computer={item}
+                    onClick={() => {
+                      setCurrentComputer(item);
+                      setShowDetailDrawer(true);
+                    }}
+                  />
+                ))}
+                {(activeTab === 'all' ? mergedComputers : mergedComputers.filter(c => String(c.zoneId) === activeTab)).length === 0 && (
+                  <div className="w-full py-20 text-center text-gray-500">
+                    Không có dữ liệu máy tính
+                  </div>
+                )}
+              </>
             )}
           </div>
         ) : (

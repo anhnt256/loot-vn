@@ -1,1 +1,66 @@
 @import "tailwindcss";
+
+:root {
+  --primary-color: #eb2b90;
+  --secondary-color: #23c3f3;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Numbers, stats, titles */
+.font-gaming {
+  font-family: 'Rajdhani', sans-serif;
+}
+
+/* Tenant theme buttons */
+.btn-primary {
+  background-color: var(--primary-color);
+  color: #fff;
+}
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(0.85);
+}
+.btn-secondary {
+  background-color: var(--secondary-color);
+  color: #fff;
+}
+.btn-secondary:hover:not(:disabled) {
+  filter: brightness(0.85);
+}
+
+/* Tenant theme text colors */
+.text-primary {
+  color: var(--primary-color) !important;
+}
+.text-secondary {
+  color: var(--secondary-color) !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* Tenant theme nav active */
+.nav-active {
+  background-color: color-mix(in srgb, var(--primary-color) 25%, transparent);
+  color: var(--primary-color) !important;
+}

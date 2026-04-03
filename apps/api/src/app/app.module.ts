@@ -17,6 +17,9 @@ import { GameModule } from './admin-app/game/game.module';
 import { ShiftHandoverReportModule } from './admin-app/shift-handover-report/shift-handover-report.module';
 import { MaterialModule } from './admin-app/material/material.module';
 import { MenuModule } from './admin-app/menu/menu.module';
+import { FeedbackModule } from './admin-app/feedback/feedback.module';
+import { ClientDashboardModule } from './admin-app/dashboard/dashboard.module';
+import { OrderModule } from './admin-app/order/order.module';
 
 @Module({
   imports: [
@@ -36,6 +39,9 @@ import { MenuModule } from './admin-app/menu/menu.module';
     ShiftHandoverReportModule,
     MaterialModule,
     MenuModule,
+    FeedbackModule,
+    ClientDashboardModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,45 +1,28 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Card, Input, Button, Typography, message, ConfigProvider, theme, Spin } from 'antd';
+import { App, Card, Input, Button, Typography, ConfigProvider, theme, Spin } from 'antd';
 import { LaptopOutlined, LoadingOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { setCookie } from 'cookies-next';
 import { apiClient, ACCESS_TOKEN_KEY } from '@gateway-workspace/shared/utils/client';
+import { getCurrentUser, setCurrentUser } from '../constants';
 
 const { Title, Text } = Typography;
 
 const isDev = import.meta.env.DEV;
 
 const Login: React.FC = () => {
+  if (getCurrentUser()) return <Navigate to="/dashboard" replace />;
+
+  const { message } = App.useApp();
   const [macAddress, setMacAddress] = useState('');
   const [loading, setLoading] = useState(false);
   const [autoLoginAttempted, setAutoLoginAttempted] = useState(false);
   const navigate = useNavigate();
 
-  const defaultTenantConfig = (typeof window !== 'undefined' && (window as any).__TENANT_CONFIG__) || {};
-  const [tenantLogo, setTenantLogo] = useState<string | null>(defaultTenantConfig?.logo?.url || defaultTenantConfig?.logo || null);
-  const [tenantColor, setTenantColor] = useState<string>(defaultTenantConfig?.primaryColor || '#ff721f');
-
-  useEffect(() => {
-    const fetchTenantInfo = async () => {
-      try {
-        const result = await apiClient.get('/auth/tenant-info');
-        if (result.data?.success && result.data?.data) {
-          const tenantData = result.data.data;
-          let logo = tenantData.logo;
-          if (typeof logo === 'object') {
-            logo = logo?.url || null;
-          }
-          setTenantLogo(logo);
-          if (tenantData.primaryColor) {
-            setTenantColor(tenantData.primaryColor);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to fetch tenant info:', err);
-      }
-    };
-    fetchTenantInfo();
-  }, []);
+  const tenantConfig = (typeof window !== 'undefined' && (window as any).__TENANT_CONFIG__) || {};
+  const logo = tenantConfig?.logo;
+  const tenantLogo: string | null = typeof logo === 'object' ? (logo?.url || null) : (logo || null);
+  const tenantColor: string = tenantConfig?.primaryColor || '#ff721f';
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -56,9 +39,20 @@ const Login: React.FC = () => {
         loginMethod: 'client',
       });
 
-      if (result.data.statusCode === 200 || result.data.success) {
-        const { token } = result.data;
+      if (result.status === 200 || result.status === 201 || result.data.statusCode === 200 || result.data.success) {
+        const { token, success: _s, statusCode: _sc, message: _msg, ...userPayload } = result.data;
         if (token) setCookie(ACCESS_TOKEN_KEY, token, { maxAge: 86400, path: '/' });
+        setCurrentUser({
+          userId: userPayload.userId,
+          userName: userPayload.userName,
+          fullName: userPayload.fullName,
+          machineName: userPayload.computerName,
+          role: userPayload.role,
+          stars: 0,
+          totalCheckIn: 0,
+          claimedCheckIn: 0,
+          availableCheckIn: 0,
+        });
         message.success('Đăng nhập thành công!');
         navigate('/dashboard');
       } else {
@@ -101,12 +95,10 @@ const Login: React.FC = () => {
   // Production: hiển thị loading khi đang auto login
   if (!isDev && loading) {
     return (
-      <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
-        <div className="min-h-screen flex flex-col justify-center items-center bg-[#0d1117] gap-4">
-          <Spin indicator={<LoadingOutlined style={{ fontSize: 48, color: tenantColor }} spin />} />
-          <Text style={{ color: '#8b949e', fontSize: '16px' }}>Đang tự động đăng nhập...</Text>
-        </div>
-      </ConfigProvider>
+      <div className="min-h-screen flex flex-col justify-center items-center bg-[#0d1117] gap-4">
+        <Spin indicator={<LoadingOutlined style={{ fontSize: 48, color: tenantColor }} spin />} />
+        <Text style={{ color: '#8b949e', fontSize: '16px' }}>Đang tự động đăng nhập...</Text>
+      </div>
     );
   }
 

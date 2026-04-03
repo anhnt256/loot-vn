@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import dayjs from "dayjs";
 import {
   PlusOutlined,
   EditOutlined,
@@ -8,7 +9,24 @@ import {
   EyeInvisibleOutlined,
   LoadingOutlined,
   CameraOutlined,
+  HolderOutlined,
+  ClockCircleOutlined,
 } from "@ant-design/icons";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   Button,
   Modal,
@@ -21,10 +39,14 @@ import {
   Space,
   message,
   Popconfirm,
-  List,
   Badge,
   Spin,
   Upload,
+  Switch,
+  TimePicker,
+  DatePicker,
+  Divider,
+  Tooltip,
 } from "antd";
 import type { UploadChangeParam } from "antd/es/upload";
 import { apiClient } from "@gateway-workspace/shared/utils/client";
@@ -37,12 +59,24 @@ function getImageUrl(imageUrl: string | null) {
   return `${API_BASE}${imageUrl}`;
 }
 
+interface MachineGroup {
+  MachineGroupId: number;
+  MachineGroupName: string;
+}
+
 interface MenuCategory {
   id: number;
   name: string;
   sortOrder: number;
   isActive: boolean;
   _count: { recipes: number };
+  scheduleEnabled: boolean;
+  scheduleTimeStart: string | null;
+  scheduleTimeEnd: string | null;
+  scheduleDateStart: string | null;
+  scheduleDateEnd: string | null;
+  scheduleMachineGroupIds: string | null;
+  requiredCategoryIds: string | null;
 }
 
 interface MenuItem {
@@ -55,6 +89,87 @@ interface MenuItem {
   category: { id: number; name: string } | null;
 }
 
+function SortableCategoryItem({
+  cat,
+  isSelected,
+  onSelect,
+  onEdit,
+  onDelete,
+}: {
+  cat: MenuCategory;
+  isSelected: boolean;
+  onSelect: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cat.id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center rounded px-2 py-1.5 cursor-pointer transition-colors ${
+        isSelected ? "bg-blue-900/40" : "hover:bg-gray-700/50"
+      }`}
+      onClick={onSelect}
+    >
+      {/* Drag handle - fixed width */}
+      <span
+        {...attributes}
+        {...listeners}
+        className="text-gray-500 hover:text-gray-300 cursor-grab active:cursor-grabbing shrink-0 w-5 flex justify-center"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <HolderOutlined />
+      </span>
+
+      {/* Category name - takes remaining space, truncates */}
+      <span className="text-gray-200 flex-1 truncate min-w-0 mx-2 text-sm">{cat.name}</span>
+
+      {/* Fixed-width icons group - always 116px regardless of content */}
+      <div className="flex items-center gap-1 shrink-0 w-[116px] justify-end">
+        {cat.scheduleEnabled && (
+          <Tooltip title="Đang hẹn giờ">
+            <ClockCircleOutlined className="text-cyan-400" style={{ fontSize: 12 }} />
+          </Tooltip>
+        )}
+        {cat.requiredCategoryIds && cat.requiredCategoryIds !== '[]' && (
+          <Tooltip title="Yêu cầu món chính">
+            <span className="text-orange-400 text-xs font-bold leading-none">!</span>
+          </Tooltip>
+        )}
+        <Badge count={cat._count.recipes} showZero style={{ backgroundColor: '#6b7280' }} />
+        <Button
+          type="text"
+          size="small"
+          icon={<EditOutlined />}
+          onClick={(e) => { e.stopPropagation(); onEdit(); }}
+        />
+        <Popconfirm
+          title="Xoá danh mục này?"
+          description="Sản phẩm sẽ chuyển về Chưa phân loại"
+          onConfirm={(e) => { e?.stopPropagation(); onDelete(); }}
+          onCancel={(e) => e?.stopPropagation()}
+        >
+          <Button
+            type="text"
+            size="small"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </Popconfirm>
+      </div>
+    </div>
+  );
+}
+
 export default function MenuManagementPage() {
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [items, setItems] = useState<MenuItem[]>([]);
@@ -65,6 +180,10 @@ export default function MenuManagementPage() {
   const [editingCat, setEditingCat] = useState<MenuCategory | null>(null);
   const [catForm] = Form.useForm();
 
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const [machineGroups, setMachineGroups] = useState<MachineGroup[]>([]);
+  const [catScheduleEnabled, setCatScheduleEnabled] = useState(false);
+
   const [itemModalVisible, setItemModalVisible] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [itemForm] = Form.useForm();
@@ -73,6 +192,9 @@ export default function MenuManagementPage() {
 
   useEffect(() => {
     fetchData();
+    apiClient.get<MachineGroup[]>("/admin/menu/machine-groups")
+      .then(r => setMachineGroups(r.data || []))
+      .catch(() => {});
   }, []);
 
   const fetchData = async () => {
@@ -101,17 +223,48 @@ export default function MenuManagementPage() {
   // --- Category CRUD ---
   const openCatModal = (cat?: MenuCategory) => {
     setEditingCat(cat || null);
-    catForm.setFieldsValue(cat || { name: "", sortOrder: 0 });
+    const enabled = cat?.scheduleEnabled ?? false;
+    setCatScheduleEnabled(enabled);
+    catForm.setFieldsValue({
+      name: cat?.name ?? "",
+      scheduleEnabled: enabled,
+      scheduleTime: cat?.scheduleTimeStart && cat?.scheduleTimeEnd
+        ? [dayjs(cat.scheduleTimeStart, "HH:mm"), dayjs(cat.scheduleTimeEnd, "HH:mm")]
+        : null,
+      scheduleDate: cat?.scheduleDateStart && cat?.scheduleDateEnd
+        ? [dayjs(cat.scheduleDateStart), dayjs(cat.scheduleDateEnd)]
+        : null,
+      scheduleMachineGroupIds: cat?.scheduleMachineGroupIds
+        ? JSON.parse(cat.scheduleMachineGroupIds)
+        : [],
+      requiredCategoryIds: cat?.requiredCategoryIds
+        ? JSON.parse(cat.requiredCategoryIds)
+        : [],
+    });
     setCatModalVisible(true);
   };
 
   const handleCatSubmit = async (values: any) => {
     try {
+      const payload: any = {
+        name: values.name,
+        scheduleEnabled: values.scheduleEnabled ?? false,
+        scheduleTimeStart: values.scheduleTime?.[0]?.format("HH:mm") ?? null,
+        scheduleTimeEnd: values.scheduleTime?.[1]?.format("HH:mm") ?? null,
+        scheduleDateStart: values.scheduleDate?.[0]?.toISOString() ?? null,
+        scheduleDateEnd: values.scheduleDate?.[1]?.toISOString() ?? null,
+        scheduleMachineGroupIds: values.scheduleMachineGroupIds?.length
+          ? JSON.stringify(values.scheduleMachineGroupIds)
+          : null,
+        requiredCategoryIds: values.requiredCategoryIds?.length
+          ? JSON.stringify(values.requiredCategoryIds)
+          : null,
+      };
       if (editingCat) {
-        await apiClient.patch(`/admin/menu/categories/${editingCat.id}`, values);
+        await apiClient.patch(`/admin/menu/categories/${editingCat.id}`, payload);
         message.success("Cập nhật danh mục thành công");
       } else {
-        await apiClient.post("/admin/menu/categories", values);
+        await apiClient.post("/admin/menu/categories", payload);
         message.success("Thêm danh mục thành công");
       }
       setCatModalVisible(false);
@@ -129,6 +282,22 @@ export default function MenuManagementPage() {
       fetchData();
     } catch {
       message.error("Lỗi khi xoá danh mục");
+    }
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = categories.findIndex((c) => c.id === active.id);
+    const newIndex = categories.findIndex((c) => c.id === over.id);
+    const reordered = arrayMove(categories, oldIndex, newIndex);
+    setCategories(reordered);
+    const orders = reordered.map((c, i) => ({ id: c.id, sortOrder: i }));
+    try {
+      await apiClient.patch("/admin/menu/categories/reorder", { orders });
+    } catch {
+      message.error("Lỗi khi lưu thứ tự danh mục");
+      fetchData();
     }
   };
 
@@ -199,10 +368,7 @@ export default function MenuManagementPage() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <Breadcrumb className="mb-2">
-            <Breadcrumb.Item>Dashboard</Breadcrumb.Item>
-            <Breadcrumb.Item>Quản lý Menu</Breadcrumb.Item>
-          </Breadcrumb>
+          <Breadcrumb className="mb-2" items={[{ title: "Dashboard" }, { title: "Quản lý Menu" }]} />
           <h1 className="text-2xl font-bold text-white m-0">Quản lý Menu</h1>
           <div className="text-gray-400 text-sm mt-1">
             {totalItems} sản phẩm &middot; {activeItems} đang hiển thị &middot; {uncategorized} chưa phân loại
@@ -218,52 +384,43 @@ export default function MenuManagementPage() {
         {/* Left: Categories */}
         <Card
           className="bg-gray-800 border-gray-700 shrink-0"
-          style={{ width: 280 }}
+          style={{ width: 340 }}
           title={<span className="text-gray-100">Danh mục</span>}
           extra={
             <Button type="link" size="small" icon={<PlusOutlined />} onClick={() => openCatModal()}>Thêm</Button>
           }
         >
-          <List
-            size="small"
-            dataSource={[
-              { id: null, name: "Tất cả", count: totalItems },
-              { id: 0, name: "Chưa phân loại", count: uncategorized },
-              ...categories.map((c) => ({ id: c.id, name: c.name, count: c._count.recipes })),
-            ]}
-            renderItem={(item: any) => (
-              <List.Item
-                className={`cursor-pointer rounded px-3 transition-colors ${
-                  selectedCategoryId === item.id ? "bg-blue-900/40" : "hover:bg-gray-700/50"
-                }`}
-                onClick={() => setSelectedCategoryId(item.id)}
-                actions={
-                  item.id !== null && item.id !== 0
-                    ? [
-                        <Button type="text" size="small" icon={<EditOutlined />} onClick={(e) => {
-                          e.stopPropagation();
-                          const cat = categories.find((c) => c.id === item.id);
-                          if (cat) openCatModal(cat);
-                        }} />,
-                        <Popconfirm
-                          title="Xoá danh mục này?"
-                          description="Sản phẩm sẽ chuyển về Chưa phân loại"
-                          onConfirm={(e) => { e?.stopPropagation(); handleDeleteCat(item.id); }}
-                          onCancel={(e) => e?.stopPropagation()}
-                        >
-                          <Button type="text" size="small" danger icon={<DeleteOutlined />} onClick={(e) => e.stopPropagation()} />
-                        </Popconfirm>,
-                      ]
-                    : undefined
-                }
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-200">{item.name}</span>
-                  <Badge count={item.count} showZero style={{ backgroundColor: '#6b7280' }} />
-                </div>
-              </List.Item>
-            )}
-          />
+          {/* Fixed items */}
+          <div
+            className={`flex items-center gap-2 rounded px-3 py-1.5 cursor-pointer transition-colors ${selectedCategoryId === null ? "bg-blue-900/40" : "hover:bg-gray-700/50"}`}
+            onClick={() => setSelectedCategoryId(null)}
+          >
+            <span className="text-gray-200 flex-1">Tất cả</span>
+            <Badge count={totalItems} showZero style={{ backgroundColor: '#6b7280' }} />
+          </div>
+          <div
+            className={`flex items-center gap-2 rounded px-3 py-1.5 cursor-pointer transition-colors ${selectedCategoryId === 0 ? "bg-blue-900/40" : "hover:bg-gray-700/50"}`}
+            onClick={() => setSelectedCategoryId(0)}
+          >
+            <span className="text-gray-200 flex-1">Chưa phân loại</span>
+            <Badge count={uncategorized} showZero style={{ backgroundColor: '#6b7280' }} />
+          </div>
+
+          {/* Sortable categories */}
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={categories.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+              {categories.map((cat) => (
+                <SortableCategoryItem
+                  key={cat.id}
+                  cat={cat}
+                  isSelected={selectedCategoryId === cat.id}
+                  onSelect={() => setSelectedCategoryId(cat.id)}
+                  onEdit={() => openCatModal(cat)}
+                  onDelete={() => handleDeleteCat(cat.id)}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
         </Card>
 
         {/* Right: Visual menu grid */}
@@ -360,16 +517,83 @@ export default function MenuManagementPage() {
         open={catModalVisible}
         onCancel={() => setCatModalVisible(false)}
         footer={null}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={catForm} layout="vertical" onFinish={handleCatSubmit} className="mt-4">
           <Form.Item name="name" label="Tên danh mục" rules={[{ required: true, message: "Nhập tên danh mục" }]}>
-            <Input placeholder="VD: Đồ uống, Đồ ăn, Combo..." />
+            <Input placeholder="VD: Khuyến mãi, Đặc biệt, Combo..." />
           </Form.Item>
-          <Form.Item name="sortOrder" label="Thứ tự hiển thị">
-            <InputNumber min={0} style={{ width: "100%" }} />
+
+          <Divider className="my-3" />
+
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-gray-200 font-medium flex items-center gap-2">
+              <ClockCircleOutlined className="text-cyan-400" /> Hẹn giờ hiển thị
+            </span>
+            <Form.Item name="scheduleEnabled" valuePropName="checked" className="mb-0">
+              <Switch
+                checkedChildren="Bật"
+                unCheckedChildren="Tắt"
+                onChange={setCatScheduleEnabled}
+              />
+            </Form.Item>
+          </div>
+
+          {catScheduleEnabled && (
+            <div className="bg-gray-900 rounded-lg p-4 flex flex-col gap-4">
+              <Form.Item name="scheduleTime" label="Khung giờ hiển thị" className="mb-0">
+                <TimePicker.RangePicker
+                  format="HH:mm"
+                  minuteStep={15}
+                  style={{ width: "100%" }}
+                  placeholder={["Từ giờ", "Đến giờ"]}
+                />
+              </Form.Item>
+
+              <Form.Item name="scheduleDate" label="Khoảng ngày áp dụng (để trống = luôn luôn)" className="mb-0">
+                <DatePicker.RangePicker
+                  format="DD/MM/YYYY"
+                  style={{ width: "100%" }}
+                  placeholder={["Từ ngày", "Đến ngày"]}
+                />
+              </Form.Item>
+
+              <Form.Item name="scheduleMachineGroupIds" label="Nhóm máy áp dụng (để trống = tất cả)" className="mb-0">
+                <Select
+                  mode="multiple"
+                  placeholder="Chọn nhóm máy..."
+                  allowClear
+                  options={machineGroups.map(g => ({
+                    label: g.MachineGroupName,
+                    value: g.MachineGroupId,
+                  }))}
+                />
+              </Form.Item>
+            </div>
+          )}
+
+          <Divider className="my-3" />
+
+          <Form.Item
+            name="requiredCategoryIds"
+            label={
+              <span className="text-gray-200 font-medium">
+                Yêu cầu món chính từ danh mục{" "}
+                <span className="text-gray-500 font-normal text-xs">(để trống = không ràng buộc)</span>
+              </span>
+            }
+          >
+            <Select
+              mode="multiple"
+              placeholder="Chọn danh mục bắt buộc phải có trước khi order món này..."
+              allowClear
+              options={categories
+                .filter((c) => c.id !== editingCat?.id)
+                .map((c) => ({ label: c.name, value: c.id }))}
+            />
           </Form.Item>
-          <div className="flex justify-end gap-3">
+
+          <div className="flex justify-end gap-3 mt-4">
             <Button onClick={() => setCatModalVisible(false)}>Hủy</Button>
             <Button type="primary" htmlType="submit">Lưu</Button>
           </div>
@@ -382,7 +606,7 @@ export default function MenuManagementPage() {
         open={itemModalVisible}
         onCancel={() => setItemModalVisible(false)}
         footer={null}
-        destroyOnClose
+        destroyOnHidden
         width={520}
       >
         <Form form={itemForm} layout="vertical" onFinish={handleItemSubmit} className="mt-4">

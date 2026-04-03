@@ -11,7 +11,19 @@ export default {
     ...createGlobPatternsForNx(join(__dirname, 'src')),
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        'light-pink': '#FFB6C1',
+        'pale-green': '#98FB98',
+        moccasin: '#FFE4B5',
+        'dark-gray': '#333333',
+        gold: '#FFD700',
+      },
+      fontFamily: {
+        sans: ['Be Vietnam Pro', 'sans-serif'],
+        gaming: ['Rajdhani', 'sans-serif'],
+      },
+    },
   },
   plugins: [],
 };

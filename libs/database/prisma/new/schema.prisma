@@ -820,14 +820,21 @@ model MaterialUnitConversion {
 }
 
 model MenuCategory {
-  id        Int      @id @default(autoincrement())
-  name      String   @db.VarChar(100)
-  sortOrder Int      @default(0)
-  isActive  Boolean  @default(true)
-  tenantId  Int
-  recipes   Recipe[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                      Int       @id @default(autoincrement())
+  name                    String    @db.VarChar(100)
+  sortOrder               Int       @default(0)
+  isActive                Boolean   @default(true)
+  tenantId                Int
+  scheduleEnabled         Boolean   @default(false)
+  scheduleTimeStart       String?   @db.VarChar(5)
+  scheduleTimeEnd         String?   @db.VarChar(5)
+  scheduleDateStart       DateTime?
+  scheduleDateEnd         DateTime?
+  scheduleMachineGroupIds String?   @db.Text
+  requiredCategoryIds     String?   @db.Text
+  recipes                 Recipe[]
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
 
   @@index([tenantId])
   @@map("MenuCategory")
@@ -901,9 +908,84 @@ model InventoryTransaction {
   @@map("InventoryTransaction")
 }
 
+model FoodOrder {
+  id           Int              @id @default(autoincrement())
+  userId       Int
+  macAddress   String           @db.VarChar(100)  // Định danh máy ổn định, không đổi theo tên/IP
+  computerName String?          @db.VarChar(100)  // Tên hiển thị (có thể null hoặc thay đổi)
+  tenantId     Int
+  status       FoodOrderStatus?
+  totalAmount  Decimal          @db.Decimal(12, 2)
+  note         String?          @db.Text
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  details      FoodOrderDetail[]
+  statusHistory FoodOrderStatusHistory[]
+
+  @@index([userId])
+  @@index([tenantId])
+  @@index([status])
+  @@index([macAddress])
+  @@index([createdAt])
+  @@map("FoodOrder")
+}
+
+model FoodOrderStatusHistory {
+  id         Int       @id @default(autoincrement())
+  orderId    Int
+  status     String    @db.VarChar(20)   // Trạng thái mới sau khi chuyển
+  changedBy  Int?                        // staffId — null nếu do hệ thống
+  note       String?   @db.VarChar(255)
+  changedAt  DateTime  @default(now())   // Thời điểm chuyển trạng thái
+  order      FoodOrder @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+  @@index([changedAt])
+  @@map("FoodOrderStatusHistory")
+}
+
+model FoodOrderDetail {
+  id              Int       @id @default(autoincrement())
+  orderId         Int
+  recipeId        Int
+  recipeVersionId Int
+  recipeName      String    @db.VarChar(255)  // Snapshot tên món tại thời điểm đặt
+  salePrice       Decimal   @db.Decimal(12, 2) // Snapshot giá bán tại thời điểm đặt
+  quantity        Int
+  subtotal        Decimal   @db.Decimal(12, 2)
+  note            String?   @db.VarChar(500)
+  recipeSnapshot  String    @db.LongText       // JSON snapshot công thức (RecipeVersion.items) tại thời điểm đặt
+  order           FoodOrder @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+  @@index([recipeId])
+  @@index([recipeVersionId])
+  @@map("FoodOrderDetail")
+}
+
+model StaffShift {
+  id          Int       @id @default(autoincrement())
+  staffId     Int
+  staffName   String    @db.VarChar(100)
+  tenantId    Int
+  startedAt   DateTime  @default(now())
+  endedAt     DateTime?
+  isActive    Boolean   @default(true)
+  note        String?   @db.VarChar(500)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([tenantId])
+  @@index([staffId])
+  @@index([isActive])
+  @@index([startedAt])
+  @@map("StaffShift")
+}
+
 model Feedback {
   id          Int            @id @default(autoincrement())
   userId      Int?
+  itemId      Int?
   type        FeedbackType
   title       String         @db.VarChar(255)
   description String         @db.Text
@@ -1169,6 +1251,15 @@ model MomoCredential {
   merchant_id Int?
 }
 
+enum FoodOrderStatus {
+  PENDING
+  CHAP_NHAN
+  THU_TIEN
+  PHUC_VU
+  HOAN_THANH
+  HUY
+}
+
 enum ShiftRevenueType {
   MORNING
   AFTERNOON
@@ -1267,6 +1358,7 @@ enum FeedbackType {
   BUG_REPORT
   FEATURE_REQUEST
   GENERAL
+  RESTOCK_REQUEST
 }
 
 enum FeedbackStatus {

@@ -93,11 +93,7 @@ export default function ProfitAnalysisPage() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <Breadcrumb className="mb-2">
-            <Breadcrumb.Item>Dashboard</Breadcrumb.Item>
-            <Breadcrumb.Item>Quản lý kho</Breadcrumb.Item>
-            <Breadcrumb.Item>Phân tích lợi nhuận</Breadcrumb.Item>
-          </Breadcrumb>
+          <Breadcrumb className="mb-2" items={[{ title: "Dashboard" }, { title: "Quản lý kho" }, { title: "Phân tích lợi nhuận" }]} />
           <h1 className="text-2xl font-bold text-white m-0">Phân tích Lợi nhuận & Giá vốn</h1>
         </div>
         <Button icon={<ReloadOutlined />} onClick={fetchReport} loading={loading}>Cập nhật báo cáo</Button>

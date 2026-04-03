@@ -615,7 +615,7 @@ export default function ShiftReports() {
         width={800}
         centered
         className="dark-modal"
-        destroyOnClose
+        destroyOnHidden
       >
         <Form
           form={form}

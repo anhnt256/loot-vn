@@ -26,7 +26,7 @@ export class ChatCache {
     branch: string,
     messages: any[],
   ): Promise<void> {
-    const key = `chat:messages:${branch}:${machineName}`;
+    const key = `${branch}:chat:messages:${machineName}`;
     try {
       await redisService.setex(
         key,
@@ -45,7 +45,7 @@ export class ChatCache {
     machineName: string,
     branch: string,
   ): Promise<any[] | null> {
-    const key = `chat:messages:${branch}:${machineName}`;
+    const key = `${branch}:chat:messages:${machineName}`;
     try {
       const cached = await redisService.get(key);
       return cached ? JSON.parse(cached) : null;
@@ -59,7 +59,7 @@ export class ChatCache {
    * Cache chat statistics
    */
   async cacheStats(branch: string, stats: any): Promise<void> {
-    const key = `chat:stats:${branch}`;
+    const key = `${branch}:chat:stats`;
     try {
       await redisService.setex(key, this.TTL.STATS, JSON.stringify(stats));
     } catch (error) {
@@ -71,7 +71,7 @@ export class ChatCache {
    * Get cached chat statistics
    */
   async getCachedStats(branch: string): Promise<any | null> {
-    const key = `chat:stats:${branch}`;
+    const key = `${branch}:chat:stats`;
     try {
       const cached = await redisService.get(key);
       return cached ? JSON.parse(cached) : null;
@@ -89,7 +89,7 @@ export class ChatCache {
     branch: string,
     userInfo: any,
   ): Promise<void> {
-    const key = `chat:user:${branch}:${userId}`;
+    const key = `${branch}:chat:user:${userId}`;
     try {
       await redisService.setex(
         key,
@@ -105,7 +105,7 @@ export class ChatCache {
    * Get cached user information
    */
   async getCachedUserInfo(userId: number, branch: string): Promise<any | null> {
-    const key = `chat:user:${branch}:${userId}`;
+    const key = `${branch}:chat:user:${userId}`;
     try {
       const cached = await redisService.get(key);
       return cached ? JSON.parse(cached) : null;
@@ -123,7 +123,7 @@ export class ChatCache {
     branch: string,
     status: any,
   ): Promise<void> {
-    const key = `chat:machine:${branch}:${machineName}`;
+    const key = `${branch}:chat:machine:${machineName}`;
     try {
       await redisService.setex(
         key,
@@ -142,7 +142,7 @@ export class ChatCache {
     machineName: string,
     branch: string,
   ): Promise<any | null> {
-    const key = `chat:machine:${branch}:${machineName}`;
+    const key = `${branch}:chat:machine:${machineName}`;
     try {
       const cached = await redisService.get(key);
       return cached ? JSON.parse(cached) : null;
@@ -160,8 +160,8 @@ export class ChatCache {
     branch: string,
   ): Promise<void> {
     const keys = [
-      `chat:messages:${branch}:${machineName}`,
-      `chat:machine:${branch}:${machineName}`,
+      `${branch}:chat:messages:${machineName}`,
+      `${branch}:chat:machine:${machineName}`,
     ];
 
     try {
@@ -176,7 +176,7 @@ export class ChatCache {
    */
   async invalidateBranchCache(branch: string): Promise<void> {
     try {
-      const pattern = `chat:*:${branch}:*`;
+      const pattern = `${branch}:chat:*`;
       const keys = await redisService.keys(pattern);
       if (keys.length > 0) {
         await Promise.all(keys.map((key) => redisService.del(key)));
@@ -194,7 +194,7 @@ export class ChatCache {
     memoryUsage: string;
   }> {
     try {
-      const keys = await redisService.keys('chat:*');
+      const keys = await redisService.keys('*:chat:*');
       return {
         totalKeys: keys.length,
         memoryUsage: 'N/A', // Would need Redis INFO command for memory usage
@@ -213,7 +213,7 @@ export class ChatCache {
    */
   async clearAllCache(): Promise<void> {
     try {
-      const keys = await redisService.keys('chat:*');
+      const keys = await redisService.keys('*:chat:*');
       if (keys.length > 0) {
         await Promise.all(keys.map((key) => redisService.del(key)));
       }

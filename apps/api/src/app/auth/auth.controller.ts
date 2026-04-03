@@ -33,23 +33,13 @@ export class AuthController {
       });
     }
 
-    const isAdmin = result.role === 'admin' || result.isAdmin === true;
-    const tokenCookieName = isAdmin ? 'token' : 'staffToken';
-
-    res.cookie(tokenCookieName, result.token, {
+    res.cookie('token', result.token, {
       maxAge: 86400 * 1000,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       path: '/',
     });
-
-    if (result.loginType) {
-      res.cookie('loginType', result.loginType, {
-        maxAge: 86400 * 1000,
-        path: '/',
-      });
-    }
 
     return res.json({
       ...result,
@@ -60,37 +50,8 @@ export class AuthController {
   }
 
   @Post('logout')
-  async logout(@Req() req: any, @Res() res: Response) {
-    const referer = req.headers['referer'] || '';
-    const token = req.cookies['token'];
-    const staffToken = req.cookies['staffToken'];
-    const loginType = req.cookies['loginType'];
-
-    const isAdminLogout =
-      referer.includes('/admin') ||
-      (token && !staffToken) ||
-      (token && staffToken && referer.includes('/admin'));
-    const isStaffLogout =
-      referer.includes('/staff') ||
-      (staffToken && !token) ||
-      (token && staffToken && referer.includes('/staff'));
-
-    if (isAdminLogout) {
-      res.clearCookie('token');
-      if (loginType === 'username') {
-        res.clearCookie('loginType');
-      }
-    } else if (isStaffLogout) {
-      res.clearCookie('staffToken');
-      if (loginType === 'account') {
-        res.clearCookie('loginType');
-      }
-    } else {
-      res.clearCookie('token');
-      res.clearCookie('staffToken');
-      res.clearCookie('loginType');
-    }
-
+  async logout(@Res() res: Response) {
+    res.clearCookie('token', { path: '/' });
     return res.json({ success: true });
   }
 }

@@ -249,9 +249,9 @@ export class AuthService {
     const session = sessions[0];
     const fnetUserId = Number(session.UserId);
 
-    // 3. Lấy thông tin user từ usertb (fnetDB)
+    // 3. Lấy thông tin user + machineGroupId từ usertb (fnetDB)
     const fnetUsers = await fnet.$queryRawUnsafe<any[]>(
-      `SELECT UserId, UserName, FirstName, LastName FROM usertb WHERE UserId = ? LIMIT 1`,
+      `SELECT UserId, UserName, FirstName, LastName, MachineGroupId FROM usertb WHERE UserId = ? LIMIT 1`,
       fnetUserId,
     );
     const fnetUser = fnetUsers?.[0];
@@ -289,6 +289,7 @@ export class AuthService {
       computerId: computer.id,
       computerName: computer.name,
       macAddress,
+      machineGroupId: fnetUser?.MachineGroupId ? Number(fnetUser.MachineGroupId) : null,
     };
 
     const token = await signJWT(payload);

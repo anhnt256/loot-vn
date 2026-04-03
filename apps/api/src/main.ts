@@ -7,10 +7,12 @@ import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import cookieParser = require('cookie-parser');
 import { AppModule } from './app/app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.use(cookieParser());
 
   // Serve /images from apps/api/images
   app.useStaticAssets(join(process.cwd(), 'apps', 'api', 'images'), { prefix: '/images' });

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { PlusOutlined, EditOutlined, ReloadOutlined, DeleteOutlined, SettingOutlined, HistoryOutlined, SwapOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, ReloadOutlined, DeleteOutlined, SettingOutlined, HistoryOutlined, SwapOutlined, SearchOutlined } from '@ant-design/icons';
 import { Table, Tag, Button, Modal, Form, Input, message, Select, Card, Breadcrumb, Space, InputNumber, Divider } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { apiClient } from "@gateway-workspace/shared/utils/client";
@@ -55,6 +55,7 @@ export default function RecipeManagementPage() {
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
   const [editForm] = Form.useForm();
   const [editLoading, setEditLoading] = useState(false);
+  const [searchText, setSearchText] = useState('');
 
   // Compare modal
   const [compareVisible, setCompareVisible] = useState(false);
@@ -284,11 +285,7 @@ export default function RecipeManagementPage() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <Breadcrumb className="mb-2">
-            <Breadcrumb.Item>Dashboard</Breadcrumb.Item>
-            <Breadcrumb.Item>Quản lý kho</Breadcrumb.Item>
-            <Breadcrumb.Item>Định mức (BOM)</Breadcrumb.Item>
-          </Breadcrumb>
+          <Breadcrumb className="mb-2" items={[{ title: "Dashboard" }, { title: "Quản lý kho" }, { title: "Định mức (BOM)" }]} />
           <h1 className="text-2xl font-bold text-white m-0">Công thức & Định mức (BOM)</h1>
         </div>
         <Space>
@@ -298,11 +295,31 @@ export default function RecipeManagementPage() {
       </div>
 
       <Card className="bg-gray-800 border-gray-700">
-        <Table columns={columns} dataSource={recipes} rowKey="id" loading={loading} pagination={{ pageSize: 12 }} className="custom-table" />
+        <div className="mb-4">
+          <Input
+            placeholder="Tìm theo tên sản phẩm..."
+            prefix={<SearchOutlined className="text-gray-400" />}
+            allowClear
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: 320 }}
+            size="large"
+          />
+        </div>
+        <Table
+          columns={columns}
+          dataSource={recipes.filter((r) =>
+            !searchText || r.name.toLowerCase().includes(searchText.toLowerCase())
+          )}
+          rowKey="id"
+          loading={loading}
+          pagination={{ pageSize: 12 }}
+          className="custom-table"
+        />
       </Card>
 
       {/* Create Modal */}
-      <Modal title="Thiết lập Công thức / Định mức (BOM)" open={createVisible} onCancel={() => setCreateVisible(false)} footer={null} width={750} destroyOnClose>
+      <Modal title="Thiết lập Công thức / Định mức (BOM)" open={createVisible} onCancel={() => setCreateVisible(false)} footer={null} width={750} destroyOnHidden>
         <Form form={createForm} layout="vertical" onFinish={handleCreateSubmit} className="mt-4">
           <Form.Item name="name" label="Tên sản phẩm" rules={[{ required: true, message: "Vui lòng nhập tên sản phẩm" }]}>
             <Input placeholder="VD: Trà sữa trân châu, Cơm gà xối mỡ..." size="large" />
@@ -332,7 +349,7 @@ export default function RecipeManagementPage() {
             </div>
           </div>
         ) : "Sửa BOM"}
-        open={editVisible} onCancel={() => setEditVisible(false)} footer={null} width={750} destroyOnClose
+        open={editVisible} onCancel={() => setEditVisible(false)} footer={null} width={750} destroyOnHidden
       >
         <Form form={editForm} layout="vertical" onFinish={handleEditSubmit} className="mt-4">
           <Divider><SettingOutlined /> Thành phần nguyên liệu</Divider>
@@ -359,7 +376,7 @@ export default function RecipeManagementPage() {
         onCancel={() => setCompareVisible(false)}
         footer={null}
         width={800}
-        destroyOnClose
+        destroyOnHidden
       >
         {compareRecipe && (
           <div className="mt-4">
