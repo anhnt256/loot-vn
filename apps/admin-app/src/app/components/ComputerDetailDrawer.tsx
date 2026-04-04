@@ -289,6 +289,12 @@ const ComputerDetailDrawer: React.FC<ComputerDetailDrawerProps> = ({ computer, o
             {pricePerHour.toLocaleString('vi-VN')} VNĐ
           </span>
         </div>
+        {computer?.macAddress && (
+          <div className="flex items-center">
+            <span className="text-gray-400 w-28 text-[13px]">MAC Address:</span>
+            <span className="text-cyan-400 font-mono font-bold text-[13px]">{computer.macAddress}</span>
+          </div>
+        )}
       </div>
     </div>
   );

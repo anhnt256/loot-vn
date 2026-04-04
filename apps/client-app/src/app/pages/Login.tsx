@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { App, Card, Input, Button, Typography, ConfigProvider, theme, Spin } from 'antd';
-import { LaptopOutlined, LoadingOutlined } from '@ant-design/icons';
+import { App, Card, Input, Button, Typography, ConfigProvider, theme } from 'antd';
+import { LaptopOutlined } from '@ant-design/icons';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { setCookie } from 'cookies-next';
 import { apiClient, ACCESS_TOKEN_KEY } from '@gateway-workspace/shared/utils/client';
@@ -8,15 +8,12 @@ import { getCurrentUser, setCurrentUser } from '../constants';
 
 const { Title, Text } = Typography;
 
-const isDev = import.meta.env.DEV;
-
 const Login: React.FC = () => {
   if (getCurrentUser()) return <Navigate to="/dashboard" replace />;
 
   const { message } = App.useApp();
   const [macAddress, setMacAddress] = useState('');
   const [loading, setLoading] = useState(false);
-  const [autoLoginAttempted, setAutoLoginAttempted] = useState(false);
   const navigate = useNavigate();
 
   const tenantConfig = (typeof window !== 'undefined' && (window as any).__TENANT_CONFIG__) || {};
@@ -67,41 +64,6 @@ const Login: React.FC = () => {
     }
   }, [navigate]);
 
-  // Production: tự động lấy MAC từ API và auto login
-  useEffect(() => {
-    if (isDev || autoLoginAttempted) return;
-    setAutoLoginAttempted(true);
-
-    const autoLogin = async () => {
-      setLoading(true);
-      try {
-        const res = await apiClient.get('/auth/detect-mac');
-        const detectedMac = res.data?.macAddress;
-        if (detectedMac) {
-          await doLogin(detectedMac);
-        } else {
-          message.error('Không thể nhận diện máy tính. Vui lòng liên hệ quản trị viên.');
-          setLoading(false);
-        }
-      } catch (err) {
-        console.error('Auto login failed:', err);
-        message.error('Tự động đăng nhập thất bại. Vui lòng liên hệ quản trị viên.');
-        setLoading(false);
-      }
-    };
-    autoLogin();
-  }, [isDev, autoLoginAttempted, doLogin]);
-
-  // Production: hiển thị loading khi đang auto login
-  if (!isDev && loading) {
-    return (
-      <div className="min-h-screen flex flex-col justify-center items-center bg-[#0d1117] gap-4">
-        <Spin indicator={<LoadingOutlined style={{ fontSize: 48, color: tenantColor }} spin />} />
-        <Text style={{ color: '#8b949e', fontSize: '16px' }}>Đang tự động đăng nhập...</Text>
-      </div>
-    );
-  }
-
   return (
     <ConfigProvider
       theme={{
@@ -137,51 +99,38 @@ const Login: React.FC = () => {
                 <Title level={2} style={{ color: 'white', margin: 0, fontWeight: 800, fontSize: '28px', letterSpacing: '-0.5px' }}>
                   Client App
                 </Title>
-                {isDev && (
-                  <Text style={{ color: '#8b949e', fontSize: '12px' }}>Debug Mode</Text>
-                )}
               </div>
 
-              {isDev && (
-                <div className="w-full space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold text-[#f0f6fc] ml-1 block">
-                      MAC Address
-                    </label>
-                    <Input
-                      size="large"
-                      prefix={<LaptopOutlined className="text-slate-500 mr-2" />}
-                      placeholder="VD: AA:BB:CC:DD:EE:FF"
-                      value={macAddress}
-                      onChange={(e) => setMacAddress(e.target.value)}
-                      className="bg-[#0d1117] border-[#30363d] h-12 text-white hover:border-[#8b949e]"
-                      onPressEnter={() => doLogin(macAddress.trim())}
-                    />
-                  </div>
-
-                  <div className="pt-4">
-                    <Button
-                      type="primary"
-                      size="large"
-                      loading={loading}
-                      onClick={() => doLogin(macAddress.trim())}
-                      disabled={!macAddress.trim()}
-                      className="w-full border-none h-12 text-base font-bold transition-all"
-                      style={{ backgroundColor: tenantColor, boxShadow: `0 10px 15px -3px ${tenantColor}1A, 0 4px 6px -4px ${tenantColor}1A` }}
-                    >
-                      Đăng nhập
-                    </Button>
-                  </div>
+              <div className="w-full space-y-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-[#f0f6fc] ml-1 block">
+                    MAC Address
+                  </label>
+                  <Input
+                    size="large"
+                    prefix={<LaptopOutlined className="text-slate-500 mr-2" />}
+                    placeholder="VD: AA:BB:CC:DD:EE:FF"
+                    value={macAddress}
+                    onChange={(e) => setMacAddress(e.target.value)}
+                    className="bg-[#0d1117] border-[#30363d] h-12 text-white hover:border-[#8b949e]"
+                    onPressEnter={() => doLogin(macAddress.trim())}
+                  />
                 </div>
-              )}
 
-              {!isDev && (
-                <div className="w-full text-center py-4">
-                  <Text style={{ color: '#8b949e' }}>
-                    Không thể tự động đăng nhập. Vui lòng liên hệ quản trị viên.
-                  </Text>
+                <div className="pt-4">
+                  <Button
+                    type="primary"
+                    size="large"
+                    loading={loading}
+                    onClick={() => doLogin(macAddress.trim())}
+                    disabled={!macAddress.trim()}
+                    className="w-full border-none h-12 text-base font-bold transition-all"
+                    style={{ backgroundColor: tenantColor, boxShadow: `0 10px 15px -3px ${tenantColor}1A, 0 4px 6px -4px ${tenantColor}1A` }}
+                  >
+                    Đăng nhập
+                  </Button>
                 </div>
-              )}
+              </div>
             </div>
           </Card>
 

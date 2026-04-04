@@ -367,7 +367,7 @@ export class ComputerService {
       }, 5000),
       executeQueryWithTimeout(async () => {
         return (await gateway.computer.findMany({
-          select: { id: true, name: true, devices: true }
+          select: { id: true, name: true, macAddress: true, devices: true }
         }));
       }, 5000),
     ]);
@@ -421,7 +421,7 @@ export class ComputerService {
 
     const results = [];
     for (const computer of computers) {
-      const { name } = computer || {};
+      const { name, macAddress } = computer || {};
       const computerStatusData = Array.isArray(computerStatus) && computerStatus.length > 0
         ? computerStatus.find((status: any) => status.MachineName === name)
         : null;
@@ -441,6 +441,7 @@ export class ComputerService {
       results.push({
         id: gatewayComputer?.id || null,
         name: computer.name,
+        macAddress: gatewayComputer?.macAddress || macAddress || null,
         status: Status !== undefined && Status !== null ? Status : (DeviceStatus !== undefined && DeviceStatus !== null ? DeviceStatus : "UNKNOWN"),
         userId: UserId || null,
         userName: userInfo?.userName || null,

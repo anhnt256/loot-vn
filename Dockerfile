@@ -57,6 +57,7 @@ FROM runner-base AS api
 COPY --from=builder /app/dist/apps/api ./dist/apps/api
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/apps/api/images ./apps/api/images
 ENV PRISMA_QUERY_ENGINE_LIBRARY=/app/dist/apps/api/libquery_engine-debian-openssl-3.0.x.so.node
 CMD ["node", "dist/apps/api/main.js"]
 

@@ -35,6 +35,8 @@ services:
       - REDIS_HOST=redis
     env_file:
       - .env
+    volumes:
+      - api-images:/app/apps/api/images
     restart: always
     depends_on:
       - redis
@@ -141,6 +143,8 @@ services:
 volumes:
   redis-data:
     name: ${TENANT_PREFIX:-}redis-data
+  api-images:
+    name: ${TENANT_PREFIX:-}api-images
 
 networks:
   internal-network:
