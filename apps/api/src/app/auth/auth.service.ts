@@ -111,12 +111,44 @@ export class AuthService {
 
     if (loginMethod === 'admin') {
       if (!tenantId?.trim()) {
-        throw new BadRequestException('x-tenant-id header is required for admin login');
+        return this.loginMasterAdmin(userName, password);
       }
       return this.loginAdmin(userName, password, tenantId.trim());
     }
 
     throw new BadRequestException('Phương thức đăng nhập không hợp lệ. Dùng admin, staff hoặc client.');
+  }
+
+  private async loginMasterAdmin(userName: string, password: string) {
+    const staff = await this.masterPrisma.staff.findFirst({
+      where: { userName, isDeleted: false },
+    });
+
+    if (!staff) {
+      throw new UnauthorizedException('Tên đăng nhập hoặc mật khẩu không đúng');
+    }
+
+    if (!staff.isAdmin) {
+      throw new UnauthorizedException('Chỉ có admin mới được phép truy cập bằng phương thức này');
+    }
+
+    if (!(await this.verifyPassword(password, staff.password))) {
+      throw new UnauthorizedException('Tên đăng nhập hoặc mật khẩu không đúng');
+    }
+
+    const payload = {
+      userId: Number(staff.id),
+      id: Number(staff.id),
+      userName: staff.userName,
+      fullName: staff.fullName,
+      role: 'admin',
+      isAdmin: true,
+      loginType: 'admin',
+      staffType: staff.staffType,
+    };
+
+    const token = await signJWT(payload);
+    return { token, ...payload };
   }
 
   private async loginAdmin(userName: string, password: string, tenantId: string) {

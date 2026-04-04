@@ -52,7 +52,7 @@ const Login: React.FC = () => {
       const result = await apiClient.post('/auth/login', {
         userName: username,
         password: password,
-        loginMethod: 'admin',
+        loginMethod: 'staff',
       });
 
       if (result.data.statusCode === 200 || result.data.success) {
