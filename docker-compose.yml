@@ -76,22 +76,6 @@ services:
       - internal-network
       - proxy-network
 
-  # Tenant Manage App (Vite)
-  tenant-manage:
-    build:
-      <<: *build-defaults
-      target: tenant-manage
-    container_name: ${TENANT_PREFIX:-}tenant-manage
-    environment:
-      - PORT=7500
-      - HOST=0.0.0.0
-    env_file:
-      - .env
-    restart: always
-    networks:
-      - internal-network
-      - proxy-network
-
   # Master App (Vite)
   master:
     build:

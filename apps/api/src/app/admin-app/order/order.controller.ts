@@ -17,6 +17,7 @@ import {
 import { AuthGuard } from '../../auth/auth.guard';
 import { TenantGatewayService } from '../../database/tenant-gateway.service';
 import { OrderGateway } from './order.gateway';
+import { StockService, STOCK_RESERVED_STATUSES } from './stock.service';
 import { redisService } from '../../lib/redis-service';
 
 const pauseKey = (tenantId: string) => `${tenantId}:order:pause`;
@@ -37,6 +38,7 @@ export class OrderController {
   constructor(
     private readonly tenantGateway: TenantGatewayService,
     private readonly orderGateway: OrderGateway,
+    private readonly stockService: StockService,
   ) {}
 
   /* ───────────── SHIFT MANAGEMENT ───────────── */
@@ -55,11 +57,23 @@ export class OrderController {
 
     const db = await this.tenantGateway.getGatewayClient(tenantId);
 
-    // Đóng ca cũ nếu còn active
-    await ((db as any).staffShift as any).updateMany({
-      where: { tenantId: parsedTenantId, staffId, isActive: true },
-      data: { isActive: false, endedAt: new Date() },
+    // Kiểm tra xem có ai khác đang nhận ca không — 1 ca chỉ cho phép 1 người
+    const activeShift = await ((db as any).staffShift as any).findFirst({
+      where: { tenantId: parsedTenantId, isActive: true },
     });
+    if (activeShift && activeShift.staffId !== staffId) {
+      throw new BadRequestException(
+        `Nhân viên "${activeShift.staffName}" đang nhận ca. Chỉ cho phép 1 người nhận đơn mỗi ca.`,
+      );
+    }
+
+    // Đóng ca cũ nếu chính mình còn active
+    if (activeShift && activeShift.staffId === staffId) {
+      await ((db as any).staffShift as any).updateMany({
+        where: { tenantId: parsedTenantId, staffId, isActive: true },
+        data: { isActive: false, endedAt: new Date() },
+      });
+    }
 
     // Tạo ca mới
     const shift = await ((db as any).staffShift as any).create({
@@ -79,7 +93,7 @@ export class OrderController {
     return { success: true, data: shift };
   }
 
-  /** POST /admin/orders/shift/end — nhân viên kết thúc ca */
+  /** POST /admin/orders/shift/end — nhân viên kết thúc ca (chỉ shift owner) */
   @Post('shift/end')
   async endShift(
     @Headers('x-tenant-id') tenantId: string,
@@ -91,6 +105,16 @@ export class OrderController {
     if (!staffId) throw new BadRequestException('Không xác định được nhân viên');
 
     const db = await this.tenantGateway.getGatewayClient(tenantId);
+
+    // Chỉ shift owner mới được kết ca
+    const activeShift = await ((db as any).staffShift as any).findFirst({
+      where: { tenantId: parsedTenantId, isActive: true },
+    });
+    if (activeShift && activeShift.staffId !== staffId) {
+      throw new BadRequestException(
+        `Chỉ "${activeShift.staffName}" (người nhận ca) mới có thể kết ca`,
+      );
+    }
 
     const updated = await ((db as any).staffShift as any).updateMany({
       where: { tenantId: parsedTenantId, staffId, isActive: true },
@@ -116,9 +140,11 @@ export class OrderController {
   @Get('shift/current')
   async getCurrentShift(
     @Headers('x-tenant-id') tenantId: string,
+    @Req() req: any,
   ) {
     if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
     const parsedTenantId = parseInt(tenantId) || 1;
+    const staffId = Number(req.user?.staffId ?? req.user?.userId ?? null) || null;
     const db = await this.tenantGateway.getGatewayClient(tenantId);
 
     const shift = await ((db as any).staffShift as any).findFirst({
@@ -126,7 +152,10 @@ export class OrderController {
       orderBy: { startedAt: 'desc' },
     });
 
-    return { data: shift };
+    return {
+      data: shift,
+      isOwner: !!shift && shift.staffId === staffId,
+    };
   }
 
   /** GET /admin/orders/all — danh sách tất cả đơn hàng (có phân trang + lọc) */
@@ -290,6 +319,11 @@ export class OrderController {
   /**
    * PATCH /admin/orders/:id/status — admin cập nhật trạng thái đơn hàng
    * Mỗi lần chuyển trạng thái tạo một bản ghi FoodOrderStatusHistory
+   *
+   * Stock flow:
+   *   CHAP_NHAN  → trừ kho Redis (reserve — kiểm tra tồn kho)
+   *   HOAN_THANH → trừ kho DB (commit vĩnh viễn + audit log)
+   *   HUY        → hoàn trả kho Redis nếu đã reserve trước đó
    */
   @Patch(':id/status')
   async updateStatus(
@@ -306,8 +340,22 @@ export class OrderController {
     const staffId = Number(req.user?.staffId ?? req.user?.userId ?? null) || null;
     const db = await this.tenantGateway.getGatewayClient(tenantId);
 
+    // Chỉ shift owner mới được thao tác đơn hàng
+    const activeShift = await ((db as any).staffShift as any).findFirst({
+      where: { tenantId: parsedTenantId, isActive: true },
+    });
+    if (!activeShift) {
+      throw new BadRequestException('Chưa có ca nào đang hoạt động. Cần nhận ca trước.');
+    }
+    if (activeShift.staffId !== staffId) {
+      throw new BadRequestException(
+        `Chỉ "${activeShift.staffName}" (người nhận ca) mới có thể thao tác đơn hàng`,
+      );
+    }
+
     const order = await (db.foodOrder as any).findFirst({
       where: { id, tenantId: parsedTenantId },
+      include: { details: true },
     });
     if (!order) throw new NotFoundException('Không tìm thấy đơn hàng');
 
@@ -320,37 +368,75 @@ export class OrderController {
       );
     }
 
-    // Cập nhật status + ghi history trong transaction
-    const updated = await db.$transaction(async (tx: any) => {
-      const updatedOrder = await (tx as any).foodOrder.update({
-        where: { id },
-        data: { status: newStatus, updatedAt: new Date() },
-        include: {
-          details: true,
-          statusHistory: { orderBy: { changedAt: 'asc' } },
-        },
+    // ── CHAP_NHAN: reserve kho trong Redis (trước khi cập nhật DB) ──
+    let stockReserved = false;
+    if (newStatus === 'CHAP_NHAN') {
+      await this.stockService.reserveStock(tenantId, order.details);
+      stockReserved = true;
+    }
+
+    try {
+      // Cập nhật status + ghi history (+ trừ kho DB nếu HOAN_THANH) trong transaction
+      const updated = await db.$transaction(async (tx: any) => {
+        const updatedOrder = await (tx as any).foodOrder.update({
+          where: { id },
+          data: { status: newStatus, updatedAt: new Date() },
+          include: {
+            details: true,
+            statusHistory: { orderBy: { changedAt: 'asc' } },
+          },
+        });
+
+        await (tx as any).foodOrderStatusHistory.create({
+          data: {
+            orderId: id,
+            status: newStatus,
+            changedBy: staffId,
+            note: note ?? null,
+            changedAt: new Date(),
+          },
+        });
+
+        // ── HOAN_THANH: trừ kho DB vĩnh viễn + ghi audit log ──
+        if (newStatus === 'HOAN_THANH') {
+          await this.stockService.commitStockInTx(
+            tx,
+            parsedTenantId,
+            id,
+            order.details,
+          );
+        }
+
+        return updatedOrder;
       });
 
-      await (tx as any).foodOrderStatusHistory.create({
-        data: {
-          orderId: id,
-          status: newStatus,
-          changedBy: staffId,
-          note: note ?? null,
-          changedAt: new Date(),
-        },
+      // ── HUY: hoàn trả kho Redis nếu đã reserve ──
+      if (newStatus === 'HUY' && STOCK_RESERVED_STATUSES.includes(order.status)) {
+        await this.stockService.releaseStock(tenantId, order.details);
+      }
+
+      // Publish WebSocket event cho client tracking
+      await this.orderGateway.publishOrderStatus(tenantId, id, {
+        orderId: id,
+        status: newStatus,
+        changedAt: new Date().toISOString(),
       });
 
-      return updatedOrder;
-    });
+      return { success: true, data: updated };
+    } catch (err) {
+      // Nếu đã reserve Redis nhưng DB transaction thất bại → rollback Redis
+      if (stockReserved) {
+        await this.stockService.releaseStock(tenantId, order.details).catch(() => {});
+      }
+      throw err;
+    }
+  }
 
-    // Publish WebSocket event cho client tracking
-    await this.orderGateway.publishOrderStatus(tenantId, id, {
-      orderId: id,
-      status: newStatus,
-      changedAt: new Date().toISOString(),
-    });
-
-    return { success: true, data: updated };
+  /** POST /admin/orders/stock/sync — đồng bộ tồn kho từ DB sang Redis */
+  @Post('stock/sync')
+  async syncStock(@Headers('x-tenant-id') tenantId: string) {
+    if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    const count = await this.stockService.syncStock(tenantId);
+    return { success: true, synced: count };
   }
 }

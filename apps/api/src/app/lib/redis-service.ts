@@ -281,6 +281,20 @@ export class RedisService {
   }
 
   /**
+   * Increment a key by a float value (supports negative for decrement).
+   * Returns the new value after the operation.
+   */
+  async incrByFloat(key: string, increment: number): Promise<number> {
+    try {
+      const result = await this.publisher.incrbyfloat(key, increment);
+      return parseFloat(result);
+    } catch (error) {
+      console.error('Error in incrByFloat:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Close all connections
    */
   async close(): Promise<void> {

@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Drawer, Badge, Button, Tag, Spin, Empty, App, Segmented } from 'antd';
+import { Drawer, Badge, Button, Tag, Spin, Empty, App } from 'antd';
 import { ShoppingOutlined, ReloadOutlined } from '@ant-design/icons';
 import { io, Socket } from 'socket.io-client';
 import { apiClient, ACCESS_TOKEN_KEY } from '@gateway-workspace/shared/utils/client';
 import { getCookie } from 'cookies-next';
+import { useShift } from '../hooks/useShift';
 
 interface OrderDetail {
   id: number;
@@ -74,6 +75,7 @@ const OrderDrawer: React.FC<Props> = ({ tenantId }) => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const [page, setPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
+  const { currentShift, isShiftOwner } = useShift();
   const socketRef = useRef<Socket | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
@@ -351,24 +353,32 @@ const OrderDrawer: React.FC<Props> = ({ tenantId }) => {
                         className="flex gap-2 px-4 py-3 border-t"
                         style={{ borderColor: '#1f2937' }}
                       >
-                        <Button
-                          type="primary"
-                          size="small"
-                          loading={updating === order.id}
-                          onClick={() => handleUpdateStatus(order.id, cfg.next!)}
-                          className="flex-1"
-                          style={{ background: '#ec4899', borderColor: '#ec4899' }}
-                        >
-                          {cfg.nextLabel}
-                        </Button>
-                        <Button
-                          danger
-                          size="small"
-                          disabled={updating === order.id}
-                          onClick={() => handleCancel(order.id)}
-                        >
-                          Hủy
-                        </Button>
+                        {isShiftOwner ? (
+                          <>
+                            <Button
+                              type="primary"
+                              size="small"
+                              loading={updating === order.id}
+                              onClick={() => handleUpdateStatus(order.id, cfg.next!)}
+                              className="flex-1"
+                              style={{ background: '#ec4899', borderColor: '#ec4899' }}
+                            >
+                              {cfg.nextLabel}
+                            </Button>
+                            <Button
+                              danger
+                              size="small"
+                              disabled={updating === order.id}
+                              onClick={() => handleCancel(order.id)}
+                            >
+                              Hủy
+                            </Button>
+                          </>
+                        ) : (
+                          <div className="text-xs text-yellow-400 w-full text-center py-1">
+                            Chỉ "{currentShift?.staffName}" mới được phép xử lý đơn hàng
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

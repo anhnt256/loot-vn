@@ -26,7 +26,7 @@ import {
 import { deleteCookie } from 'cookies-next';
 import { ACCESS_TOKEN_KEY, apiClient } from '@gateway-workspace/shared/utils/client';
 import OrderDrawer from './OrderDrawer';
-import PauseOrderButton from './PauseOrderButton';
+import ShiftButton from './ShiftButton';
 
 const { Header, Sider, Content } = Layout;
 
@@ -200,7 +200,7 @@ const AdminLayout: React.FC = () => {
               )}
             </div>
             <div className="flex items-center gap-3">
-              <PauseOrderButton />
+              <ShiftButton />
               <OrderDrawer tenantId={apiClient.defaults.headers.common['x-tenant-id'] as string ?? ''} />
             </div>
           </Header>

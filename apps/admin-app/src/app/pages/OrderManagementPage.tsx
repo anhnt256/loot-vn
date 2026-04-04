@@ -8,12 +8,12 @@ import {
   CheckCircleOutlined, CloseCircleOutlined,
   ShoppingCartOutlined, DollarOutlined,
   WalletOutlined, CreditCardOutlined,
-  PlayCircleOutlined, StopOutlined, PlusOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { apiClient, ACCESS_TOKEN_KEY } from '@gateway-workspace/shared/utils/client';
 import { io, Socket } from 'socket.io-client';
 import { getCookie } from 'cookies-next';
+import { useShift } from '../hooks/useShift';
 
 /* ---------- types ---------- */
 interface OrderDetail {
@@ -48,15 +48,6 @@ interface FoodOrder {
 interface RevenueInfo {
   totalCompleted: number;
   completedCount: number;
-}
-
-interface StaffShift {
-  id: number;
-  staffId: number;
-  staffName: string;
-  startedAt: string;
-  endedAt: string | null;
-  isActive: boolean;
 }
 
 /* ---------- constants ---------- */
@@ -117,9 +108,8 @@ const OrderManagementPage: React.FC = () => {
     dayjs().startOf('day'), dayjs().endOf('day'),
   ]);
 
-  // Shift state
-  const [currentShift, setCurrentShift] = useState<StaffShift | null>(null);
-  const [shiftLoading, setShiftLoading] = useState(false);
+  // Shift state (shared via hook)
+  const { currentShift, isShiftOwner } = useShift();
 
   const socketRef = useRef<Socket | null>(null);
 
@@ -144,18 +134,7 @@ const OrderManagementPage: React.FC = () => {
     }
   }, [page, pageSize, statusFilter, dateRange, searchText]);
 
-  const fetchCurrentShift = async () => {
-    try {
-      const res = await apiClient.get('/admin/orders/shift/current');
-      setCurrentShift(res.data?.data ?? null);
-    } catch { /* silent */ }
-  };
-
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
-
-  useEffect(() => {
-    fetchCurrentShift();
-  }, []);
 
   // WebSocket for real-time updates
   useEffect(() => {
@@ -178,51 +157,6 @@ const OrderManagementPage: React.FC = () => {
     socketRef.current = socket;
     return () => { socket.disconnect(); };
   }, []);
-
-  /* ---------- shift actions ---------- */
-  const handleStartShift = async () => {
-    setShiftLoading(true);
-    try {
-      const res = await apiClient.post('/admin/orders/shift/start');
-      setCurrentShift(res.data?.data ?? null);
-      notification.success({ message: 'Đã bắt đầu nhận đơn!', placement: 'topRight' });
-      await fetchOrders();
-    } catch (err: any) {
-      notification.error({
-        message: 'Không thể bắt đầu ca',
-        description: err?.response?.data?.message ?? 'Vui lòng thử lại',
-        placement: 'topRight',
-      });
-    } finally {
-      setShiftLoading(false);
-    }
-  };
-
-  const handleEndShift = () => {
-    modal.confirm({
-      title: 'Dừng nhận đơn?',
-      content: 'Hệ thống sẽ ngưng nhận đơn hàng. Bạn có chắc chắn muốn kết thúc ca?',
-      okText: 'Xác nhận dừng',
-      cancelText: 'Hủy',
-      okButtonProps: { danger: true },
-      onOk: async () => {
-        setShiftLoading(true);
-        try {
-          await apiClient.post('/admin/orders/shift/end');
-          setCurrentShift(null);
-          notification.success({ message: 'Đã dừng nhận đơn', placement: 'topRight' });
-        } catch (err: any) {
-          notification.error({
-            message: 'Không thể kết thúc ca',
-            description: err?.response?.data?.message ?? 'Vui lòng thử lại',
-            placement: 'topRight',
-          });
-        } finally {
-          setShiftLoading(false);
-        }
-      },
-    });
-  };
 
   /* ---------- order actions ---------- */
   const handleUpdateStatus = async (orderId: number, newStatus: string) => {
@@ -353,14 +287,6 @@ const OrderManagementPage: React.FC = () => {
         const isUpdating = updating === row.order.id;
 
         if (row.detailIndex !== 0) {
-          if (row.order.status === 'HOAN_THANH') {
-            return (
-              <div className="flex items-center gap-2">
-                <Tag color="default" className="border-gray-600 text-gray-400">HOÀN THÀNH</Tag>
-                <Tooltip title="In hóa đơn"><Button size="small" icon={<PrinterOutlined />} type="text" /></Tooltip>
-              </div>
-            );
-          }
           return { children: null, props: { rowSpan: 0 } };
         }
 
@@ -376,20 +302,24 @@ const OrderManagementPage: React.FC = () => {
           };
         }
 
+        const noShift = !isShiftOwner;
         return {
           children: (
             <div className="flex items-center gap-2 flex-wrap">
               {cfg.next && (
-                <Button
-                  type="primary"
-                  size="small"
-                  loading={isUpdating}
-                  onClick={() => handleUpdateStatus(row.order.id, cfg.next!)}
-                  style={{ background: '#22c55e', borderColor: '#22c55e' }}
-                  icon={<CheckCircleOutlined />}
-                >
-                  {cfg.nextLabel.toUpperCase()}
-                </Button>
+                <Tooltip title={noShift ? (currentShift ? `Chỉ "${currentShift.staffName}" mới được phép xử lý đơn hàng` : 'Cần nhận ca trước khi thao tác') : undefined}>
+                  <Button
+                    type="primary"
+                    size="small"
+                    loading={isUpdating}
+                    disabled={noShift}
+                    onClick={() => handleUpdateStatus(row.order.id, cfg.next!)}
+                    style={noShift ? {} : { background: '#22c55e', borderColor: '#22c55e' }}
+                    icon={<CheckCircleOutlined />}
+                  >
+                    {cfg.nextLabel.toUpperCase()}
+                  </Button>
+                </Tooltip>
               )}
               {cfg.next && (
                 <Popconfirm
@@ -398,15 +328,18 @@ const OrderManagementPage: React.FC = () => {
                   okText="Hủy đơn"
                   cancelText="Không"
                   okButtonProps={{ danger: true }}
+                  disabled={noShift}
                 >
-                  <Button
-                    danger
-                    size="small"
-                    disabled={isUpdating}
-                    icon={<CloseCircleOutlined />}
-                  >
-                    HỦY
-                  </Button>
+                  <Tooltip title={noShift ? (currentShift ? `Chỉ "${currentShift.staffName}" mới được phép xử lý đơn hàng` : 'Cần nhận ca trước khi thao tác') : undefined}>
+                    <Button
+                      danger
+                      size="small"
+                      disabled={isUpdating || noShift}
+                      icon={<CloseCircleOutlined />}
+                    >
+                      HỦY
+                    </Button>
+                  </Tooltip>
                 </Popconfirm>
               )}
               <Tooltip title="In hóa đơn">
@@ -426,27 +359,6 @@ const OrderManagementPage: React.FC = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-white m-0">Đơn Hàng</h1>
         <div className="flex items-center gap-3">
-          {currentShift ? (
-            <Button
-              danger
-              icon={<StopOutlined />}
-              onClick={handleEndShift}
-              loading={shiftLoading}
-              style={{ borderColor: '#ef4444', color: '#ef4444' }}
-            >
-              DỪNG NHẬN ĐƠN
-            </Button>
-          ) : (
-            <Button
-              type="primary"
-              icon={<PlayCircleOutlined />}
-              onClick={handleStartShift}
-              loading={shiftLoading}
-              style={{ background: '#22c55e', borderColor: '#22c55e' }}
-            >
-              NHẬN ĐƠN
-            </Button>
-          )}
           <Button
             icon={<ReloadOutlined />}
             onClick={fetchOrders}
@@ -467,14 +379,15 @@ const OrderManagementPage: React.FC = () => {
             <div className="text-xs font-bold text-gray-400 tracking-wider mb-2">THÔNG TIN CA HIỆN TẠI</div>
             {currentShift ? (
               <>
-                <div className="text-sm font-semibold mb-1 text-green-400">
-                  Đang nhận đơn
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="inline-block w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                  <span className="text-sm font-semibold text-green-400">Đang nhận đơn</span>
                 </div>
-                <div className="text-gray-300 text-sm">
-                  Nhận Ca
+                <div className="text-white text-base font-bold">
+                  {currentShift.staffName}
                 </div>
-                <div className="text-gray-400 text-xs mt-0.5">
-                  {currentShift.staffName} - {dayjs(currentShift.startedAt).format('HH:mm DD/MM/YY')}
+                <div className="text-gray-400 text-xs mt-1">
+                  Nhận ca lúc {dayjs(currentShift.startedAt).format('HH:mm - DD/MM/YYYY')}
                 </div>
               </>
             ) : (
@@ -483,7 +396,7 @@ const OrderManagementPage: React.FC = () => {
                   Chưa nhận ca
                 </div>
                 <div className="text-gray-500 text-xs">
-                  Bấm "NHẬN ĐƠN" để bắt đầu ca làm việc
+                  Bấm "NHẬN CA" trên thanh header để bắt đầu ca làm việc
                 </div>
               </>
             )}
