@@ -16,6 +16,10 @@ interface ReportData {
   morningStaffName: string | null;
   afternoonStaffName: string | null;
   eveningStaffName: string | null;
+  metadata?: Record<string, {
+    start?: { at?: string };
+    end?: { at?: string };
+  }>;
   materials: {
     id: number;
     materialName: string;

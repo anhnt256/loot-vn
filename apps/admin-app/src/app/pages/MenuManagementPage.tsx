@@ -292,7 +292,7 @@ export default function MenuManagementPage() {
     const newIndex = categories.findIndex((c) => c.id === over.id);
     const reordered = arrayMove(categories, oldIndex, newIndex);
     setCategories(reordered);
-    const orders = reordered.map((c, i) => ({ id: c.id, sortOrder: i }));
+    const orders = reordered.map((c: any, i: number) => ({ id: c.id, sortOrder: i }));
     try {
       await apiClient.patch("/admin/menu/categories/reorder", { orders });
     } catch {
