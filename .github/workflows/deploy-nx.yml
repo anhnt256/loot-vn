@@ -87,6 +87,7 @@ jobs:
             ADMIN_PATH=admin-${PROJECT_NAME}.${BASE_DOMAIN}
             HR_PATH=hr-${PROJECT_NAME}.${BASE_DOMAIN}
             HR_MANAGER_PATH=hr-manager-${PROJECT_NAME}.${BASE_DOMAIN}
+            CLIENT_PATH=client-${PROJECT_NAME}.${BASE_DOMAIN}
             MASTER_PATH=${TENANT_PREFIX}.${BASE_DOMAIN}
             VITE_API_URL=https://api-${PROJECT_NAME}.${BASE_DOMAIN}
             EOF

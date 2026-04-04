@@ -58,6 +58,22 @@ services:
       - internal-network
       - proxy-network
 
+  # Client App (Vite)
+  client:
+    build:
+      <<: *build-defaults
+      target: client
+    container_name: ${TENANT_PREFIX:-}client
+    environment:
+      - PORT=7900
+      - HOST=0.0.0.0
+    env_file:
+      - .env
+    restart: always
+    networks:
+      - internal-network
+      - proxy-network
+
   # Tenant Manage App (Vite)
   tenant-manage:
     build:

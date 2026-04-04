@@ -30,6 +30,7 @@ ENV VITE_TENANT_PREFIX=${VITE_TENANT_PREFIX}
 
 RUN npx nx build api && \
     npx nx build admin --production && \
+    npx nx build client --production && \
     npx nx build hr --production && \
     npx nx build hr-manager --production && \
     npx nx build master --production && \
@@ -78,6 +79,11 @@ CMD ["sh", "-c", "serve -s dist/apps/master -p ${PORT:-3000}"]
 FROM runner-base AS hr
 COPY --from=builder /app/dist/apps/hr ./dist/apps/hr
 CMD ["sh", "-c", "serve -s dist/apps/hr -p ${PORT:-3000}"]
+
+# ─── Client Runner ───────────────────────────────────────────────────────────
+FROM runner-base AS client
+COPY --from=builder /app/dist/apps/client-app ./dist/apps/client-app
+CMD ["sh", "-c", "serve -s dist/apps/client-app -p ${PORT:-3000}"]
 
 # ─── HR Manager Runner ──────────────────────────────────────────────────────
 FROM runner-base AS hr-manager
