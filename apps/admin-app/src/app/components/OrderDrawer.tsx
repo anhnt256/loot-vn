@@ -2,8 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Drawer, Badge, Button, Tag, Spin, Empty, App } from 'antd';
 import { ShoppingOutlined, ReloadOutlined } from '@ant-design/icons';
 import { io, Socket } from 'socket.io-client';
-import { apiClient, ACCESS_TOKEN_KEY } from '@gateway-workspace/shared/utils/client';
-import { getCookie } from 'cookies-next';
+import { apiClient, ACCESS_TOKEN_KEY, getCookie } from '@gateway-workspace/shared/utils/client';
 import { useShift } from '../hooks/useShift';
 
 interface OrderDetail {

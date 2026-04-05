@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Body, Req, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { AuthGuard } from './auth.guard';
 import { Response } from 'express';
 import { getTenantIdFromRequest } from '../hr-app/tenant-from-request';
 
@@ -33,14 +34,6 @@ export class AuthController {
       });
     }
 
-    res.cookie('token', result.token, {
-      maxAge: 86400 * 1000,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      path: '/',
-    });
-
     return res.json({
       ...result,
       success: true,
@@ -49,9 +42,14 @@ export class AuthController {
     });
   }
 
+  @Get('me')
+  @UseGuards(AuthGuard)
+  async getMe(@Req() req: any) {
+    return req.user;
+  }
+
   @Post('logout')
   async logout(@Res() res: Response) {
-    res.clearCookie('token', { path: '/' });
     return res.json({ success: true });
   }
 }

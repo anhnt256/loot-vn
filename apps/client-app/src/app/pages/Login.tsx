@@ -2,15 +2,12 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { App, Card, Input, Button, Typography, ConfigProvider, theme } from 'antd';
 import { LaptopOutlined } from '@ant-design/icons';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { setCookie } from 'cookies-next';
-import { apiClient, ACCESS_TOKEN_KEY } from '@gateway-workspace/shared/utils/client';
-import { getCurrentUser, setCurrentUser } from '../constants';
+import { apiClient, ACCESS_TOKEN_KEY, setCookie, getCookie } from '@gateway-workspace/shared/utils/client';
 
 const { Title, Text } = Typography;
 
 const Login: React.FC = () => {
-  if (getCurrentUser()) return <Navigate to="/dashboard" replace />;
-
+  const token = getCookie(ACCESS_TOKEN_KEY);
   const { message } = App.useApp();
   const [macAddress, setMacAddress] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,6 +25,8 @@ const Login: React.FC = () => {
     }
   }, []);
 
+  if (token) return <Navigate to="/dashboard" replace />;
+
   const doLogin = useCallback(async (mac: string) => {
     setLoading(true);
     try {
@@ -37,19 +36,8 @@ const Login: React.FC = () => {
       });
 
       if (result.status === 200 || result.status === 201 || result.data.statusCode === 200 || result.data.success) {
-        const { token, success: _s, statusCode: _sc, message: _msg, ...userPayload } = result.data;
+        const { token } = result.data;
         if (token) setCookie(ACCESS_TOKEN_KEY, token, { maxAge: 86400, path: '/' });
-        setCurrentUser({
-          userId: userPayload.userId,
-          userName: userPayload.userName,
-          fullName: userPayload.fullName,
-          machineName: userPayload.computerName,
-          role: userPayload.role,
-          stars: 0,
-          totalCheckIn: 0,
-          claimedCheckIn: 0,
-          availableCheckIn: 0,
-        });
         message.success('Đăng nhập thành công!');
         navigate('/dashboard');
       } else {

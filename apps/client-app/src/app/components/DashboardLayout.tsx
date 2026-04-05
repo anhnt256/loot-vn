@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { apiClient, ACCESS_TOKEN_KEY } from '@gateway-workspace/shared/utils/client';
-import { deleteCookie } from 'cookies-next';
-import { clearCurrentUser, getCurrentUser, setCurrentUser, CurrentUser } from '../constants';
+import { apiClient, ACCESS_TOKEN_KEY, deleteCookie } from '@gateway-workspace/shared/utils/client';
 import { cn } from '../../lib/utils';
 import ChatPanel from './ChatPanel';
 import { CartProvider } from '../contexts/CartContext';
+import { UserProvider, useUser } from '../contexts/UserContext';
+import { Spin } from 'antd';
 
 const navLinks = [
   { href: '/dashboard/check-in', label: 'Điểm danh' },
@@ -17,38 +17,25 @@ const navLinks = [
   { href: '/dashboard/voucher', label: 'Voucher' },
 ];
 
-const DashboardLayout: React.FC = () => {
+const DashboardContent: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [currentUser, setUser] = useState<CurrentUser>(getCurrentUser()!);
-
-  // Refresh user stats from server once on mount
-  useEffect(() => {
-    const user = getCurrentUser();
-    if (!user) return;
-    const userId = user.userId || user.id;
-    if (!userId) return;
-
-    apiClient
-      .post('/dashboard/user-calculator', { listUsers: [userId] })
-      .then((res) => {
-        const fresh = Array.isArray(res.data?.data) ? res.data.data[0] : null;
-        if (fresh) {
-          const updated = { ...user, ...fresh };
-          setCurrentUser(updated);
-          setUser(updated);
-        }
-      })
-      .catch(() => {/* silent */});
-  }, []);
+  const { user, loading } = useUser();
 
   const handleLogout = async () => {
     try { await apiClient.delete('/dashboard/cart'); } catch { /* ignore */ }
     try { await apiClient.post('/auth/logout'); } catch { /* ignore */ }
-    clearCurrentUser();
     deleteCookie(ACCESS_TOKEN_KEY);
     navigate('/login');
   };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-200">
+        <Spin size="large" />
+      </div>
+    );
+  }
 
   return (
     <CartProvider>
@@ -59,11 +46,11 @@ const DashboardLayout: React.FC = () => {
           {/* User info */}
           <div className="flex justify-between items-center mb-5 px-2">
             <span className="font-sans font-bold text-primary uppercase tracking-wider text-base truncate max-w-[110px]">
-              {currentUser.userName}
+              {user?.userName ?? '---'}
             </span>
             <div className="flex items-center bg-gray-700 rounded-full px-3 py-1 gap-1">
               <span className="font-gaming font-bold text-yellow-400 text-base">
-                {(currentUser.stars ?? 0).toLocaleString()}
+                {(user?.stars ?? 0).toLocaleString()}
               </span>
               <span className="text-yellow-400 text-sm">⭐</span>
             </div>
@@ -105,7 +92,7 @@ const DashboardLayout: React.FC = () => {
       {/* Right Chat Panel */}
       <div className="w-80 bg-gray-900 border-l border-gray-700 shadow-lg flex-shrink-0">
         <ChatPanel
-          machineName={currentUser.machineName}
+          machineName={user?.machineName}
           defaultTab={location.pathname.includes('order') ? 'cart' : 'chat'}
         />
       </div>
@@ -113,5 +100,11 @@ const DashboardLayout: React.FC = () => {
     </CartProvider>
   );
 };
+
+const DashboardLayout: React.FC = () => (
+  <UserProvider>
+    <DashboardContent />
+  </UserProvider>
+);
 
 export default DashboardLayout;

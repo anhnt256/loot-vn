@@ -1,5 +1,5 @@
 import React from 'react';
-import { Crown, Trophy } from "lucide-react";
+import { Crown } from "lucide-react";
 import { isEmpty } from "lodash";
 import {
   FaDesktop,
@@ -41,6 +41,7 @@ interface Computer {
   userType?: number;
   isUseApp?: boolean;
   note?: string;
+  machineGroupName?: string;
   battlePass?: {
     isUsed: boolean;
     isPremium: boolean;
@@ -56,7 +57,7 @@ interface Computer {
 interface ComputerCardProps {
   computer: Computer;
   onClick: () => void;
-  className?: string; // Kept to support layout grids
+  className?: string;
 }
 
 const getStatusColor = (status: string) => {
@@ -67,6 +68,46 @@ const getStatusColor = (status: string) => {
     default: return 'text-gray-500';
   }
 };
+
+/** Map machine group keyword → tag color */
+const GROUP_STYLES: Record<string, { bg: string; text: string }> = {
+  svip:     { bg: 'bg-yellow-400',  text: 'text-black' },
+  vip:      { bg: 'bg-amber-500',   text: 'text-white' },
+  couple:   { bg: 'bg-pink-500',    text: 'text-white' },
+  stream:   { bg: 'bg-violet-500',  text: 'text-white' },
+  bootcamp: { bg: 'bg-red-600',     text: 'text-white' },
+  fps:      { bg: 'bg-lime-500',    text: 'text-black' },
+  moba:     { bg: 'bg-indigo-500',  text: 'text-white' },
+  phòng:    { bg: 'bg-rose-600',    text: 'text-white' },
+};
+
+const DEFAULT_STYLE = { bg: 'bg-gray-400', text: 'text-gray-800' };
+const DEFAULT_GROUPS = ['mặc định', 'mac dinh', 'default', 'thường', 'thuong', 'normal'];
+
+/** Auto-generate a consistent color from group name for unknown groups */
+function hashColor(str: string): { bg: string; text: string } {
+  const COLORS = [
+    { bg: 'bg-orange-600', text: 'text-white' },
+    { bg: 'bg-lime-600',   text: 'text-white' },
+    { bg: 'bg-sky-600',    text: 'text-white' },
+    { bg: 'bg-fuchsia-600', text: 'text-white' },
+    { bg: 'bg-emerald-600', text: 'text-white' },
+    { bg: 'bg-indigo-600', text: 'text-white' },
+  ];
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  return COLORS[Math.abs(hash) % COLORS.length];
+}
+
+function getGroupStyle(groupName?: string | null) {
+  if (!groupName) return null;
+  const key = groupName.toLowerCase().trim();
+  if (DEFAULT_GROUPS.some(g => key.includes(g))) return { style: DEFAULT_STYLE, label: groupName };
+  for (const [keyword, style] of Object.entries(GROUP_STYLES)) {
+    if (key.includes(keyword)) return { style, label: groupName };
+  }
+  return { style: hashColor(key), label: groupName };
+}
 
 const ComputerCard: React.FC<ComputerCardProps> = ({ computer, onClick, className }) => {
   const {
@@ -80,6 +121,7 @@ const ComputerCard: React.FC<ComputerCardProps> = ({ computer, onClick, classNam
     devices,
     userType,
     isUseApp,
+    machineGroupName,
     battlePass,
   } = computer;
 
@@ -91,6 +133,8 @@ const ComputerCard: React.FC<ComputerCardProps> = ({ computer, onClick, classNam
     chairStatus,
     networkStatus,
   } = devices && devices.length > 0 ? devices[0] : {} as Partial<DeviceStatus>;
+
+  const group = getGroupStyle(machineGroupName);
 
   let bgColor = "bg-gray-600";
   if (userType === 5) {
@@ -106,11 +150,19 @@ const ComputerCard: React.FC<ComputerCardProps> = ({ computer, onClick, classNam
       className={`${bgColor} text-white font-bold relative cursor-pointer hover:opacity-90 transition-opacity duration-200 rounded-lg shadow-md leading-[1.15] ${className ? className : 'h-[120px] w-[calc(50%-0.25rem)] sm:w-[140px]'}`}
       onClick={onClick}
     >
-      {userType === 5 && (
-        <div className="absolute bottom-1 right-1 bg-white text-purple-700 text-[9px] font-bold px-1.5 py-[2px] rounded shadow-sm">
-          COMBO
-        </div>
-      )}
+      {/* Bottom-left tags: group + combo */}
+      <div className="absolute bottom-1 left-1 flex items-center gap-1">
+        {group && (
+          <div className={`${group.style.bg} ${group.style.text} text-[8px] font-bold px-1.5 py-[2px] rounded shadow-sm leading-none`}>
+            {group.label}
+          </div>
+        )}
+        {userType === 5 && (
+          <div className="bg-white text-purple-700 text-[8px] font-bold px-1.5 py-[2px] rounded shadow-sm leading-none">
+            COMBO
+          </div>
+        )}
+      </div>
 
       <div className="absolute top-2 left-2 max-w-[calc(100%-22px)]">
         <div className="text-[13px]">{name}</div>
@@ -118,7 +170,6 @@ const ComputerCard: React.FC<ComputerCardProps> = ({ computer, onClick, classNam
           <div className="text-[9px] truncate mt-[1px]">{userName.toUpperCase()}</div>
         )}
 
-        {/* Show "Chưa sử dụng" when userName is null but machine is active (ON status) */}
         {isEmpty(userName) &&
           isUseApp === true &&
           Number(status) === EnumComputerStatus.ON && (
@@ -132,14 +183,12 @@ const ComputerCard: React.FC<ComputerCardProps> = ({ computer, onClick, classNam
             </>
           )}
 
-        {/* Show "Không sử dụng" in red when isUseApp is false */}
         {isUseApp === false && (
           <div className="text-[11px] truncate text-red-500 font-bold overflow-hidden display-webkit-box webkit-line-clamp-2 webkit-box-orient-vertical mt-1">
             Không sử dụng
           </div>
         )}
 
-        {/* Hide UserId, Điểm danh, Lượt quay when machine is not in use */}
         {isUseApp === true && !isEmpty(userName) && (
           <>
             <div className="text-[9px] truncate text-orange-300 font-bold mt-[1px]">
@@ -164,7 +213,6 @@ const ComputerCard: React.FC<ComputerCardProps> = ({ computer, onClick, classNam
           </div>
         )}
 
-        {/* Battle Pass Info - Only show when machine is in use */}
         {isUseApp === true && !isEmpty(userName) && (
           <div className="text-[8px] text-cyan-300 font-bold mt-[2px]">
             <div className="flex items-center gap-1 mb-[2px]">
@@ -210,7 +258,7 @@ const ComputerCard: React.FC<ComputerCardProps> = ({ computer, onClick, classNam
         )}
       </div>
 
-      {/* Device Status Icons - Show for all machines */}
+      {/* Device Status Icons */}
       <div className="absolute top-2 right-1.5 flex flex-col gap-[3px] items-center">
         <FaDesktop
           className={getStatusColor(monitorStatus || "GOOD")}

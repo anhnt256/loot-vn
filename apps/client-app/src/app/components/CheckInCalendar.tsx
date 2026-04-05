@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import { apiClient } from '@gateway-workspace/shared/utils/client';
-import { getCurrentUser } from '../constants';
+import { useUser } from '../contexts/UserContext';
 
 interface CheckInDay {
   date: string;
@@ -21,6 +21,7 @@ const STATUS_STYLE: Record<CheckInDay['status'], { bg: string; text: string; dot
 };
 
 const CheckInCalendar: React.FC<Props> = ({ refreshKey }) => {
+  const { user } = useUser();
   const [days, setDays] = useState<CheckInDay[]>([]);
   const [totalRewards, setTotalRewards] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -58,7 +59,6 @@ const CheckInCalendar: React.FC<Props> = ({ refreshKey }) => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const user = getCurrentUser();
       const userId = user?.userId || user?.id;
 
       if (!userId) {
@@ -85,7 +85,7 @@ const CheckInCalendar: React.FC<Props> = ({ refreshKey }) => {
     };
 
     fetchData();
-  }, [createDaysOfMonth, refreshKey]);
+  }, [createDaysOfMonth, refreshKey, user]);
 
   if (loading) {
     return (

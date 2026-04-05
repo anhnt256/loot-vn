@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { deleteCookie, getCookie } from "cookies-next";
+import { deleteCookie, getCookie } from "../cookie";
 import { ACCESS_TOKEN_KEY, CURRENT_USER } from "@gateway-workspace/shared/utils";
 import isEmpty from "lodash/isEmpty";
 import { clearUserData, clearAdminData, clearStaffData } from "../utils";

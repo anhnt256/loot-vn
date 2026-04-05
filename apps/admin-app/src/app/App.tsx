@@ -3,6 +3,7 @@ import { App as AntApp, ConfigProvider, theme } from 'antd';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import AdminLayout from './components/AdminLayout';
+import ProtectedRoute from './components/ProtectedRoute';
 import DashboardOverview from './pages/DashboardOverview';
 import LayoutManager from './pages/LayoutManager';
 import SystemConfig from './pages/SystemConfig';
@@ -23,7 +24,7 @@ export function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={<AdminLayout />}>
+            <Route path="/dashboard" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
               <Route index element={<DashboardOverview />} />
               <Route path="layout-manager" element={<LayoutManager />} />
               <Route path="system-config" element={<SystemConfig />} />

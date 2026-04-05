@@ -1,10 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { App } from 'antd';
 import { io, Socket } from 'socket.io-client';
-import { apiClient } from '@gateway-workspace/shared/utils/client';
-import { ACCESS_TOKEN_KEY } from '@gateway-workspace/shared/utils/client';
-import { getCookie } from 'cookies-next';
-import { getCurrentUser } from '../constants';
+import { apiClient, ACCESS_TOKEN_KEY, getCookie } from '@gateway-workspace/shared/utils/client';
+import { useUser } from '../contexts/UserContext';
 import { useCart } from '../contexts/CartContext';
 
 interface ChatMessage {
@@ -57,7 +55,7 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat' }) => {
   const [sending, setSending] = useState(false);
   const [onlineCount, setOnlineCount] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const user = getCurrentUser();
+  const { user } = useUser();
   const { cart, setCart, clearCart } = useCart();
 
   const handleChangeQty = (idx: number, delta: number) => {

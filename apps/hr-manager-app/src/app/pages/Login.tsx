@@ -2,8 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Card, Input, Button, Typography, message, ConfigProvider, theme } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { setCookie } from 'cookies-next';
-import { apiClient, ACCESS_TOKEN_KEY } from '@gateway-workspace/shared/utils';
+import { apiClient, ACCESS_TOKEN_KEY, setCookie } from '@gateway-workspace/shared/utils';
 
 const { Title, Text } = Typography;
 

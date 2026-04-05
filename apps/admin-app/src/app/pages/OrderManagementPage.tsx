@@ -10,9 +10,8 @@ import {
   WalletOutlined, CreditCardOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { apiClient, ACCESS_TOKEN_KEY } from '@gateway-workspace/shared/utils/client';
+import { apiClient, ACCESS_TOKEN_KEY, getCookie } from '@gateway-workspace/shared/utils/client';
 import { io, Socket } from 'socket.io-client';
-import { getCookie } from 'cookies-next';
 import { useShift } from '../hooks/useShift';
 
 /* ---------- types ---------- */

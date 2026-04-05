@@ -19,8 +19,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@gateway-workspace/shared/utils';
 import { Drawer, Grid } from 'antd';
-import { getCookie, deleteCookie } from 'cookies-next';
-import { ACCESS_TOKEN_KEY } from '@gateway-workspace/shared/utils';
+import { ACCESS_TOKEN_KEY, getCookie, deleteCookie } from '@gateway-workspace/shared/utils';
 
 const { useBreakpoint } = Grid;
 

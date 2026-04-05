@@ -93,7 +93,7 @@ export class ComputerService {
       (async () => {
         const queryString = `
         SELECT 
-          u.id, u.userId, u.userName, u.stars, u.magicStone, u.isUseApp, u.note, u.createdAt, u.updatedAt,
+          u.userId, u.userName, u.stars, u.magicStone, u.isUseApp, u.note, u.createdAt, u.updatedAt,
           COALESCE(SUM(CASE WHEN ush.type = 'CHECK_IN' THEN ush.newStars - ush.oldStars ELSE 0 END), 0) AS totalClaimed,
           COALESCE(SUM(CASE WHEN gr.expiredAt >= NOW() THEN gr.amount - gr.usedAmount ELSE 0 END), 0) AS totalGiftRounds
         FROM User u
@@ -103,7 +103,7 @@ export class ComputerService {
         LEFT JOIN GiftRound gr ON u.userId = gr.userId 
           AND gr.expiredAt >= NOW()
         WHERE u.userId IN (${userIdsStr})
-        GROUP BY u.id, u.userId, u.userName, u.stars, u.magicStone, u.isUseApp, u.note, u.createdAt, u.updatedAt
+        GROUP BY u.userId, u.userName, u.stars, u.magicStone, u.isUseApp, u.note, u.createdAt, u.updatedAt
         `;
         return await gatewayDB.$queryRawUnsafe(queryString);
       })(),
@@ -196,6 +196,8 @@ export class ComputerService {
       userGiftRoundsMap.set(user.userId, convertBigIntToNumber(user.totalGiftRounds));
     });
 
+
+
     const userGameRoundsMap = new Map();
     (userGameRounds as any[]).forEach((round) => {
       userGameRoundsMap.set(round.userId, convertBigIntToNumber(round.gameRounds));
@@ -260,14 +262,14 @@ export class ComputerService {
         const maxDailyCheckInPoints = 24000;
         const remainingDailyLimit = Math.max(0, maxDailyCheckInPoints - totalClaimed);
         availableCheckIn = Math.min(Math.max(0, totalCheckIn - totalClaimed), remainingDailyLimit);
-        checkIn = userData?.id ? availableCheckIn : totalCheckIn;
+        checkIn = userData?.userId ? availableCheckIn : totalCheckIn;
       }
 
       userTopUp = userTopUpsMap.get(userId) || 0;
       const round = Math.floor(userTopUp ? userTopUp / spendPerRound : 0);
       totalGiftRounds = userGiftRoundsMap.get(userId) || 0;
 
-      if (userData?.id) {
+      if (userData?.userId) {
         const usedRounds = userGameRoundsMap.get(userId) || 0;
         totalRound = round + totalGiftRounds - usedRounds;
       } else {
@@ -305,33 +307,36 @@ export class ComputerService {
     const { gateway, fnet } = await this.getClients(tenantId);
     
     const configs = await this.configService.getConfigs(tenantId);
-    const computerPrefix = configs['COMPUTER_PREFIX'] || 'MAY';
     const spendPerRound = Number(configs['SPEND_PER_ROUND']) || Number(process.env.NEXT_PUBLIC_SPEND_PER_ROUND || 5000);
     
     // Using string interpolation for queries directly inside methods
     const startOfDayVN = getStartOfDayVNISO();
 
     const queryResults = await Promise.allSettled([
+      // [0] Session status from fnet
       executeQueryWithTimeout(async () => {
         return (await fnet.$queryRawUnsafe(`
-        SELECT 
-          s.MachineName, s.EnterDate, s.EnterTime, s.Status, s.UserId, u.UserType, cs.NetInfo, mg.MachineGroupName, mg.PriceDefault, pm.Price, d.Status as DeviceStatus
+        SELECT
+          s.MachineName, s.EnterDate, s.EnterTime, s.Status, s.UserId, u.UserType, cs.NetInfo,
+          mg.MachineGroupName, mg.PriceDefault, pm.Price, d.Status as DeviceStatus
         FROM systemlogtb s
         LEFT JOIN usertb u ON s.UserId = u.UserId
         LEFT JOIN clientsystb cs ON s.MachineName = cs.PCName
-        LEFT JOIN machinegrouptb mg ON u.MachineGroupId = mg.MachineGroupId
+        LEFT JOIN usertb mu ON s.MachineName = mu.UserName
+        LEFT JOIN machinegrouptb mg ON mu.MachineGroupId = mg.MachineGroupId
         LEFT JOIN pricemachinetb pm ON mg.MachineGroupId = pm.MachineGroupId AND pm.PriceId = 1
         LEFT JOIN dptb d ON s.MachineName = d.ComputerName
         INNER JOIN (
           SELECT MachineName, MAX(SystemLogId) AS MaxSystemLogId
           FROM systemlogtb
-          WHERE MachineName NOT LIKE '${computerPrefix}-%' AND EnterDate >= DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+          WHERE EnterDate >= DATE_SUB(CURDATE(), INTERVAL 1 DAY)
           GROUP BY MachineName
         ) latest_log ON s.MachineName = latest_log.MachineName AND s.SystemLogId = latest_log.MaxSystemLogId
         ORDER BY s.MachineName ASC;
       `)) as any[];
       }, 8000),
 
+      // [1] Device histories from gateway
       executeQueryWithTimeout(async () => {
         return (await gateway.$queryRawUnsafe(`
         SELECT h.*, CONVERT_TZ(h.createdAt, '+00:00', '+07:00') as createdAt, CONVERT_TZ(h.updatedAt, '+00:00', '+07:00') as updatedAt
@@ -340,44 +345,23 @@ export class ComputerService {
       `)) as any[];
       }, 5000),
 
-      executeQueryWithTimeout(async () => {
-        return (await fnet.$queryRawUnsafe(`
-        select u.UserName as name, u.MAC as macAddress, m.MachineGroupName
-        FROM usertb u 
-        left join machinegrouptb m on m.MachineGroupId = u.MachineGroupId
-        where u.UserName REGEXP '^${computerPrefix}[0-9]+'
-        ORDER BY LENGTH(u.UserName) ASC, u.UserName ASC
-      `)) as any[];
-      }, 5000),
-
-      executeQueryWithTimeout(async () => {
-        return (await gateway.$queryRawUnsafe(`SELECT * FROM CheckInItem`)) as any[];
-      }, 3000),
-
-      executeQueryWithTimeout(async () => {
-        return (await fnet.$queryRawUnsafe(`
-        SELECT cs.PCName as machineName, cs.NetInfo, mg.MachineGroupName, mg.PriceDefault, pm.Price
-        FROM clientsystb cs
-        LEFT JOIN usertb u ON cs.PCName = u.UserName
-        LEFT JOIN machinegrouptb mg ON u.MachineGroupId = mg.MachineGroupId
-        LEFT JOIN pricemachinetb pm ON mg.MachineGroupId = pm.MachineGroupId AND pm.PriceId = 1
-        WHERE cs.PCName IS NOT NULL
-        ORDER BY cs.PCName ASC;
-      `)) as any[];
-      }, 5000),
+      // [2] Computers from gateway (source of truth)
       executeQueryWithTimeout(async () => {
         return (await gateway.computer.findMany({
           select: { id: true, name: true, macAddress: true, devices: true }
         }));
       }, 5000),
+
+      // [3] CheckIn items from gateway
+      executeQueryWithTimeout(async () => {
+        return (await gateway.$queryRawUnsafe(`SELECT * FROM CheckInItem`)) as any[];
+      }, 3000),
     ]);
 
     const computerStatus: any[] = queryResults[0].status === "fulfilled" ? (queryResults[0].value || []) : [];
     const deviceHistoriesRaw: any[] = queryResults[1].status === "fulfilled" ? (queryResults[1].value || []) : [];
     const computers: any[] = queryResults[2].status === "fulfilled" ? (queryResults[2].value || []) : [];
     const checkInItems: any[] = queryResults[3].status === "fulfilled" ? (queryResults[3].value || []) : [];
-    const machineDetailsRaw: any[] = queryResults[4].status === "fulfilled" ? (queryResults[4].value || []) : [];
-    const gatewayComputers: any[] = queryResults[5].status === "fulfilled" ? (queryResults[5].value || []) : [];
 
     if (!Array.isArray(computers) || computers.length === 0) {
       return [];
@@ -406,32 +390,18 @@ export class ComputerService {
     const userInfoMap = new Map();
     usersInfo.forEach((userInfo) => userInfoMap.set(userInfo.userId, userInfo));
 
-    const machineDetailsMap = new Map();
-    if (Array.isArray(machineDetailsRaw)) {
-      machineDetailsRaw.forEach((machineDetail: any) => {
-        if (machineDetail.machineName) {
-          let netInfoData = null;
-          try {
-            netInfoData = machineDetail.NetInfo ? JSON.parse(machineDetail.NetInfo) : null;
-          } catch (e) { netInfoData = null; }
-          machineDetailsMap.set(machineDetail.machineName, { ...machineDetail, netInfo: netInfoData });
-        }
-      });
-    }
+    const computerStatusMap = new Map();
+    computerStatus.forEach((status: any) => {
+      computerStatusMap.set(status.MachineName, status);
+    });
 
     const results = [];
     for (const computer of computers) {
-      const { name, macAddress } = computer || {};
-      const computerStatusData = Array.isArray(computerStatus) && computerStatus.length > 0
-        ? computerStatus.find((status: any) => status.MachineName === name)
-        : null;
-      const { UserId, Status, UserType, NetInfo, DeviceStatus } = computerStatusData || {};
+      const { id, name, macAddress, devices } = computer;
+      const statusData = computerStatusMap.get(name) || {};
+      const { UserId, Status, UserType, NetInfo, DeviceStatus, MachineGroupName } = statusData;
 
       const userInfo = UserId ? userInfoMap.get(parseInt(UserId, 10)) : null;
-      const machineDetail = machineDetailsMap.get(name) || {};
-
-      const gatewayComputer = gatewayComputers.find((c: any) => c.name === name);
-      const devices = gatewayComputer?.devices || [];
 
       let netInfoData = null;
       try {
@@ -439,9 +409,9 @@ export class ComputerService {
       } catch (e) { netInfoData = null; }
 
       results.push({
-        id: gatewayComputer?.id || null,
-        name: computer.name,
-        macAddress: gatewayComputer?.macAddress || macAddress || null,
+        id,
+        name,
+        macAddress: macAddress || null,
         status: Status !== undefined && Status !== null ? Status : (DeviceStatus !== undefined && DeviceStatus !== null ? DeviceStatus : "UNKNOWN"),
         userId: UserId || null,
         userName: userInfo?.userName || null,
@@ -457,12 +427,11 @@ export class ComputerService {
         totalPayment: userInfo?.totalPayment || 0,
         giftRound: userInfo?.giftRound || 0,
         battlePass: userInfo?.battlePass || { isUsed: false, isPremium: false, data: null },
+        machineGroupName: MachineGroupName || null,
         machineDetails: {
-          netInfo: machineDetail.netInfo || netInfoData,
-          machineGroupName: machineDetail.MachineGroupName || "Default",
-          pricePerHour: machineDetail.Price || machineDetail.PriceDefault || 0,
+          netInfo: netInfoData,
         },
-        devices: devices.filter((d: any) => d && d.id).map((device: any) => ({
+        devices: (devices || []).filter((d: any) => d && d.id).map((device: any) => ({
           ...device,
           histories: [
             deviceIdToHistories[device.id]?.REPORT ? { ...deviceIdToHistories[device.id].REPORT, createdAt: safeDateToString(deviceIdToHistories[device.id].REPORT.createdAt), updatedAt: safeDateToString(deviceIdToHistories[device.id].REPORT.updatedAt) } : null,

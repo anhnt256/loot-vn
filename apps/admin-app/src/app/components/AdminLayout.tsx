@@ -23,8 +23,7 @@ import {
   LogoutOutlined,
   InboxOutlined
 } from '@ant-design/icons';
-import { deleteCookie } from 'cookies-next';
-import { ACCESS_TOKEN_KEY, apiClient } from '@gateway-workspace/shared/utils/client';
+import { ACCESS_TOKEN_KEY, apiClient, deleteCookie } from '@gateway-workspace/shared/utils/client';
 import OrderDrawer from './OrderDrawer';
 import ShiftButton from './ShiftButton';
 
@@ -32,18 +31,9 @@ const { Header, Sider, Content } = Layout;
 
 const AdminLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [fundAmount, setFundAmount] = useState<number | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
-
-  const defaultTenantConfig = (typeof window !== 'undefined' && (window as any).__TENANT_CONFIG__) || {};
-  let tenantLogo = defaultTenantConfig?.logo || null;
-  if (typeof tenantLogo === 'object') {
-    tenantLogo = tenantLogo?.url || null;
-  }
-  const primaryColor = defaultTenantConfig?.primaryColor || '#1677ff';
-  const secondaryColor = defaultTenantConfig?.secondaryColor || '#f97316';
-
-  const [fundAmount, setFundAmount] = useState<number | null>(null);
 
   const fetchFund = async () => {
     try {
@@ -70,9 +60,16 @@ const AdminLayout: React.FC = () => {
 
   const handleLogout = () => {
     deleteCookie(ACCESS_TOKEN_KEY);
-    localStorage.removeItem('userInfo');
     navigate('/login');
   };
+
+  const defaultTenantConfig = (typeof window !== 'undefined' && (window as any).__TENANT_CONFIG__) || {};
+  let tenantLogo = defaultTenantConfig?.logo || null;
+  if (typeof tenantLogo === 'object') {
+    tenantLogo = tenantLogo?.url || null;
+  }
+  const primaryColor = defaultTenantConfig?.primaryColor || '#1677ff';
+  const secondaryColor = defaultTenantConfig?.secondaryColor || '#f97316';
 
   const menuItems = [
     { key: '/dashboard', icon: <DashboardOutlined />, label: 'Dashboard' },

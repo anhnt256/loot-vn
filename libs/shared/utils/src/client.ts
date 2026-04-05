@@ -4,3 +4,4 @@
  */
 export { default as apiClient } from './lib/apiClient';
 export { ACCESS_TOKEN_KEY } from './lib/constants/token.constant';
+export { getCookie, setCookie, deleteCookie } from './lib/cookie';

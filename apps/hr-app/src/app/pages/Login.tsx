@@ -3,9 +3,7 @@ import { Card, Input, Button, Typography, ConfigProvider, theme, App, Alert } fr
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { setCookie } from 'cookies-next';
-import { apiClient } from '@gateway-workspace/shared/utils';
-import { ACCESS_TOKEN_KEY } from '@gateway-workspace/shared/utils';
+import { apiClient, ACCESS_TOKEN_KEY, setCookie } from '@gateway-workspace/shared/utils';
 
 const { Title, Text } = Typography;
 

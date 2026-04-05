@@ -2,7 +2,23 @@ import { StrictMode } from 'react';
 import * as ReactDOM from 'react-dom/client';
 import App from './app/App';
 import './index.css';
-import { apiClient } from '@gateway-workspace/shared/utils/client';
+import { apiClient, ACCESS_TOKEN_KEY, deleteCookie } from '@gateway-workspace/shared/utils/client';
+
+// Redirect to login on 401 (expired/invalid token)
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (
+      error.response?.status === 401 &&
+      !error.config?.url?.includes('/auth/') &&
+      !window.location.pathname.includes('/login')
+    ) {
+      deleteCookie(ACCESS_TOKEN_KEY);
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 async function bootstrap() {
   if (typeof globalThis.window !== 'undefined') {

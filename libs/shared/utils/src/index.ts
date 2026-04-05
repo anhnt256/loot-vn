@@ -1,6 +1,7 @@
 export { default as apiClient } from './lib/apiClient';
 export * from './lib/apiClient';
 export { default as dayjs } from './lib/dayjs';
+export * from './lib/cookie';
 export * from './lib/fetcher';
 export * from './lib/ffood-token-utils';
 export * from './lib/jwt';

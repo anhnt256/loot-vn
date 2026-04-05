@@ -1,14 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, InputNumber, Button, Card, Typography, message, Skeleton } from 'antd';
-import { SettingOutlined, SaveOutlined } from '@ant-design/icons';
+import { Form, InputNumber, Button, Card, Typography, message, Skeleton, Descriptions, Spin } from 'antd';
+import { SettingOutlined, SaveOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { apiClient } from '@gateway-workspace/shared/utils/client';
 
 const { Title } = Typography;
+
+interface ServerTime {
+  now: string;
+  dayOfWeek: string;
+  startDay: string;
+  endDay: string;
+  startWeek: string;
+  endWeek: string;
+  startMonth: string;
+  endMonth: string;
+}
 
 export default function SystemConfig() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [serverTime, setServerTime] = useState<ServerTime | null>(null);
+  const [checkingTime, setCheckingTime] = useState(false);
 
   useEffect(() => {
     fetchConfigs();
@@ -21,7 +34,6 @@ export default function SystemConfig() {
       const data = res.data || {};
       form.setFieldsValue({
         SPEND_PER_ROUND: data.SPEND_PER_ROUND ? Number(data.SPEND_PER_ROUND) : 5000,
-        COMPUTER_PREFIX: data.COMPUTER_PREFIX || 'MAY',
         JACKPOT_AMOUNT: data.JACKPOT_AMOUNT ? Number(data.JACKPOT_AMOUNT) : 0,
         GAME_FUND_RATE: data.GAME_FUND_RATE ? Number(data.GAME_FUND_RATE) : 1.5,
       });
@@ -43,6 +55,19 @@ export default function SystemConfig() {
       message.error('Không thể lưu cấu hình hệ thống');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleCheckServerTime = async () => {
+    try {
+      setCheckingTime(true);
+      const res = await apiClient.get('/system-config/server-time');
+      setServerTime(res.data);
+    } catch (err) {
+      console.error('Lỗi khi kiểm tra giờ hệ thống', err);
+      message.error('Không thể kiểm tra giờ hệ thống');
+    } finally {
+      setCheckingTime(false);
     }
   };
 
@@ -82,15 +107,6 @@ export default function SystemConfig() {
                 formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                 parser={(value) => value!.replace(/\$\s?|(,*)/g, '') as any}
               />
-            </Form.Item>
-
-            <Form.Item
-              name="COMPUTER_PREFIX"
-              label={<span className="text-gray-200 font-medium">Tiền tố tên máy tính (Computer Prefix)</span>}
-              rules={[{ required: true, message: 'Vui lòng nhập tiền tố' }]}
-              extra={<span className="text-gray-400 text-xs">Tên máy trạm phải bắt đầu bằng chữ này và theo sau là số (VD: MAY sẽ bắt được MAY01, MAY02...)</span>}
-            >
-              <Input size="large" className="w-full text-lg" style={{ textTransform: 'uppercase' }} />
             </Form.Item>
 
             <Form.Item
@@ -137,6 +153,44 @@ export default function SystemConfig() {
               </Button>
             </div>
           </Form>
+        )}
+      </Card>
+
+      <Card
+        className="border-gray-700 shadow-xl mt-6"
+        style={{ backgroundColor: '#1f2937' }}
+        bodyStyle={{ padding: '32px' }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-gray-200 font-medium text-base">Kiểm tra giờ hệ thống (Server)</span>
+          <Button
+            icon={<ClockCircleOutlined />}
+            onClick={handleCheckServerTime}
+            loading={checkingTime}
+          >
+            Kiểm tra
+          </Button>
+        </div>
+
+        {checkingTime && !serverTime && <Spin />}
+
+        {serverTime && (
+          <Descriptions
+            bordered
+            size="small"
+            column={1}
+            labelStyle={{ color: '#9ca3af', backgroundColor: '#111827', width: 160 }}
+            contentStyle={{ color: '#f3f4f6', backgroundColor: '#1f2937' }}
+          >
+            <Descriptions.Item label="Giờ hiện tại">{serverTime.now}</Descriptions.Item>
+            <Descriptions.Item label="Thứ">{serverTime.dayOfWeek}</Descriptions.Item>
+            <Descriptions.Item label="Start Day">{serverTime.startDay}</Descriptions.Item>
+            <Descriptions.Item label="End Day">{serverTime.endDay}</Descriptions.Item>
+            <Descriptions.Item label="Start Week">{serverTime.startWeek}</Descriptions.Item>
+            <Descriptions.Item label="End Week">{serverTime.endWeek}</Descriptions.Item>
+            <Descriptions.Item label="Start Month">{serverTime.startMonth}</Descriptions.Item>
+            <Descriptions.Item label="End Month">{serverTime.endMonth}</Descriptions.Item>
+          </Descriptions>
         )}
       </Card>
     </div>

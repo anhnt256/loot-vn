@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 import { StarFilled, StarOutlined } from '@ant-design/icons';
 import { App, Spin } from 'antd';
 import { apiClient } from '@gateway-workspace/shared/utils/client';
-import { getCurrentUser, setCurrentUser } from '../constants';
+import { useUser } from '../contexts/UserContext';
 
 interface Props {
   onRefresh?: () => void;
@@ -13,12 +13,12 @@ interface Props {
 const CheckInCard: React.FC<Props> = ({ onRefresh }) => {
   const { message } = App.useApp();
   const [isChecking, setIsChecking] = useState(false);
+  const { user, refreshUser } = useUser();
 
-  const currentUser = getCurrentUser();
-  const playTime = (currentUser?.totalCheckIn ?? 0) / 1000 / 3600 || 0;
-  const claim = currentUser?.claimedCheckIn ?? 0;
-  const rewards = currentUser?.availableCheckIn ?? 0;
-  const userId = currentUser?.userId || currentUser?.id || 0;
+  const playTime = (user?.totalCheckIn ?? 0) / 1000 / 3600 || 0;
+  const claim = user?.claimedCheckIn ?? 0;
+  const rewards = user?.availableCheckIn ?? 0;
+  const userId = user?.userId || user?.id || 0;
 
   const handleCheckIn = useCallback(async () => {
     if (rewards <= 0) {
@@ -29,24 +29,19 @@ const CheckInCard: React.FC<Props> = ({ onRefresh }) => {
     try {
       await apiClient.post('/dashboard/check-in', { userId });
       message.success('Nhận thưởng thành công!');
-      // Refresh user data
-      const res = await apiClient.post('/dashboard/user-calculator', { listUsers: [userId] });
-      const freshData = Array.isArray(res.data?.data) ? res.data.data[0] : null;
-      if (freshData && currentUser) {
-        setCurrentUser({ ...currentUser, ...freshData });
-      }
+      await refreshUser();
       onRefresh?.();
     } catch (err: any) {
       message.error(err?.response?.data?.message || 'Lỗi khi nhận thưởng!');
     } finally {
       setIsChecking(false);
     }
-  }, [rewards, userId, currentUser, onRefresh]);
+  }, [rewards, userId, onRefresh, refreshUser]);
 
   const handleUpdate = useCallback(() => {
     onRefresh?.();
-    window.location.reload();
-  }, [onRefresh]);
+    refreshUser();
+  }, [onRefresh, refreshUser]);
 
   return (
     <div className="border-2 p-4 border-gray-400 shadow-card rounded-lg">

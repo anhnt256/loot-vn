@@ -57,28 +57,18 @@ export class LayoutService {
 
   // Computers & Layout
   async getComputers(tenantId: string) {
-    const { gateway, fnet } = await this.getClients(tenantId);
-    
-    const configs = await this.configService.getConfigs(tenantId);
-    const prefix = configs['COMPUTER_PREFIX'] || 'MAY';
+    const { gateway } = await this.getClients(tenantId);
 
-    const query = `
-      SELECT u.UserName as ComputerName, u.MAC as macAddress, m.MachineGroupName
-      FROM usertb u 
-      LEFT JOIN machinegrouptb m ON m.MachineGroupId = u.MachineGroupId
-      WHERE u.UserName REGEXP '^${prefix}[0-9]+'
-      ORDER BY LENGTH(u.UserName) ASC, u.UserName ASC
-    `;
-    const fnetComputers: any[] = await fnet.$queryRawUnsafe(query);
-    
-    const layouts = await gateway.computerLayout.findMany();
-    
-    return fnetComputers.map(c => {
+    const [computers, layouts] = await Promise.all([
+      gateway.computer.findMany({ select: { id: true, name: true, macAddress: true } }),
+      gateway.computerLayout.findMany(),
+    ]);
+
+    return computers.map((c: any) => {
       const layout = layouts.find((l: any) => l.macAddress === c.macAddress);
       return {
-        computerName: c.ComputerName,
+        computerName: c.name,
         macAddress: c.macAddress,
-        groupName: c.MachineGroupName,
         zoneId: layout ? layout.zoneId : null,
         layout: layout ? {
           id: layout.id,

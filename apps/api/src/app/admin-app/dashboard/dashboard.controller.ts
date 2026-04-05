@@ -4,6 +4,7 @@ import {
   Post,
   Delete,
   Body,
+  Param,
   Req,
   UseGuards,
   Headers,
@@ -15,6 +16,7 @@ import { AuthGuard } from '../../auth/auth.guard';
 import { redisService } from '../../lib/redis-service';
 import { TenantGatewayService } from '../../database/tenant-gateway.service';
 import { OrderGateway } from '../order/order.gateway';
+import { DashboardService } from './dashboard.service';
 import { randomBytes } from 'crypto';
 
 @Controller('dashboard')
@@ -23,6 +25,7 @@ export class DashboardController {
   constructor(
     private readonly tenantGateway: TenantGatewayService,
     private readonly orderGateway: OrderGateway,
+    private readonly dashboardService: DashboardService,
   ) {}
 
   /** macAddress là định danh ổn định của máy — không thay đổi theo tên/IP */
@@ -239,5 +242,89 @@ export class DashboardController {
     } finally {
       await redisService.releaseLock(lockKey, lockValue).catch(() => {/* silent */});
     }
+  }
+
+  // ─── Game Check-in Endpoints ───
+
+  /** GET /dashboard/me — lấy thông tin game user (identity + stats) cho client-app */
+  @Get('me')
+  async getClientMe(
+    @Headers('x-tenant-id') tenantId: string,
+    @Req() req: any,
+  ) {
+    if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    const userId = Number(req.user?.userId);
+    if (!userId) throw new BadRequestException('Không xác định được userId');
+
+    const stats = await this.dashboardService.getUserCalculator(tenantId, [userId]);
+    const userStats = stats[0] || {};
+
+    return {
+      userId,
+      userName: req.user?.userName,
+      fullName: req.user?.fullName,
+      computerName: req.user?.computerName,
+      macAddress: req.user?.macAddress,
+      role: req.user?.role,
+      // Game stats
+      stars: userStats.stars ?? 0,
+      totalCheckIn: userStats.totalCheckIn ?? 0,
+      claimedCheckIn: userStats.claimedCheckIn ?? 0,
+      availableCheckIn: userStats.availableCheckIn ?? 0,
+      round: userStats.round ?? 0,
+      magicStone: userStats.magicStone ?? 0,
+      battlePass: userStats.battlePass ?? null,
+    };
+  }
+
+  /** POST /dashboard/user-calculator — tính stats cho list users (client-app dùng) */
+  @Post('user-calculator')
+  async userCalculator(
+    @Headers('x-tenant-id') tenantId: string,
+    @Req() req: any,
+    @Body() body: { listUsers?: number[] },
+  ) {
+    if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    // Fallback: nếu không gửi listUsers, tự lấy userId từ JWT
+    const listUsers = body?.listUsers?.length
+      ? body.listUsers
+      : [Number(req.user?.userId)].filter(Boolean);
+    if (!listUsers.length) throw new BadRequestException('Không xác định được userId');
+    const data = await this.dashboardService.getUserCalculator(tenantId, listUsers);
+    return { data };
+  }
+
+  /** POST /dashboard/check-in — claim check-in rewards */
+  @Post('check-in')
+  async checkIn(
+    @Headers('x-tenant-id') tenantId: string,
+    @Req() req: any,
+    @Body() body: { userId: number },
+  ) {
+    if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    const userId = body.userId || Number(req.user?.userId);
+    if (!userId) throw new BadRequestException('userId is required');
+
+    try {
+      const data = await this.dashboardService.createCheckIn(tenantId, userId);
+      return { success: true, data };
+    } catch (error: any) {
+      if (error instanceof BadRequestException) throw error;
+      throw new BadRequestException(error?.message || 'Lỗi khi check-in');
+    }
+  }
+
+  /** GET /dashboard/check-in-result/:userId — lịch sử check-in tháng hiện tại */
+  @Get('check-in-result/:userId')
+  async getCheckInResult(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('userId') userIdParam: string,
+  ) {
+    if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    const userId = parseInt(userIdParam, 10);
+    if (isNaN(userId)) throw new BadRequestException('Invalid userId');
+
+    const data = await this.dashboardService.getCheckInResults(tenantId, userId);
+    return data;
   }
 }
