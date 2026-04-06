@@ -28,12 +28,7 @@ ARG VITE_TENANT_PREFIX=""
 ENV VITE_API_URL=${VITE_API_URL}
 ENV VITE_TENANT_PREFIX=${VITE_TENANT_PREFIX}
 
-RUN npx nx build api && \
-    npx nx build admin --production && \
-    npx nx build client --production && \
-    npx nx build hr --production && \
-    npx nx build hr-manager --production && \
-    npx nx build master --production
+RUN npx nx run-many --target=build --projects=api,admin,client,hr,hr-manager,master --configuration=production --parallel=6
 
 # ─── Stage 2: Runner Base ────────────────────────────────────────────────────
 FROM node:20-bookworm AS runner-base

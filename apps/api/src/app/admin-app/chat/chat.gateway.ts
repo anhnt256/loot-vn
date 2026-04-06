@@ -9,6 +9,7 @@ import {
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { Redis } from 'ioredis';
 import { redisService } from '../../lib/redis-service';
 import { ChatService, ChatMessageWithUser } from './chat.service';
 import { validateMessage } from '../../lib/chat-validation';
@@ -29,23 +30,37 @@ export class ChatGateway
   constructor(private readonly chatService: ChatService) {}
 
   afterInit() {
-    this.subscribeRedis();
-  }
+    // Dedicated subscriber for chat — subscribes on 'ready', auto re-subscribes on reconnect
+    const subscriber = new Redis({
+      host: process.env.REDIS_HOST || 'localhost',
+      port: parseInt(process.env.REDIS_PORT || '6379'),
+      password: process.env.REDIS_PASSWORD || undefined,
+      maxRetriesPerRequest: null,
+      retryStrategy(times) {
+        const delay = Math.min(times * 500, 5000);
+        console.log(`Chat subscriber reconnecting... attempt ${times}, delay ${delay}ms`);
+        return delay;
+      },
+    });
 
-  private subscribeRedis(attempt = 1) {
-    redisService
-      .psubscribe('*:chat:message', (channel, message) => {
-        const tenantId = channel.split(':chat:message')[0];
-        this.server.to(`chat:${tenantId}`).emit('chat:message', message);
-      })
-      .then(() => {
-        console.log('Redis chat psubscribe OK');
-      })
-      .catch((err) => {
-        const delay = Math.min(attempt * 1000, 10000);
-        console.error(`Redis psubscribe failed (attempt ${attempt}), retrying in ${delay}ms:`, err.message);
-        setTimeout(() => this.subscribeRedis(attempt + 1), delay);
-      });
+    subscriber.on('ready', () => {
+      console.log('Chat subscriber ready, subscribing to *:chat:message');
+      subscriber.psubscribe('*:chat:message');
+    });
+
+    subscriber.on('pmessage', (_pattern, channel, message) => {
+      const tenantId = channel.split(':chat:message')[0];
+      try {
+        const parsed = JSON.parse(message);
+        this.server.to(`chat:${tenantId}`).emit('chat:message', parsed);
+      } catch {
+        // ignore parse errors
+      }
+    });
+
+    subscriber.on('error', (err) => {
+      console.error('Chat subscriber error:', err.message);
+    });
   }
 
   async handleConnection(client: Socket) {
@@ -146,7 +161,7 @@ export class ChatGateway
         staffId: data.staffId ?? client.data.staffId,
       });
 
-      // Publish qua Redis → broadcast tới tất cả clients
+      // Publish qua Redis → subscriber nhận và broadcast tới tất cả clients
       await redisService.publish(REDIS_CHANNEL_CHAT(tenantId), message);
 
       return { success: true, message };
