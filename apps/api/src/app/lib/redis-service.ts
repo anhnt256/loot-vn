@@ -80,6 +80,8 @@ export class RedisService {
     }
   }
 
+  private psubscribeListeners = new Set<string>();
+
   /**
    * Subscribe to multiple channels with pattern matching
    */
@@ -87,9 +89,11 @@ export class RedisService {
     pattern: string,
     callback: (channel: string, message: any) => void,
   ): Promise<void> {
-    try {
-      await this.subscriber.psubscribe(pattern);
+    await this.subscriber.psubscribe(pattern);
 
+    // Only attach listener once per pattern to avoid duplicates on retry
+    if (!this.psubscribeListeners.has(pattern)) {
+      this.psubscribeListeners.add(pattern);
       this.subscriber.on(
         'pmessage',
         (receivedPattern, receivedChannel, message) => {
@@ -98,15 +102,11 @@ export class RedisService {
               const parsedMessage = JSON.parse(message);
               callback(receivedChannel, parsedMessage);
             } catch {
-              // If parsing fails, pass the raw message
               callback(receivedChannel, message);
             }
           }
         },
       );
-    } catch (error) {
-      console.error('Error subscribing to pattern:', error);
-      throw error;
     }
   }
 

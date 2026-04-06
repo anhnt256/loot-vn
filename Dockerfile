@@ -33,8 +33,7 @@ RUN npx nx build api && \
     npx nx build client --production && \
     npx nx build hr --production && \
     npx nx build hr-manager --production && \
-    npx nx build master --production && \
-    npx nx build tenant-manage --production
+    npx nx build master --production
 
 # ─── Stage 2: Runner Base ────────────────────────────────────────────────────
 FROM node:20-bookworm AS runner-base
@@ -65,11 +64,6 @@ CMD ["node", "dist/apps/api/main.js"]
 FROM runner-base AS admin
 COPY --from=builder /app/dist/apps/admin ./dist/apps/admin
 CMD ["sh", "-c", "serve -s dist/apps/admin -p ${PORT:-3000}"]
-
-# ─── Tenant Manage Runner ───────────────────────────────────────────────────
-FROM runner-base AS tenant-manage
-COPY --from=builder /app/dist/apps/tenant-manage ./dist/apps/tenant-manage
-CMD ["sh", "-c", "serve -s dist/apps/tenant-manage -p ${PORT:-3000}"]
 
 # ─── Master Runner ───────────────────────────────────────────────────────────
 FROM runner-base AS master

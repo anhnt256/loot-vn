@@ -29,13 +29,23 @@ export class ChatGateway
   constructor(private readonly chatService: ChatService) {}
 
   afterInit() {
-    // Subscribe Redis pattern để forward message tới đúng Socket.IO room
+    this.subscribeRedis();
+  }
+
+  private subscribeRedis(attempt = 1) {
     redisService
       .psubscribe('*:chat:message', (channel, message) => {
         const tenantId = channel.split(':chat:message')[0];
         this.server.to(`chat:${tenantId}`).emit('chat:message', message);
       })
-      .catch(console.error);
+      .then(() => {
+        console.log('Redis chat psubscribe OK');
+      })
+      .catch((err) => {
+        const delay = Math.min(attempt * 1000, 10000);
+        console.error(`Redis psubscribe failed (attempt ${attempt}), retrying in ${delay}ms:`, err.message);
+        setTimeout(() => this.subscribeRedis(attempt + 1), delay);
+      });
   }
 
   async handleConnection(client: Socket) {
@@ -136,7 +146,7 @@ export class ChatGateway
         staffId: data.staffId ?? client.data.staffId,
       });
 
-      // Publish qua Redis → broadcast tới tất cả servers
+      // Publish qua Redis → broadcast tới tất cả clients
       await redisService.publish(REDIS_CHANNEL_CHAT(tenantId), message);
 
       return { success: true, message };
