@@ -25,6 +25,7 @@ export function ChatWindow({
   const [error, setError] = useState<string | null>(null);
   const [firstUnreadId, setFirstUnreadId] = useState<number | undefined>();
   const maxSeenRef = useRef(0);
+  const didFetchLastSeen = useRef(false);
 
   const {
     messages,
@@ -36,6 +37,7 @@ export function ChatWindow({
     sendMessage,
     markSeen,
     loadMore,
+    scrollToBottom,
     messagesEndRef,
   } = useSocketChat({
     serverUrl,
@@ -55,67 +57,18 @@ export function ChatWindow({
     if (isConnected && error) setError(null);
   }, [isConnected, error]);
 
-  // Determine firstUnreadId from lastSeen (fetch once on mount)
+  // Once messages loaded, find firstUnreadId and scroll appropriately
   useEffect(() => {
-    if (!serverUrl || !tenantId || !token || currentUser.loginType !== 'username') return;
-    const fetchLastSeen = async () => {
-      try {
-        const res = await fetch(
-          `${serverUrl.replace(/\/$/, '')}/admin/chat/unread-count`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'x-tenant-id': tenantId,
-            },
-          },
-        );
-        const data = await res.json();
-        // If there are unread messages, we need lastSeenId to find the divider
-        if (data?.data?.count > 0) {
-          const seenRes = await fetch(
-            `${serverUrl.replace(/\/$/, '')}/admin/chat/messages?page=1&limit=200`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                'x-tenant-id': tenantId,
-              },
-            },
-          );
-          // We'll set firstUnreadId after messages load
-        }
-      } catch {
-        // silent
-      }
-    };
-    fetchLastSeen();
-  }, []);
+    if (messages.length === 0 || didFetchLastSeen.current) return;
+    if (currentUser.loginType !== 'username') {
+      // Non-admin: just scroll to bottom
+      setTimeout(scrollToBottom, 100);
+      didFetchLastSeen.current = true;
+      return;
+    }
 
-  // Once messages loaded, find firstUnreadId by fetching lastSeenId
-  useEffect(() => {
-    if (messages.length === 0 || currentUser.loginType !== 'username') return;
-    if (firstUnreadId !== undefined) return; // already set
+    didFetchLastSeen.current = true;
 
-    const fetchLastSeenId = async () => {
-      try {
-        const res = await fetch(
-          `${serverUrl.replace(/\/$/, '')}/api/admin/chat/mark-seen`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-              'x-tenant-id': tenantId,
-            },
-            body: JSON.stringify({ messageId: 0 }), // dummy to get current count, won't update since 0 < current
-          },
-        );
-        // Actually let's just use a simpler approach: get last seen from a dedicated endpoint
-      } catch {
-        // silent
-      }
-    };
-
-    // Simple approach: use REST to get lastSeenId, then find first message after it
     (async () => {
       try {
         const res = await fetch(
@@ -133,9 +86,14 @@ export function ChatWindow({
         const first = messages.find((m) => m.id > lastSeenId);
         if (first) {
           setFirstUnreadId(first.id);
+          // MessageList will scroll to the unread divider
+        } else {
+          // All messages read — scroll to bottom
+          setTimeout(scrollToBottom, 100);
         }
       } catch {
-        // silent — no divider
+        // Fallback: scroll to bottom
+        setTimeout(scrollToBottom, 100);
       }
     })();
   }, [messages.length]);

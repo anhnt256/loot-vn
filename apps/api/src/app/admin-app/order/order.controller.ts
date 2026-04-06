@@ -297,21 +297,13 @@ export class OrderController {
     const where: any = { tenantId: parsedTenantId };
     const andConditions: any[] = [];
 
-    // Giới hạn đơn hàng trong phạm vi ca + đơn chưa hoàn thành từ ca trước
+    // Giới hạn đơn hàng trong phạm vi ca hiện tại
     const shiftDateRange: any = {};
     if (shift) {
       shiftDateRange.gte = new Date(shift.startedAt);
       if (shift.endedAt) shiftDateRange.lte = new Date(shift.endedAt);
 
-      andConditions.push({
-        OR: [
-          { createdAt: shiftDateRange },
-          {
-            createdAt: { lt: new Date(shift.startedAt) },
-            status: { notIn: ['HOAN_THANH', 'HUY'] },
-          },
-        ],
-      });
+      andConditions.push({ createdAt: shiftDateRange });
     }
 
     if (status && status !== 'ALL') {

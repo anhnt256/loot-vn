@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { ChatWindow } from './ChatWindow';
 import { ChatUser } from './types';
@@ -20,9 +20,15 @@ export function ChatButton({
 }: ChatButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const isOpenRef = useRef(false);
   const socketRef = useRef<Socket | null>(null);
 
-  // Maintain a background socket just for unread count tracking
+  // Keep ref in sync
+  useEffect(() => {
+    isOpenRef.current = isOpen;
+  }, [isOpen]);
+
+  // Maintain a background socket for unread count tracking
   useEffect(() => {
     if (!tenantId || !serverUrl) return;
 
@@ -39,12 +45,15 @@ export function ChatButton({
     });
 
     socket.on('chat:unread_count', (data: { count: number }) => {
-      setUnreadCount(data.count);
+      // Only update badge when chat is closed; when open the user is reading
+      if (!isOpenRef.current) {
+        setUnreadCount(data.count);
+      }
     });
 
     // When a new message arrives and chat is closed, bump unread
     socket.on('chat:message', () => {
-      if (!isOpen) {
+      if (!isOpenRef.current) {
         setUnreadCount((prev) => prev + 1);
       }
     });
@@ -55,7 +64,16 @@ export function ChatButton({
     };
   }, [serverUrl, tenantId, token, currentUser.userId]);
 
-  // When chat opens, reset badge (messages will be marked seen via scroll)
+  // When chat opens → clear badge; when chat closes → re-fetch real unread count
+  useEffect(() => {
+    if (isOpen) {
+      setUnreadCount(0);
+    } else {
+      // Re-fetch fresh unread count from server via socket
+      socketRef.current?.emit('chat:mark-seen', { messageId: 0 });
+    }
+  }, [isOpen]);
+
   const handleToggle = () => {
     setIsOpen((prev) => !prev);
   };

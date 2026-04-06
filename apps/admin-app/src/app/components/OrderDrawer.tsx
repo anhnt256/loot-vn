@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Drawer, Badge, Button, Tag, Spin, Empty, App } from 'antd';
-import { ShoppingOutlined, ReloadOutlined } from '@ant-design/icons';
+import { ShoppingOutlined, ReloadOutlined, PrinterOutlined } from '@ant-design/icons';
 import { io, Socket } from 'socket.io-client';
 import { apiClient, getToken } from '@gateway-workspace/shared/utils/client';
 import { useShift } from '../hooks/useShift';
+import { printReceipt } from '../services/print';
+import type { ReceiptData } from '../services/print';
 
 interface OrderDetail {
   id: number;
@@ -33,13 +35,13 @@ interface FoodOrder {
   statusHistory: StatusHistory[];
 }
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; next: string | null; nextLabel: string }> = {
-  PENDING:    { label: 'Chờ xác nhận', color: 'gold',    next: 'CHAP_NHAN',  nextLabel: 'Chấp nhận' },
-  CHAP_NHAN:  { label: 'Chấp nhận',    color: 'blue',    next: 'THU_TIEN',   nextLabel: 'Thu tiền' },
-  THU_TIEN:   { label: 'Thu tiền',     color: 'purple',  next: 'PHUC_VU',    nextLabel: 'Phục vụ' },
-  PHUC_VU:    { label: 'Phục vụ',      color: 'orange',  next: 'HOAN_THANH', nextLabel: 'Hoàn thành' },
-  HOAN_THANH: { label: 'Hoàn thành',   color: 'green',   next: null,         nextLabel: '' },
-  HUY:        { label: 'Đã hủy',       color: 'red',     next: null,         nextLabel: '' },
+const STATUS_CONFIG: Record<string, { label: string; color: string; btnColor: string; next: string | null; nextLabel: string }> = {
+  PENDING:    { label: 'Chờ xác nhận', color: 'gold',    btnColor: '#2563eb', next: 'CHAP_NHAN',  nextLabel: 'Chấp nhận' },
+  CHAP_NHAN:  { label: 'Chấp nhận',    color: 'blue',    btnColor: '#7c3aed', next: 'THU_TIEN',   nextLabel: 'Thu tiền' },
+  THU_TIEN:   { label: 'Thu tiền',     color: 'purple',  btnColor: '#ea580c', next: 'PHUC_VU',    nextLabel: 'Phục vụ' },
+  PHUC_VU:    { label: 'Phục vụ',      color: 'orange',  btnColor: '#16a34a', next: 'HOAN_THANH', nextLabel: 'Hoàn thành' },
+  HOAN_THANH: { label: 'Hoàn thành',   color: 'green',   btnColor: '#22c55e', next: null,         nextLabel: '' },
+  HUY:        { label: 'Đã hủy',       color: 'red',     btnColor: '#dc2626', next: null,         nextLabel: '' },
 };
 
 const ALL_STATUS_FILTERS = ['ALL', 'PENDING', 'CHAP_NHAN', 'THU_TIEN', 'PHUC_VU', 'HOAN_THANH'] as const;
@@ -71,6 +73,7 @@ const OrderDrawer: React.FC<Props> = ({ tenantId }) => {
   const [allOrders, setAllOrders] = useState<FoodOrder[]>([]);
   const [loading, setLoading] = useState(false);
   const [updating, setUpdating] = useState<number | null>(null);
+  const [printing, setPrinting] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const [page, setPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -162,6 +165,24 @@ const OrderDrawer: React.FC<Props> = ({ tenantId }) => {
   };
 
   const handleCancel = (orderId: number) => handleUpdateStatus(orderId, 'HUY');
+
+  const handlePrint = async (orderId: number) => {
+    setPrinting(orderId);
+    try {
+      const res = await apiClient.get(`/admin/orders/${orderId}/receipt`);
+      const receiptData: ReceiptData = res.data;
+      await printReceipt(receiptData);
+      notification.success({ message: 'In bill thành công!', placement: 'topRight' });
+    } catch (err: any) {
+      notification.error({
+        message: 'In bill thất bại',
+        description: err?.response?.data?.message ?? err?.message ?? 'Vui lòng thử lại',
+        placement: 'topRight',
+      });
+    } finally {
+      setPrinting(null);
+    }
+  };
 
   // Filtered + paginated
   const filtered = allOrders.filter((o) => {
@@ -366,39 +387,44 @@ const OrderDrawer: React.FC<Props> = ({ tenantId }) => {
                     )}
 
                     {/* Actions */}
-                    {cfg.next && (
-                      <div
-                        className="flex gap-2 px-4 py-3 border-t"
-                        style={{ borderColor: '#1f2937' }}
-                      >
-                        {isShiftOwner ? (
-                          <>
+                    <div
+                      className="flex items-center justify-center gap-3 px-4 py-3 border-t"
+                      style={{ borderColor: '#1f2937' }}
+                    >
+                      {isShiftOwner ? (
+                        <>
+                          {cfg.next && (
                             <Button
                               type="primary"
-                              size="small"
                               loading={updating === order.id}
                               onClick={() => handleUpdateStatus(order.id, cfg.next!)}
-                              className="flex-1"
-                              style={{ background: '#ec4899', borderColor: '#ec4899' }}
+                              style={{ background: cfg.btnColor, borderColor: cfg.btnColor, minWidth: 100 }}
                             >
-                              {cfg.nextLabel}
+                              {cfg.nextLabel.toUpperCase()}
                             </Button>
+                          )}
+                          {cfg.next && (
                             <Button
-                              danger
-                              size="small"
                               disabled={updating === order.id}
                               onClick={() => handleCancel(order.id)}
+                              style={{ background: '#dc2626', borderColor: '#dc2626', color: '#fff', minWidth: 64 }}
                             >
-                              Hủy
+                              HỦY
                             </Button>
-                          </>
-                        ) : (
-                          <div className="text-xs text-yellow-400 w-full text-center py-1">
-                            {currentShift ? `Chỉ "${currentShift.staffName}" mới được phép xử lý đơn hàng` : 'Bạn cần Nhận ca để xử lý đơn hàng nhé'}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                          )}
+                          <Button
+                            icon={<PrinterOutlined />}
+                            loading={printing === order.id}
+                            onClick={() => handlePrint(order.id)}
+                            style={{ minWidth: 40 }}
+                          />
+                        </>
+                      ) : (
+                        <div className="text-xs text-yellow-400 w-full text-center py-1">
+                          {currentShift ? `Chỉ "${currentShift.staffName}" mới được phép xử lý đơn hàng` : 'Bạn cần Nhận ca để xử lý đơn hàng nhé'}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })}

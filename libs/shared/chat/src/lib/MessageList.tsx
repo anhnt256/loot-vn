@@ -217,13 +217,12 @@ export function MessageList({
     }
   }, [firstUnreadId, messages]);
 
-  // Auto-scroll to bottom when new messages arrive (only if user is near bottom)
+  // Auto-scroll to bottom when new real-time messages arrive (only if user is near bottom)
   useEffect(() => {
-    if (messages.length > prevMessageCount.current) {
-      // New message(s) added (not loading older messages which prepend)
+    if (messages.length > prevMessageCount.current && prevMessageCount.current > 0) {
+      // Only for real-time messages (small batch), not initial load or pagination
       const added = messages.length - prevMessageCount.current;
-      const isNewMessage = added > 0 && added < 5; // small batch = real-time, not pagination
-      if (isNewMessage && isNearBottom()) {
+      if (added > 0 && added < 5 && isNearBottom()) {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
       }
     }

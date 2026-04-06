@@ -382,7 +382,6 @@ const OrderManagementPage: React.FC = () => {
                 <Tag color={cfg.color}>{cfg.label}</Tag>
                 <Tooltip title={printed ? 'In lại bill' : 'In bill'}>
                   <Button
-                    size="small"
                     icon={<PrinterOutlined />}
                     loading={printing === row.order.id}
                     onClick={() => handlePrint(row.order.id)}
@@ -403,7 +402,6 @@ const OrderManagementPage: React.FC = () => {
                 <Tooltip title={noShift ? (currentShift ? `Chỉ "${currentShift.staffName}" mới được phép xử lý đơn hàng` : 'Bạn cần Nhận ca để xử lý đơn hàng nhé') : undefined}>
                   <Button
                     type="primary"
-                    size="small"
                     loading={isUpdating}
                     disabled={noShift}
                     onClick={() => handleUpdateStatus(row.order.id, cfg.next!)}
@@ -416,7 +414,6 @@ const OrderManagementPage: React.FC = () => {
               {cfg.next && (
                 <Tooltip title={noShift ? (currentShift ? `Chỉ "${currentShift.staffName}" mới được phép xử lý đơn hàng` : 'Bạn cần Nhận ca để xử lý đơn hàng nhé') : undefined}>
                   <Button
-                    size="small"
                     disabled={isUpdating || noShift}
                     onClick={() => { setCancelModal({ orderId: row.order.id }); setCancelReason(''); }}
                     style={{ background: '#dc2626', borderColor: '#dc2626', color: '#fff' }}
@@ -427,7 +424,6 @@ const OrderManagementPage: React.FC = () => {
               )}
               <Tooltip title={printed ? 'In lại bill' : 'In bill'}>
                 <Button
-                  size="small"
                   icon={<PrinterOutlined />}
                   loading={printing === row.order.id}
                   onClick={() => handlePrint(row.order.id)}
