@@ -4,9 +4,13 @@ const redis = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
   password: process.env.REDIS_PASSWORD,
-  maxRetriesPerRequest: 3,
-  lazyConnect: true,
+  maxRetriesPerRequest: null,
   keepAlive: 30000,
+  retryStrategy(times) {
+    const delay = Math.min(times * 500, 5000);
+    console.log(`Redis reconnecting... attempt ${times}, delay ${delay}ms`);
+    return delay;
+  },
 });
 
 // Handle Redis connection events

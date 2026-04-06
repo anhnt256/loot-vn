@@ -17,6 +17,11 @@ services:
       --appendfsync everysec
       --maxmemory 256mb
       --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     volumes:
       - redis-data:/data
     networks:
@@ -39,7 +44,8 @@ services:
       - api-images:/app/apps/api/images
     restart: always
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     networks:
       - internal-network
       - proxy-network
