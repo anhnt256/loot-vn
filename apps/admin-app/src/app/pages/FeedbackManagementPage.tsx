@@ -116,7 +116,7 @@ const DEVICE_STATUS_LABELS: Record<string, string> = {
 };
 
 /** Parse structured note JSON from feedback */
-function parseNote(note: string | null): { deviceStatuses?: Record<string, string>; userNote?: string } | null {
+function parseNote(note: string | null): { deviceStatuses?: Record<string, string>; userNote?: string; deviceReportCreated?: boolean } | null {
   if (!note) return null;
   try {
     const parsed = JSON.parse(note);

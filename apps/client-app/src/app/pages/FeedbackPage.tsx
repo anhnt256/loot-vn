@@ -128,7 +128,7 @@ const FeedbackPage: React.FC = () => {
   }, [categories, feedbackImages]);
 
   /* ── Draft: auto-save & restore ── */
-  const draftTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const draftTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const draftLoadedRef = useRef(false);
 
   const getFormSnapshot = useCallback(() => {
