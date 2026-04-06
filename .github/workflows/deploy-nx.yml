@@ -89,11 +89,9 @@ jobs:
             HR_MANAGER_PATH=hr-manager-${PROJECT_NAME}.${BASE_DOMAIN}
             CLIENT_PATH=client-${PROJECT_NAME}.${BASE_DOMAIN}
             MASTER_PATH=${TENANT_PREFIX}.${BASE_DOMAIN}
+            REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
             VITE_API_URL=https://api-${PROJECT_NAME}.${BASE_DOMAIN}
             EOF
-
-            # Force recreate redis to ensure clean config (no stale auth)
-            docker compose -p ${PROJECT_NAME} up -d --build --force-recreate redis
 
             # Build and deploy all services
             docker compose -p ${PROJECT_NAME} up -d --build --remove-orphans
