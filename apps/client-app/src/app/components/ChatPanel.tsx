@@ -1,17 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { App } from 'antd';
 import { io, Socket } from 'socket.io-client';
-import { apiClient, ACCESS_TOKEN_KEY, getCookie } from '@gateway-workspace/shared/utils/client';
+import { apiClient, getToken } from '@gateway-workspace/shared/utils/client';
 import { useUser } from '../contexts/UserContext';
 import { useCart } from '../contexts/CartContext';
-
-interface ChatMessage {
-  id: number;
-  sender: string;
-  content: string;
-  createdAt: string;
-  isStaff?: boolean;
-}
+import { ChatWindow } from '@gateway-workspace/shared/chat';
 
 interface FoodOrder {
   id: number;
@@ -31,6 +24,7 @@ interface FoodOrder {
 interface Props {
   machineName?: string;
   defaultTab?: 'chat' | 'cart';
+  onMenuUpdated?: () => void;
 }
 
 const ORDER_STATUS_LABEL: Record<string, { label: string; color: string }> = {
@@ -47,14 +41,9 @@ function getStatusInfo(status: string | null) {
   return ORDER_STATUS_LABEL[status] ?? { label: status, color: '#9ca3af' };
 }
 
-const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat' }) => {
+const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat', onMenuUpdated }) => {
   const { notification } = App.useApp();
   const [activeTab, setActiveTab] = useState<'chat' | 'cart'>(defaultTab);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState('');
-  const [sending, setSending] = useState(false);
-  const [onlineCount, setOnlineCount] = useState(0);
-  const bottomRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
   const { cart, setCart, clearCart } = useCart();
 
@@ -78,7 +67,7 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat' }) => {
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [orders, setOrders] = useState<FoodOrder[]>([]);
   const [orderIdx, setOrderIdx] = useState(0);
-  const [pauseInfo, setPauseInfo] = useState<{ resumeAt: string; note: string | null } | null>(null);
+  const [pauseInfo, setPauseInfo] = useState<{ resumeAt: string | null; note: string | null } | null>(null);
   const [pauseCountdown, setPauseCountdown] = useState('');
   const currentOrder = orders[orderIdx] ?? null;
   const latestOrder = orders[0] ?? null;
@@ -104,10 +93,10 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat' }) => {
     }
   };
 
-  // Kết nối WebSocket + fetch đơn active khi mount
+  // Kết nối WebSocket cho orders
   useEffect(() => {
     const tenantId = (apiClient.defaults.headers.common['x-tenant-id'] as string) ?? '';
-    const token = getCookie(ACCESS_TOKEN_KEY) as string | undefined;
+    const token = getToken();
 
     const socket: Socket = io(`${apiClient.defaults.baseURL ?? ''}/orders`, {
       auth: { tenantId, token },
@@ -115,7 +104,6 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat' }) => {
     });
 
     socket.on('connect', async () => {
-      // Fetch đơn hiện tại và join room của đơn active
       const list = await fetchCurrentOrder();
       const active = list.find(
         (o) => o.status !== 'HOAN_THANH' && o.status !== 'HUY',
@@ -124,7 +112,6 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat' }) => {
         activeOrderIdRef.current = active.id;
         socket.emit('join:order', { orderId: active.id });
       }
-      // Fetch trạng thái pause hiện tại
       try {
         const res = await apiClient.get('/admin/orders/pause-status');
         if (res.data?.paused) {
@@ -133,7 +120,6 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat' }) => {
       } catch { /* silent */ }
     });
 
-    // Nhận cập nhật status real-time từ admin
     socket.on('order:status', (data: { orderId: number; status: string; changedAt: string }) => {
       setOrders((prev) =>
         prev.map((o) =>
@@ -142,13 +128,16 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat' }) => {
       );
     });
 
-    // Nhận thông báo ngưng/mở nhận đơn
     socket.on('order:pause', (data: { resumeAt: string; note: string | null }) => {
       setPauseInfo(data);
     });
     socket.on('order:resume', () => {
       setPauseInfo(null);
       setPauseCountdown('');
+    });
+
+    socket.on('menu:updated', () => {
+      onMenuUpdated?.();
     });
 
     socketRef.current = socket;
@@ -159,7 +148,7 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat' }) => {
   useEffect(() => {
     if (!pauseInfo?.resumeAt) { setPauseCountdown(''); return; }
     const tick = () => {
-      const diff = new Date(pauseInfo.resumeAt).getTime() - Date.now();
+      const diff = new Date(pauseInfo.resumeAt!).getTime() - Date.now();
       if (diff <= 0) { setPauseInfo(null); setPauseCountdown(''); return; }
       const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
@@ -171,43 +160,6 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat' }) => {
     return () => clearInterval(id);
   }, [pauseInfo]);
 
-  const fetchMessages = async () => {
-    try {
-      const res = await apiClient.get('/dashboard/chat/messages');
-      if (res.data?.data) setMessages(res.data.data);
-    } catch {
-      // silent
-    }
-  };
-
-  useEffect(() => {
-    fetchMessages();
-    const interval = setInterval(fetchMessages, 10000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const handleSend = async () => {
-    const text = input.trim();
-    if (!text || sending) return;
-    setSending(true);
-    try {
-      await apiClient.post('/dashboard/chat/messages', {
-        content: text,
-        userId: user?.userId || user?.id,
-      });
-      setInput('');
-      await fetchMessages();
-    } catch {
-      // silent
-    } finally {
-      setSending(false);
-    }
-  };
-
   const handleCheckout = async () => {
     if (checkingOut || cart.length === 0) return;
     setCheckingOut(true);
@@ -216,7 +168,6 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat' }) => {
       const res = await apiClient.post('/dashboard/checkout', { cart });
       await clearCart();
       const list = await fetchCurrentOrder();
-      // Join WebSocket room của đơn mới để nhận status update
       const newOrder = res.data?.data ?? list[0];
       if (newOrder?.id && socketRef.current) {
         activeOrderIdRef.current = newOrder.id;
@@ -236,13 +187,6 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat' }) => {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
   const formatTime = (iso: string) => {
     try {
       const d = new Date(iso);
@@ -251,6 +195,8 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat' }) => {
       return '';
     }
   };
+
+  const tenantId = (apiClient.defaults.headers.common['x-tenant-id'] as string) ?? '';
 
   return (
     <div className="flex flex-col h-full">
@@ -264,7 +210,7 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat' }) => {
               ? { background: 'var(--primary-color)', color: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.4)' }
               : { color: '#9ca3af' }}
           >
-            💬 Chat
+            Chat
           </button>
           <button
             onClick={() => setActiveTab('cart')}
@@ -273,7 +219,7 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat' }) => {
               ? { background: 'var(--secondary-color)', color: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.4)' }
               : { color: '#9ca3af' }}
           >
-            🛒 Giỏ hàng{cart.length > 0 ? ` (${cart.length})` : ''}
+            Giỏ hàng{cart.length > 0 ? ` (${cart.length})` : ''}
             {isOrderActive && (
               <span
                 className="absolute top-1 right-1 w-2 h-2 rounded-full animate-pulse"
@@ -282,66 +228,28 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat' }) => {
             )}
           </button>
         </div>
-
-        {activeTab === 'chat' && (
-          <div className="px-1 pt-2 pb-2 border-b border-gray-700 mt-1">
-            <p className="font-semibold text-white text-sm">Chat - Máy {machineName || '—'}</p>
-            <p className="text-gray-400 text-xs">{onlineCount} người đang online</p>
-          </div>
-        )}
       </div>
 
       {activeTab === 'chat' ? (
-        <>
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-2 py-2 space-y-2 bg-gray-900">
-            {messages.length === 0 && (
-              <p className="text-gray-500 text-xs text-center mt-4">Chưa có tin nhắn</p>
-            )}
-            {messages.map((msg) => (
-              <div key={msg.id} className="text-xs">
-                <div className={`inline-block max-w-full rounded px-2 py-1 ${msg.isStaff ? 'bg-gray-700 border border-gray-600' : 'bg-gray-800 border border-gray-700'}`}>
-                  <span className={`font-semibold ${msg.isStaff ? 'text-primary' : 'text-gray-300'}`}>
-                    {msg.sender}
-                  </span>
-                  <span className="text-gray-500 ml-1">{formatTime(msg.createdAt)}</span>
-                  <p className="text-gray-200 mt-0.5 whitespace-pre-wrap break-words">{msg.content}</p>
-                </div>
-              </div>
-            ))}
-            <div ref={bottomRef} />
-          </div>
-
-          {/* Input */}
-          <div className="border-t border-gray-700 px-2 py-2 flex-shrink-0 bg-gray-800">
-            <div className="flex gap-1 items-center">
-              <input
-                className="flex-1 text-xs bg-gray-700 border border-gray-600 text-gray-200 placeholder-gray-500 rounded px-2 py-1.5 outline-none focus:border-gray-400"
-                placeholder="Nhập tin nhắn..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-              />
-              <button
-                onClick={handleSend}
-                disabled={!input.trim() || sending}
-                className="btn-primary text-xs disabled:opacity-50 px-2 py-1.5 rounded transition-colors"
-              >
-                Gửi
-              </button>
-            </div>
-            <p className="text-gray-500 text-[10px] mt-1">
-              Nhấn Enter để gửi. Shift+Enter để xuống dòng
-            </p>
-          </div>
-        </>
+        <ChatWindow
+          serverUrl={apiClient.defaults.baseURL || ''}
+          tenantId={tenantId}
+          token={getToken() || ''}
+          currentUser={{
+            userId: user?.userId || user?.id || 0,
+            machineName: machineName || user?.machineName || '',
+            loginType: 'mac',
+          }}
+          title={machineName || '—'}
+          className="flex-1 min-h-0"
+        />
       ) : (
         <div className="flex-1 min-h-0 bg-gray-900 flex flex-col overflow-hidden">
 
           {/* ── PHẦN TRÊN: Giỏ hàng (55%) ── */}
           <div className="flex flex-col border-b border-gray-700" style={{ flex: '5.5 1 0', minHeight: 0 }}>
 
-            {/* Banner ngưng nhận đơn — luôn hiển thị khi paused */}
+            {/* Banner ngưng nhận đơn */}
             {pauseInfo ? (
               <div
                 className="flex-shrink-0 mx-3 mt-2.5 mb-1 rounded-xl px-3 py-2.5 flex flex-col gap-1.5"
@@ -350,29 +258,29 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat' }) => {
                 <div className="flex items-center gap-2">
                   <span className="text-xl leading-none">⏸</span>
                   <div>
-                    <p className="text-orange-200 text-xs font-bold leading-tight">Tạm ngưng nhận đơn hàng</p>
-                    {pauseInfo.note && (
-                      <p className="text-orange-400 text-[10px] mt-0.5">{pauseInfo.note}</p>
-                    )}
+                    <p className="text-orange-200 text-xs font-bold leading-tight">Đang tạm ngưng nhận đơn</p>
+                    <p className="text-orange-400 text-[10px] mt-0.5">Hãy liên hệ thu ngân để mở lại ngay nhé.</p>
                   </div>
                 </div>
-                <div
-                  className="flex items-center justify-between rounded-lg px-3 py-1.5"
-                  style={{ background: 'rgba(0,0,0,0.3)' }}
-                >
-                  <span className="text-orange-300/80 text-[10px]">Có thể đặt hàng sau:</span>
-                  <span
-                    className="font-mono font-bold text-sm tracking-wider"
-                    style={{ color: '#fde68a', textShadow: '0 0 8px rgba(253,230,138,0.5)' }}
+                {pauseCountdown && (
+                  <div
+                    className="flex items-center justify-between rounded-lg px-3 py-1.5"
+                    style={{ background: 'rgba(0,0,0,0.3)' }}
                   >
-                    {pauseCountdown || '—'}
-                  </span>
-                </div>
+                    <span className="text-orange-300/80 text-[10px]">Có thể đặt hàng sau:</span>
+                    <span
+                      className="font-mono font-bold text-sm tracking-wider"
+                      style={{ color: '#fde68a', textShadow: '0 0 8px rgba(253,230,138,0.5)' }}
+                    >
+                      {pauseCountdown}
+                    </span>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex items-center justify-between px-3 pt-2.5 pb-1.5 flex-shrink-0">
                 <span className="text-gray-300 text-xs font-semibold uppercase tracking-wide">
-                  🛒 Giỏ hàng{cart.length > 0 ? ` (${cart.length})` : ''}
+                  Giỏ hàng{cart.length > 0 ? ` (${cart.length})` : ''}
                 </span>
               </div>
             )}
@@ -386,7 +294,7 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat' }) => {
                     const imgSrc = cartItem.item.imageUrl
                       ? `${apiClient.defaults.baseURL ?? ''}${cartItem.item.imageUrl}`
                       : null;
-                    const subtotal = cartItem.item.salePrice * cartItem.quantity;
+                    const subtotal = Number(cartItem.item.salePrice) * cartItem.quantity;
                     return (
                       <div key={idx} className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden flex gap-2.5 p-2">
                         <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-900">
@@ -425,7 +333,7 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat' }) => {
                   <div className="flex items-center justify-between">
                     <span className="text-gray-400 text-xs font-medium">Tổng cộng</span>
                     <span className="font-bold text-sm text-pink-400">
-                      {cart.reduce((sum, ci) => sum + ci.item.salePrice * ci.quantity, 0).toLocaleString('vi-VN')}đ
+                      {cart.reduce((sum, ci) => sum + Number(ci.item.salePrice) * ci.quantity, 0).toLocaleString('vi-VN')}đ
                     </span>
                   </div>
                   {checkoutError && <p className="text-red-400 text-[10px] text-center">{checkoutError}</p>}
@@ -441,7 +349,7 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat' }) => {
                     {checkingOut
                       ? 'Đang xử lý...'
                       : pauseInfo
-                        ? `⏸ Mở lại sau ${pauseCountdown}`
+                        ? pauseCountdown ? `⏸ Mở lại sau ${pauseCountdown}` : '⏸ Tạm ngưng nhận đơn'
                         : 'Đặt hàng'}
                   </button>
                 </div>
@@ -451,10 +359,9 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat' }) => {
 
           {/* ── PHẦN DƯỚI: Đơn hàng (45%) ── */}
           <div className="flex flex-col" style={{ flex: '4.5 1 0', minHeight: 0 }}>
-            {/* Header */}
             <div className="flex items-center justify-between px-3 pt-2.5 pb-1.5 flex-shrink-0">
               <div className="flex items-center gap-1.5">
-                <span className="text-gray-300 text-xs font-semibold uppercase tracking-wide">📋 Đơn hàng</span>
+                <span className="text-gray-300 text-xs font-semibold uppercase tracking-wide">Đơn hàng</span>
                 {currentOrder && (
                   <span className="text-gray-500 text-xs">#{currentOrder.id}</span>
                 )}
@@ -479,7 +386,7 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat' }) => {
               ) : (
                 <>
                   <p className="px-3 text-gray-600 text-[10px] mb-1.5 flex-shrink-0">
-                    {formatTime(currentOrder.createdAt)} · {currentOrder.details.reduce((sum, d) => sum + d.quantity, 0)} món
+                    {formatTime(currentOrder.createdAt)} · {currentOrder.details.reduce((sum, d) => sum + d.quantity, 0)} mon
                     {orderIdx === 0 && isOrderActive && <span className="ml-1 animate-pulse">· đang cập nhật</span>}
                   </p>
                   <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-1.5" style={{ minHeight: 0 }}>
@@ -497,7 +404,6 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat' }) => {
               )}
             </div>
 
-            {/* Prev / Next — fixed at bottom, large touch targets */}
             {orders.length > 1 && (
               <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2 border-t border-gray-700 bg-gray-900">
                 <button

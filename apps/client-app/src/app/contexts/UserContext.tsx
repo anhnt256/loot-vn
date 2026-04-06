@@ -10,6 +10,7 @@ export interface UserData {
   computerName?: string;
   role?: string;
   stars: number;
+  totalPlayMinutes: number;
   totalCheckIn: number;
   claimedCheckIn: number;
   availableCheckIn: number;
@@ -51,6 +52,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         computerName: data.computerName,
         role: data.role,
         stars: data.stars ?? 0,
+        totalPlayMinutes: data.totalPlayMinutes ?? 0,
         totalCheckIn: data.totalCheckIn ?? 0,
         claimedCheckIn: data.claimedCheckIn ?? 0,
         availableCheckIn: data.availableCheckIn ?? 0,

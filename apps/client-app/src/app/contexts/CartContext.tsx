@@ -7,6 +7,7 @@ export interface MenuItem {
   salePrice: number;
   imageUrl: string | null;
   categoryId: number | null;
+  secondaryCategoryIds: string | null;
   category: { id: number; name: string } | null;
   isActive: boolean;
   availablePortions: number | null;

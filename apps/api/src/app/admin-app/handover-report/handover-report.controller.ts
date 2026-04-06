@@ -5,6 +5,12 @@ import { HandoverReportService } from './handover-report.service';
 export class HandoverReportController {
   constructor(private readonly handoverReportService: HandoverReportService) {}
 
+  @Get('work-shifts')
+  async getWorkShifts(@Headers('x-tenant-id') tenantId: string) {
+    if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    return this.handoverReportService.getWorkShifts(tenantId);
+  }
+
   @Get()
   async getReports(
     @Query('date') date: string,
@@ -46,6 +52,20 @@ export class HandoverReportController {
   ) {
     if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
     return this.handoverReportService.updateMaterial(tenantId, payload);
+  }
+
+  @Get('shift-inventory-summary')
+  async getShiftInventorySummary(
+    @Query('date') date: string,
+    @Query('shift') shift: string,
+    @Query('reportType') reportType: string,
+    @Headers('x-tenant-id') tenantId: string,
+  ) {
+    if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    if (!date || !shift || !reportType) {
+      throw new BadRequestException('Missing required parameters: date, shift, reportType');
+    }
+    return this.handoverReportService.getShiftInventorySummary(tenantId, date, shift, reportType);
   }
 
   @Get('get-report-data')

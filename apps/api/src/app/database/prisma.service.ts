@@ -34,6 +34,8 @@ export class TenantPrismaService implements OnApplicationShutdown {
         },
       });
       await client.$connect();
+      // Ensure UTF-8 for raw queries with Vietnamese text
+      await client.$executeRawUnsafe('SET NAMES utf8mb4').catch(() => {});
       this.clientCache[key] = client;
     }
     return this.clientCache[key];

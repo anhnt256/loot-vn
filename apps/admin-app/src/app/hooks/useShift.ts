@@ -11,9 +11,16 @@ export interface StaffShift {
   isActive: boolean;
 }
 
+export interface WorkShiftSchedule {
+  startTime: string; // HH:mm:ss
+  endTime: string;   // HH:mm:ss
+  isOvernight: boolean;
+}
+
 interface ShiftState {
   shift: StaffShift | null;
   isOwner: boolean;
+  workShiftSchedule: WorkShiftSchedule | null;
 }
 
 /* ── singleton store ── */
@@ -25,9 +32,9 @@ let cached: ShiftState = loadFromStorage();
 function loadFromStorage(): ShiftState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : { shift: null, isOwner: false };
+    return raw ? JSON.parse(raw) : { shift: null, isOwner: false, workShiftSchedule: null };
   } catch {
-    return { shift: null, isOwner: false };
+    return { shift: null, isOwner: false, workShiftSchedule: null };
   }
 }
 
@@ -54,7 +61,7 @@ function setState(state: ShiftState) {
 
 function clearState() {
   localStorage.removeItem(STORAGE_KEY);
-  cached = { shift: null, isOwner: false };
+  cached = { shift: null, isOwner: false, workShiftSchedule: null };
   emitChange();
 }
 
@@ -67,7 +74,8 @@ export function useShift() {
       const res = await apiClient.get('/admin/orders/shift/current');
       const shift = res.data?.data ?? null;
       const isOwner = res.data?.isOwner ?? false;
-      setState({ shift, isOwner });
+      const workShiftSchedule = res.data?.workShiftSchedule ?? null;
+      setState({ shift, isOwner, workShiftSchedule });
     } catch {
       /* silent */
     }
@@ -82,9 +90,11 @@ export function useShift() {
   const startShift = useCallback(async () => {
     const res = await apiClient.post('/admin/orders/shift/start');
     const shift = res.data?.data ?? null;
-    setState({ shift, isOwner: true });
+    setState({ shift, isOwner: true, workShiftSchedule: cached.workShiftSchedule });
+    // Fetch lại ngay để lấy workShiftSchedule mới nhất
+    fetchShift();
     return shift;
-  }, []);
+  }, [fetchShift]);
 
   const endShift = useCallback(async () => {
     await apiClient.post('/admin/orders/shift/end');
@@ -97,6 +107,8 @@ export function useShift() {
     hasShift: !!state.shift,
     /** User hiện tại là người nhận ca */
     isShiftOwner: state.isOwner,
+    /** Lịch ca làm việc (giờ bắt đầu/kết thúc) */
+    workShiftSchedule: state.workShiftSchedule,
     startShift,
     endShift,
     refreshShift: fetchShift,

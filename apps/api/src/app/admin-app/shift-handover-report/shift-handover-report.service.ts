@@ -5,8 +5,6 @@ import { CreateShiftReportDto } from './dto/create-shift-report.dto';
 import { FilterShiftReportDto } from './dto/filter-shift-report.dto';
 import { dayjs } from '@gateway-workspace/shared/utils';
 import { getMomoStatisticsByShift, loginAndGetMomoToken } from '../../lib/momo-report';
-import { computePaymentTotals, getShiftApiDateParam } from '../../lib/ffood-shift-verify';
-import { loginAndGetToken as loginAndGetFfoodToken } from '../../lib/ffood-login';
 import { getFnetDB } from '../../lib/db';
 
 @Injectable()
@@ -31,6 +29,11 @@ export class ShiftHandoverReportService {
     if (!dbUrl) throw new BadRequestException('Tenant chưa cấu hình DB URL');
 
     return await this.tenantPrisma.getClient(dbUrl);
+  }
+
+  async getWorkShifts(tenantId: string) {
+    const db = await this.getGatewayClient(tenantId);
+    return db.workShift.findMany({ orderBy: { startTime: 'asc' } });
   }
 
   async create(tenantId: string, payload: CreateShiftReportDto) {
@@ -80,8 +83,7 @@ export class ShiftHandoverReportService {
       if (!shift) throw new BadRequestException('Ca trực không tồn tại');
       
       let fnetRevenue = 0;
-      let totalFood = 0;
-      let deduction = 0;
+      let gcpRevenue = 0;
       let momoRevenue = 0;
 
       // 1. FNET Revenue
@@ -96,87 +98,45 @@ export class ShiftHandoverReportService {
         }
       }
 
-      // 2. FFOOD Revenue
-      try {
-        const ffoodCred = await gatewayClient.ffoodCredential.findFirst();
-        console.log('[Autofill] Ffood Cred:', ffoodCred ? 'Found' : 'Not found');
-        if (ffoodCred && ffoodCred.shopId) {
-          let token = ffoodCred.token;
-          const isExpired = !token || !ffoodCred.expired || new Date(ffoodCred.expired) <= new Date();
-          console.log(`[Autofill] Ffood Token expired? ${isExpired}`);
+      // 2. GCP Revenue (Doanh thu hoàn thành từ hệ thống đặt món theo GCPID/StaffID)
+      if (shift.gcpId) {
+        try {
+          const gcpStaffId = parseInt(shift.gcpId, 10);
+          const parsedTenantId = parseInt(tenantId) || 1;
+          const startOfDay = dayjs(dateStr).utcOffset(7).startOf('day').toDate();
+          const endOfDay = dayjs(dateStr).utcOffset(7).endOf('day').toDate();
 
-          if (isExpired && ffoodCred.ffoodUrl && ffoodCred.username && ffoodCred.password) {
-            console.log('[Autofill] Refreshing Ffood token via Playwright...');
-            const loginRes = await loginAndGetFfoodToken(ffoodCred.ffoodUrl, ffoodCred.username, ffoodCred.password);
-            if (loginRes) {
-              token = loginRes.token;
-              await gatewayClient.ffoodCredential.update({
-                where: { id: ffoodCred.id },
-                data: { token, expired: loginRes.expired }
-              });
-              console.log('[Autofill] Ffood login success');
-            } else {
-              console.warn('[Autofill] Ffood login failed');
-            }
+          // Tìm StaffShift của nhân viên theo gcpId trên ngày đó
+          const staffShift = await (gatewayClient as any).staffShift.findFirst({
+            where: {
+              staffId: gcpStaffId,
+              tenantId: parsedTenantId,
+              startedAt: { gte: startOfDay, lte: endOfDay },
+            },
+            orderBy: { startedAt: 'desc' },
+          });
+
+          if (staffShift) {
+            const shiftStart = new Date(staffShift.startedAt);
+            const shiftEnd = staffShift.endedAt ? new Date(staffShift.endedAt) : endOfDay;
+
+            const revenueAgg = await (gatewayClient as any).foodOrder.aggregate({
+              where: {
+                tenantId: parsedTenantId,
+                status: 'HOAN_THANH',
+                createdAt: { gte: shiftStart, lte: shiftEnd },
+              },
+              _sum: { totalAmount: true },
+            });
+
+            gcpRevenue = Number(revenueAgg._sum?.totalAmount ?? 0);
+            console.log(`[Autofill] GCP Revenue: ${gcpRevenue} for staffId ${gcpStaffId} shift ${staffShift.id} (${staffShift.startedAt} ~ ${staffShift.endedAt ?? 'active'}) on ${dateStr}`);
+          } else {
+            console.warn(`[Autofill] No StaffShift found for gcpId ${shift.gcpId} on ${dateStr}`);
           }
-
-          if (token) {
-            const apiDateParam = getShiftApiDateParam(dateStr);
-            const url = `https://pos-api.ffood.com.vn/api/v1/shift?date=${encodeURIComponent(apiDateParam)}&shopId=${encodeURIComponent(ffoodCred.shopId.trim())}`;
-            console.log(`[Autofill] Ffood URL: ${url}`);
-            const res = await fetch(url, { headers: { Authorization: `Bearer ${token.trim()}` } });
-            if (res.ok) {
-              const json = await res.json() as any;
-              const rawShifts = Array.isArray(json?.data) ? json.data : [];
-              console.log(`[Autofill] Ffood raw shifts count: ${rawShifts.length}`);
-              
-              // Filter shifts by employee ID AND date
-              const employeeId = shift.ffoodId?.trim();
-              const filteredShifts = rawShifts.filter((item: any) => {
-                const sameId = item.employee?.id?.trim() === employeeId;
-                const shiftDate = item.checkInTime ? dayjs(item.checkInTime).format('YYYY-MM-DD') : null;
-                const sameDate = shiftDate === dateStr;
-                return sameId && sameDate;
-              });
-
-              console.log(`[Autofill] Ffood candidate shifts for ${employeeId} on ${dateStr}: ${filteredShifts.length}`);
-              filteredShifts.forEach((s: any) => {
-                const { totalFood: sFood, deduction: sDeduct } = computePaymentTotals(s.payments);
-                console.log(`[Autofill] Candidate Shift ${s.id}: in=${s.checkInTime}, out=${s.checkOutTime}, food=${sFood}, deduct=${sDeduct}, payments=${JSON.stringify(s.payments)}`);
-              });
-
-              if (filteredShifts.length > 0) {
-                // If multiple shifts for same employee on same day, pick the one closest to shift startTime
-                let bestShift = filteredShifts[0];
-                if (filteredShifts.length > 1) {
-                   const shiftStart = dayjs(`${dateStr}T${dayjs(shift.startTime).format('HH:mm:ss')}`);
-                   let minDiff = Infinity;
-                   for (const s of filteredShifts) {
-                     const checkIn = dayjs(s.checkInTime);
-                     const diff = Math.abs(checkIn.diff(shiftStart, 'minute'));
-                     if (diff < minDiff) {
-                       minDiff = diff;
-                       bestShift = s;
-                     }
-                   }
-                   console.log(`[Autofill] Multiple shifts found. Picked ${bestShift.id} (diff ${minDiff} mins from workShift start)`);
-                }
-
-                const totals = computePaymentTotals(bestShift.payments);
-                totalFood = totals.totalFood;
-                deduction = totals.deduction;
-                console.log(`[Autofill] Ffood shift found: id=${bestShift.id}, final food=${totalFood}, final deduct=${deduction}`);
-              } else {
-                console.warn(`[Autofill] Ffood shift matching ffoodId ${shift.ffoodId} and date ${dateStr} NOT found`);
-              }
-            } else {
-              const errTxt = await res.text();
-              console.error(`[Autofill] Ffood API error ${res.status}: ${errTxt}`);
-            }
-          }
+        } catch (e) {
+          console.error('[Autofill] GCP Revenue error:', e);
         }
-      } catch (e) {
-        console.error('[Autofill] Ffood error:', e);
       }
 
       // 3. MOMO Revenue
@@ -234,7 +194,7 @@ export class ShiftHandoverReportService {
         success: true,
         data: {
           fnetRevenue,
-          gcpRevenue: totalFood - deduction,
+          gcpRevenue,
           momoRevenue
         }
       };

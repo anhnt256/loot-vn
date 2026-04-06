@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { apiClient, ACCESS_TOKEN_KEY, deleteCookie } from '@gateway-workspace/shared/utils/client';
+import { apiClient, removeToken } from '@gateway-workspace/shared/utils/client';
 import { cn } from '../../lib/utils';
 import ChatPanel from './ChatPanel';
 import { CartProvider } from '../contexts/CartContext';
@@ -12,20 +12,26 @@ const navLinks = [
   { href: '/dashboard/games', label: 'Trò chơi' },
   { href: '/dashboard/order', label: 'Đặt hàng' },
   { href: '/dashboard/store', label: 'Đổi thưởng' },
-  { href: '/dashboard/feedback', label: 'Phản hồi đã gửi' },
+  { href: '/dashboard/feedback', label: 'Gửi Phản Hồi' },
   { href: '/dashboard/battle-pass', label: 'Battle Pass' },
   { href: '/dashboard/voucher', label: 'Voucher' },
 ];
+
+export interface DashboardOutletContext {
+  menuVersion: number;
+}
 
 const DashboardContent: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, loading } = useUser();
+  const [menuVersion, setMenuVersion] = useState(0);
+  const handleMenuUpdated = useCallback(() => setMenuVersion((v) => v + 1), []);
 
   const handleLogout = async () => {
     try { await apiClient.delete('/dashboard/cart'); } catch { /* ignore */ }
     try { await apiClient.post('/auth/logout'); } catch { /* ignore */ }
-    deleteCookie(ACCESS_TOKEN_KEY);
+    removeToken();
     navigate('/login');
   };
 
@@ -85,7 +91,7 @@ const DashboardContent: React.FC = () => {
       {/* Main Content */}
       <div className="flex-1 overflow-hidden">
         <div className="h-full overflow-auto">
-          <Outlet />
+          <Outlet context={{ menuVersion } satisfies DashboardOutletContext} />
         </div>
       </div>
 
@@ -94,6 +100,7 @@ const DashboardContent: React.FC = () => {
         <ChatPanel
           machineName={user?.machineName}
           defaultTab={location.pathname.includes('order') ? 'cart' : 'chat'}
+          onMenuUpdated={handleMenuUpdated}
         />
       </div>
     </div>

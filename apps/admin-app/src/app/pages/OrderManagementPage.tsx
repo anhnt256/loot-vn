@@ -1,18 +1,21 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Table, Select, Button, Tag, App, DatePicker, Input, Tooltip, Popconfirm, Modal,
+  Table, Select, Button, Tag, App, DatePicker, Input, Tooltip, Modal,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
   ReloadOutlined, FilterOutlined, CloseOutlined, PrinterOutlined,
-  CheckCircleOutlined, CloseCircleOutlined,
+  CheckCircleOutlined, CloseCircleOutlined, PlayCircleOutlined,
   ShoppingCartOutlined, DollarOutlined,
   WalletOutlined, CreditCardOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { apiClient, ACCESS_TOKEN_KEY, getCookie } from '@gateway-workspace/shared/utils/client';
+import { apiClient, getToken } from '@gateway-workspace/shared/utils/client';
 import { io, Socket } from 'socket.io-client';
 import { useShift } from '../hooks/useShift';
+import { useShiftGuard } from '../hooks/useShiftGuard';
+import { printReceipt, usePrinterStore } from '../services/print';
+import type { ReceiptData } from '../services/print';
 
 /* ---------- types ---------- */
 interface OrderDetail {
@@ -50,13 +53,13 @@ interface RevenueInfo {
 }
 
 /* ---------- constants ---------- */
-const STATUS_CONFIG: Record<string, { label: string; color: string; next: string | null; nextLabel: string }> = {
-  PENDING:    { label: 'Chờ xác nhận', color: 'gold',    next: 'CHAP_NHAN',  nextLabel: 'Chấp nhận' },
-  CHAP_NHAN:  { label: 'Chấp nhận',   color: 'blue',    next: 'THU_TIEN',   nextLabel: 'Thu tiền' },
-  THU_TIEN:   { label: 'Thu tiền',     color: 'purple',  next: 'PHUC_VU',    nextLabel: 'Phục vụ' },
-  PHUC_VU:    { label: 'Phục vụ',      color: 'orange',  next: 'HOAN_THANH', nextLabel: 'Hoàn thành' },
-  HOAN_THANH: { label: 'Hoàn thành',   color: 'green',   next: null,         nextLabel: '' },
-  HUY:        { label: 'Đã hủy',       color: 'red',     next: null,         nextLabel: '' },
+const STATUS_CONFIG: Record<string, { label: string; color: string; btnColor: string; next: string | null; nextLabel: string }> = {
+  PENDING:    { label: 'Chờ xác nhận', color: 'gold',    btnColor: '#2563eb', next: 'CHAP_NHAN',  nextLabel: 'Chấp nhận' },
+  CHAP_NHAN:  { label: 'Chấp nhận',   color: 'blue',    btnColor: '#7c3aed', next: 'THU_TIEN',   nextLabel: 'Thu tiền' },
+  THU_TIEN:   { label: 'Thu tiền',     color: 'purple',  btnColor: '#ea580c', next: 'PHUC_VU',    nextLabel: 'Phục vụ' },
+  PHUC_VU:    { label: 'Phục vụ',      color: 'orange',  btnColor: '#16a34a', next: 'HOAN_THANH', nextLabel: 'Hoàn thành' },
+  HOAN_THANH: { label: 'Hoàn thành',   color: 'green',   btnColor: '#22c55e', next: null,         nextLabel: '' },
+  HUY:        { label: 'Đã hủy',       color: 'red',     btnColor: '#dc2626', next: null,         nextLabel: '' },
 };
 
 const STATUS_OPTIONS = [
@@ -95,20 +98,38 @@ const OrderManagementPage: React.FC = () => {
   const [orders, setOrders] = useState<FoodOrder[]>([]);
   const [loading, setLoading] = useState(false);
   const [updating, setUpdating] = useState<number | null>(null);
+  const [printing, setPrinting] = useState<number | null>(null);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [revenue, setRevenue] = useState<RevenueInfo>({ totalCompleted: 0, completedCount: 0 });
+  const [startingShift, setStartingShift] = useState(false);
+  const [cancelModal, setCancelModal] = useState<{ orderId: number } | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
+  const [printedOrders, setPrintedOrders] = useState<Set<number>>(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('loot_printed_orders') ?? '[]');
+      return new Set(stored);
+    } catch { return new Set(); }
+  });
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [searchText, setSearchText] = useState('');
+  // Shift state (shared via hook)
+  const { currentShift, hasShift, isShiftOwner, startShift } = useShift();
+  const { confirmShiftStart } = useShiftGuard();
+
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>([
-    dayjs().startOf('day'), dayjs().endOf('day'),
+    dayjs().startOf('day'), dayjs(),
   ]);
 
-  // Shift state (shared via hook)
-  const { currentShift, isShiftOwner } = useShift();
+  // Sync dateRange start with shift startedAt
+  useEffect(() => {
+    if (currentShift?.startedAt) {
+      setDateRange([dayjs(currentShift.startedAt), dayjs()]);
+    }
+  }, [currentShift?.startedAt]);
 
   const socketRef = useRef<Socket | null>(null);
 
@@ -119,7 +140,8 @@ const OrderManagementPage: React.FC = () => {
       const params: any = { page, limit: pageSize };
       if (statusFilter !== 'ALL') params.status = statusFilter;
       if (dateRange[0]) params.from = dateRange[0].toISOString();
-      if (dateRange[1]) params.to = dateRange[1].toISOString();
+      // Luôn dùng thời gian hiện tại cho `to` để không bỏ sót đơn mới
+      params.to = dayjs().toISOString();
       if (searchText.trim()) params.search = searchText.trim();
 
       const res = await apiClient.get('/admin/orders/all', { params });
@@ -133,6 +155,10 @@ const OrderManagementPage: React.FC = () => {
     }
   }, [page, pageSize, statusFilter, dateRange, searchText]);
 
+  // Ref để WebSocket luôn gọi fetchOrders mới nhất (tránh stale closure)
+  const fetchOrdersRef = useRef(fetchOrders);
+  fetchOrdersRef.current = fetchOrders;
+
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
   // WebSocket for real-time updates
@@ -140,7 +166,7 @@ const OrderManagementPage: React.FC = () => {
     const tenantId = apiClient.defaults.headers.common['x-tenant-id'] as string;
     if (!tenantId) return;
 
-    const token = getCookie(ACCESS_TOKEN_KEY) as string | undefined;
+    const token = getToken();
     const socket: Socket = io(`${apiClient.defaults.baseURL ?? ''}/orders`, {
       auth: { tenantId, token },
       transports: ['websocket'],
@@ -150,8 +176,8 @@ const OrderManagementPage: React.FC = () => {
       socket.emit('join:admin', { tenantId });
     });
 
-    socket.on('order:new', () => fetchOrders());
-    socket.on('order:status', () => fetchOrders());
+    socket.on('order:new', () => fetchOrdersRef.current());
+    socket.on('order:status', () => fetchOrdersRef.current());
 
     socketRef.current = socket;
     return () => { socket.disconnect(); };
@@ -174,16 +200,74 @@ const OrderManagementPage: React.FC = () => {
     }
   };
 
+  const handleCancelOrder = async () => {
+    if (!cancelModal || !cancelReason.trim()) return;
+    setUpdating(cancelModal.orderId);
+    try {
+      await apiClient.patch(`/admin/orders/${cancelModal.orderId}/status`, {
+        status: 'HUY',
+        note: cancelReason.trim(),
+      });
+      await fetchOrders();
+      setCancelModal(null);
+      setCancelReason('');
+    } catch (err: any) {
+      notification.error({
+        message: 'Huỷ đơn thất bại',
+        description: err?.response?.data?.message ?? 'Vui lòng thử lại',
+        placement: 'topRight',
+      });
+    } finally {
+      setUpdating(null);
+    }
+  };
+
   const handleFilterUnprocessed = () => {
     setStatusFilter('UNPROCESSED');
     setPage(1);
   };
 
+  // Lắng nghe event từ ShiftButton khi cần filter đơn chưa hoàn thành
+  useEffect(() => {
+    const handler = () => {
+      setStatusFilter('UNPROCESSED');
+      setPage(1);
+    };
+    window.addEventListener('shift:filter-unfinished', handler);
+    return () => window.removeEventListener('shift:filter-unfinished', handler);
+  }, []);
+
   const handleClearFilters = () => {
     setStatusFilter('ALL');
     setSearchText('');
-    setDateRange([dayjs().startOf('day'), dayjs().endOf('day')]);
+    setDateRange([
+      currentShift?.startedAt ? dayjs(currentShift.startedAt) : dayjs().startOf('day'),
+      dayjs(),
+    ]);
     setPage(1);
+  };
+
+  const handlePrint = async (orderId: number) => {
+    setPrinting(orderId);
+    try {
+      const res = await apiClient.get(`/admin/orders/${orderId}/receipt`);
+      const receiptData: ReceiptData = res.data;
+      await printReceipt(receiptData);
+      setPrintedOrders((prev) => {
+        const next = new Set(prev).add(orderId);
+        localStorage.setItem('loot_printed_orders', JSON.stringify([...next]));
+        return next;
+      });
+      notification.success({ message: 'In bill thành công!', placement: 'topRight' });
+    } catch (err: any) {
+      notification.error({
+        message: 'In bill thất bại',
+        description: err?.response?.data?.message ?? err?.message ?? 'Vui lòng thử lại',
+        placement: 'topRight',
+      });
+    } finally {
+      setPrinting(null);
+    }
   };
 
   // Flatten orders into rows for table with rowSpan
@@ -289,12 +373,22 @@ const OrderManagementPage: React.FC = () => {
           return { children: null, props: { rowSpan: 0 } };
         }
 
+        const printed = printedOrders.has(row.order.id);
+
         if (row.order.status === 'HOAN_THANH' || row.order.status === 'HUY') {
           return {
             children: (
               <div className="flex items-center gap-2">
                 <Tag color={cfg.color}>{cfg.label}</Tag>
-                <Tooltip title="In hóa đơn"><Button size="small" icon={<PrinterOutlined />} type="text" /></Tooltip>
+                <Tooltip title={printed ? 'In lại bill' : 'In bill'}>
+                  <Button
+                    size="small"
+                    icon={<PrinterOutlined />}
+                    loading={printing === row.order.id}
+                    onClick={() => handlePrint(row.order.id)}
+                    style={printed ? { background: '#22c55e', borderColor: '#22c55e', color: '#fff' } : {}}
+                  />
+                </Tooltip>
               </div>
             ),
             props: { rowSpan: row.detailCount },
@@ -306,43 +400,39 @@ const OrderManagementPage: React.FC = () => {
           children: (
             <div className="flex items-center gap-2 flex-wrap">
               {cfg.next && (
-                <Tooltip title={noShift ? (currentShift ? `Chỉ "${currentShift.staffName}" mới được phép xử lý đơn hàng` : 'Cần nhận ca trước khi thao tác') : undefined}>
+                <Tooltip title={noShift ? (currentShift ? `Chỉ "${currentShift.staffName}" mới được phép xử lý đơn hàng` : 'Bạn cần Nhận ca để xử lý đơn hàng nhé') : undefined}>
                   <Button
                     type="primary"
                     size="small"
                     loading={isUpdating}
                     disabled={noShift}
                     onClick={() => handleUpdateStatus(row.order.id, cfg.next!)}
-                    style={noShift ? {} : { background: '#22c55e', borderColor: '#22c55e' }}
-                    icon={<CheckCircleOutlined />}
+                    style={noShift ? {} : { background: cfg.btnColor, borderColor: cfg.btnColor }}
                   >
                     {cfg.nextLabel.toUpperCase()}
                   </Button>
                 </Tooltip>
               )}
               {cfg.next && (
-                <Popconfirm
-                  title="Xác nhận hủy đơn hàng?"
-                  onConfirm={() => handleUpdateStatus(row.order.id, 'HUY')}
-                  okText="Hủy đơn"
-                  cancelText="Không"
-                  okButtonProps={{ danger: true }}
-                  disabled={noShift}
-                >
-                  <Tooltip title={noShift ? (currentShift ? `Chỉ "${currentShift.staffName}" mới được phép xử lý đơn hàng` : 'Cần nhận ca trước khi thao tác') : undefined}>
-                    <Button
-                      danger
-                      size="small"
-                      disabled={isUpdating || noShift}
-                      icon={<CloseCircleOutlined />}
-                    >
-                      HỦY
-                    </Button>
-                  </Tooltip>
-                </Popconfirm>
+                <Tooltip title={noShift ? (currentShift ? `Chỉ "${currentShift.staffName}" mới được phép xử lý đơn hàng` : 'Bạn cần Nhận ca để xử lý đơn hàng nhé') : undefined}>
+                  <Button
+                    size="small"
+                    disabled={isUpdating || noShift}
+                    onClick={() => { setCancelModal({ orderId: row.order.id }); setCancelReason(''); }}
+                    style={{ background: '#dc2626', borderColor: '#dc2626', color: '#fff' }}
+                  >
+                    HỦY
+                  </Button>
+                </Tooltip>
               )}
-              <Tooltip title="In hóa đơn">
-                <Button size="small" icon={<PrinterOutlined />} type="text" />
+              <Tooltip title={printed ? 'In lại bill' : 'In bill'}>
+                <Button
+                  size="small"
+                  icon={<PrinterOutlined />}
+                  loading={printing === row.order.id}
+                  onClick={() => handlePrint(row.order.id)}
+                  style={printed ? { background: '#22c55e', borderColor: '#22c55e', color: '#fff' } : {}}
+                />
               </Tooltip>
             </div>
           ),
@@ -351,6 +441,55 @@ const OrderManagementPage: React.FC = () => {
       },
     },
   ];
+
+  const handleStartShiftInline = async () => {
+    const confirmed = await confirmShiftStart();
+    if (!confirmed) return;
+    setStartingShift(true);
+    try {
+      await startShift();
+      notification.success({ message: 'Đã nhận ca!', placement: 'topRight' });
+    } catch (err: any) {
+      notification.error({
+        message: err?.response?.data?.message ?? 'Không thể nhận ca',
+        placement: 'topRight',
+      });
+    } finally {
+      setStartingShift(false);
+    }
+  };
+
+  // Chưa có ca nào đang hoạt động → chỉ hiển thị thông báo nhận ca
+  if (!hasShift) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-white m-0">Đơn Hàng</h1>
+        </div>
+
+        <div
+          className="rounded-xl border flex flex-col items-center justify-center py-24"
+          style={{ background: '#1f2937', borderColor: '#374151' }}
+        >
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ background: '#374151' }}>
+            <ShoppingCartOutlined className="text-gray-500" style={{ fontSize: 28 }} />
+          </div>
+          <h2 className="text-lg font-semibold text-gray-300 mb-1">Chưa nhận ca</h2>
+          <p className="text-sm text-gray-500 mb-6">Bạn cần nhận ca để bắt đầu xem và xử lý đơn hàng</p>
+          <Button
+            type="primary"
+            size="large"
+            icon={<PlayCircleOutlined />}
+            loading={startingShift}
+            onClick={handleStartShiftInline}
+            style={{ background: '#22c55e', borderColor: '#22c55e' }}
+          >
+            NHẬN CA
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -376,29 +515,16 @@ const OrderManagementPage: React.FC = () => {
         <div className="flex flex-wrap items-start justify-between gap-6">
           <div>
             <div className="text-xs font-bold text-gray-400 tracking-wider mb-2">THÔNG TIN CA HIỆN TẠI</div>
-            {currentShift ? (
-              <>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="inline-block w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                  <span className="text-sm font-semibold text-green-400">Đang nhận đơn</span>
-                </div>
-                <div className="text-white text-base font-bold">
-                  {currentShift.staffName}
-                </div>
-                <div className="text-gray-400 text-xs mt-1">
-                  Nhận ca lúc {dayjs(currentShift.startedAt).format('HH:mm - DD/MM/YYYY')}
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="text-sm font-semibold mb-1 text-yellow-400">
-                  Chưa nhận ca
-                </div>
-                <div className="text-gray-500 text-xs">
-                  Bấm "NHẬN CA" trên thanh header để bắt đầu ca làm việc
-                </div>
-              </>
-            )}
+            <div className="flex items-center gap-2 mb-1">
+              <span className="inline-block w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              <span className="text-sm font-semibold text-green-400">Đang nhận đơn</span>
+            </div>
+            <div className="text-white text-base font-bold">
+              {currentShift!.staffName}
+            </div>
+            <div className="text-gray-400 text-xs mt-1">
+              Nhận ca lúc {dayjs(currentShift!.startedAt).format('HH:mm - DD/MM/YYYY')}
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-6">
@@ -467,12 +593,13 @@ const OrderManagementPage: React.FC = () => {
             style={{ width: 240 }}
           />
           <DatePicker.RangePicker
+            showTime={{ format: 'HH:mm' }}
             value={dateRange as any}
             onChange={(dates) => {
               setDateRange(dates ? [dates[0], dates[1]] : [null, null]);
               setPage(1);
             }}
-            format="DD/MM/YYYY"
+            format="DD/MM/YYYY HH:mm"
             allowClear
           />
           <Button
@@ -515,6 +642,27 @@ const OrderManagementPage: React.FC = () => {
           return base;
         }}
       />
+
+      {/* Modal xác nhận huỷ đơn */}
+      <Modal
+        title="Xác nhận huỷ đơn hàng"
+        open={!!cancelModal}
+        onCancel={() => setCancelModal(null)}
+        onOk={handleCancelOrder}
+        okText="Xác nhận huỷ"
+        cancelText="Đóng"
+        okButtonProps={{ danger: true, disabled: !cancelReason.trim() }}
+        confirmLoading={updating === cancelModal?.orderId}
+      >
+        <p className="mb-2">Vui lòng nhập lý do huỷ đơn hàng #{cancelModal?.orderId}:</p>
+        <Input.TextArea
+          rows={3}
+          value={cancelReason}
+          onChange={(e) => setCancelReason(e.target.value)}
+          placeholder="Nhập lý do huỷ đơn..."
+          autoFocus
+        />
+      </Modal>
     </div>
   );
 };

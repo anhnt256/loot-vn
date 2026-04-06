@@ -291,30 +291,27 @@ export class AuthService {
     const fnetFullName = fnetUser
       ? [fnetUser.LastName, fnetUser.FirstName].filter(Boolean).join(' ') || fnetUserName
       : fnetUserName;
-
-    // 4. Auto-create / update User trong mainDB (userId là PK, đồng bộ từ fnet)
+    // 4. Auto-create User trong mainDB nếu chưa có (không ghi đè userName nếu đã tồn tại)
     const existingUsers = await gateway.$queryRawUnsafe<any[]>(
-      `SELECT userId FROM User WHERE userId = ? LIMIT 1`,
+      `SELECT userId, userName FROM User WHERE userId = ? LIMIT 1`,
       fnetUserId,
     );
+    let dbUserName: string;
     if (!existingUsers?.length) {
+      dbUserName = `HF-${fnetUserId}`;
       await gateway.$executeRawUnsafe(
         `INSERT INTO User (userId, userName, rankId, stars, magicStone, isUseApp, createdAt, updatedAt) VALUES (?, ?, 1, 0, 0, true, NOW(), NOW())`,
         fnetUserId,
-        fnetUserName,
+        dbUserName,
       );
     } else {
-      await gateway.$executeRawUnsafe(
-        `UPDATE User SET userName = ?, updatedAt = NOW() WHERE userId = ?`,
-        fnetUserName,
-        fnetUserId,
-      );
+      dbUserName = existingUsers[0].userName;
     }
 
     // 5. Tạo JWT token
     const payload = {
       userId: fnetUserId,
-      userName: fnetUserName,
+      userName: dbUserName,
       fullName: fnetFullName,
       role: 'client',
       loginType: 'client',

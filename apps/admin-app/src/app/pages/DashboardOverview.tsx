@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button, message, Drawer, Tabs, Select, Radio } from 'antd';
-import { UnorderedListOutlined, AppstoreOutlined } from '@ant-design/icons';
+import { UnorderedListOutlined, AppstoreOutlined, SyncOutlined } from '@ant-design/icons';
 import { apiClient } from '@gateway-workspace/shared/utils/client';
 import ComputerCard from '../components/ComputerCard';
 import ComputerDetailDrawer from '../components/ComputerDetailDrawer';
@@ -15,7 +15,8 @@ const ResponsiveGridLayout = WidthProvider(RGL);
 const EnumComputerStatus = {
   READY: 1,
   OFF: 2,
-  ON: 3
+  ON: 3,
+  CRASH: 4,
 };
 
 const DashboardOverview: React.FC = () => {
@@ -30,6 +31,7 @@ const DashboardOverview: React.FC = () => {
   const [showDetailDrawer, setShowDetailDrawer] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  const [syncing, setSyncing] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
   useEffect(() => {
@@ -56,6 +58,19 @@ const DashboardOverview: React.FC = () => {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSyncFnet = async () => {
+    setSyncing(true);
+    try {
+      const res = await apiClient.post('/user/sync-fnet');
+      message.success(res.data?.message || 'Đồng bộ tài khoản Fnet thành công');
+      fetchComputers();
+    } catch (err: any) {
+      message.error(err?.response?.data?.message || 'Đồng bộ thất bại');
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -130,10 +145,18 @@ const DashboardOverview: React.FC = () => {
                   ...zones.map(z => ({ value: String(z.id), label: z.name }))
                 ]}
               />
+              <Button
+                icon={<SyncOutlined spin={syncing} />}
+                loading={syncing}
+                onClick={handleSyncFnet}
+                size="small"
+              >
+                Đồng bộ Fnet
+              </Button>
               {!isMobile && activeTab !== 'all' && (
-                <Radio.Group 
+                <Radio.Group
                   className="shrink-0 hidden lg:inline-flex"
-                  value={viewMode} 
+                  value={viewMode}
                   onChange={(e) => setViewMode(e.target.value)}
                   optionType="button"
                   buttonStyle="solid"

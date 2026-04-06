@@ -28,12 +28,19 @@ export default function ShiftReports() {
   const [form] = Form.useForm();
 
   // Watch fields for automatic calculation inside the form helper
-  const cashRevenue = Form.useWatch('cashRevenue', form) || 0;
+  const fnetRevenue = Form.useWatch('fnetRevenue', form) || 0;
+  const gcpRevenue = Form.useWatch('gcpRevenue', form) || 0;
+  const momoRevenue = Form.useWatch('momoRevenue', form) || 0;
+  const cashRevenue = fnetRevenue + gcpRevenue - momoRevenue;
   const cashExpense = Form.useWatch('cashExpense', form) || 0;
   const afterExpense = cashRevenue - cashExpense;
 
   const actualReceived = Form.useWatch('actualReceived', form) || 0;
   const difference = actualReceived - afterExpense;
+
+  useEffect(() => {
+    form.setFieldValue('cashRevenue', cashRevenue);
+  }, [cashRevenue]);
 
   const formDate = Form.useWatch('date', form);
   const formWorkShiftId = Form.useWatch('workShiftId', form);
@@ -75,7 +82,7 @@ export default function ShiftReports() {
 
   const fetchWorkShifts = async () => {
     try {
-      const res = await apiClient.get('/hr-manager/work-shifts');
+      const res = await apiClient.get('/admin-app/shift-reports/work-shifts');
       setWorkShifts(Array.isArray(res.data) ? res.data : (res.data?.data || []));
     } catch(e) {
       console.error('Failed to fetch work shifts', e);
@@ -669,8 +676,8 @@ export default function ShiftReports() {
           <Card className="mb-6 border-gray-700 bg-gray-900/40 shadow-inner" bodyStyle={{ padding: '20px' }}>
              <Row gutter={20}>
                 <Col span={8}>
-                  <Form.Item label={<span className="text-gray-300">Tiền mặt</span>} name="cashRevenue">
-                    <InputNumber style={{ width: '100%' }} className="font-bold text-lg" size="large" min={0} formatter={numberFormatter} parser={numberParser} />
+                  <Form.Item label={<span className="text-gray-400 text-xs">Tiền mặt</span>} name="cashRevenue">
+                    <InputNumber disabled style={{ width: '100%' }} className="font-bold text-lg disabled-input-dark" size="large" min={0} formatter={numberFormatter} parser={numberParser} />
                   </Form.Item>
                 </Col>
                 <Col span={8}>

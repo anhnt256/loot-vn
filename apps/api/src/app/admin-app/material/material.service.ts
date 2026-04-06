@@ -239,9 +239,23 @@ export class MaterialService {
     });
   }
 
-  async adjustStock(tenantId: string, dto: { materialId: number; type: 'RECEIPT' | 'ISSUE'; quantity: number; reason?: string }) {
+  async adjustStock(tenantId: string, dto: { materialId: number; type: 'RECEIPT' | 'ISSUE'; quantity: number; reason?: string }, staffId?: number) {
     const db = await this.getGatewayClient(tenantId);
     const tenantIdInt = parseInt(tenantId) || 1;
+
+    // Phải có ca đang hoạt động mới được Nhập/Xuất kho
+    const activeShift = await ((db as any).staffShift as any).findFirst({
+      where: { tenantId: tenantIdInt, isActive: true },
+    });
+    if (!activeShift) {
+      throw new BadRequestException('Chưa có ca nào đang hoạt động. Cần nhận ca trước khi Nhập/Xuất kho.');
+    }
+    // Chỉ người đang nhận ca mới được phép Nhập/Xuất kho
+    if (activeShift.staffId !== staffId) {
+      throw new BadRequestException(
+        `Chỉ "${activeShift.staffName}" (người đang nhận ca) mới được phép Nhập/Xuất kho.`,
+      );
+    }
 
     const material = await db.material.findFirst({
       where: { id: dto.materialId, tenantId: tenantIdInt },
@@ -269,6 +283,7 @@ export class MaterialService {
           type: dto.type,
           quantityChange,
           reason: dto.reason || (isReceipt ? 'Nhập kho' : 'Xuất kho'),
+          staffId: staffId ?? activeShift.staffId,
           tenantId: tenantIdInt,
         },
       });
@@ -285,6 +300,281 @@ export class MaterialService {
       orderBy: { createdAt: 'desc' },
       take: 100
     });
+  }
+
+  /**
+   * Danh sách ca làm việc kèm thống kê biến động kho trong ca
+   */
+  async findShiftAuditList(tenantId: string, page = 1, limit = 20, from?: string, to?: string, staffName?: string) {
+    const db = await this.getGatewayClient(tenantId);
+    const tenantIdInt = parseInt(tenantId) || 1;
+    const skip = (page - 1) * limit;
+
+    const where: any = { tenantId: tenantIdInt };
+    if (from || to) {
+      where.startedAt = {};
+      if (from) where.startedAt.gte = new Date(from);
+      if (to) where.startedAt.lte = new Date(to);
+    }
+    if (staffName) {
+      where.staffName = { contains: staffName };
+    }
+
+    const [shifts, total] = await Promise.all([
+      ((db as any).staffShift as any).findMany({
+        where,
+        orderBy: { startedAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      ((db as any).staffShift as any).count({ where }),
+    ]);
+
+    // Thống kê cho từng ca
+    const result = await Promise.all(
+      (shifts as any[]).map(async (shift: any) => {
+        const timeFilter: any = { gte: new Date(shift.startedAt) };
+        if (shift.endedAt) timeFilter.lte = new Date(shift.endedAt);
+        const orderWhere = { tenantId: tenantIdInt, createdAt: timeFilter };
+
+        const [txCounts, totalOrders, completedAgg, cancelledCount] = await Promise.all([
+          db.inventoryTransaction.groupBy({
+            by: ['type'],
+            where: { tenantId: tenantIdInt, createdAt: timeFilter },
+            _count: { id: true },
+          }),
+          (db.foodOrder as any).count({ where: orderWhere }),
+          (db.foodOrder as any).aggregate({
+            where: { ...orderWhere, status: 'HOAN_THANH' },
+            _sum: { totalAmount: true },
+            _count: { id: true },
+          }),
+          (db.foodOrder as any).count({ where: { ...orderWhere, status: 'HUY' } }),
+        ]);
+
+        const byType: Record<string, number> = {};
+        for (const g of txCounts as any[]) {
+          byType[g.type] = g._count.id;
+        }
+
+        return {
+          id: shift.id,
+          staffName: shift.staffName,
+          staffId: shift.staffId,
+          startedAt: shift.startedAt,
+          endedAt: shift.endedAt,
+          isActive: shift.isActive,
+          totalOrders: Number(totalOrders),
+          completedOrders: Number(completedAgg._count?.id ?? 0),
+          cancelledOrders: Number(cancelledCount),
+          totalRevenue: Number(completedAgg._sum?.totalAmount ?? 0),
+          receiptCount: byType['RECEIPT'] || 0,
+          saleCount: byType['SALE'] || 0,
+        };
+      }),
+    );
+
+    return { data: result, total, page, limit };
+  }
+
+  /**
+   * Chi tiết Nhập kho trong 1 ca — kèm số lượng trước/sau khi nhập
+   */
+  async findShiftReceiptDetail(tenantId: string, shiftId: number) {
+    const db = await this.getGatewayClient(tenantId);
+    const tenantIdInt = parseInt(tenantId) || 1;
+
+    const shift = await ((db as any).staffShift as any).findFirst({
+      where: { id: shiftId, tenantId: tenantIdInt },
+    });
+    if (!shift) throw new NotFoundException('Không tìm thấy ca làm việc');
+
+    const timeFilter: any = { gte: new Date(shift.startedAt) };
+    if (shift.endedAt) timeFilter.lte = new Date(shift.endedAt);
+
+    const receipts = await db.inventoryTransaction.findMany({
+      where: {
+        tenantId: tenantIdInt,
+        createdAt: timeFilter,
+        type: 'RECEIPT',
+      },
+      include: { material: { select: { name: true, baseUnit: true, quantityInStock: true } } },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    // Tính số lượng trước/sau cho mỗi giao dịch nhập kho
+    // Lấy tổng thay đổi SAU mỗi giao dịch nhập cho từng material để tính ngược
+    const materialIds = [...new Set(receipts.map((r: any) => r.materialId))];
+    const allSubsequentByMaterial: Record<number, number> = {};
+
+    for (const matId of materialIds) {
+      // Tất cả transactions cho material này SAU ca (hoặc SAU shift.endedAt)
+      const afterShift = await db.inventoryTransaction.findMany({
+        where: {
+          tenantId: tenantIdInt,
+          materialId: matId as number,
+          createdAt: shift.endedAt ? { gt: new Date(shift.endedAt) } : { gt: new Date() },
+        },
+        select: { quantityChange: true },
+      });
+      const totalAfter = afterShift.reduce((s: number, t: any) => s + Number(t.quantityChange), 0);
+      allSubsequentByMaterial[matId as number] = totalAfter;
+    }
+
+    // Tính: stockAfterAll = currentStock. stockAtEndOfShift = currentStock - totalAfterShift
+    // Duyệt ngược danh sách receipts trong ca để tính before/after
+    const materialTxInShift: Record<number, any[]> = {};
+    for (const matId of materialIds) {
+      const allInShift = await db.inventoryTransaction.findMany({
+        where: {
+          tenantId: tenantIdInt,
+          materialId: matId as number,
+          createdAt: timeFilter,
+        },
+        orderBy: { createdAt: 'desc' },
+        select: { id: true, quantityChange: true },
+      });
+      materialTxInShift[matId as number] = allInShift;
+    }
+
+    const result = receipts.map((r: any) => {
+      const currentStock = Number(r.material?.quantityInStock ?? 0);
+      const totalAfterShift = Number(allSubsequentByMaterial[r.materialId] ?? 0);
+      const stockAtEndOfShift = currentStock - totalAfterShift;
+
+      // Tính tổng thay đổi SAU giao dịch này trong ca
+      const txsInShift = materialTxInShift[r.materialId] || [];
+      let sumAfterThis = 0;
+      for (const tx of txsInShift) {
+        if (tx.id === r.id) break;
+        sumAfterThis += Number(tx.quantityChange);
+      }
+      const quantityAfter = stockAtEndOfShift - sumAfterThis;
+      const quantityChange = Number(r.quantityChange);
+      const quantityBefore = quantityAfter - quantityChange;
+
+      return {
+        id: r.id,
+        materialId: r.materialId,
+        materialName: r.material?.name,
+        baseUnit: r.material?.baseUnit,
+        quantityChange,
+        quantityBefore: Math.round(quantityBefore * 100) / 100,
+        quantityAfter: Math.round(quantityAfter * 100) / 100,
+        reason: r.reason,
+        staffId: r.staffId,
+        createdAt: r.createdAt,
+      };
+    });
+
+    return { shift: { id: shift.id, staffName: shift.staffName, startedAt: shift.startedAt, endedAt: shift.endedAt }, data: result };
+  }
+
+  /**
+   * Chi tiết Xuất kho (SALE) trong 1 ca — kèm thông tin đơn hàng
+   */
+  async findShiftSaleDetail(tenantId: string, shiftId: number) {
+    const db = await this.getGatewayClient(tenantId);
+    const tenantIdInt = parseInt(tenantId) || 1;
+
+    const shift = await ((db as any).staffShift as any).findFirst({
+      where: { id: shiftId, tenantId: tenantIdInt },
+    });
+    if (!shift) throw new NotFoundException('Không tìm thấy ca làm việc');
+
+    const timeFilter: any = { gte: new Date(shift.startedAt) };
+    if (shift.endedAt) timeFilter.lte = new Date(shift.endedAt);
+
+    const sales = await db.inventoryTransaction.findMany({
+      where: {
+        tenantId: tenantIdInt,
+        createdAt: timeFilter,
+        type: 'SALE',
+      },
+      include: { material: { select: { name: true, baseUnit: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Nhóm theo referenceId (orderId) để admin đối chiếu
+    const orderIds = [...new Set(sales.filter((s: any) => s.referenceId).map((s: any) => Number(s.referenceId)))];
+    const orders: Record<number, any> = {};
+    if (orderIds.length > 0) {
+      const orderList = await (db.foodOrder as any).findMany({
+        where: { id: { in: orderIds }, tenantId: tenantIdInt },
+        include: { details: true },
+      });
+      for (const o of orderList) {
+        orders[o.id] = o;
+      }
+    }
+
+    return {
+      shift: { id: shift.id, staffName: shift.staffName, startedAt: shift.startedAt, endedAt: shift.endedAt },
+      data: sales.map((s: any) => ({
+        id: s.id,
+        materialId: s.materialId,
+        materialName: s.material?.name,
+        baseUnit: s.material?.baseUnit,
+        quantityChange: Number(s.quantityChange),
+        reason: s.reason,
+        referenceId: s.referenceId,
+        createdAt: s.createdAt,
+      })),
+      orders,
+    };
+  }
+
+  /**
+   * Danh sách đơn hàng trong 1 ca, lọc theo status
+   */
+  async findShiftOrders(tenantId: string, shiftId: number, status?: string) {
+    const db = await this.getGatewayClient(tenantId);
+    const tenantIdInt = parseInt(tenantId) || 1;
+
+    const shift = await ((db as any).staffShift as any).findFirst({
+      where: { id: shiftId, tenantId: tenantIdInt },
+    });
+    if (!shift) throw new NotFoundException('Không tìm thấy ca làm việc');
+
+    const timeFilter: any = { gte: new Date(shift.startedAt) };
+    if (shift.endedAt) timeFilter.lte = new Date(shift.endedAt);
+
+    const where: any = { tenantId: tenantIdInt, createdAt: timeFilter };
+    if (status === 'PENDING') {
+      // Đang xử lý = chưa hoàn thành, chưa huỷ
+      where.status = { notIn: ['HOAN_THANH', 'HUY'] };
+    } else if (status) {
+      where.status = status;
+    }
+
+    const orders = await (db.foodOrder as any).findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      include: { details: true, statusHistory: { orderBy: { changedAt: 'asc' } } },
+    });
+
+    return {
+      shift: { id: shift.id, staffName: shift.staffName, startedAt: shift.startedAt, endedAt: shift.endedAt },
+      data: orders,
+    };
+  }
+
+  /**
+   * Chi tiết 1 đơn hàng để đối chiếu
+   */
+  async findOrderDetail(tenantId: string, orderId: number) {
+    const db = await this.getGatewayClient(tenantId);
+    const tenantIdInt = parseInt(tenantId) || 1;
+
+    const order = await (db.foodOrder as any).findFirst({
+      where: { id: orderId, tenantId: tenantIdInt },
+      include: {
+        details: true,
+        statusHistory: { orderBy: { changedAt: 'asc' } },
+      },
+    });
+    if (!order) throw new NotFoundException('Không tìm thấy đơn hàng');
+    return order;
   }
 
   // --- Profit Analysis ---

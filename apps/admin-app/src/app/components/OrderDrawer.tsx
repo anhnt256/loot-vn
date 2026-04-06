@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Drawer, Badge, Button, Tag, Spin, Empty, App } from 'antd';
 import { ShoppingOutlined, ReloadOutlined } from '@ant-design/icons';
 import { io, Socket } from 'socket.io-client';
-import { apiClient, ACCESS_TOKEN_KEY, getCookie } from '@gateway-workspace/shared/utils/client';
+import { apiClient, getToken } from '@gateway-workspace/shared/utils/client';
 import { useShift } from '../hooks/useShift';
 
 interface OrderDetail {
@@ -74,15 +74,16 @@ const OrderDrawer: React.FC<Props> = ({ tenantId }) => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const [page, setPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
-  const { currentShift, isShiftOwner } = useShift();
+  const { currentShift, hasShift, isShiftOwner } = useShift();
   const socketRef = useRef<Socket | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const fetchOrders = async () => {
+    if (!hasShift) { setAllOrders([]); return; }
     setLoading(true);
     setPage(1);
     try {
-      const res = await apiClient.get('/admin/orders');
+      const res = await apiClient.get('/admin/orders/all', { params: { limit: 200 } });
       setAllOrders(res.data?.data ?? []);
     } catch {
       // silent
@@ -95,7 +96,7 @@ const OrderDrawer: React.FC<Props> = ({ tenantId }) => {
     if (!tenantId) return;
     fetchOrders();
 
-    const token = getCookie(ACCESS_TOKEN_KEY) as string | undefined;
+    const token = getToken();
     const socket: Socket = io(`${apiClient.defaults.baseURL ?? ''}/orders`, {
       auth: { tenantId, token },
       transports: ['websocket'],
@@ -127,6 +128,17 @@ const OrderDrawer: React.FC<Props> = ({ tenantId }) => {
   useEffect(() => {
     setPage(1);
   }, [statusFilter]);
+
+  // Lắng nghe event từ ShiftButton khi cần filter đơn chưa hoàn thành
+  useEffect(() => {
+    const handleFilterUnfinished = () => {
+      setOpen(true);
+      setStatusFilter('ALL');
+      fetchOrders();
+    };
+    window.addEventListener('shift:filter-unfinished', handleFilterUnfinished);
+    return () => window.removeEventListener('shift:filter-unfinished', handleFilterUnfinished);
+  }, []);
 
   const handleUpdateStatus = async (orderId: number, newStatus: string) => {
     setUpdating(orderId);
@@ -189,6 +201,13 @@ const OrderDrawer: React.FC<Props> = ({ tenantId }) => {
     if (s === 'ALL') return allOrders.length;
     return allOrders.filter((o) => (o.status ?? 'PENDING') === s).length;
   };
+
+  // Khi chưa nhận ca → ẩn nút, xoá đơn cũ
+  useEffect(() => {
+    if (!hasShift) setAllOrders([]);
+  }, [hasShift]);
+
+  if (!hasShift) return null;
 
   return (
     <>
@@ -375,7 +394,7 @@ const OrderDrawer: React.FC<Props> = ({ tenantId }) => {
                           </>
                         ) : (
                           <div className="text-xs text-yellow-400 w-full text-center py-1">
-                            Chỉ "{currentShift?.staffName}" mới được phép xử lý đơn hàng
+                            {currentShift ? `Chỉ "${currentShift.staffName}" mới được phép xử lý đơn hàng` : 'Bạn cần Nhận ca để xử lý đơn hàng nhé'}
                           </div>
                         )}
                       </div>

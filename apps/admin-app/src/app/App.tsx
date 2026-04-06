@@ -12,10 +12,13 @@ import ShiftReports from './pages/shift-reports/ShiftReports';
 import DeviceHistoryPage from './pages/device-history/DeviceHistoryPage';
 import MaterialManagementPage from './pages/MaterialManagementPage';
 import RecipeManagementPage from './pages/RecipeManagementPage';
-import InventoryAuditPage from './pages/InventoryAuditPage';
+import ShiftAuditPage from './pages/ShiftAuditPage';
 import ProfitAnalysisPage from './pages/ProfitAnalysisPage';
 import MenuManagementPage from './pages/MenuManagementPage';
 import OrderManagementPage from './pages/OrderManagementPage';
+import PrinterManagement from './pages/printer-management/PrinterManagement';
+import StatisticsPage from './pages/StatisticsPage';
+import FeedbackManagementPage from './pages/FeedbackManagementPage';
 
 export function App() {
   return (
@@ -33,10 +36,13 @@ export function App() {
               <Route path="menu-management" element={<MenuManagementPage />} />
               <Route path="material-management" element={<MaterialManagementPage />} />
               <Route path="recipe-management" element={<RecipeManagementPage />} />
-              <Route path="inventory-audit" element={<InventoryAuditPage />} />
+              <Route path="inventory-audit" element={<ShiftAuditPage />} />
               <Route path="profit-analysis" element={<ProfitAnalysisPage />} />
               <Route path="reports" element={<ShiftReports />} />
               <Route path="device-history" element={<DeviceHistoryPage />} />
+              <Route path="statistics" element={<StatisticsPage />} />
+              <Route path="printer-management" element={<PrinterManagement />} />
+              <Route path="feedback" element={<FeedbackManagementPage />} />
               <Route path="*" element={<div className="p-8 text-white">Chức năng đang được phát triển...</div>} />
             </Route>
             <Route path="/" element={<Navigate to="/login" replace />} />

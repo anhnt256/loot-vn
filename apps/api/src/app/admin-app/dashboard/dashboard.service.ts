@@ -378,6 +378,7 @@ export class DashboardService {
         userId,
         userName: userData?.userName,
         userType,
+        totalPlayMinutes,
         totalCheckIn,
         claimedCheckIn,
         availableCheckIn,
@@ -394,5 +395,142 @@ export class DashboardService {
     }
 
     return results;
+  }
+
+  // ─── GET /dashboard/rewards — danh sách reward khả dụng ───
+  async getRewards(tenantId: string) {
+    const { gateway } = await this.getClients(tenantId);
+
+    const now = dayjs().utcOffset(7).format('YYYY-MM-DD HH:mm:ss');
+
+    // Lấy danh sách reward còn hiệu lực + đếm số promotion code chưa dùng
+    const rewards = await gateway.$queryRawUnsafe(`
+      SELECT r.id, r.name, r.stars, r.value, r.startDate, r.endDate,
+        (SELECT COUNT(*) FROM PromotionCode pc
+         WHERE pc.promotionSettingId = r.id AND pc.isUsed = false
+        ) AS totalPromotion
+      FROM Reward r
+      WHERE (r.startDate IS NULL OR r.startDate <= '${now}')
+        AND (r.endDate IS NULL OR r.endDate >= '${now}')
+      ORDER BY r.stars ASC
+    `);
+
+    return (rewards as any[]).map((r: any) => ({
+      ...r,
+      stars: Number(r.stars || 0),
+      value: Number(r.value || 0),
+      totalPromotion: Number(r.totalPromotion || 0),
+    }));
+  }
+
+  // ─── POST /dashboard/reward-exchange — đổi sao lấy thưởng ───
+  async exchangeReward(
+    tenantId: string,
+    userId: number,
+    rewardId: number,
+  ) {
+    const { gateway } = await this.getClients(tenantId);
+    const nowDB = dayjs().utcOffset(7).format('YYYY-MM-DD HH:mm:ss');
+
+    return await gateway.$transaction(async (tx: any) => {
+      // 1. Lock user row
+      const users = await tx.$queryRawUnsafe(
+        `SELECT * FROM User WHERE userId = ${userId} LIMIT 1 FOR UPDATE`,
+      );
+      const user = users[0];
+      if (!user) throw new BadRequestException('Không tìm thấy thông tin người dùng');
+
+      const currentStars = Number(user.stars || 0);
+
+      // 2. Lock reward row
+      const rewards = await tx.$queryRawUnsafe(
+        `SELECT * FROM Reward WHERE id = ${rewardId} LIMIT 1 FOR UPDATE`,
+      );
+      const reward = rewards[0];
+      if (!reward) throw new BadRequestException('Phần thưởng không tồn tại');
+
+      const requiredStars = Number(reward.stars || 0);
+      if (currentStars < requiredStars) {
+        throw new BadRequestException(
+          `Bạn chỉ có ${currentStars.toLocaleString()} sao, không đủ để đổi (cần ${requiredStars.toLocaleString()} sao).`,
+        );
+      }
+
+      // 3. Tìm promotion code chưa dùng
+      const codes = await tx.$queryRawUnsafe(
+        `SELECT * FROM PromotionCode WHERE promotionSettingId = ${rewardId} AND isUsed = false LIMIT 1 FOR UPDATE`,
+      );
+      if (!codes.length) {
+        throw new BadRequestException('Số lượng mã đã hết. Vui lòng liên hệ admin để bổ sung.');
+      }
+      const promoCode = codes[0];
+
+      // 4. Đánh dấu code đã dùng
+      await tx.$executeRawUnsafe(
+        `UPDATE PromotionCode SET isUsed = true, updatedAt = '${nowDB}' WHERE id = ${promoCode.id}`,
+      );
+
+      // 5. Tạo UserRewardMap
+      await tx.$executeRawUnsafe(
+        `INSERT INTO UserRewardMap (userId, rewardId, promotionCodeId, status, type, createdAt, updatedAt)
+         VALUES (${userId}, ${rewardId}, ${promoCode.id}, 'INITIAL', 'STARS', '${nowDB}', '${nowDB}')`,
+      );
+
+      // 6. Trừ sao + ghi lịch sử
+      const newStars = currentStars - requiredStars;
+      await tx.$executeRawUnsafe(
+        `INSERT INTO UserStarHistory (userId, type, oldStars, newStars, createdAt)
+         VALUES (${userId}, 'REWARD', ${currentStars}, ${newStars}, '${nowDB}')`,
+      );
+      await tx.$executeRawUnsafe(
+        `UPDATE User SET stars = ${newStars}, updatedAt = '${nowDB}' WHERE userId = ${userId}`,
+      );
+
+      return { success: true, newStars };
+    });
+  }
+
+  // ─── GET /dashboard/reward-history — lịch sử đổi thưởng ───
+  async getRewardHistory(
+    tenantId: string,
+    userId: number,
+    page: number,
+    limit: number,
+  ) {
+    const { gateway } = await this.getClients(tenantId);
+    const offset = (page - 1) * limit;
+
+    const [rewards, countRes] = await Promise.all([
+      gateway.$queryRawUnsafe(`
+        SELECT urm.id, urm.createdAt, urm.updatedAt, urm.status, urm.note, urm.type,
+          r.id AS reward_id, r.name AS reward_name, r.value AS reward_value, r.stars AS reward_stars,
+          pc.id AS promotionCode_id, pc.code AS promotionCode_code, pc.name AS promotionCode_name, pc.value AS promotionCode_value
+        FROM UserRewardMap urm
+        LEFT JOIN Reward r ON urm.rewardId = r.id
+        LEFT JOIN PromotionCode pc ON urm.promotionCodeId = pc.id
+        WHERE urm.userId = ${userId}
+        ORDER BY urm.createdAt DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `),
+      gateway.$queryRawUnsafe(
+        `SELECT COUNT(*) as total FROM UserRewardMap WHERE userId = ${userId}`,
+      ),
+    ]);
+
+    const total = Number(countRes[0]?.total || 0);
+    return {
+      rewards: (rewards as any[]).map((r: any) => ({
+        ...r,
+        reward_stars: Number(r.reward_stars || 0),
+        reward_value: Number(r.reward_value || 0),
+        promotionCode_value: Number(r.promotionCode_value || 0),
+      })),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 }

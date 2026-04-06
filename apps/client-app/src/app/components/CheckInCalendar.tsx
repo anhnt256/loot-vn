@@ -15,7 +15,7 @@ interface Props {
 
 const STATUS_STYLE: Record<CheckInDay['status'], { bg: string; text: string; dot: string }> = {
   expired:   { bg: 'bg-pink-200 border border-pink-300',                                                         text: 'text-pink-900',   dot: 'bg-pink-400' },
-  checked:   { bg: 'bg-green-200 border-2 border-green-400',                                                     text: 'text-green-900',  dot: 'bg-green-500' },
+  checked:   { bg: 'border-2',                                                                                  text: 'text-white',      dot: '' },
   available: { bg: '',                                                                                           text: 'text-white',      dot: 'bg-gradient-to-r from-indigo-600 to-pink-600' },
   coming:    { bg: 'bg-[#FEF3C7] border border-[#FDE68A]',                                                      text: 'text-amber-900',  dot: 'bg-amber-300' },
 };
@@ -56,10 +56,11 @@ const CheckInCalendar: React.FC<Props> = ({ refreshKey }) => {
     });
   }, []);
 
+  const userId = user?.userId || user?.id;
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const userId = user?.userId || user?.id;
 
       if (!userId) {
         setDays(createDaysOfMonth([]));
@@ -85,7 +86,7 @@ const CheckInCalendar: React.FC<Props> = ({ refreshKey }) => {
     };
 
     fetchData();
-  }, [createDaysOfMonth, refreshKey, user]);
+  }, [createDaysOfMonth, refreshKey, userId]);
 
   if (loading) {
     return (
@@ -123,6 +124,9 @@ const CheckInCalendar: React.FC<Props> = ({ refreshKey }) => {
                 style={day.status === 'available' ? {
                   background: 'linear-gradient(135deg, var(--primary-color), var(--secondary-color))',
                   boxShadow: '0 0 16px color-mix(in srgb, var(--primary-color) 40%, transparent)',
+                } : day.status === 'checked' ? {
+                  background: 'color-mix(in srgb, var(--primary-color) 25%, #1f2937)',
+                  borderColor: 'var(--primary-color)',
                 } : undefined}
               >
                 <span className={`font-gaming font-bold text-lg leading-none ${s.text}`}>
@@ -149,6 +153,8 @@ const CheckInCalendar: React.FC<Props> = ({ refreshKey }) => {
                 className={`w-2.5 h-2.5 rounded-full ${STATUS_STYLE[status].dot}`}
                 style={status === 'available' ? {
                   background: 'linear-gradient(to right, var(--primary-color), var(--secondary-color))',
+                } : status === 'checked' ? {
+                  background: 'var(--primary-color)',
                 } : undefined}
               />
               <span className="text-gray-400 text-xs">{label}</span>

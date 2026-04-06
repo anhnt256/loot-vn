@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Body, Query, Req, UseGuards, Delete, Param, BadRequestException, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Req, UseGuards, Delete, Param, BadRequestException, Patch, Headers } from '@nestjs/common';
 import { HrAppService } from './hr-app.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { CurrentUser, UserRequestContext } from '../auth/user-request-context';
 import { getTenantSlugFromRequest } from './tenant-from-request';
 
 @Controller('hr-app')
@@ -15,10 +16,9 @@ export class HrAppController {
 
   @Get('my-info')
   @UseGuards(AuthGuard)
-  async getMyInfo(@Req() req: any) {
-    const { userName } = req.user;
+  async getMyInfo(@Req() req: any, @CurrentUser() user: UserRequestContext) {
     const tenantId = this.getTenantId(req);
-    const staff = await this.hrAppService.getMyInfo(userName, tenantId);
+    const staff = await this.hrAppService.getMyInfo(user.userName, tenantId);
     return { success: true, data: staff };
   }
 
@@ -71,28 +71,25 @@ export class HrAppController {
 
   @Get('requests')
   @UseGuards(AuthGuard)
-  async getRequests(@Req() req: any) {
-    const { userName } = req.user;
+  async getRequests(@Req() req: any, @CurrentUser() user: UserRequestContext) {
     const tenantId = this.getTenantId(req);
-    const data = await this.hrAppService.getRequests(userName, tenantId);
+    const data = await this.hrAppService.getRequests(user.userName, tenantId);
     return { success: true, data };
   }
 
   @Post('requests')
   @UseGuards(AuthGuard)
-  async createRequest(@Req() req: any, @Body() body: { type: string; metadata?: Record<string, unknown> }) {
-    const { userName } = req.user;
+  async createRequest(@Req() req: any, @CurrentUser() user: UserRequestContext, @Body() body: { type: string; metadata?: Record<string, unknown> }) {
     const tenantId = this.getTenantId(req);
-    const data = await this.hrAppService.createRequest(userName, body, tenantId);
+    const data = await this.hrAppService.createRequest(user.userName, body, tenantId);
     return { success: true, data };
   }
 
   @Delete('requests/:id')
   @UseGuards(AuthGuard)
-  async deleteRequest(@Req() req: any, @Param('id') id: string) {
-    const { userName } = req.user;
+  async deleteRequest(@Req() req: any, @CurrentUser() user: UserRequestContext, @Param('id') id: string) {
     const tenantId = this.getTenantId(req);
-    await this.hrAppService.deleteRequest(userName, id, tenantId);
+    await this.hrAppService.deleteRequest(user.userName, id, tenantId);
     return { success: true };
   }
 
@@ -114,10 +111,9 @@ export class HrAppController {
 
   @Post('change-password')
   @UseGuards(AuthGuard)
-  async changePassword(@Req() req: any, @Body() body: any) {
-    const { userName } = req.user;
+  async changePassword(@Req() req: any, @CurrentUser() user: UserRequestContext, @Body() body: any) {
     const tenantId = this.getTenantId(req);
-    const data = await this.hrAppService.changePassword(userName, body, tenantId);
+    const data = await this.hrAppService.changePassword(user.userName, body, tenantId);
     return { success: true, ...data };
   }
 }

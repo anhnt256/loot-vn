@@ -7,8 +7,6 @@ import {
   ReloadOutlined,
   AppstoreOutlined,
   EyeInvisibleOutlined,
-  LoadingOutlined,
-  CameraOutlined,
   HolderOutlined,
   ClockCircleOutlined,
 } from "@ant-design/icons";
@@ -32,23 +30,20 @@ import {
   Modal,
   Form,
   Input,
-  InputNumber,
   Select,
   Card,
   Breadcrumb,
-  Space,
   message,
   Popconfirm,
   Badge,
   Spin,
-  Upload,
   Switch,
   TimePicker,
   DatePicker,
   Divider,
   Tooltip,
+  Checkbox,
 } from "antd";
-import type { UploadChangeParam } from "antd/es/upload";
 import { apiClient } from "@gateway-workspace/shared/utils/client";
 
 const API_BASE = apiClient.defaults.baseURL || "";
@@ -86,7 +81,13 @@ interface MenuItem {
   imageUrl: string | null;
   isActive: boolean;
   categoryId: number | null;
+  secondaryCategoryIds: string | null; // JSON array e.g. "[2,5]"
   category: { id: number; name: string } | null;
+}
+
+function parseSecondaryIds(raw: string | null): number[] {
+  if (!raw) return [];
+  try { return JSON.parse(raw); } catch { return []; }
 }
 
 function SortableCategoryItem({
@@ -95,12 +96,14 @@ function SortableCategoryItem({
   onSelect,
   onEdit,
   onDelete,
+  onManageProducts,
 }: {
   cat: MenuCategory;
   isSelected: boolean;
   onSelect: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onManageProducts: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cat.id });
   const style: React.CSSProperties = {
@@ -144,7 +147,13 @@ function SortableCategoryItem({
             <span className="text-orange-400 text-xs font-bold leading-none">!</span>
           </Tooltip>
         )}
-        <Badge count={cat._count.recipes} showZero style={{ backgroundColor: '#6b7280' }} />
+        <span
+          onClick={(e) => { e.stopPropagation(); onManageProducts(); }}
+          className="cursor-pointer hover:opacity-80"
+          title="Quản lý sản phẩm trong danh mục"
+        >
+          <Badge count={cat._count.recipes} showZero overflowCount={9999} style={{ backgroundColor: '#6b7280' }} />
+        </span>
         <Button
           type="text"
           size="small"
@@ -184,11 +193,14 @@ export default function MenuManagementPage() {
   const [machineGroups, setMachineGroups] = useState<MachineGroup[]>([]);
   const [catScheduleEnabled, setCatScheduleEnabled] = useState(false);
 
-  const [itemModalVisible, setItemModalVisible] = useState(false);
-  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
-  const [itemForm] = Form.useForm();
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
+
+  /* ── Assign products modal ── */
+  const [assignModalVisible, setAssignModalVisible] = useState(false);
+  const [assignCat, setAssignCat] = useState<MenuCategory | null>(null);
+  const [assignSelected, setAssignSelected] = useState<number[]>([]);
+  const [assignSearch, setAssignSearch] = useState("");
+  // IDs of items to keep in both categories (secondary)
+  const [assignKeepBoth, setAssignKeepBoth] = useState<number[]>([]);
 
   useEffect(() => {
     fetchData();
@@ -217,8 +229,11 @@ export default function MenuManagementPage() {
     selectedCategoryId === null
       ? items
       : selectedCategoryId === 0
-        ? items.filter((i) => !i.categoryId)
-        : items.filter((i) => i.categoryId === selectedCategoryId);
+        ? items.filter((i) => !i.categoryId && parseSecondaryIds(i.secondaryCategoryIds).length === 0)
+        : items.filter((i) =>
+            i.categoryId === selectedCategoryId ||
+            parseSecondaryIds(i.secondaryCategoryIds).includes(selectedCategoryId)
+          );
 
   // --- Category CRUD ---
   const openCatModal = (cat?: MenuCategory) => {
@@ -285,6 +300,71 @@ export default function MenuManagementPage() {
     }
   };
 
+  const openAssignModal = (cat: MenuCategory) => {
+    setAssignCat(cat);
+    // Chọn sẵn items có categoryId = cat.id HOẶC có cat.id trong secondaryCategoryIds
+    const selected = items
+      .filter((i) => i.categoryId === cat.id || parseSecondaryIds(i.secondaryCategoryIds).includes(cat.id))
+      .map((i) => i.id);
+    setAssignSelected(selected);
+    // Items đã có sẵn trong secondaryCategoryIds cho category này
+    const existingSecondary = items
+      .filter((i) => i.categoryId !== cat.id && parseSecondaryIds(i.secondaryCategoryIds).includes(cat.id))
+      .map((i) => i.id);
+    setAssignKeepBoth(existingSecondary);
+    setAssignSearch("");
+    setAssignModalVisible(true);
+  };
+
+  const handleAssignSubmit = async () => {
+    if (!assignCat) return;
+    try {
+      // Items đang thuộc category này (primary)
+      const currentPrimaryIds = items.filter((i) => i.categoryId === assignCat.id).map((i) => i.id);
+      // Items đang là secondary cho category này
+      const currentSecondaryIds = items
+        .filter((i) => i.categoryId !== assignCat.id && parseSecondaryIds(i.secondaryCategoryIds).includes(assignCat.id))
+        .map((i) => i.id);
+      const allCurrentIds = [...currentPrimaryIds, ...currentSecondaryIds];
+
+      const newlyChecked = assignSelected.filter((id) => !allCurrentIds.includes(id));
+      const unchecked = allCurrentIds.filter((id) => !assignSelected.includes(id));
+
+      const promises: Promise<any>[] = [];
+
+      // Newly checked items: chia ra "move" và "keep both"
+      const toMoveAsPrimary = newlyChecked.filter((id) => !assignKeepBoth.includes(id));
+      const toAddAsSecondary = newlyChecked.filter((id) => assignKeepBoth.includes(id));
+
+      if (toMoveAsPrimary.length > 0) {
+        promises.push(apiClient.patch("/admin/menu/items/bulk-assign", { categoryId: assignCat.id, recipeIds: toMoveAsPrimary }));
+      }
+      if (toAddAsSecondary.length > 0) {
+        promises.push(apiClient.patch("/admin/menu/items/secondary-category/add", { categoryId: assignCat.id, recipeIds: toAddAsSecondary }));
+      }
+
+      // Unchecked items: xoá khỏi primary hoặc secondary
+      const uncheckedPrimary = unchecked.filter((id) => currentPrimaryIds.includes(id));
+      const uncheckedSecondary = unchecked.filter((id) => currentSecondaryIds.includes(id));
+
+      if (uncheckedPrimary.length > 0) {
+        promises.push(apiClient.patch("/admin/menu/items/bulk-assign", { categoryId: null, recipeIds: uncheckedPrimary }));
+      }
+      if (uncheckedSecondary.length > 0) {
+        promises.push(apiClient.patch("/admin/menu/items/secondary-category/remove", { categoryId: assignCat.id, recipeIds: uncheckedSecondary }));
+      }
+
+      if (promises.length > 0) {
+        await Promise.all(promises);
+        message.success(`Đã cập nhật danh mục "${assignCat.name}"`);
+        fetchData();
+      }
+      setAssignModalVisible(false);
+    } catch {
+      message.error("Lỗi khi cập nhật danh mục");
+    }
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -301,68 +381,10 @@ export default function MenuManagementPage() {
     }
   };
 
-  // --- Item CRUD ---
-  const openItemModal = (item?: MenuItem) => {
-    setEditingItem(item || null);
-    if (item) {
-      itemForm.setFieldsValue({
-        name: item.name,
-        salePrice: Number(item.salePrice),
-        categoryId: item.categoryId,
-      });
-      setImageUrl(item.imageUrl);
-    } else {
-      itemForm.setFieldsValue({
-        name: "",
-        salePrice: 0,
-        categoryId: selectedCategoryId && selectedCategoryId > 0 ? selectedCategoryId : undefined,
-      });
-      setImageUrl(null);
-    }
-    setItemModalVisible(true);
-  };
-
-  const handleItemSubmit = async (values: any) => {
-    try {
-      const payload = { ...values, imageUrl };
-      if (editingItem) {
-        await apiClient.patch(`/admin/menu/items/${editingItem.id}`, payload);
-        message.success("Cập nhật sản phẩm thành công");
-      } else {
-        await apiClient.post("/admin/menu/items", payload);
-        message.success("Thêm sản phẩm thành công");
-      }
-      setItemModalVisible(false);
-      fetchData();
-    } catch {
-      message.error("Lỗi khi lưu sản phẩm");
-    }
-  };
-
-  const handleUploadChange = (info: UploadChangeParam) => {
-    if (info.file.status === "uploading") {
-      setUploading(true);
-      return;
-    }
-    if (info.file.status === "done") {
-      setUploading(false);
-      const url = info.file.response?.imageUrl;
-      if (url) {
-        setImageUrl(url);
-        message.success("Upload thành công");
-      }
-    }
-    if (info.file.status === "error") {
-      setUploading(false);
-      message.error("Upload thất bại");
-    }
-  };
 
   const totalItems = items.length;
   const activeItems = items.filter((i) => i.isActive).length;
-  const uncategorized = items.filter((i) => !i.categoryId).length;
-
-  const previewUrl = getImageUrl(imageUrl);
+  const uncategorized = items.filter((i) => !i.categoryId && parseSecondaryIds(i.secondaryCategoryIds).length === 0).length;
 
   return (
     <div>
@@ -374,10 +396,7 @@ export default function MenuManagementPage() {
             {totalItems} sản phẩm &middot; {activeItems} đang hiển thị &middot; {uncategorized} chưa phân loại
           </div>
         </div>
-        <Space>
-          <Button icon={<ReloadOutlined />} onClick={fetchData} loading={loading}>Làm mới</Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => openItemModal()}>Thêm sản phẩm</Button>
-        </Space>
+        <Button icon={<ReloadOutlined />} onClick={fetchData} loading={loading}>Làm mới</Button>
       </div>
 
       <div className="flex gap-4">
@@ -396,14 +415,14 @@ export default function MenuManagementPage() {
             onClick={() => setSelectedCategoryId(null)}
           >
             <span className="text-gray-200 flex-1">Tất cả</span>
-            <Badge count={totalItems} showZero style={{ backgroundColor: '#6b7280' }} />
+            <Badge count={totalItems} showZero overflowCount={9999} style={{ backgroundColor: '#6b7280' }} />
           </div>
           <div
             className={`flex items-center gap-2 rounded px-3 py-1.5 cursor-pointer transition-colors ${selectedCategoryId === 0 ? "bg-blue-900/40" : "hover:bg-gray-700/50"}`}
             onClick={() => setSelectedCategoryId(0)}
           >
             <span className="text-gray-200 flex-1">Chưa phân loại</span>
-            <Badge count={uncategorized} showZero style={{ backgroundColor: '#6b7280' }} />
+            <Badge count={uncategorized} showZero overflowCount={9999} style={{ backgroundColor: '#6b7280' }} />
           </div>
 
           {/* Sortable categories */}
@@ -417,6 +436,7 @@ export default function MenuManagementPage() {
                   onSelect={() => setSelectedCategoryId(cat.id)}
                   onEdit={() => openCatModal(cat)}
                   onDelete={() => handleDeleteCat(cat.id)}
+                  onManageProducts={() => openAssignModal(cat)}
                 />
               ))}
             </SortableContext>
@@ -460,18 +480,17 @@ export default function MenuManagementPage() {
               {filteredItems.map((item) => (
                 <div
                   key={item.id}
-                  className={`group relative rounded-2xl overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-pink-500/50 ${
+                  className={`relative rounded-2xl overflow-hidden transition-all ${
                     !item.isActive ? "opacity-50" : ""
                   }`}
                   style={{ background: "#1e2433" }}
-                  onClick={() => openItemModal(item)}
                 >
                   <div className="aspect-[4/3] bg-gray-800 overflow-hidden">
                     {item.imageUrl ? (
                       <img
                         src={getImageUrl(item.imageUrl)!}
                         alt={item.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-600">
@@ -490,22 +509,8 @@ export default function MenuManagementPage() {
                       <EyeInvisibleOutlined /> Ẩn
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                    <span className="bg-white/90 text-gray-900 px-3 py-1 rounded-full text-xs font-bold">
-                      Chỉnh sửa
-                    </span>
-                  </div>
                 </div>
               ))}
-
-              <div
-                className="rounded-2xl border-2 border-dashed border-gray-600 hover:border-pink-500 flex flex-col items-center justify-center cursor-pointer transition-colors"
-                style={{ minHeight: 200 }}
-                onClick={() => openItemModal()}
-              >
-                <PlusOutlined className="text-3xl text-gray-500 mb-2" />
-                <span className="text-gray-500 text-sm">Thêm sản phẩm</span>
-              </div>
             </div>
           )}
         </div>
@@ -600,71 +605,98 @@ export default function MenuManagementPage() {
         </Form>
       </Modal>
 
-      {/* Item Modal */}
+      {/* Assign Products Modal */}
       <Modal
-        title={editingItem ? "Sửa sản phẩm" : "Thêm sản phẩm"}
-        open={itemModalVisible}
-        onCancel={() => setItemModalVisible(false)}
-        footer={null}
-        destroyOnHidden
-        width={520}
+        title={assignCat ? `Quản lý sản phẩm — ${assignCat.name}` : "Quản lý sản phẩm"}
+        open={assignModalVisible}
+        onCancel={() => setAssignModalVisible(false)}
+        onOk={handleAssignSubmit}
+        okText="Lưu"
+        cancelText="Hủy"
+        width={600}
+        destroyOnClose
       >
-        <Form form={itemForm} layout="vertical" onFinish={handleItemSubmit} className="mt-4">
-          {/* Image upload */}
-          <Form.Item label="Hình ảnh sản phẩm">
-            <Upload
-              name="file"
-              showUploadList={false}
-              action={`${API_BASE}/admin/menu/upload`}
-              onChange={handleUploadChange}
-              accept="image/*"
-            >
-              <div
-                className="relative cursor-pointer rounded-xl overflow-hidden border-2 border-dashed border-gray-600 hover:border-pink-500 transition-colors"
-                style={{ width: 200, height: 150 }}
-              >
-                {previewUrl ? (
-                  <>
-                    <img src={previewUrl} alt="preview" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/0 hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
-                      <CameraOutlined className="text-white text-2xl" />
-                    </div>
-                  </>
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
-                    {uploading ? <LoadingOutlined className="text-2xl" /> : <CameraOutlined className="text-2xl" />}
-                    <span className="text-xs mt-2">{uploading ? "Đang tải..." : "Click để chọn ảnh"}</span>
-                  </div>
-                )}
-              </div>
-            </Upload>
-          </Form.Item>
+        <div className="mb-3 text-gray-400 text-sm">
+          Tick chọn sản phẩm muốn thêm vào danh mục "{assignCat?.name}". Bỏ tick để xoá khỏi danh mục.
+        </div>
+        <Input.Search
+          placeholder="Tìm sản phẩm..."
+          allowClear
+          className="mb-3"
+          value={assignSearch}
+          onChange={(e) => setAssignSearch(e.target.value)}
+        />
+        <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+          <div className="flex flex-col gap-1">
+            {items
+              .filter((i) => i.isActive)
+              .filter((i) => !assignSearch || i.name.toLowerCase().includes(assignSearch.toLowerCase()))
+              .map((item) => {
+                const inThisCat = item.categoryId === assignCat?.id;
+                const isSecondaryHere = parseSecondaryIds(item.secondaryCategoryIds).includes(assignCat?.id ?? 0);
+                const inOtherCat = item.categoryId && item.categoryId !== assignCat?.id;
+                const otherCatName = inOtherCat ? categories.find((c) => c.id === item.categoryId)?.name : null;
+                const isChecked = assignSelected.includes(item.id);
+                const isKeptBoth = assignKeepBoth.includes(item.id);
 
-          <Form.Item name="name" label="Tên sản phẩm" rules={[{ required: true, message: "Nhập tên sản phẩm" }]}>
-            <Input placeholder="VD: Trà Sữa Trân Châu, Cà Phê Sữa Đá..." size="large" />
-          </Form.Item>
-          <Form.Item name="salePrice" label="Giá bán (VNĐ)">
-            <InputNumber
-              placeholder="VD: 35000"
-              min={0}
-              style={{ width: "100%" }}
-              size="large"
-              formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-            />
-          </Form.Item>
-          <Form.Item name="categoryId" label="Danh mục">
-            <Select placeholder="Chọn danh mục" allowClear>
-              {categories.map((c) => (
-                <Select.Option key={c.id} value={c.id}>{c.name}</Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <div className="flex justify-end gap-3 mt-6">
-            <Button onClick={() => setItemModalVisible(false)}>Hủy</Button>
-            <Button type="primary" htmlType="submit" size="large">Lưu</Button>
+                return (
+                  <div
+                    key={item.id}
+                    className={`flex items-center px-3 py-2 rounded hover:bg-gray-700/50 ${inThisCat || isSecondaryHere ? 'bg-green-900/20' : ''}`}
+                  >
+                    <Checkbox
+                      checked={isChecked}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        if (checked && inOtherCat && !isSecondaryHere) {
+                          // Item đang ở danh mục khác → hỏi xác nhận
+                          Modal.confirm({
+                            title: 'Sản phẩm thuộc danh mục khác',
+                            content: (
+                              <span>
+                                Bạn đang chọn <b>{item.name}</b> — món này đang nằm ở danh mục <b>{otherCatName}</b>.
+                                Bạn muốn giữ lại cả 2 hay xoá ở danh mục <b>{otherCatName}</b>?
+                              </span>
+                            ),
+                            okText: 'Giữ lại',
+                            cancelText: `Xoá ở "${otherCatName}"`,
+                            okButtonProps: { style: { background: '#22c55e', borderColor: '#22c55e' } },
+                            cancelButtonProps: { danger: true },
+                            onOk: () => {
+                              // Giữ lại cả 2: thêm vào assignKeepBoth
+                              setAssignSelected((prev) => [...prev, item.id]);
+                              setAssignKeepBoth((prev) => [...prev, item.id]);
+                            },
+                            onCancel: () => {
+                              // Xoá ở danh mục khác: move sang danh mục hiện tại (KHÔNG thêm vào keepBoth)
+                              setAssignSelected((prev) => [...prev, item.id]);
+                              setAssignKeepBoth((prev) => prev.filter((id) => id !== item.id));
+                            },
+                          });
+                        } else if (checked) {
+                          setAssignSelected((prev) => [...prev, item.id]);
+                        } else {
+                          setAssignSelected((prev) => prev.filter((id) => id !== item.id));
+                          setAssignKeepBoth((prev) => prev.filter((id) => id !== item.id));
+                        }
+                      }}
+                      className="flex-1"
+                    >
+                      <span className="text-gray-200">{item.name}</span>
+                      <span className="text-gray-500 text-xs ml-2">{Number(item.salePrice).toLocaleString()}đ</span>
+                    </Checkbox>
+                    {otherCatName && (
+                      <span className={`text-xs shrink-0 ${isKeptBoth ? 'text-green-400' : 'text-yellow-400'}`}>
+                        ({otherCatName}{isKeptBoth ? ' · giữ lại' : ''})
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
           </div>
-        </Form>
+        </div>
       </Modal>
+
     </div>
   );
 }

@@ -301,7 +301,8 @@ const ComputerDetailDrawer: React.FC<ComputerDetailDrawerProps> = ({ computer, o
 
   const Tab2Content = () => {
     const isCombo = computer?.userType === 5;
-    const userTypeName = isCombo ? 'Combo' : computer?.userType === 1 ? 'Khách' : computer?.userType === 2 ? 'Hội viên' : 'Giao dịch viên';
+    const isMember = computer?.userType === 2 || (computer?.userType >= 6 && computer?.userType <= 9);
+    const userTypeName = isCombo ? 'Combo' : computer?.userType === 1 ? 'Khách' : isMember ? 'Hội viên' : 'Giao dịch viên';
     const displayName = isCombo ? 'Combo' : (computer?.userName || 'Không xác định');
     const checkIn = computer?.availableCheckIn || computer?.totalCheckIn || 0;
     const round = computer?.round || 0;
@@ -311,13 +312,23 @@ const ComputerDetailDrawer: React.FC<ComputerDetailDrawerProps> = ({ computer, o
     const isUseApp = computer?.isUseApp !== false;
     const note = computer?.note || 'Không có ghi chú';
 
-    const device = computer?.device || {};
+    // Use latest history record for device status (matches "Lịch sử máy" tab)
+    const histories = (computer?.devices?.[0]?.histories || []).filter(Boolean);
+    const latestHistory = histories[0] || {};
+    const device = {
+      monitorStatus: latestHistory.monitorStatus,
+      keyboardStatus: latestHistory.keyboardStatus,
+      mouseStatus: latestHistory.mouseStatus,
+      headphoneStatus: latestHistory.headphoneStatus,
+      chairStatus: latestHistory.chairStatus,
+      networkStatus: latestHistory.networkStatus,
+    };
 
     const getStatusDisplay = (statusVal?: string) => {
-      const s = statusVal || 'GOOD'; 
+      const s = statusVal || 'GOOD';
       if (s === 'GOOD') return { text: 'Tốt', color: 'text-green-500' };
       if (s === 'DAMAGED_BUT_USABLE') return { text: 'Xài tạm', color: 'text-yellow-500' };
-      return { text: 'Lỗi', color: 'text-red-500' }; 
+      return { text: 'Lỗi', color: 'text-red-500' };
     };
 
     const monitor = getStatusDisplay(device.monitorStatus);

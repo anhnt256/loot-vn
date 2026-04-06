@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Headers, BadRequestException, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, Headers, BadRequestException, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { MaterialService } from './material.service';
 import { CreateMaterialDto } from './dto/create-material.dto';
 import { UpdateMaterialDto } from './dto/update-material.dto';
+import { AuthGuard } from '../../auth/auth.guard';
+import { CurrentUser, UserRequestContext } from '../../auth/user-request-context';
 
 @Controller('admin/materials')
 export class MaterialController {
@@ -24,12 +26,15 @@ export class MaterialController {
 
   // --- Fixed routes MUST come before :id routes ---
   @Post('stock-adjust')
+  @UseGuards(AuthGuard)
   async adjustStock(
     @Headers('x-tenant-id') tenantId: string,
+    @CurrentUser() user: UserRequestContext,
     @Body() dto: { materialId: number; type: 'RECEIPT' | 'ISSUE'; quantity: number; reason?: string }
   ) {
     if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
-    return this.materialService.adjustStock(tenantId, dto);
+    const staffId = user.staffId ?? user.userId;
+    return this.materialService.adjustStock(tenantId, dto, staffId);
   }
 
   @Get('recipes')
@@ -42,6 +47,63 @@ export class MaterialController {
   async findAllTransactions(@Headers('x-tenant-id') tenantId: string) {
     if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
     return this.materialService.findAllTransactions(tenantId);
+  }
+
+  @Get('shift-audit')
+  async getShiftAuditList(
+    @Headers('x-tenant-id') tenantId: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('staffName') staffName?: string,
+  ) {
+    if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    return this.materialService.findShiftAuditList(
+      tenantId,
+      parseInt(page ?? '1') || 1,
+      parseInt(limit ?? '20') || 20,
+      from,
+      to,
+      staffName,
+    );
+  }
+
+  @Get('shift-audit/:shiftId/orders')
+  async getShiftOrders(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('shiftId', ParseIntPipe) shiftId: number,
+    @Query('status') status?: string,
+  ) {
+    if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    return this.materialService.findShiftOrders(tenantId, shiftId, status);
+  }
+
+  @Get('shift-audit/:shiftId/receipts')
+  async getShiftReceiptDetail(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('shiftId', ParseIntPipe) shiftId: number,
+  ) {
+    if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    return this.materialService.findShiftReceiptDetail(tenantId, shiftId);
+  }
+
+  @Get('shift-audit/:shiftId/sales')
+  async getShiftSaleDetail(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('shiftId', ParseIntPipe) shiftId: number,
+  ) {
+    if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    return this.materialService.findShiftSaleDetail(tenantId, shiftId);
+  }
+
+  @Get('order-detail/:orderId')
+  async getOrderDetail(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('orderId', ParseIntPipe) orderId: number,
+  ) {
+    if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    return this.materialService.findOrderDetail(tenantId, orderId);
   }
 
   @Get('profit-reports')

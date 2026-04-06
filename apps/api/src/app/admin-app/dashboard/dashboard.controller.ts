@@ -5,7 +5,7 @@ import {
   Delete,
   Body,
   Param,
-  Req,
+  Query,
   UseGuards,
   Headers,
   BadRequestException,
@@ -13,6 +13,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { AuthGuard } from '../../auth/auth.guard';
+import { CurrentUser, UserRequestContext } from '../../auth/user-request-context';
 import { redisService } from '../../lib/redis-service';
 import { TenantGatewayService } from '../../database/tenant-gateway.service';
 import { OrderGateway } from '../order/order.gateway';
@@ -28,13 +29,6 @@ export class DashboardController {
     private readonly dashboardService: DashboardService,
   ) {}
 
-  /** macAddress là định danh ổn định của máy — không thay đổi theo tên/IP */
-  private resolveMacAddress(req: any): string {
-    const mac = req.user?.macAddress;
-    if (!mac) throw new BadRequestException('Không xác định được máy (macAddress thiếu trong token)');
-    return mac;
-  }
-
   private cartKey(tenantId: string, macAddress: string): string {
     return `${tenantId}:cart:${macAddress}`;
   }
@@ -46,23 +40,23 @@ export class DashboardController {
   @Get('cart')
   async getCart(
     @Headers('x-tenant-id') tenantId: string,
-    @Req() req: any,
+    @CurrentUser() user: UserRequestContext,
   ) {
     if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
-    const macAddress = this.resolveMacAddress(req);
-    const raw = await redisService.get(this.cartKey(tenantId, macAddress));
+    if (!user.macAddress) throw new BadRequestException('Không xác định được máy (macAddress thiếu trong token)');
+    const raw = await redisService.get(this.cartKey(tenantId, user.macAddress));
     return { data: raw ? JSON.parse(raw) : [] };
   }
 
   @Post('cart')
   async saveCart(
     @Headers('x-tenant-id') tenantId: string,
-    @Req() req: any,
+    @CurrentUser() user: UserRequestContext,
     @Body() body: { cart: any[] },
   ) {
     if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
-    const macAddress = this.resolveMacAddress(req);
-    await redisService.set(this.cartKey(tenantId, macAddress), JSON.stringify(body.cart ?? []));
+    if (!user.macAddress) throw new BadRequestException('Không xác định được máy (macAddress thiếu trong token)');
+    await redisService.set(this.cartKey(tenantId, user.macAddress), JSON.stringify(body.cart ?? []));
     return { success: true };
   }
 
@@ -70,17 +64,15 @@ export class DashboardController {
   @Get('orders')
   async getOrders(
     @Headers('x-tenant-id') tenantId: string,
-    @Req() req: any,
+    @CurrentUser() user: UserRequestContext,
   ) {
     if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
-    const macAddress = this.resolveMacAddress(req);
-    const userId = Number(req.user?.userId ?? 0);
+    if (!user.macAddress) throw new BadRequestException('Không xác định được máy (macAddress thiếu trong token)');
     const parsedTenantId = parseInt(tenantId) || 1;
 
     const db = await this.tenantGateway.getGatewayClient(tenantId);
     const orders = await (db.foodOrder as any).findMany({
-      // Lọc cả userId + macAddress: tránh hiển thị đơn của user khác trên cùng máy
-      where: { macAddress, userId, tenantId: parsedTenantId },
+      where: { macAddress: user.macAddress, userId: user.userId, tenantId: parsedTenantId },
       orderBy: { createdAt: 'desc' },
       take: 10,
       include: { details: true },
@@ -92,11 +84,11 @@ export class DashboardController {
   @Delete('cart')
   async clearCart(
     @Headers('x-tenant-id') tenantId: string,
-    @Req() req: any,
+    @CurrentUser() user: UserRequestContext,
   ) {
     if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
-    const macAddress = this.resolveMacAddress(req);
-    await redisService.del(this.cartKey(tenantId, macAddress));
+    if (!user.macAddress) throw new BadRequestException('Không xác định được máy (macAddress thiếu trong token)');
+    await redisService.del(this.cartKey(tenantId, user.macAddress));
     return { success: true };
   }
 
@@ -113,14 +105,13 @@ export class DashboardController {
   @Post('checkout')
   async checkout(
     @Headers('x-tenant-id') tenantId: string,
-    @Req() req: any,
+    @CurrentUser() user: UserRequestContext,
     @Body() body: { cart?: any[] },
   ) {
     if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    if (!user.macAddress) throw new BadRequestException('Không xác định được máy (macAddress thiếu trong token)');
 
-    const macAddress = this.resolveMacAddress(req);
-    const userId = Number(req.user?.userId ?? 0);
-    const computerName: string | null = req.user?.computerName ?? null;
+    const { macAddress, userId, computerName } = user;
 
     // 1. Lấy giỏ hàng: ưu tiên Redis, fallback sang body
     let cart: any[] = [];
@@ -213,7 +204,7 @@ export class DashboardController {
           data: {
             userId,
             macAddress,
-            computerName,
+            computerName: computerName ?? null,
             tenantId: parsedTenantId,
             status: 'PENDING',
             totalAmount,
@@ -250,28 +241,29 @@ export class DashboardController {
   @Get('me')
   async getClientMe(
     @Headers('x-tenant-id') tenantId: string,
-    @Req() req: any,
+    @CurrentUser() user: UserRequestContext,
   ) {
     if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
-    const userId = Number(req.user?.userId);
-    if (!userId) throw new BadRequestException('Không xác định được userId');
 
-    const stats = await this.dashboardService.getUserCalculator(tenantId, [userId]);
+    const stats = await this.dashboardService.getUserCalculator(tenantId, [user.userId]);
     const userStats = stats[0] || {};
 
     return {
-      userId,
-      userName: req.user?.userName,
-      fullName: req.user?.fullName,
-      computerName: req.user?.computerName,
-      macAddress: req.user?.macAddress,
-      role: req.user?.role,
+      userId: user.userId,
+      userName: userStats.userName || user.userName,
+      fullName: user.fullName,
+      computerName: user.computerName,
+      macAddress: user.macAddress,
+      role: user.role,
       // Game stats
       stars: userStats.stars ?? 0,
+      totalPlayMinutes: userStats.totalPlayMinutes ?? 0,
       totalCheckIn: userStats.totalCheckIn ?? 0,
       claimedCheckIn: userStats.claimedCheckIn ?? 0,
       availableCheckIn: userStats.availableCheckIn ?? 0,
       round: userStats.round ?? 0,
+      giftRound: userStats.giftRound ?? 0,
+      totalPayment: userStats.totalPayment ?? 0,
       magicStone: userStats.magicStone ?? 0,
       battlePass: userStats.battlePass ?? null,
     };
@@ -281,14 +273,13 @@ export class DashboardController {
   @Post('user-calculator')
   async userCalculator(
     @Headers('x-tenant-id') tenantId: string,
-    @Req() req: any,
+    @CurrentUser() user: UserRequestContext,
     @Body() body: { listUsers?: number[] },
   ) {
     if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
-    // Fallback: nếu không gửi listUsers, tự lấy userId từ JWT
     const listUsers = body?.listUsers?.length
       ? body.listUsers
-      : [Number(req.user?.userId)].filter(Boolean);
+      : [user.userId].filter(Boolean);
     if (!listUsers.length) throw new BadRequestException('Không xác định được userId');
     const data = await this.dashboardService.getUserCalculator(tenantId, listUsers);
     return { data };
@@ -298,11 +289,11 @@ export class DashboardController {
   @Post('check-in')
   async checkIn(
     @Headers('x-tenant-id') tenantId: string,
-    @Req() req: any,
+    @CurrentUser() user: UserRequestContext,
     @Body() body: { userId: number },
   ) {
     if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
-    const userId = body.userId || Number(req.user?.userId);
+    const userId = body.userId || user.userId;
     if (!userId) throw new BadRequestException('userId is required');
 
     try {
@@ -326,5 +317,45 @@ export class DashboardController {
 
     const data = await this.dashboardService.getCheckInResults(tenantId, userId);
     return data;
+  }
+
+  // ─── Reward Exchange Endpoints ───
+
+  /** GET /dashboard/rewards — danh sách phần thưởng khả dụng */
+  @Get('rewards')
+  async getRewards(
+    @Headers('x-tenant-id') tenantId: string,
+  ) {
+    if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    return this.dashboardService.getRewards(tenantId);
+  }
+
+  /** POST /dashboard/reward-exchange — đổi sao lấy thưởng */
+  @Post('reward-exchange')
+  async exchangeReward(
+    @Headers('x-tenant-id') tenantId: string,
+    @CurrentUser() user: UserRequestContext,
+    @Body() body: { rewardId: number },
+  ) {
+    if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    if (!body.rewardId) throw new BadRequestException('rewardId is required');
+    return this.dashboardService.exchangeReward(tenantId, user.userId, body.rewardId);
+  }
+
+  /** GET /dashboard/reward-history — lịch sử đổi thưởng */
+  @Get('reward-history')
+  async getRewardHistory(
+    @Headers('x-tenant-id') tenantId: string,
+    @CurrentUser() user: UserRequestContext,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    return this.dashboardService.getRewardHistory(
+      tenantId,
+      user.userId,
+      parseInt(page || '1', 10),
+      parseInt(limit || '5', 10),
+    );
   }
 }

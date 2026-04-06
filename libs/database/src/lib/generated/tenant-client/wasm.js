@@ -372,7 +372,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "D:\\Project\\gateway-app\\libs\\database\\src\\lib\\generated\\tenant-client",
+      "value": "/Users/anh-nguyen-covergo/loot-vn/libs/database/src/lib/generated/tenant-client",
       "fromEnvVar": null
     },
     "config": {
@@ -381,7 +381,7 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "windows",
+        "value": "darwin-arm64",
         "native": true
       },
       {
@@ -394,7 +394,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "D:\\Project\\gateway-app\\libs\\database\\prisma\\tenant\\schema.prisma",
+    "sourceFilePath": "/Users/anh-nguyen-covergo/loot-vn/libs/database/prisma/tenant/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {

@@ -1,18 +1,16 @@
-import { ACCESS_TOKEN_KEY } from "./constants/token.constant";
-import axios from "axios";
-import { getCookie } from "./cookie";
+import { getToken } from './token';
+import axios from 'axios';
 
 const host = process.env.VITE_API_URL || '';
 
 const apiClient = axios.create({
   baseURL: host,
-  withCredentials: true,
 });
 
 apiClient.interceptors.request.use(async (request) => {
-  const token = getCookie(ACCESS_TOKEN_KEY) || getCookie("staffToken");
+  const token = getToken();
   if (token) {
-    request.headers["Authorization"] = `Bearer ${token}`;
+    request.headers['Authorization'] = `Bearer ${token}`;
   }
   return request;
 });

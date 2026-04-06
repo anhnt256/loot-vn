@@ -840,17 +840,18 @@ model MenuCategory {
 }
 
 model Recipe {
-  id         Int             @id @default(autoincrement())
-  name       String          @db.VarChar(255)
-  salePrice  Decimal         @default(0) @db.Decimal(12, 2)
-  imageUrl   String?         @db.VarChar(500)
-  isActive   Boolean         @default(true)
-  categoryId Int?
-  tenantId   Int
-  category   MenuCategory?   @relation(fields: [categoryId], references: [id])
-  versions   RecipeVersion[]
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @updatedAt
+  id                   Int             @id @default(autoincrement())
+  name                 String          @db.VarChar(255)
+  salePrice            Decimal         @default(0) @db.Decimal(12, 2)
+  imageUrl             String?         @db.VarChar(500)
+  isActive             Boolean         @default(true)
+  categoryId           Int?
+  secondaryCategoryIds String?         @db.Text /// JSON array of additional category IDs, e.g. [2,5]
+  tenantId             Int
+  category             MenuCategory?   @relation(fields: [categoryId], references: [id])
+  versions             RecipeVersion[]
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
 
   @@index([tenantId])
   @@index([categoryId])
@@ -982,26 +983,27 @@ model StaffShift {
 }
 
 model Feedback {
-  id          Int            @id @default(autoincrement())
-  userId      Int?
-  itemId      Int?
-  type        FeedbackType
-  title       String         @db.VarChar(255)
-  description String         @db.Text
-  priority    String         @db.VarChar(20)
-  category    String?        @db.VarChar(50)
-  rating      Int?           @default(0)
-  image       String?        @db.Text
-  note        String?        @db.Text
-  isAnonymous Boolean        @default(false)
-  status      FeedbackStatus @default(SUBMITTED)
-  response    String?        @db.Text
-  stars       Int?           @default(0)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  computerId  Int?
-  user        User?          @relation(fields: [userId], references: [userId])
-  computer    Computer?      @relation(fields: [computerId], references: [id])
+  id            Int                     @id @default(autoincrement())
+  userId        Int?
+  itemId        Int?
+  type          FeedbackType
+  title         String                  @db.VarChar(255)
+  description   String                  @db.Text
+  priority      String                  @db.VarChar(20)
+  category      String?                 @db.VarChar(50)
+  rating        Int?                    @default(0)
+  image         String?                 @db.Text
+  note          String?                 @db.Text
+  isAnonymous   Boolean                 @default(false)
+  status        FeedbackStatus          @default(SUBMITTED)
+  response      String?                 @db.Text
+  stars         Int?                    @default(0)
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  computerId    Int?
+  user          User?                   @relation(fields: [userId], references: [userId])
+  computer      Computer?               @relation(fields: [computerId], references: [id])
+  statusHistory FeedbackStatusHistory[]
 
   @@index([userId])
   @@index([computerId])
@@ -1009,6 +1011,20 @@ model Feedback {
   @@index([createdAt])
   @@index([category])
   @@index([priority])
+}
+
+model FeedbackStatusHistory {
+  id         Int      @id @default(autoincrement())
+  feedbackId Int
+  fromStatus String   @db.VarChar(20)
+  toStatus   String   @db.VarChar(20)
+  changedBy  Int? // staffId or userId — null nếu do hệ thống
+  note       String?  @db.VarChar(500)
+  changedAt  DateTime @default(now())
+  feedback   Feedback @relation(fields: [feedbackId], references: [id])
+
+  @@index([feedbackId])
+  @@index([changedAt])
 }
 
 model FnetHistory {
@@ -1029,19 +1045,6 @@ model FnetHistory {
   @@index([type])
   @@index([createdAt])
   @@index([moneyType])
-}
-
-model PromotionReward {
-  id         Int      @id @default(autoincrement())
-  name       String
-  value      Int
-  quantity   Int
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  starsValue Int
-
-  @@index([isActive])
 }
 
 model GameAppointmentTier {
@@ -1292,6 +1295,7 @@ enum UserStarHistoryType {
   GIFT_ROUND
   FEEDBACK
   BATTLE_PASS
+  REDEMPTION
 }
 
 enum PromotionType {
@@ -1360,6 +1364,7 @@ enum FeedbackType {
 }
 
 enum FeedbackStatus {
+  DRAFT
   SUBMITTED
   RECEIVED
   PROCESSING
@@ -1504,4 +1509,115 @@ model ComputerLayout {
 
   @@index([zoneId])
   @@map("ComputerLayout")
+}
+
+// ─── Promotion Reward (Đổi thưởng) ───
+
+model PromotionReward {
+  id          Int                 @id @default(autoincrement())
+  name        String              @db.VarChar(100)
+  description String?             @db.VarChar(500)
+  type        PromotionRewardType
+  starsCost   Int
+
+  // PLAY_TIME fields
+  walletType  String? @db.VarChar(10) // "MAIN" | "SUB"
+  moneyAmount Int? // VNĐ to add to wallet
+
+  imageUrl      String?  @db.VarChar(500)
+  isActive      Boolean  @default(true)
+  displayOrder  Int      @default(0)
+  maxPerDay     Int?
+  maxPerMonth   Int?
+  totalQuantity Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  recipes     PromotionRewardRecipe[]
+  categories  PromotionRewardCategory[]
+  redemptions PromotionRewardRedemption[]
+
+  @@index([type])
+  @@index([isActive])
+  @@map("PromotionReward")
+}
+
+model PromotionRewardRecipe {
+  id                Int @id @default(autoincrement())
+  promotionRewardId Int
+  recipeId          Int
+  quantity          Int @default(1)
+
+  promotionReward PromotionReward @relation(fields: [promotionRewardId], references: [id], onDelete: Cascade)
+
+  @@unique([promotionRewardId, recipeId])
+  @@index([promotionRewardId])
+  @@index([recipeId])
+  @@map("PromotionRewardRecipe")
+}
+
+model PromotionRewardCategory {
+  id                Int @id @default(autoincrement())
+  promotionRewardId Int
+  categoryId        Int
+
+  promotionReward PromotionReward @relation(fields: [promotionRewardId], references: [id], onDelete: Cascade)
+
+  @@unique([promotionRewardId, categoryId])
+  @@index([promotionRewardId])
+  @@index([categoryId])
+  @@map("PromotionRewardCategory")
+}
+
+model PromotionRewardRedemption {
+  id                Int                 @id @default(autoincrement())
+  userId            Int
+  promotionRewardId Int
+  starsCost         Int
+  status            RedemptionStatus    @default(PENDING)
+  rewardType        PromotionRewardType
+
+  // FOOD/DRINK
+  chosenRecipeId Int?
+  chosenQuantity Int? @default(1)
+
+  // PLAY_TIME
+  walletType  String? @db.VarChar(10)
+  moneyAmount Int?
+
+  // Cost tracking
+  actualCost Decimal? @db.Decimal(12, 2)
+
+  // Shift tracking
+  workShiftId Int?
+  approvedBy  Int?
+
+  note      String?  @db.VarChar(500)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  promotionReward PromotionReward @relation(fields: [promotionRewardId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([rewardType])
+  @@index([createdAt])
+  @@index([workShiftId])
+  @@index([promotionRewardId])
+  @@map("PromotionRewardRedemption")
+}
+
+enum PromotionRewardType {
+  PLAY_TIME
+  FOOD
+  DRINK
+  VOUCHER
+  OTHER
+}
+
+enum RedemptionStatus {
+  PENDING
+  APPROVED
+  COMPLETED
+  REJECTED
 }

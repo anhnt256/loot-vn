@@ -1,12 +1,17 @@
 import { Controller, Get, Post, Body, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from './auth.guard';
+import { CurrentUser, UserRequestContext } from './user-request-context';
 import { Response } from 'express';
 import { getTenantIdFromRequest } from '../hr-app/tenant-from-request';
+import { ConfigService } from '../admin-app/config/config.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Get('tenant-info')
   async getTenantInfo(@Req() req: any, @Res() res: Response) {
@@ -18,7 +23,17 @@ export class AuthController {
     if (!tenantInfo) {
       return res.json({ success: false, message: 'Tenant not found' });
     }
-    return res.json({ success: true, data: tenantInfo });
+    // Attach game configs
+    let spendPerRound = 30000;
+    let upRateAmount = 500000;
+    try {
+      const configs = await this.configService.getConfigs(tenantId);
+      spendPerRound = Number(configs['SPEND_PER_ROUND']) || 30000;
+      upRateAmount = Number(configs['UP_RATE_AMOUNT']) || 500000;
+    } catch {
+      // keep defaults
+    }
+    return res.json({ success: true, data: { ...tenantInfo, spendPerRound, upRateAmount } });
   }
 
   @Post('login')
@@ -44,8 +59,8 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(AuthGuard)
-  async getMe(@Req() req: any) {
-    return req.user;
+  async getMe(@CurrentUser() user: UserRequestContext) {
+    return user;
   }
 
   @Post('logout')

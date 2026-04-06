@@ -1,0 +1,8 @@
+{
+  "name": "shared-chat",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/chat/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {}
+}

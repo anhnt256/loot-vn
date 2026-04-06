@@ -45,7 +45,8 @@ export default function SendReportDrawer({
   const [staffs, setStaffs] = useState<Staff[]>([]);
   const [selectedStaff, setSelectedStaff] = useState<number | null>(null);
   const [selectedShift, setSelectedShift] = useState<ShiftType | null>(null);
-  
+  const [workShifts, setWorkShifts] = useState<any[]>([]);
+
   const [reportData, setReportData] = useState<any>(null);
   const [materials, setMaterials] = useState<MaterialData[]>([]);
   const [step, setStep] = useState<'START' | 'END'>('START');
@@ -58,6 +59,7 @@ export default function SendReportDrawer({
         return;
       }
       fetchStaffs();
+      fetchWorkShifts();
       fetchReportData();
     } else {
       setSelectedStaff(null);
@@ -103,6 +105,31 @@ export default function SendReportDrawer({
     }
   };
 
+  const fetchWorkShifts = async () => {
+    try {
+      const res = await apiClient.get<any>("/admin/handover-reports/work-shifts");
+      if (res.data?.success) {
+        setWorkShifts(res.data.data);
+      }
+    } catch (e) {
+      console.error("Failed to load work shifts", e);
+    }
+  };
+
+  // Map WorkShift name to SANG/CHIEU/TOI by keyword matching
+  const SHIFT_NAME_KEYWORDS: Record<ShiftType, string[]> = {
+    [SHIFT_ENUM.SANG]: ['sáng', 'sang'],
+    [SHIFT_ENUM.CHIEU]: ['đêm', 'dem', 'chiều', 'chieu'],
+    [SHIFT_ENUM.TOI]: ['tối', 'toi'],
+  };
+
+  const getWorkShiftForShift = (shift: ShiftType) => {
+    const keywords = SHIFT_NAME_KEYWORDS[shift];
+    return workShifts.find((ws: any) =>
+      keywords.some((kw) => ws.name?.toLowerCase().includes(kw))
+    ) || null;
+  };
+
   const fetchReportData = async () => {
     setLoading(true);
     try {
@@ -124,6 +151,20 @@ export default function SendReportDrawer({
     }
   };
 
+  // Auto-map staff when shift is selected based on WorkShift.gcpId
+  useEffect(() => {
+    if (selectedShift && workShifts.length > 0 && staffs.length > 0) {
+      const ws = getWorkShiftForShift(selectedShift);
+      if (ws?.gcpId) {
+        const gcpStaffId = parseInt(ws.gcpId, 10);
+        const matched = staffs.find((s) => s.id === gcpStaffId);
+        if (matched) {
+          setSelectedStaff(matched.id);
+        }
+      }
+    }
+  }, [selectedShift, workShifts, staffs]);
+
   useEffect(() => {
     if (reportData && selectedShift) {
       mapMaterialData(selectedShift);
@@ -131,6 +172,44 @@ export default function SendReportDrawer({
       setMaterials([]);
     }
   }, [reportData, selectedShift]);
+
+  // Auto-fill Nhập/Xuất from InventoryTransaction when switching to END step
+  useEffect(() => {
+    if (step === 'END' && selectedShift && selectedDate && !getShiftCompleteStatus(selectedShift)) {
+      fetchShiftInventorySummary();
+    }
+  }, [step, selectedShift]);
+
+  const fetchShiftInventorySummary = async () => {
+    try {
+      const dateStr = selectedDate ? selectedDate.toISOString().split("T")[0] : "";
+      const res = await apiClient.get<any>("/admin/handover-reports/shift-inventory-summary", {
+        params: { date: dateStr, shift: selectedShift, reportType: selectedReportType }
+      });
+
+      if (res.data?.success && res.data.data.length > 0) {
+        const summaryMap = new Map<number, { totalReceived: number; totalIssued: number }>(
+          res.data.data.map((s: any) => [s.materialId, s])
+        );
+
+        setMaterials(prev => prev.map(m => {
+          const summary = summaryMap.get(Number(m.id));
+          if (summary) {
+            const received = summary.totalReceived || 0;
+            const issued = summary.totalIssued || 0;
+            return {
+              ...m,
+              received: received > 0 ? received : (m.received || 0),
+              issued: issued > 0 ? issued : (m.issued || 0),
+            };
+          }
+          return m;
+        }));
+      }
+    } catch (e) {
+      console.error("Failed to fetch shift inventory summary", e);
+    }
+  };
 
   const getShiftSubmissionCount = (shift: ShiftType) => {
     if (!reportData?.submissionTracking) return 0;
@@ -384,10 +463,13 @@ export default function SendReportDrawer({
     return baseColumns;
   }, [step, selectedShift, reportData, materials]);
 
-  const shiftOptions = Object.values(SHIFT_ENUM).map(t => ({
-     label: SHIFT_LABELS[t as ShiftType],
-     value: t
-  }));
+  const shiftOptions = (Object.values(SHIFT_ENUM) as ShiftType[]).map((shiftKey) => {
+     const ws = getWorkShiftForShift(shiftKey);
+     return {
+       label: ws ? ws.name : SHIFT_LABELS[shiftKey],
+       value: shiftKey,
+     };
+  });
 
   const staffOptions = staffs.map(st => ({
      label: st.fullName,

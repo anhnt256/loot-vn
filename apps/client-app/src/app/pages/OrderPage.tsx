@@ -1,8 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { Input } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { apiClient } from '@gateway-workspace/shared/utils/client';
 import { useCart, MenuItem } from '../contexts/CartContext';
+import type { DashboardOutletContext } from '../components/DashboardLayout';
 
 interface Category {
   id: number;
@@ -11,6 +13,7 @@ interface Category {
 }
 
 const OrderPage: React.FC = () => {
+  const { menuVersion } = useOutletContext<DashboardOutletContext>();
   const [categories, setCategories] = useState<Category[]>([]);
   const [items, setItems] = useState<MenuItem[]>([]);
   const [selectedCat, setSelectedCat] = useState<number | null>(null);
@@ -35,9 +38,15 @@ const OrderPage: React.FC = () => {
   const [restockSending, setRestockSending] = useState(false);
   const [restockSent, setRestockSent] = useState(false);
 
+  const isFirstLoad = useRef(true);
+
   useEffect(() => {
-    const fetchAll = async () => {
-      setLoading(true);
+    const showLoading = isFirstLoad.current;
+    isFirstLoad.current = false;
+
+    if (showLoading) setLoading(true);
+
+    const fetchMenu = async () => {
       try {
         const [catRes, itemRes] = await Promise.all([
           apiClient.get('/admin/menu/categories/client'),
@@ -46,22 +55,29 @@ const OrderPage: React.FC = () => {
         const visibleCategories: Category[] = catRes.data || [];
         setCategories(visibleCategories);
 
-        // Ẩn sản phẩm thuộc danh mục đang bị hẹn giờ ẩn
         const visibleCategoryIds = new Set(visibleCategories.map((c) => c.id));
         const allItems: MenuItem[] = (itemRes.data || []).filter((i: MenuItem) => i.isActive !== false);
-        setItems(allItems.filter((i) => !i.categoryId || visibleCategoryIds.has(i.categoryId)));
+        setItems(allItems.filter((i) => {
+          if (!i.categoryId) return true;
+          if (visibleCategoryIds.has(i.categoryId)) return true;
+          // Cũng hiện nếu secondaryCategoryIds chứa bất kỳ visible category nào
+          const secondaryIds: number[] = i.secondaryCategoryIds ? JSON.parse(i.secondaryCategoryIds) : [];
+          return secondaryIds.some((id) => visibleCategoryIds.has(id));
+        }));
       } catch {
         // silent
       } finally {
-        setLoading(false);
+        if (showLoading) setLoading(false);
       }
     };
-    fetchAll();
-  }, []);
+
+    fetchMenu();
+  }, [menuVersion]);
 
   const filtered = useMemo(() => {
     return items.filter((item) => {
-      const matchCat = selectedCat === null || item.categoryId === selectedCat;
+      const secondaryIds: number[] = item.secondaryCategoryIds ? JSON.parse(item.secondaryCategoryIds) : [];
+      const matchCat = selectedCat === null || item.categoryId === selectedCat || secondaryIds.includes(selectedCat);
       const matchSearch = item.name.toLowerCase().includes(search.toLowerCase());
       return matchCat && matchSearch;
     });
@@ -227,7 +243,7 @@ const OrderPage: React.FC = () => {
                     </p>
                     <div className="flex items-center justify-between mt-1">
                       <p className="text-pink-400 font-semibold text-sm">
-                        {item.salePrice > 0 ? `${item.salePrice.toLocaleString('vi-VN')}đ` : '0đ'}
+                        {Number(item.salePrice) > 0 ? `${Number(item.salePrice).toLocaleString('vi-VN')}đ` : '0đ'}
                       </p>
                       {item.availablePortions !== null && (
                         item.availablePortions > 0

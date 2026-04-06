@@ -126,10 +126,33 @@ export class MenuService {
 
   async deleteCategory(tenantId: string, id: number) {
     const db = await this.getGatewayClient(tenantId);
+    const tid = parseInt(tenantId) || 1;
+    // Xoá categoryId gốc
     await db.recipe.updateMany({
-      where: { categoryId: id, tenantId: parseInt(tenantId) || 1 },
+      where: { categoryId: id, tenantId: tid },
       data: { categoryId: null },
     });
+    // Xoá khỏi secondaryCategoryIds
+    const recipesWithSecondary = await db.recipe.findMany({
+      where: { tenantId: tid, secondaryCategoryIds: { not: null } },
+      select: { id: true, secondaryCategoryIds: true },
+    });
+    await Promise.all(
+      recipesWithSecondary
+        .filter((r) => {
+          const ids: number[] = JSON.parse(r.secondaryCategoryIds!);
+          return ids.includes(id);
+        })
+        .map((r) => {
+          const ids: number[] = JSON.parse(r.secondaryCategoryIds!);
+          const updated = ids.filter((cid) => cid !== id);
+          return db.recipe.update({
+            where: { id: r.id },
+            data: { secondaryCategoryIds: updated.length ? JSON.stringify(updated) : null },
+          });
+        }),
+    );
+    await this.invalidateAllMenuCache(tenantId);
     return db.menuCategory.delete({ where: { id } });
   }
 
@@ -166,19 +189,23 @@ export class MenuService {
       orderBy: { name: 'asc' },
     });
 
-    // Stock calculation – use Material.quantityInStock directly
+    // Stock calculation – prefer Redis (reflects reserved amounts) with DB fallback
     const materialIds = [
       ...new Set(recipes.flatMap((r) => r.versions[0]?.items.map((i) => i.materialId) ?? [])),
     ];
-    const materials = materialIds.length
-      ? await db.material.findMany({
-          where: { id: { in: materialIds }, tenantId: tid },
-          select: { id: true, quantityInStock: true },
-        })
-      : [];
-    const stockMap = new Map<number, number>(
-      materials.map((m) => [m.id, Number(m.quantityInStock ?? 0)])
-    );
+    const stockMap = new Map<number, number>();
+    if (materialIds.length) {
+      const dbMaterials = await db.material.findMany({
+        where: { id: { in: materialIds }, tenantId: tid },
+        select: { id: true, quantityInStock: true },
+      });
+      const dbStockMap = new Map(dbMaterials.map((m) => [m.id, Number(m.quantityInStock ?? 0)]));
+
+      for (const matId of materialIds) {
+        const redisVal = await redisService.get(`${tenantId}:stock:${matId}`);
+        stockMap.set(matId, redisVal !== null ? parseFloat(redisVal) : (dbStockMap.get(matId) ?? 0));
+      }
+    }
 
     // Restock requests submitted by this user
     const restockFeedbacks = await db.feedback.findMany({
@@ -215,7 +242,7 @@ export class MenuService {
     await redisService.del(this.menuCacheKey(tenantId, userId));
   }
 
-  private async invalidateAllMenuCache(tenantId: string) {
+  async invalidateAllMenuCache(tenantId: string) {
     const keys = await redisService.keys(`${tenantId}:menu:items:*`);
     await Promise.all(keys.map((k) => redisService.del(k)));
   }
@@ -225,6 +252,65 @@ export class MenuService {
     const result = await db.recipe.update({ where: { id }, data: dto });
     await this.invalidateAllMenuCache(tenantId);
     return result;
+  }
+
+  async bulkAssignCategory(tenantId: string, categoryId: number | null, recipeIds: number[]) {
+    const db = await this.getGatewayClient(tenantId);
+    const result = await db.recipe.updateMany({
+      where: { id: { in: recipeIds }, tenantId: parseInt(tenantId) || 1 },
+      data: { categoryId },
+    });
+    await this.invalidateAllMenuCache(tenantId);
+    return result;
+  }
+
+  /**
+   * Thêm categoryId vào secondaryCategoryIds cho các recipes.
+   * Giữ nguyên categoryId gốc, chỉ thêm vào danh sách phụ.
+   */
+  async addSecondaryCategory(tenantId: string, categoryId: number, recipeIds: number[]) {
+    const db = await this.getGatewayClient(tenantId);
+    const tid = parseInt(tenantId) || 1;
+    const recipes = await db.recipe.findMany({
+      where: { id: { in: recipeIds }, tenantId: tid },
+      select: { id: true, secondaryCategoryIds: true },
+    });
+    await Promise.all(
+      recipes.map((r) => {
+        const existing: number[] = r.secondaryCategoryIds ? JSON.parse(r.secondaryCategoryIds) : [];
+        if (!existing.includes(categoryId)) {
+          existing.push(categoryId);
+        }
+        return db.recipe.update({
+          where: { id: r.id },
+          data: { secondaryCategoryIds: JSON.stringify(existing) },
+        });
+      }),
+    );
+    await this.invalidateAllMenuCache(tenantId);
+  }
+
+  /**
+   * Xoá categoryId khỏi secondaryCategoryIds cho các recipes.
+   */
+  async removeSecondaryCategory(tenantId: string, categoryId: number, recipeIds: number[]) {
+    const db = await this.getGatewayClient(tenantId);
+    const tid = parseInt(tenantId) || 1;
+    const recipes = await db.recipe.findMany({
+      where: { id: { in: recipeIds }, tenantId: tid },
+      select: { id: true, secondaryCategoryIds: true },
+    });
+    await Promise.all(
+      recipes.map((r) => {
+        const existing: number[] = r.secondaryCategoryIds ? JSON.parse(r.secondaryCategoryIds) : [];
+        const updated = existing.filter((id) => id !== categoryId);
+        return db.recipe.update({
+          where: { id: r.id },
+          data: { secondaryCategoryIds: updated.length ? JSON.stringify(updated) : null },
+        });
+      }),
+    );
+    await this.invalidateAllMenuCache(tenantId);
   }
 
   async findMenuItemById(tenantId: string, id: number) {

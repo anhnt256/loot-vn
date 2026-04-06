@@ -3,7 +3,7 @@ import { Card, Input, Button, Typography, ConfigProvider, theme, App, Alert } fr
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { apiClient, ACCESS_TOKEN_KEY, setCookie } from '@gateway-workspace/shared/utils';
+import { apiClient, setToken } from '@gateway-workspace/shared/utils';
 
 const { Title, Text } = Typography;
 
@@ -73,7 +73,7 @@ const Login: React.FC = () => {
           return;
         }
         const { token } = result.data;
-        setCookie(ACCESS_TOKEN_KEY, token, { maxAge: 86400, path: '/' });
+        setToken(token);
         message.success('Chào mừng đến với Portal!');
         navigate('/dashboard');
       } else {

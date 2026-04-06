@@ -1,9 +1,15 @@
-import { Body, Controller, Patch, Headers, BadRequestException } from '@nestjs/common';
+import { Body, Controller, Patch, Post, Headers, BadRequestException } from '@nestjs/common';
 import { UserService } from './user.service';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  @Post('sync-fnet')
+  async syncFnetUsers(@Headers('x-tenant-id') tenantId: string) {
+    if (!tenantId) throw new BadRequestException('Missing x-tenant-id header');
+    return this.userService.syncFnetUsers(tenantId);
+  }
 
   @Patch('note')
   async updateNote(@Headers('x-tenant-id') tenantId: string, @Body() body: { userId: number; note: string }) {

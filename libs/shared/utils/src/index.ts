@@ -8,4 +8,5 @@ export * from './lib/jwt';
 export * from './lib/timezone-utils';
 export * from './lib/utils';
 export * from './lib/constants/token.constant';
+export * from './lib/token';
 export * from './lib/queries';

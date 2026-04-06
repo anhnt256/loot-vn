@@ -773,6 +773,7 @@ exports.Prisma.RecipeScalarFieldEnum = {
   imageUrl: 'imageUrl',
   isActive: 'isActive',
   categoryId: 'categoryId',
+  secondaryCategoryIds: 'secondaryCategoryIds',
   tenantId: 'tenantId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -878,6 +879,16 @@ exports.Prisma.FeedbackScalarFieldEnum = {
   computerId: 'computerId'
 };
 
+exports.Prisma.FeedbackStatusHistoryScalarFieldEnum = {
+  id: 'id',
+  feedbackId: 'feedbackId',
+  fromStatus: 'fromStatus',
+  toStatus: 'toStatus',
+  changedBy: 'changedBy',
+  note: 'note',
+  changedAt: 'changedAt'
+};
+
 exports.Prisma.FnetHistoryScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -890,17 +901,6 @@ exports.Prisma.FnetHistoryScalarFieldEnum = {
   moneyType: 'moneyType',
   oldMainMoney: 'oldMainMoney',
   newMainMoney: 'newMainMoney'
-};
-
-exports.Prisma.PromotionRewardScalarFieldEnum = {
-  id: 'id',
-  name: 'name',
-  value: 'value',
-  quantity: 'quantity',
-  isActive: 'isActive',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  starsValue: 'starsValue'
 };
 
 exports.Prisma.GameAppointmentTierScalarFieldEnum = {
@@ -1104,6 +1104,56 @@ exports.Prisma.ComputerLayoutScalarFieldEnum = {
   y: 'y',
   w: 'w',
   h: 'h',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PromotionRewardScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  type: 'type',
+  starsCost: 'starsCost',
+  walletType: 'walletType',
+  moneyAmount: 'moneyAmount',
+  imageUrl: 'imageUrl',
+  isActive: 'isActive',
+  displayOrder: 'displayOrder',
+  maxPerDay: 'maxPerDay',
+  maxPerMonth: 'maxPerMonth',
+  totalQuantity: 'totalQuantity',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PromotionRewardRecipeScalarFieldEnum = {
+  id: 'id',
+  promotionRewardId: 'promotionRewardId',
+  recipeId: 'recipeId',
+  quantity: 'quantity'
+};
+
+exports.Prisma.PromotionRewardCategoryScalarFieldEnum = {
+  id: 'id',
+  promotionRewardId: 'promotionRewardId',
+  categoryId: 'categoryId'
+};
+
+exports.Prisma.PromotionRewardRedemptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  promotionRewardId: 'promotionRewardId',
+  starsCost: 'starsCost',
+  status: 'status',
+  rewardType: 'rewardType',
+  chosenRecipeId: 'chosenRecipeId',
+  chosenQuantity: 'chosenQuantity',
+  walletType: 'walletType',
+  moneyAmount: 'moneyAmount',
+  actualCost: 'actualCost',
+  workShiftId: 'workShiftId',
+  approvedBy: 'approvedBy',
+  note: 'note',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -1344,7 +1394,8 @@ exports.Prisma.MenuCategoryOrderByRelevanceFieldEnum = {
 
 exports.Prisma.RecipeOrderByRelevanceFieldEnum = {
   name: 'name',
-  imageUrl: 'imageUrl'
+  imageUrl: 'imageUrl',
+  secondaryCategoryIds: 'secondaryCategoryIds'
 };
 
 exports.Prisma.RecipeVersionOrderByRelevanceFieldEnum = {
@@ -1393,13 +1444,15 @@ exports.Prisma.FeedbackOrderByRelevanceFieldEnum = {
   response: 'response'
 };
 
+exports.Prisma.FeedbackStatusHistoryOrderByRelevanceFieldEnum = {
+  fromStatus: 'fromStatus',
+  toStatus: 'toStatus',
+  note: 'note'
+};
+
 exports.Prisma.FnetHistoryOrderByRelevanceFieldEnum = {
   type: 'type',
   moneyType: 'moneyType'
-};
-
-exports.Prisma.PromotionRewardOrderByRelevanceFieldEnum = {
-  name: 'name'
 };
 
 exports.Prisma.GameAppointmentTierOrderByRelevanceFieldEnum = {
@@ -1496,6 +1549,18 @@ exports.Prisma.ZoneOrderByRelevanceFieldEnum = {
 exports.Prisma.ComputerLayoutOrderByRelevanceFieldEnum = {
   macAddress: 'macAddress'
 };
+
+exports.Prisma.PromotionRewardOrderByRelevanceFieldEnum = {
+  name: 'name',
+  description: 'description',
+  walletType: 'walletType',
+  imageUrl: 'imageUrl'
+};
+
+exports.Prisma.PromotionRewardRedemptionOrderByRelevanceFieldEnum = {
+  walletType: 'walletType',
+  note: 'note'
+};
 exports.MissionType = exports.$Enums.MissionType = {
   HOURS: 'HOURS',
   ORDER: 'ORDER',
@@ -1521,7 +1586,8 @@ exports.UserStarHistoryType = exports.$Enums.UserStarHistoryType = {
   RETURN_GIFT: 'RETURN_GIFT',
   GIFT_ROUND: 'GIFT_ROUND',
   FEEDBACK: 'FEEDBACK',
-  BATTLE_PASS: 'BATTLE_PASS'
+  BATTLE_PASS: 'BATTLE_PASS',
+  REDEMPTION: 'REDEMPTION'
 };
 
 exports.Staff_gender = exports.$Enums.Staff_gender = {
@@ -1619,6 +1685,7 @@ exports.FeedbackType = exports.$Enums.FeedbackType = {
 };
 
 exports.FeedbackStatus = exports.$Enums.FeedbackStatus = {
+  DRAFT: 'DRAFT',
   SUBMITTED: 'SUBMITTED',
   RECEIVED: 'RECEIVED',
   PROCESSING: 'PROCESSING',
@@ -1686,6 +1753,21 @@ exports.RuleActionType = exports.$Enums.RuleActionType = {
   DISMISSAL: 'DISMISSAL'
 };
 
+exports.PromotionRewardType = exports.$Enums.PromotionRewardType = {
+  PLAY_TIME: 'PLAY_TIME',
+  FOOD: 'FOOD',
+  DRINK: 'DRINK',
+  VOUCHER: 'VOUCHER',
+  OTHER: 'OTHER'
+};
+
+exports.RedemptionStatus = exports.$Enums.RedemptionStatus = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  COMPLETED: 'COMPLETED',
+  REJECTED: 'REJECTED'
+};
+
 exports.Prisma.ModelName = {
   SystemConfig: 'SystemConfig',
   Rank: 'Rank',
@@ -1747,8 +1829,8 @@ exports.Prisma.ModelName = {
   FoodOrderDetail: 'FoodOrderDetail',
   StaffShift: 'StaffShift',
   Feedback: 'Feedback',
+  FeedbackStatusHistory: 'FeedbackStatusHistory',
   FnetHistory: 'FnetHistory',
-  PromotionReward: 'PromotionReward',
   GameAppointmentTier: 'GameAppointmentTier',
   GameAppointment: 'GameAppointment',
   GameAppointmentMember: 'GameAppointmentMember',
@@ -1763,7 +1845,11 @@ exports.Prisma.ModelName = {
   RuleSeverity: 'RuleSeverity',
   StaffViolation: 'StaffViolation',
   Zone: 'Zone',
-  ComputerLayout: 'ComputerLayout'
+  ComputerLayout: 'ComputerLayout',
+  PromotionReward: 'PromotionReward',
+  PromotionRewardRecipe: 'PromotionRewardRecipe',
+  PromotionRewardCategory: 'PromotionRewardCategory',
+  PromotionRewardRedemption: 'PromotionRewardRedemption'
 };
 
 /**

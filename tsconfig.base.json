@@ -41,6 +41,9 @@
       ],
       "@gateway-workspace/shared/constants": [
         "libs/shared/constants/src/index.ts"
+      ],
+      "@gateway-workspace/shared/chat": [
+        "libs/shared/chat/src/index.ts"
       ]
     }
   },

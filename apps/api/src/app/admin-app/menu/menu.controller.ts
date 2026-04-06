@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Headers, BadRequestException, ParseIntPipe, UseInterceptors, UploadedFile, UseGuards, Req, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Headers, BadRequestException, ParseIntPipe, UseInterceptors, UploadedFile, UseGuards } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { randomBytes } from 'crypto';
 import { MenuService } from './menu.service';
 import { AuthGuard } from '../../auth/auth.guard';
+import { CurrentUser, UserRequestContext } from '../../auth/user-request-context';
 
 const IMAGES_DIR = join(process.cwd(), 'apps', 'api', 'images', 'menu');
 
@@ -55,11 +56,10 @@ export class MenuController {
   @UseGuards(AuthGuard)
   async findClientCategories(
     @Headers('x-tenant-id') tenantId: string,
-    @Req() req: any,
+    @CurrentUser() user: UserRequestContext,
   ) {
     if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
-    const machineGroupId = req.user?.machineGroupId ?? null;
-    return this.menuService.findClientCategories(tenantId, machineGroupId);
+    return this.menuService.findClientCategories(tenantId, user.machineGroupId ?? null);
   }
 
   @Post('categories')
@@ -118,10 +118,12 @@ export class MenuController {
   // --- Menu Items ---
   @Get('items')
   @UseGuards(AuthGuard)
-  async findAllMenuItems(@Headers('x-tenant-id') tenantId: string, @Req() req: any) {
+  async findAllMenuItems(
+    @Headers('x-tenant-id') tenantId: string,
+    @CurrentUser() user: UserRequestContext,
+  ) {
     if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
-    const userId = Number(req.user?.userId ?? 0);
-    return this.menuService.findAllMenuItems(tenantId, userId);
+    return this.menuService.findAllMenuItems(tenantId, user.userId);
   }
 
   @Get('items/:id')
@@ -140,6 +142,42 @@ export class MenuController {
   ) {
     if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
     return this.menuService.createMenuItem(tenantId, dto);
+  }
+
+  @Patch('items/bulk-assign')
+  async bulkAssignCategory(
+    @Headers('x-tenant-id') tenantId: string,
+    @Body() dto: { categoryId: number | null; recipeIds: number[] }
+  ) {
+    if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    if (!dto.recipeIds?.length) throw new BadRequestException('recipeIds is required');
+    return this.menuService.bulkAssignCategory(tenantId, dto.categoryId, dto.recipeIds);
+  }
+
+  /** Thêm danh mục phụ cho các sản phẩm (giữ lại danh mục gốc) */
+  @Patch('items/secondary-category/add')
+  async addSecondaryCategory(
+    @Headers('x-tenant-id') tenantId: string,
+    @Body() dto: { categoryId: number; recipeIds: number[] },
+  ) {
+    if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    if (!dto.categoryId) throw new BadRequestException('categoryId is required');
+    if (!dto.recipeIds?.length) throw new BadRequestException('recipeIds is required');
+    await this.menuService.addSecondaryCategory(tenantId, dto.categoryId, dto.recipeIds);
+    return { success: true };
+  }
+
+  /** Xoá danh mục phụ khỏi các sản phẩm */
+  @Patch('items/secondary-category/remove')
+  async removeSecondaryCategory(
+    @Headers('x-tenant-id') tenantId: string,
+    @Body() dto: { categoryId: number; recipeIds: number[] },
+  ) {
+    if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    if (!dto.categoryId) throw new BadRequestException('categoryId is required');
+    if (!dto.recipeIds?.length) throw new BadRequestException('recipeIds is required');
+    await this.menuService.removeSecondaryCategory(tenantId, dto.categoryId, dto.recipeIds);
+    return { success: true };
   }
 
   @Patch('items/:id')

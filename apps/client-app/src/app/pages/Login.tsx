@@ -2,12 +2,12 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { App, Card, Input, Button, Typography, ConfigProvider, theme } from 'antd';
 import { LaptopOutlined } from '@ant-design/icons';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { apiClient, ACCESS_TOKEN_KEY, setCookie, getCookie } from '@gateway-workspace/shared/utils/client';
+import { apiClient, getToken, setToken } from '@gateway-workspace/shared/utils/client';
 
 const { Title, Text } = Typography;
 
 const Login: React.FC = () => {
-  const token = getCookie(ACCESS_TOKEN_KEY);
+  const token = getToken();
   const { message } = App.useApp();
   const [macAddress, setMacAddress] = useState('');
   const [loading, setLoading] = useState(false);
@@ -17,15 +17,6 @@ const Login: React.FC = () => {
   const logo = tenantConfig?.logo;
   const tenantLogo: string | null = typeof logo === 'object' ? (logo?.url || null) : (logo || null);
   const tenantColor: string = tenantConfig?.primaryColor || '#ff721f';
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('error') === 'expired') {
-      message.error('Hệ thống đã hết hạn, vui lòng gia hạn để sử dụng');
-    }
-  }, []);
-
-  if (token) return <Navigate to="/dashboard" replace />;
 
   const doLogin = useCallback(async (mac: string) => {
     setLoading(true);
@@ -37,7 +28,7 @@ const Login: React.FC = () => {
 
       if (result.status === 200 || result.status === 201 || result.data.statusCode === 200 || result.data.success) {
         const { token } = result.data;
-        if (token) setCookie(ACCESS_TOKEN_KEY, token, { maxAge: 86400, path: '/' });
+        if (token) setToken(token);
         message.success('Đăng nhập thành công!');
         navigate('/dashboard');
       } else {
@@ -51,6 +42,15 @@ const Login: React.FC = () => {
       setLoading(false);
     }
   }, [navigate]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('error') === 'expired') {
+      message.error('Hệ thống đã hết hạn, vui lòng gia hạn để sử dụng');
+    }
+  }, []);
+
+  if (token) return <Navigate to="/dashboard" replace />;
 
   return (
     <ConfigProvider

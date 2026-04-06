@@ -13,7 +13,8 @@ import {
 const EnumComputerStatus = {
   READY: 1,
   OFF: 2,
-  ON: 3
+  ON: 3,
+  CRASH: 4,
 };
 
 interface DeviceStatus {
@@ -71,14 +72,14 @@ const getStatusColor = (status: string) => {
 
 /** Map machine group keyword → tag color */
 const GROUP_STYLES: Record<string, { bg: string; text: string }> = {
-  svip:     { bg: 'bg-yellow-400',  text: 'text-black' },
-  vip:      { bg: 'bg-amber-500',   text: 'text-white' },
-  couple:   { bg: 'bg-pink-500',    text: 'text-white' },
-  stream:   { bg: 'bg-violet-500',  text: 'text-white' },
-  bootcamp: { bg: 'bg-red-600',     text: 'text-white' },
-  fps:      { bg: 'bg-lime-500',    text: 'text-black' },
-  moba:     { bg: 'bg-indigo-500',  text: 'text-white' },
-  phòng:    { bg: 'bg-rose-600',    text: 'text-white' },
+  svip:     { bg: 'bg-yellow-300',  text: 'text-black' },
+  vip:      { bg: 'bg-orange-500',  text: 'text-white' },
+  couple:   { bg: 'bg-rose-400',    text: 'text-white' },
+  stream:   { bg: 'bg-fuchsia-600', text: 'text-white' },
+  bootcamp: { bg: 'bg-yellow-400',  text: 'text-black' },
+  fps:      { bg: 'bg-green-500',   text: 'text-white' },
+  moba:     { bg: 'bg-blue-400',    text: 'text-white' },
+  phòng:    { bg: 'bg-slate-100',   text: 'text-slate-900' },
 };
 
 const DEFAULT_STYLE = { bg: 'bg-gray-400', text: 'text-gray-800' };
@@ -136,8 +137,15 @@ const ComputerCard: React.FC<ComputerCardProps> = ({ computer, onClick, classNam
 
   const group = getGroupStyle(machineGroupName);
 
+  const isComputerOff = Number(status) === EnumComputerStatus.OFF || Number(status) === EnumComputerStatus.CRASH;
+  const isAdminSession = Number(status) === EnumComputerStatus.ON && (!userId || Number(userId) === 0);
+
   let bgColor = "bg-gray-600";
-  if (userType === 5) {
+  if (isComputerOff) {
+    // CRASH & OFF → always gray
+  } else if (isAdminSession) {
+    bgColor = "bg-teal-700";
+  } else if (userType === 5) {
     bgColor = "bg-purple-700";
   } else if (Number(status) === EnumComputerStatus.ON) {
     bgColor = "bg-blue-600";
@@ -150,28 +158,39 @@ const ComputerCard: React.FC<ComputerCardProps> = ({ computer, onClick, classNam
       className={`${bgColor} text-white font-bold relative cursor-pointer hover:opacity-90 transition-opacity duration-200 rounded-lg shadow-md leading-[1.15] ${className ? className : 'h-[120px] w-[calc(50%-0.25rem)] sm:w-[140px]'}`}
       onClick={onClick}
     >
-      {/* Bottom-left tags: group + combo */}
-      <div className="absolute bottom-1 left-1 flex items-center gap-1">
-        {group && (
+      {/* Bottom-left: group tag */}
+      {group && (
+        <div className="absolute bottom-1 left-1">
           <div className={`${group.style.bg} ${group.style.text} text-[8px] font-bold px-1.5 py-[2px] rounded shadow-sm leading-none`}>
             {group.label}
           </div>
-        )}
-        {userType === 5 && (
+        </div>
+      )}
+      {/* Bottom-right: combo / admin tag */}
+      {!isComputerOff && userType === 5 && (
+        <div className="absolute bottom-1 right-1">
           <div className="bg-white text-purple-700 text-[8px] font-bold px-1.5 py-[2px] rounded shadow-sm leading-none">
             COMBO
           </div>
-        )}
-      </div>
+        </div>
+      )}
+      {isAdminSession && (
+        <div className="absolute bottom-1 right-1">
+          <div className="bg-red-600 text-yellow-300 text-[8px] font-bold px-1.5 py-[2px] rounded shadow-sm leading-none">
+            ADMIN
+          </div>
+        </div>
+      )}
 
       <div className="absolute top-2 left-2 max-w-[calc(100%-22px)]">
         <div className="text-[13px]">{name}</div>
-        {!isEmpty(userName) && isUseApp === true && (
+        {!isComputerOff && !isEmpty(userName) && isUseApp === true && (
           <div className="text-[9px] truncate mt-[1px]">{userName.toUpperCase()}</div>
         )}
 
         {isEmpty(userName) &&
           isUseApp === true &&
+          !isAdminSession &&
           Number(status) === EnumComputerStatus.ON && (
             <>
               <div className="text-[11px] truncate text-red-300 overflow-hidden display-webkit-box webkit-line-clamp-2 webkit-box-orient-vertical mt-1">
@@ -183,13 +202,13 @@ const ComputerCard: React.FC<ComputerCardProps> = ({ computer, onClick, classNam
             </>
           )}
 
-        {isUseApp === false && (
+        {!isComputerOff && isUseApp === false && (
           <div className="text-[11px] truncate text-red-500 font-bold overflow-hidden display-webkit-box webkit-line-clamp-2 webkit-box-orient-vertical mt-1">
             Không sử dụng
           </div>
         )}
 
-        {isUseApp === true && !isEmpty(userName) && (
+        {!isComputerOff && isUseApp === true && !isEmpty(userName) && (
           <>
             <div className="text-[9px] truncate text-orange-300 font-bold mt-[1px]">
               {userId}
@@ -205,7 +224,7 @@ const ComputerCard: React.FC<ComputerCardProps> = ({ computer, onClick, classNam
           </>
         )}
 
-        {!isEmpty(userName) && userId !== 0 && isUseApp === true && (
+        {!isComputerOff && !isEmpty(userName) && userId !== 0 && isUseApp === true && (
           <div
             className={`text-[9px] truncate font-bold mt-[1px] ${Number(stars) > 100000 ? "text-red-400" : "text-yellow-300"}`}
           >
@@ -213,7 +232,7 @@ const ComputerCard: React.FC<ComputerCardProps> = ({ computer, onClick, classNam
           </div>
         )}
 
-        {isUseApp === true && !isEmpty(userName) && (
+        {!isComputerOff && isUseApp === true && !isEmpty(userName) && (
           <div className="text-[8px] text-cyan-300 font-bold mt-[2px]">
             <div className="flex items-center gap-1 mb-[2px]">
               <Crown className="w-[10px] h-[10px] text-yellow-400 flex-shrink-0" />

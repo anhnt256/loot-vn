@@ -28,4 +28,9 @@ export class ShiftHandoverReportController {
   findAll(@Headers() headers: any, @Query() filterDto: FilterShiftReportDto) {
     return this.shiftReportService.findAll(this.extractTenantId(headers), filterDto);
   }
+
+  @Get('work-shifts')
+  getWorkShifts(@Headers() headers: any) {
+    return this.shiftReportService.getWorkShifts(this.extractTenantId(headers));
+  }
 }

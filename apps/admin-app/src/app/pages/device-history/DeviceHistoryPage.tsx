@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { DatePicker, Select, Button, Typography, message, Row, Col, Empty, Pagination } from 'antd';
-import { ReloadOutlined, DesktopOutlined, AppstoreOutlined, ControlOutlined, CustomerServiceOutlined, SkinOutlined, WifiOutlined, HistoryOutlined } from '@ant-design/icons';
+import { ReloadOutlined, DesktopOutlined, AppstoreOutlined, ControlOutlined, CustomerServiceOutlined, SkinOutlined, WifiOutlined, HistoryOutlined, DownloadOutlined } from '@ant-design/icons';
 import { apiClient } from '@gateway-workspace/shared/utils/client';
 import dayjs from 'dayjs';
+import * as ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
 const { Title } = Typography;
 
@@ -56,6 +58,92 @@ export default function DeviceHistoryPage() {
     if (s === 'GOOD') return { text: 'Tốt', color: 'text-green-500' };
     if (s === 'DAMAGED_BUT_USABLE') return { text: 'Xài tạm', color: 'text-yellow-500' };
     return { text: 'Lỗi', color: 'text-red-500' }; 
+  };
+
+  const getStatusText = (s?: string) => {
+    if (!s || s === 'GOOD') return 'Tốt';
+    if (s === 'DAMAGED_BUT_USABLE') return 'Hỏng nhẹ';
+    return 'Hỏng nặng';
+  };
+
+  const exportExcel = async () => {
+    try {
+      const params: any = { page: 1, limit: 9999 };
+      if (filterDates && filterDates.length === 2) {
+        params.startDate = filterDates[0].format('YYYY-MM-DD');
+        params.endDate = filterDates[1].format('YYYY-MM-DD');
+      }
+      if (filterType && filterType !== 'ALL') params.type = filterType;
+
+      const res = await apiClient.get('/devices/history', { params });
+      const data: any[] = res.data?.data || [];
+
+      if (data.length === 0) {
+        message.warning('Không có dữ liệu để xuất');
+        return;
+      }
+
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet('Lịch sử máy', { views: [{ state: 'frozen', ySplit: 1 }] });
+
+      const headers = ['STT', 'Máy', 'Loại', 'Màn hình', 'Bàn phím', 'Chuột', 'Tai nghe', 'Ghế', 'Mạng', 'Mô tả', 'Thời gian'];
+      const hr = ws.addRow(headers);
+      hr.eachCell((cell) => {
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF333333' } };
+        cell.alignment = { horizontal: 'center' };
+      });
+
+      const statusColor = (s?: string) => {
+        if (!s || s === 'GOOD') return { argb: 'FF52C41A' };
+        if (s === 'DAMAGED_BUT_USABLE') return { argb: 'FFFAAD14' };
+        return { argb: 'FFF5222D' };
+      };
+
+      data.forEach((h: any, i: number) => {
+        const row = ws.addRow([
+          i + 1,
+          h.computer?.name || `#${h.computerId}`,
+          h.type === 'REPORT' ? 'Báo hỏng' : 'Sửa chữa',
+          getStatusText(h.monitorStatus),
+          getStatusText(h.keyboardStatus),
+          getStatusText(h.mouseStatus),
+          getStatusText(h.headphoneStatus),
+          getStatusText(h.chairStatus),
+          getStatusText(h.networkStatus),
+          (h.issue || '').replace(/[\n\r]+/g, ' '),
+          dayjs(h.createdAt).format('HH:mm:ss DD/MM/YYYY'),
+        ]);
+
+        // Color type column
+        const typeCell = row.getCell(3);
+        typeCell.font = { color: h.type === 'REPORT' ? { argb: 'FFF5222D' } : { argb: 'FF3B82F6' }, bold: true };
+
+        // Color status cells (columns 4-9)
+        const fields = ['monitorStatus', 'keyboardStatus', 'mouseStatus', 'headphoneStatus', 'chairStatus', 'networkStatus'];
+        fields.forEach((f, idx) => {
+          row.getCell(4 + idx).font = { color: statusColor(h[f]) };
+        });
+      });
+
+      ws.columns = [
+        { width: 6 }, { width: 14 }, { width: 12 },
+        { width: 12 }, { width: 12 }, { width: 10 }, { width: 10 }, { width: 10 }, { width: 10 },
+        { width: 40 }, { width: 22 },
+      ];
+
+      const buffer = await wb.xlsx.writeBuffer();
+      const dateStr = filterDates
+        ? `${filterDates[0].format('DDMM')}-${filterDates[1].format('DDMM_YYYY')}`
+        : dayjs().format('MM_YYYY');
+      saveAs(
+        new Blob([buffer as BlobPart], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }),
+        `LichSuMay_${dateStr}.xlsx`
+      );
+      message.success(`Đã xuất ${data.length} bản ghi`);
+    } catch {
+      message.error('Lỗi xuất Excel');
+    }
   };
 
   const renderDeviceStatus = (history: any) => {
@@ -182,13 +270,20 @@ export default function DeviceHistoryPage() {
             ]}
             dropdownStyle={{ backgroundColor: '#1f2937' }}
           />
-          <Button 
-            icon={<ReloadOutlined />} 
-            onClick={() => fetchHistory(1)} 
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={() => fetchHistory(1)}
             loading={loading}
-            type="primary" 
+            type="primary"
             className="bg-gray-700 hover:bg-gray-600 border-0 flex items-center justify-center shadow-none text-white h-[32px] w-[32px] p-0"
           />
+          <Button
+            icon={<DownloadOutlined />}
+            onClick={exportExcel}
+            className="bg-green-700 hover:bg-green-600 border-0 text-white shadow-none"
+          >
+            Xuất Excel
+          </Button>
         </div>
       </div>
 

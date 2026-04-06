@@ -20,6 +20,8 @@ import { MenuModule } from './admin-app/menu/menu.module';
 import { FeedbackModule } from './admin-app/feedback/feedback.module';
 import { ClientDashboardModule } from './admin-app/dashboard/dashboard.module';
 import { OrderModule } from './admin-app/order/order.module';
+import { PromotionRewardModule } from './admin-app/promotion-reward/promotion-reward.module';
+import { ChatModule } from './admin-app/chat/chat.module';
 
 @Module({
   imports: [
@@ -42,6 +44,8 @@ import { OrderModule } from './admin-app/order/order.module';
     FeedbackModule,
     ClientDashboardModule,
     OrderModule,
+    PromotionRewardModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

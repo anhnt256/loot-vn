@@ -43,6 +43,15 @@ export class HandoverReportService {
     return tenantId;
   }
 
+  async getWorkShifts(tenantId: string) {
+    const gatewayClient = await this.getGatewayClient(tenantId);
+    const shifts = await gatewayClient.workShift.findMany({
+      orderBy: { startTime: 'asc' },
+      include: { staffs: { select: { id: true, fullName: true }, where: { isDeleted: false } } },
+    });
+    return { success: true, data: shifts };
+  }
+
   async getReports(tenantId: string, date?: string, reportType?: string) {
     try {
       const gatewayClient = await this.getGatewayClient(tenantId);
@@ -425,28 +434,14 @@ export class HandoverReportService {
         evening: { beginning: 0, received: 0, issued: 0, ending: 0 },
       }));
 
-      // Fetch suggested beginning balances (from previous shift or previous day)
-      const previousDate = new Date(currentDate);
-      previousDate.setDate(previousDate.getDate() - 1);
-      const formattedPreviousDate = previousDate.toISOString().split('T')[0];
-
-      const previousDayReport = await gatewayClient.$queryRaw`
-        SELECT id FROM HandoverReport 
-        WHERE DATE(date) = ${formattedPreviousDate}
-        AND reportType = ${reportType}
-        LIMIT 1
+      // Fetch suggested beginning balances from current quantityInStock in Material table
+      const currentStock = await gatewayClient.$queryRaw`
+        SELECT id, quantityInStock
+        FROM Material
+        WHERE reportType = ${reportType} AND isActive = true
       ` as any[];
 
-      let previousDayEveningEnding: any[] = [];
-      if (previousDayReport.length > 0) {
-        const results = await gatewayClient.$queryRaw`
-          SELECT m.id as materialId, hm.eveningEnding
-          FROM HandoverMaterial hm
-          JOIN Material m ON hm.materialId = m.id
-          WHERE hm.handoverReportId = ${previousDayReport[0].id} AND m.reportType = ${reportType}
-        ` as any[];
-        previousDayEveningEnding = results;
-      }
+      const stockMap = currentStock.map((m: any) => ({ id: m.id, ending: Number(m.quantityInStock) || 0 }));
 
       return {
         success: true,
@@ -455,9 +450,9 @@ export class HandoverReportService {
             currentDay: currentDayData,
             availableMaterials: availableMaterials,
             suggestedBeginning: {
-              SANG: previousDayEveningEnding.map(m => ({ id: m.materialId, ending: m.eveningEnding || 0 })),
-              CHIEU: currentDayData.map(m => ({ id: m.id, ending: m.morning.ending || 0 })),
-              TOI: currentDayData.map(m => ({ id: m.id, ending: m.afternoon.ending || 0 })),
+              SANG: stockMap,
+              CHIEU: stockMap,
+              TOI: stockMap,
             }
           },
           staffInfo: staffInfo,
@@ -468,6 +463,91 @@ export class HandoverReportService {
     } catch (error) {
        console.error(error);
        throw new InternalServerErrorException('Failed to fetch report data');
+    }
+  }
+
+  async getShiftInventorySummary(tenantId: string, date: string, shift: string, reportType: string) {
+    try {
+      const gatewayClient = await this.getGatewayClient(tenantId);
+
+      // Match work shift by name keywords
+      const SHIFT_NAME_KEYWORDS: Record<string, string[]> = {
+        [SHIFT_ENUM.SANG]: ['sáng', 'sang'],
+        [SHIFT_ENUM.CHIEU]: ['đêm', 'dem', 'chiều', 'chieu'],
+        [SHIFT_ENUM.TOI]: ['tối', 'toi'],
+      };
+
+      const workShifts = await gatewayClient.workShift.findMany();
+      const keywords = SHIFT_NAME_KEYWORDS[shift] || [];
+      const workShift = workShifts.find((ws: any) =>
+        keywords.some((kw: string) => ws.name?.toLowerCase().includes(kw))
+      );
+
+      if (!workShift) {
+        return { success: true, data: [] };
+      }
+
+      const dateStr = new Date(date).toISOString().split('T')[0];
+      const pad = (n: number) => String(n).padStart(2, '0');
+
+      const startTime = workShift.startTime;
+      const endTime = workShift.endTime;
+      const startTimeStr = `${pad(startTime.getUTCHours())}:${pad(startTime.getUTCMinutes())}:${pad(startTime.getUTCSeconds())}`;
+      const endTimeStr = `${pad(endTime.getUTCHours())}:${pad(endTime.getUTCMinutes())}:${pad(endTime.getUTCSeconds())}`;
+
+      const shiftStartDatetime = `${dateStr} ${startTimeStr}`;
+      let shiftEndDatetime: string;
+
+      if (workShift.isOvernight) {
+        const nextDate = new Date(date);
+        nextDate.setDate(nextDate.getDate() + 1);
+        shiftEndDatetime = `${nextDate.toISOString().split('T')[0]} ${endTimeStr}`;
+      } else {
+        shiftEndDatetime = `${dateStr} ${endTimeStr}`;
+      }
+
+      console.log(`[ShiftInventory] shift=${shift}, workShift=${workShift?.name}, startTime=${startTimeStr}, endTime=${endTimeStr}`);
+      console.log(`[ShiftInventory] query range: ${shiftStartDatetime} -> ${shiftEndDatetime}, reportType=${reportType}`);
+
+      // Also check if there are ANY transactions for this date regardless of time
+      const debugAll = await gatewayClient.$queryRawUnsafe(`
+        SELECT it.id, it.materialId, m.name, it.quantityChange, it.type, it.createdAt
+        FROM InventoryTransaction it
+        JOIN Material m ON it.materialId = m.id
+        WHERE m.reportType = ?
+          AND DATE(it.createdAt) = ?
+        ORDER BY it.createdAt DESC
+        LIMIT 10
+      `, reportType, dateStr);
+      console.log(`[ShiftInventory] all transactions for date:`, JSON.stringify(debugAll, (_, v) => typeof v === 'bigint' ? Number(v) : v));
+
+      const summary = await gatewayClient.$queryRawUnsafe(`
+        SELECT
+          it.materialId,
+          COALESCE(SUM(CASE WHEN it.quantityChange > 0 THEN it.quantityChange ELSE 0 END), 0) as totalReceived,
+          COALESCE(SUM(CASE WHEN it.quantityChange < 0 THEN ABS(it.quantityChange) ELSE 0 END), 0) as totalIssued
+        FROM InventoryTransaction it
+        JOIN Material m ON it.materialId = m.id
+        WHERE m.reportType = ?
+          AND m.isActive = true
+          AND it.createdAt >= ?
+          AND it.createdAt < ?
+        GROUP BY it.materialId
+      `, reportType, shiftStartDatetime, shiftEndDatetime);
+
+      console.log(`[ShiftInventory] summary results: ${(summary as any[]).length} materials found`);
+
+      return {
+        success: true,
+        data: (summary as any[]).map(s => ({
+          materialId: Number(s.materialId),
+          totalReceived: Number(s.totalReceived) || 0,
+          totalIssued: Number(s.totalIssued) || 0,
+        }))
+      };
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException('Failed to fetch shift inventory summary');
     }
   }
 

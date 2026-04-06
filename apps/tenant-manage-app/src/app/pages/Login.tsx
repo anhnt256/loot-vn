@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { Card, Input, Button, Typography, message, ConfigProvider, theme } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { apiClient, ACCESS_TOKEN_KEY, setCookie } from '@gateway-workspace/shared/utils/client';
+import { apiClient, setToken } from '@gateway-workspace/shared/utils/client';
 
 const { Title, Text } = Typography;
 
@@ -30,7 +30,7 @@ const Login: React.FC = () => {
 
       if (result.data.statusCode === 200 || result.data.success) {
         const { token } = result.data;
-        if (token) setCookie(ACCESS_TOKEN_KEY, token, { maxAge: 86400, path: '/' });
+        if (token) setToken(token);
         message.success('Chào mừng đến với Portal!');
         navigate('/dashboard');
       } else {

@@ -21,11 +21,30 @@ import {
   MenuUnfoldOutlined,
   HistoryOutlined,
   LogoutOutlined,
-  InboxOutlined
+  InboxOutlined,
+  BarChartOutlined,
+  PrinterOutlined,
+  AuditOutlined,
 } from '@ant-design/icons';
-import { ACCESS_TOKEN_KEY, apiClient, deleteCookie } from '@gateway-workspace/shared/utils/client';
+import { apiClient, removeToken, getToken } from '@gateway-workspace/shared/utils/client';
 import OrderDrawer from './OrderDrawer';
 import ShiftButton from './ShiftButton';
+import { usePrinterStore } from '../services/print';
+import { useShiftEndWarning } from '../hooks/useShiftEndWarning';
+import { ChatButton } from '@gateway-workspace/shared/chat';
+
+function parseJwtPayload(token: string) {
+  try {
+    const base64 = token.split('.')[1];
+    const bytes = atob(base64);
+    const text = decodeURIComponent(
+      bytes.split('').map(c => '%' + c.charCodeAt(0).toString(16).padStart(2, '0')).join('')
+    );
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
 
 const { Header, Sider, Content } = Layout;
 
@@ -34,6 +53,10 @@ const AdminLayout: React.FC = () => {
   const [fundAmount, setFundAmount] = useState<number | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const printerReconnect = usePrinterStore((s) => s.reconnect);
+
+  // Cảnh báo 15 phút trước khi hết giờ ca
+  useShiftEndWarning();
 
   const fetchFund = async () => {
     try {
@@ -58,8 +81,13 @@ const AdminLayout: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Auto-reconnect USB printer on login (silent — no dialog, uses previously paired device)
+  React.useEffect(() => {
+    printerReconnect();
+  }, []);
+
   const handleLogout = () => {
-    deleteCookie(ACCESS_TOKEN_KEY);
+    removeToken();
     navigate('/login');
   };
 
@@ -74,31 +102,32 @@ const AdminLayout: React.FC = () => {
   const menuItems = [
     { key: '/dashboard', icon: <DashboardOutlined />, label: 'Dashboard' },
     { key: '/dashboard/order-management', icon: <ShoppingCartOutlined />, label: 'Quản lý Đơn hàng' },
-    { key: '/dashboard/battle-pass-orders', icon: <CrownOutlined />, label: 'Đơn hàng Premium BP' },
     { key: '/dashboard/reward-exchange', icon: <SwapOutlined />, label: 'Quản lý đổi thưởng' },
-    { key: '/dashboard/menu-management', icon: <CoffeeOutlined />, label: 'Quản lý Menu' },
-    { key: '/dashboard/handover-reports', icon: <FileTextOutlined />, label: 'Báo cáo bàn giao' },
-    {
-      key: 'inventory',
-      icon: <InboxOutlined />,
-      label: 'Quản lý kho',
-      children: [
-        { key: '/dashboard/material-management', label: 'Danh mục nguyên liệu' },
-        { key: '/dashboard/recipe-management', label: 'Công thức & Định mức (BOM)' },
-        { key: '/dashboard/inventory-audit', label: 'Nhật ký biến động' },
-        { key: '/dashboard/profit-analysis', label: 'Phân tích lợi nhuận' },
-      ],
-    },
-    { key: '/dashboard/reports', icon: <SnippetsOutlined />, label: 'Báo cáo kết ca' },
-    { key: '/dashboard/device-history', icon: <HistoryOutlined />, label: 'Quản lý lịch sử máy' },
+    { key: '/dashboard/handover-reports', icon: <FileTextOutlined />, label: 'Báo cáo NVL' },
+    { key: '/dashboard/reports', icon: <SnippetsOutlined />, label: 'Báo cáo bàn giao' },
+    { key: '/dashboard/inventory-audit', icon: <AuditOutlined />, label: 'Báo cáo kết ca' },
     {
       key: 'management',
       icon: <AppstoreOutlined />,
       label: 'Quản lý',
       children: [
+        { key: '/dashboard/menu-management', label: 'Quản lý Menu' },
+        { key: '/dashboard/material-management', label: 'Danh mục nguyên liệu' },
+        { key: '/dashboard/recipe-management', label: 'Công thức & Định mức (BOM)' },
+        { key: '/dashboard/device-history', label: 'Quản lý lịch sử máy' },
         { key: '/dashboard/layout-manager', label: 'Quản lý sơ đồ phòng máy' },
+        { key: '/dashboard/printer-management', label: 'Quản lý Máy In' },
         { key: '/dashboard/feedback', label: 'Quản lý Feedback' },
         { key: '/dashboard/system-config', label: 'Cấu hình hệ thống' },
+      ],
+    },
+    {
+      key: 'statistics',
+      icon: <BarChartOutlined />,
+      label: 'Thống kê',
+      children: [
+        { key: '/dashboard/statistics', label: 'Thống kê chung' },
+        { key: '/dashboard/profit-analysis', label: 'Phân tích lợi nhuận' },
       ],
     },
   ];
@@ -206,6 +235,29 @@ const AdminLayout: React.FC = () => {
           </Content>
         </Layout>
       </Layout>
+
+      {/* Chat Button */}
+      {(() => {
+        const token = getToken() || '';
+        const jwt = parseJwtPayload(token);
+        return (
+          <ChatButton
+            serverUrl={apiClient.defaults.baseURL || ''}
+            tenantId={apiClient.defaults.headers.common['x-tenant-id'] as string ?? ''}
+            token={token}
+            currentUser={{
+              userId: jwt?.userId || jwt?.id || 0,
+              userName: jwt?.fullName || jwt?.userName || 'ADMIN',
+              loginType: 'username',
+              machineName: jwt?.fullName || jwt?.userName || 'ADMIN',
+              staffId: jwt?.staffId || jwt?.id || undefined,
+              staffType: jwt?.staffType,
+              isAdmin: true,
+            }}
+            title="Admin Chat"
+          />
+        );
+      })()}
     </ConfigProvider>
   );
 };

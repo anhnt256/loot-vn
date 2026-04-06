@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@gateway-workspace/shared/utils';
 import { Drawer, Grid } from 'antd';
-import { ACCESS_TOKEN_KEY, getCookie, deleteCookie } from '@gateway-workspace/shared/utils';
+import { getToken, removeToken } from '@gateway-workspace/shared/utils';
 
 const { useBreakpoint } = Grid;
 
@@ -85,16 +85,15 @@ export const DashboardLayout = () => {
   ];
 
   const handleLogout = () => {
-    deleteCookie(ACCESS_TOKEN_KEY, { path: '/' });
+    removeToken();
     localStorage.removeItem('userInfo');
     navigate('/login');
   };
 
   useEffect(() => {
-    const token = getCookie(ACCESS_TOKEN_KEY);
-    const loginType = getCookie('loginType');
-    
-    // Try localStorage first due to httpOnly tokens
+    const token = getToken();
+
+    // Try localStorage first for cached user info
     const storedUser = localStorage.getItem('userInfo');
     if (storedUser) {
       try {
@@ -102,11 +101,11 @@ export const DashboardLayout = () => {
       } catch (e) {}
     }
 
-    if (!token && !loginType) {
+    if (!token) {
       navigate('/login', { replace: true });
-    } else if (token && !storedUser) {
+    } else if (!storedUser) {
       try {
-        const base64Url = (token as string).split('.')[1];
+        const base64Url = token.split('.')[1];
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
         const jsonPayload = decodeURIComponent(
           window.atob(base64)

@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
+import dayjs from 'dayjs';
 import { MasterPrismaService, TenantPrismaService, FnetPrismaService } from '../../database/prisma.service';
 import { getTenantDbUrl } from '../../database/tenant-gateway.service';
 import { ConfigService } from '../config/config.service';
@@ -15,6 +16,7 @@ import {
   calculateCheckInMinutes,
   convertBigIntToNumber,
   parseBoolean,
+  combineDateTime,
 } from './computer.utils';
 
 @Injectable()
@@ -317,7 +319,7 @@ export class ComputerService {
       executeQueryWithTimeout(async () => {
         return (await fnet.$queryRawUnsafe(`
         SELECT
-          s.MachineName, s.EnterDate, s.EnterTime, s.Status, s.UserId, u.UserType, cs.NetInfo,
+          s.MachineName, s.EnterDate, s.EnterTime, s.EndDate, s.EndTime, s.Status, s.UserId, u.UserType, cs.NetInfo,
           mg.MachineGroupName, mg.PriceDefault, pm.Price, d.Status as DeviceStatus
         FROM systemlogtb s
         LEFT JOIN usertb u ON s.UserId = u.UserId
@@ -399,7 +401,16 @@ export class ComputerService {
     for (const computer of computers) {
       const { id, name, macAddress, devices } = computer;
       const statusData = computerStatusMap.get(name) || {};
-      const { UserId, Status, UserType, NetInfo, DeviceStatus, MachineGroupName } = statusData;
+      const { UserId, Status: RawStatus, UserType, NetInfo, DeviceStatus, MachineGroupName, EndDate, EndTime } = statusData;
+
+      // Status 3 (ON) nhưng EndTime đã qua → coi như OFF (2)
+      let Status = RawStatus;
+      if (Number(RawStatus) === 3 && EndDate && EndTime) {
+        const endDt = combineDateTime(EndDate, EndTime);
+        if (endDt.isBefore(dayjs().tz('Asia/Ho_Chi_Minh'))) {
+          Status = 2;
+        }
+      }
 
       const userInfo = UserId ? userInfoMap.get(parseInt(UserId, 10)) : null;
 

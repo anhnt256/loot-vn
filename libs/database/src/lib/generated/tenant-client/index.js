@@ -373,7 +373,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "D:\\Project\\gateway-app\\libs\\database\\src\\lib\\generated\\tenant-client",
+      "value": "/Users/anh-nguyen-covergo/loot-vn/libs/database/src/lib/generated/tenant-client",
       "fromEnvVar": null
     },
     "config": {
@@ -382,7 +382,7 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "windows",
+        "value": "darwin-arm64",
         "native": true
       },
       {
@@ -395,7 +395,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "D:\\Project\\gateway-app\\libs\\database\\prisma\\tenant\\schema.prisma",
+    "sourceFilePath": "/Users/anh-nguyen-covergo/loot-vn/libs/database/prisma/tenant/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -458,12 +458,16 @@ exports.PrismaClient = PrismaClient
 Object.assign(exports, Prisma)
 
 // file annotations for bundling tools to include these files
-path.join(__dirname, "query_engine-windows.dll.node");
-path.join(process.cwd(), "libs/database/src/lib/generated/tenant-client/query_engine-windows.dll.node")
+path.join(__dirname, "libquery_engine-darwin-arm64.dylib.node");
+path.join(process.cwd(), "libs/database/src/lib/generated/tenant-client/libquery_engine-darwin-arm64.dylib.node")
 
 // file annotations for bundling tools to include these files
 path.join(__dirname, "libquery_engine-debian-openssl-3.0.x.so.node");
 path.join(process.cwd(), "libs/database/src/lib/generated/tenant-client/libquery_engine-debian-openssl-3.0.x.so.node")
+
+// file annotations for bundling tools to include these files
+path.join(__dirname, "query_engine-windows.dll.node");
+path.join(process.cwd(), "libs/database/src/lib/generated/tenant-client/query_engine-windows.dll.node")
 // file annotations for bundling tools to include these files
 path.join(__dirname, "schema.prisma");
 path.join(process.cwd(), "libs/database/src/lib/generated/tenant-client/schema.prisma")

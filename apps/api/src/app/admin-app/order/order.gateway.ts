@@ -106,4 +106,9 @@ export class OrderGateway
   broadcastResume(tenantId: string) {
     this.server.to(`tenant:${tenantId}`).emit('order:resume', {});
   }
+
+  /** Broadcast menu updated event khi tồn kho thay đổi */
+  broadcastMenuUpdate(tenantId: string) {
+    this.server.to(`tenant:${tenantId}`).emit('menu:updated', {});
+  }
 }

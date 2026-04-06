@@ -15,7 +15,7 @@ const CheckInCard: React.FC<Props> = ({ onRefresh }) => {
   const [isChecking, setIsChecking] = useState(false);
   const { user, refreshUser } = useUser();
 
-  const playTime = (user?.totalCheckIn ?? 0) / 1000 / 3600 || 0;
+  const playTime = (user?.totalPlayMinutes ?? 0) / 60;
   const claim = user?.claimedCheckIn ?? 0;
   const rewards = user?.availableCheckIn ?? 0;
   const userId = user?.userId || user?.id || 0;

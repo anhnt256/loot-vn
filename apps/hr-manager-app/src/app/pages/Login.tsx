@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Card, Input, Button, Typography, message, ConfigProvider, theme } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { apiClient, ACCESS_TOKEN_KEY, setCookie } from '@gateway-workspace/shared/utils';
+import { apiClient, setToken } from '@gateway-workspace/shared/utils';
 
 const { Title, Text } = Typography;
 
@@ -58,7 +58,7 @@ const Login: React.FC = () => {
           return;
         }
         const { token, fullName, userName } = result.data;
-        if (token) setCookie(ACCESS_TOKEN_KEY, token, { maxAge: 86400, path: '/' });
+        if (token) setToken(token);
         
         // Save user info for dashboard layout since token might be httpOnly
         if (fullName || userName) {
