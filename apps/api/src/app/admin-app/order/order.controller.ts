@@ -61,21 +61,13 @@ export class OrderController {
 
     const db = await this.tenantGateway.getGatewayClient(tenantId);
 
-    // Kiểm tra nhân viên có được phép nhận ca không (phải có ca làm việc được thiết lập)
-    const NON_SHIFT_TYPES = ['MANAGER', 'SUPER_ADMIN', 'BRANCH_ADMIN'];
-    if (user.staffType && NON_SHIFT_TYPES.includes(user.staffType)) {
-      throw new BadRequestException(
-        `Tài khoản "${staffName}" (${user.staffType}) không được phép nhận ca. Chỉ nhân viên ca mới được nhận ca.`,
-      );
-    }
-
-    const staffRecord = await (db as any).staff?.findFirst?.({
-      where: { id: staffId, isDeleted: false },
-      select: { workShiftId: true, staffType: true },
+    // Kiểm tra nhân viên có nằm trong bảng WorkShift không
+    const assignedShift = await ((db as any).workShift as any).findFirst({
+      where: { staffId },
     });
-    if (staffRecord && !staffRecord.workShiftId) {
+    if (!assignedShift) {
       throw new BadRequestException(
-        `Tài khoản "${staffName}" chưa được thiết lập ca làm việc. Vui lòng liên hệ quản lý để được phân ca.`,
+        `Tài khoản "${staffName}" không nằm trong ca làm việc nào. Vui lòng liên hệ quản lý để được phân ca.`,
       );
     }
 
@@ -108,9 +100,10 @@ export class OrderController {
       },
     });
 
-    // Mở lại nhận đơn nếu đang pause
+    // Mở lại nhận đơn nếu đang pause + thông báo shift đã bắt đầu
     await redisService.del(pauseKey(tenantId));
     this.orderGateway.broadcastResume(tenantId);
+    this.orderGateway.broadcastShiftStart(tenantId);
 
     return { success: true, data: shift };
   }
@@ -154,6 +147,7 @@ export class OrderController {
       resumeAt: null as any,
       note: null,
     });
+    this.orderGateway.broadcastShiftEnd(tenantId);
 
     return { success: true, count: updated.count };
   }
@@ -202,9 +196,16 @@ export class OrderController {
       }
     }
 
+    // Kiểm tra user hiện tại có nằm trong bảng WorkShift không (qua WorkShift.staffId)
+    const assignedShift = await ((db as any).workShift as any).findFirst({
+      where: { staffId },
+    });
+    const canStartShift = !!assignedShift;
+
     return {
       data: shift,
       isOwner: !!shift && shift.staffId === staffId,
+      canStartShift,
       workShiftSchedule,
     };
   }
@@ -415,13 +416,20 @@ export class OrderController {
     return { data: orders };
   }
 
-  /** GET /admin/orders/pause-status — trạng thái ngưng nhận đơn */
+  /** GET /admin/orders/pause-status — trạng thái ngưng nhận đơn + ca làm việc */
   @Get('pause-status')
   async getPauseStatus(@Headers('x-tenant-id') tenantId: string) {
     if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    const parsedTenantId = parseInt(tenantId) || 1;
+    const db = await this.tenantGateway.getGatewayClient(tenantId);
+
+    const activeShift = await ((db as any).staffShift as any).findFirst({
+      where: { tenantId: parsedTenantId, isActive: true },
+    });
+
     const raw = await redisService.get(pauseKey(tenantId));
-    if (!raw) return { paused: false };
-    return { paused: true, ...JSON.parse(raw) };
+    if (!raw) return { paused: false, hasActiveShift: !!activeShift };
+    return { paused: true, hasActiveShift: !!activeShift, ...JSON.parse(raw) };
   }
 
   /** POST /admin/orders/pause — ngưng nhận đơn đến mốc thời gian resumeAt */

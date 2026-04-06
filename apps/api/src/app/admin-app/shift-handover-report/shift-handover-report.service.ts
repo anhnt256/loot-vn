@@ -98,18 +98,17 @@ export class ShiftHandoverReportService {
         }
       }
 
-      // 2. GCP Revenue (Doanh thu hoàn thành từ hệ thống đặt món theo GCPID/StaffID)
-      if (shift.gcpId) {
+      // 2. Doanh thu hoàn thành từ hệ thống đặt món theo staffId
+      if (shift.staffId) {
         try {
-          const gcpStaffId = parseInt(shift.gcpId, 10);
           const parsedTenantId = parseInt(tenantId) || 1;
           const startOfDay = dayjs(dateStr).utcOffset(7).startOf('day').toDate();
           const endOfDay = dayjs(dateStr).utcOffset(7).endOf('day').toDate();
 
-          // Tìm StaffShift của nhân viên theo gcpId trên ngày đó
+          // Tìm StaffShift của nhân viên theo staffId trên ngày đó
           const staffShift = await (gatewayClient as any).staffShift.findFirst({
             where: {
-              staffId: gcpStaffId,
+              staffId: shift.staffId,
               tenantId: parsedTenantId,
               startedAt: { gte: startOfDay, lte: endOfDay },
             },
@@ -130,9 +129,9 @@ export class ShiftHandoverReportService {
             });
 
             gcpRevenue = Number(revenueAgg._sum?.totalAmount ?? 0);
-            console.log(`[Autofill] GCP Revenue: ${gcpRevenue} for staffId ${gcpStaffId} shift ${staffShift.id} (${staffShift.startedAt} ~ ${staffShift.endedAt ?? 'active'}) on ${dateStr}`);
+            console.log(`[Autofill] GCP Revenue: ${gcpRevenue} for staffId ${shift.staffId} shift ${staffShift.id} (${staffShift.startedAt} ~ ${staffShift.endedAt ?? 'active'}) on ${dateStr}`);
           } else {
-            console.warn(`[Autofill] No StaffShift found for gcpId ${shift.gcpId} on ${dateStr}`);
+            console.warn(`[Autofill] No StaffShift found for staffId ${shift.staffId} on ${dateStr}`);
           }
         } catch (e) {
           console.error('[Autofill] GCP Revenue error:', e);

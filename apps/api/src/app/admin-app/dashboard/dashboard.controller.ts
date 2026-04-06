@@ -123,6 +123,16 @@ export class DashboardController {
     }
     if (!cart.length) throw new BadRequestException('Giỏ hàng trống');
 
+    // Kiểm tra phải có ca đang active mới cho đặt hàng
+    const db = await this.tenantGateway.getGatewayClient(tenantId);
+    const parsedTenantId = parseInt(tenantId) || 1;
+    const activeShift = await ((db as any).staffShift as any).findFirst({
+      where: { tenantId: parsedTenantId, isActive: true },
+    });
+    if (!activeShift) {
+      throw new BadRequestException('Hiện tại chưa có nhân viên nhận ca. Vui lòng chờ nhân viên nhận ca trước khi đặt hàng.');
+    }
+
     // Kiểm tra trạng thái ngưng nhận đơn
     const pauseRaw = await redisService.get(`${tenantId}:order:pause`);
     if (pauseRaw) {
@@ -146,9 +156,6 @@ export class DashboardController {
     }
 
     try {
-      const db = await this.tenantGateway.getGatewayClient(tenantId);
-      const parsedTenantId = parseInt(tenantId) || 1;
-
       // 3. Lấy active RecipeVersion từ DB cho từng món
       const recipeIds: number[] = cart.map((ci: any) => ci.item?.id).filter(Boolean);
 

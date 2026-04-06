@@ -378,7 +378,7 @@ exports.Prisma.WorkShiftScalarFieldEnum = {
   updatedAt: 'updatedAt',
   isOvernight: 'isOvernight',
   ffoodId: 'ffoodId',
-  gcpId: 'gcpId'
+  staffId: 'staffId'
 };
 
 exports.Prisma.WorkShiftRevenueReportScalarFieldEnum = {
@@ -1268,8 +1268,7 @@ exports.Prisma.RequestOrderByRelevanceFieldEnum = {
 
 exports.Prisma.WorkShiftOrderByRelevanceFieldEnum = {
   name: 'name',
-  ffoodId: 'ffoodId',
-  gcpId: 'gcpId'
+  ffoodId: 'ffoodId'
 };
 
 exports.Prisma.FraudLoginAlertOrderByRelevanceFieldEnum = {

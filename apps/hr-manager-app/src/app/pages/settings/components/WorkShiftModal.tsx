@@ -124,10 +124,10 @@ const WorkShiftModal: React.FC<WorkShiftModalProps> = ({ open, onClose, onSucces
           </Form.Item>
 
           <Form.Item
-            name="gcpId"
-            label="GCP ID"
+            name="staffId"
+            label="Staff ID"
           >
-            <Input placeholder="Nhập ID trên hệ thống GCP (Google Cloud)" />
+            <Input type="number" placeholder="Nhập ID nhân viên trong hệ thống" />
           </Form.Item>
         </div>
       </Form>

@@ -107,6 +107,16 @@ export class OrderGateway
     this.server.to(`tenant:${tenantId}`).emit('order:resume', {});
   }
 
+  /** Broadcast shift start event tới tất cả client */
+  broadcastShiftStart(tenantId: string) {
+    this.server.to(`tenant:${tenantId}`).emit('shift:start', {});
+  }
+
+  /** Broadcast shift end event tới tất cả client */
+  broadcastShiftEnd(tenantId: string) {
+    this.server.to(`tenant:${tenantId}`).emit('shift:end', {});
+  }
+
   /** Broadcast menu updated event khi tồn kho thay đổi */
   broadcastMenuUpdate(tenantId: string) {
     this.server.to(`tenant:${tenantId}`).emit('menu:updated', {});

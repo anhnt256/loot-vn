@@ -69,6 +69,7 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat', onMenuUp
   const [orderIdx, setOrderIdx] = useState(0);
   const [pauseInfo, setPauseInfo] = useState<{ resumeAt: string | null; note: string | null } | null>(null);
   const [pauseCountdown, setPauseCountdown] = useState('');
+  const [hasActiveShift, setHasActiveShift] = useState(true);
   const currentOrder = orders[orderIdx] ?? null;
   const latestOrder = orders[0] ?? null;
   const isOrderActive = !!(latestOrder &&
@@ -117,6 +118,7 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat', onMenuUp
         if (res.data?.paused) {
           setPauseInfo({ resumeAt: res.data.resumeAt, note: res.data.note ?? null });
         }
+        setHasActiveShift(res.data?.hasActiveShift ?? false);
       } catch { /* silent */ }
     });
 
@@ -134,6 +136,13 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat', onMenuUp
     socket.on('order:resume', () => {
       setPauseInfo(null);
       setPauseCountdown('');
+    });
+
+    socket.on('shift:start', () => {
+      setHasActiveShift(true);
+    });
+    socket.on('shift:end', () => {
+      setHasActiveShift(false);
     });
 
     socket.on('menu:updated', () => {
@@ -249,8 +258,22 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat', onMenuUp
           {/* ── PHẦN TRÊN: Giỏ hàng (55%) ── */}
           <div className="flex flex-col border-b border-gray-700" style={{ flex: '5.5 1 0', minHeight: 0 }}>
 
-            {/* Banner ngưng nhận đơn */}
-            {pauseInfo ? (
+            {/* Banner chưa nhận ca */}
+            {!hasActiveShift && !pauseInfo ? (
+              <div
+                className="flex-shrink-0 mx-3 mt-2.5 mb-1 rounded-xl px-3 py-2.5 flex flex-col gap-1.5"
+                style={{ background: 'linear-gradient(135deg, #1e1b4b, #312e81)', border: '1px solid #6366f1' }}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-xl leading-none">🔒</span>
+                  <div>
+                    <p className="text-indigo-200 text-xs font-bold leading-tight">Chưa có nhân viên nhận ca</p>
+                    <p className="text-indigo-400 text-[10px] mt-0.5">Vui lòng chờ nhân viên nhận ca trước khi đặt hàng.</p>
+                  </div>
+                </div>
+              </div>
+            ) : /* Banner ngưng nhận đơn */
+            pauseInfo ? (
               <div
                 className="flex-shrink-0 mx-3 mt-2.5 mb-1 rounded-xl px-3 py-2.5 flex flex-col gap-1.5"
                 style={{ background: 'linear-gradient(135deg, #431407, #451a03)', border: '1px solid #b45309' }}
@@ -339,18 +362,20 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat', onMenuUp
                   {checkoutError && <p className="text-red-400 text-[10px] text-center">{checkoutError}</p>}
                   <button
                     onClick={handleCheckout}
-                    disabled={checkingOut || !!pauseInfo}
+                    disabled={checkingOut || !!pauseInfo || !hasActiveShift}
                     className="w-full py-2.5 rounded-xl font-bold text-xs text-white transition-all cursor-pointer hover:opacity-90 active:scale-95 disabled:cursor-not-allowed"
-                    style={pauseInfo
+                    style={pauseInfo || !hasActiveShift
                       ? { background: '#374151', opacity: 0.7 }
                       : { background: 'linear-gradient(to right, var(--primary-color), var(--secondary-color))' }
                     }
                   >
                     {checkingOut
                       ? 'Đang xử lý...'
-                      : pauseInfo
-                        ? pauseCountdown ? `⏸ Mở lại sau ${pauseCountdown}` : '⏸ Tạm ngưng nhận đơn'
-                        : 'Đặt hàng'}
+                      : !hasActiveShift
+                        ? '🔒 Chờ nhận ca'
+                        : pauseInfo
+                          ? pauseCountdown ? `⏸ Mở lại sau ${pauseCountdown}` : '⏸ Tạm ngưng nhận đơn'
+                          : 'Đặt hàng'}
                   </button>
                 </div>
               </>

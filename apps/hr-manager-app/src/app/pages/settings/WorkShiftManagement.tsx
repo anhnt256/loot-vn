@@ -16,7 +16,7 @@ interface WorkShift {
   isOvernight: boolean;
   FnetStaffId?: number;
   ffoodId?: string;
-  gcpId?: string;
+  staffId?: number;
 }
 
 const WorkShiftManagement: React.FC = () => {
@@ -98,12 +98,12 @@ const WorkShiftManagement: React.FC = () => {
               <Tag color="purple" className="m-0 text-[11px]">FOOD: {record.ffoodId.substring(0, 8)}...</Tag>
             </Tooltip>
           )}
-          {record.gcpId && (
-            <Tooltip title="GCP ID">
-              <Tag color="geekblue" className="m-0 text-[11px]">GCP: {record.gcpId.substring(0, 8)}...</Tag>
+          {record.staffId && (
+            <Tooltip title="Staff ID">
+              <Tag color="geekblue" className="m-0 text-[11px]">Staff: {record.staffId}</Tag>
             </Tooltip>
           )}
-          {!record.FnetStaffId && !record.ffoodId && !record.gcpId && (
+          {!record.FnetStaffId && !record.ffoodId && !record.staffId && (
             <Text type="secondary" className="text-[11px]">Chưa thiết lập</Text>
           )}
         </Space>

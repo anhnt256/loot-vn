@@ -151,13 +151,12 @@ export default function SendReportDrawer({
     }
   };
 
-  // Auto-map staff when shift is selected based on WorkShift.gcpId
+  // Auto-map staff when shift is selected based on WorkShift.staffId
   useEffect(() => {
     if (selectedShift && workShifts.length > 0 && staffs.length > 0) {
       const ws = getWorkShiftForShift(selectedShift);
-      if (ws?.gcpId) {
-        const gcpStaffId = parseInt(ws.gcpId, 10);
-        const matched = staffs.find((s) => s.id === gcpStaffId);
+      if (ws?.staffId) {
+        const matched = staffs.find((s) => s.id === ws.staffId);
         if (matched) {
           setSelectedStaff(matched.id);
         }

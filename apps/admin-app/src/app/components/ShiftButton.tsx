@@ -39,7 +39,7 @@ function fmtMoney(v: number) {
 
 const ShiftButton: React.FC = () => {
   const { notification } = App.useApp();
-  const { currentShift, hasShift, isShiftOwner, startShift, endShift } = useShift();
+  const { currentShift, hasShift, isShiftOwner, canStartShift, startShift, endShift } = useShift();
   const { confirmShiftStart } = useShiftGuard();
   const [loading, setLoading] = useState(false);
 
@@ -311,6 +311,11 @@ const ShiftButton: React.FC = () => {
         </Modal>
       </>
     );
+  }
+
+  // User không nằm trong ca làm việc → không hiện nút
+  if (!canStartShift) {
+    return null;
   }
 
   // Chưa có ca → nút nhận ca

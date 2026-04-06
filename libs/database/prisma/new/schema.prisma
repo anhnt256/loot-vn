@@ -324,7 +324,7 @@ model WorkShift {
   updatedAt   DateTime @updatedAt
   isOvernight Boolean  @default(false)
   ffoodId     String?  @map("ffood_id") @db.Char(36)
-  gcpId       String?  @map("gcp_id") @db.VarChar(255)
+  staffId     Int?     @map("staff_id")
   staffs      Staff[]
   shiftHandoverReports ShiftHandoverReport[]
 

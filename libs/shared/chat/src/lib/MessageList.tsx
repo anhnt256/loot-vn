@@ -187,6 +187,13 @@ export function MessageList({
   const [showLoadMore, setShowLoadMore] = useState(false);
   const firstUnreadRef = useRef<HTMLDivElement>(null);
   const didScrollToUnread = useRef(false);
+  const prevMessageCount = useRef(0);
+
+  const isNearBottom = () => {
+    const el = listRef.current;
+    if (!el) return true;
+    return el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+  };
 
   const handleScroll = () => {
     if (listRef.current) {
@@ -209,6 +216,19 @@ export function MessageList({
       firstUnreadRef.current.scrollIntoView({ behavior: 'instant', block: 'center' });
     }
   }, [firstUnreadId, messages]);
+
+  // Auto-scroll to bottom when new messages arrive (only if user is near bottom)
+  useEffect(() => {
+    if (messages.length > prevMessageCount.current) {
+      // New message(s) added (not loading older messages which prepend)
+      const added = messages.length - prevMessageCount.current;
+      const isNewMessage = added > 0 && added < 5; // small batch = real-time, not pagination
+      if (isNewMessage && isNearBottom()) {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+    prevMessageCount.current = messages.length;
+  }, [messages.length]);
 
   return (
     <div className="flex-1 overflow-hidden flex flex-col">
