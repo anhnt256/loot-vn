@@ -23,7 +23,9 @@
       "Bash(grep -r \"dashboard/check-in\" /d/Project/gateway-app --include=\"*.ts\" --include=\"*.tsx\" ! -path \"*/node_modules/*\" ! -path \"*/.next/*\")",
       "Bash(grep -r \"POST.*check-in\\\\|check-in.*POST\\\\|/dashboard/check-in\" /d/Project/gateway-app/_old_monolith_temp --include=\"*.ts\" --include=\"*.tsx\" ! -path \"*/node_modules/*\")",
       "Bash(grep -r \"availableCheckIn\\\\|claimedCheckIn\\\\|totalCheckIn\" /d/Project/gateway-app/apps --include=\"*.ts\" --include=\"*.tsx\" ! -path \"*/node_modules/*\" ! -path \"*/.next/*\")",
-      "Bash(find /d/Project/gateway-app/apps -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) ! -path \"*/node_modules/*\" ! -path \"*/.next/*\" -exec grep -l \"check.in\\\\|checkin\" {} \\\\;)"
+      "Bash(find /d/Project/gateway-app/apps -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) ! -path \"*/node_modules/*\" ! -path \"*/.next/*\" -exec grep -l \"check.in\\\\|checkin\" {} \\\\;)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)"
     ]
   }
 }
