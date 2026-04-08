@@ -612,11 +612,15 @@ export class HandoverReportService {
     }
 
     // 2. Check Shift Handover Report (Báo cáo Bàn giao)
+    // For overnight shifts, the report might be stored under either the shift-start
+    // date or the next day, so check both.
     let bandGiao = false;
     if (workShiftId) {
       const targetDate = new Date(`${formattedDate}T00:00:00.000Z`);
+      const nextDate = new Date(targetDate);
+      nextDate.setDate(nextDate.getDate() + 1);
       const existing = await gatewayClient.shiftHandoverReport.findFirst({
-        where: { date: targetDate, workShiftId },
+        where: { workShiftId, date: { in: [targetDate, nextDate] } },
       });
       bandGiao = !!existing;
     }

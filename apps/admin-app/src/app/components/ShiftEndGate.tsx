@@ -113,13 +113,28 @@ const ShiftEndGate: React.FC<ShiftEndGateProps> = ({ onClose, primaryColor, work
   const currentWorkShift = useMemo(() => findCurrentWorkShift(workShifts), [workShifts]);
   const currentShiftEnum = currentWorkShift ? mapWorkShiftNameToEnum(currentWorkShift.name) : 'SANG';
 
+  // For overnight shifts (e.g. Ca Tối 22:50–06:00), after midnight the NVL
+  // reports are stored under yesterday's date. Use the shift-start date.
+  const shiftDate = useMemo(() => {
+    if (currentWorkShift?.isOvernight) {
+      const now = dayjs();
+      const [sH, sM] = String(currentWorkShift.startTime).split(':').map(Number);
+      const startMinutes = sH * 60 + sM;
+      const currentMinutes = now.hour() * 60 + now.minute();
+      // If current time is before the shift start time, we're in the "after midnight" portion
+      if (currentMinutes < startMinutes) {
+        return now.subtract(1, 'day').format('YYYY-MM-DD');
+      }
+    }
+    return dayjs().format('YYYY-MM-DD');
+  }, [currentWorkShift]);
+
   const checkReports = useCallback(async () => {
     setChecking(true);
     try {
-      const today = dayjs().format('YYYY-MM-DD');
       const res = await apiClient.get('/admin/handover-reports/check-end-reports', {
         params: {
-          date: today,
+          date: shiftDate,
           shift: currentShiftEnum,
           workShiftId: currentWorkShift?.id,
         },
@@ -130,7 +145,7 @@ const ShiftEndGate: React.FC<ShiftEndGateProps> = ({ onClose, primaryColor, work
     } finally {
       setChecking(false);
     }
-  }, [currentShiftEnum, currentWorkShift?.id]);
+  }, [currentShiftEnum, currentWorkShift?.id, shiftDate]);
 
   const fetchSummary = useCallback(async () => {
     setSummaryLoading(true);
@@ -497,7 +512,7 @@ const ShiftEndGate: React.FC<ShiftEndGateProps> = ({ onClose, primaryColor, work
       <SendReportDrawer
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        selectedDate={new Date()}
+        selectedDate={new Date(shiftDate)}
         selectedReportType={drawerReportType}
         onSuccess={handleDrawerSuccess}
         defaultShift={currentShiftEnum as any}
