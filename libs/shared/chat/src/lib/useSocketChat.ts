@@ -56,7 +56,11 @@ export function useSocketChat({
     });
 
     socket.on('chat:message', (message: ChatMessage) => {
-      setMessages((prev) => [...prev, message]);
+      setMessages((prev) => {
+        // Deduplicate by message ID (server may emit directly + via Redis)
+        if (message.id && prev.some((m) => m.id === message.id)) return prev;
+        return [...prev, message];
+      });
     });
 
     socket.on('chat:online_count', (data: { count: number }) => {

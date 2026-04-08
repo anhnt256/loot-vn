@@ -165,8 +165,11 @@ export class ChatGateway
         staffId: data.staffId ?? client.data.staffId,
       });
 
-      // Publish qua Redis → subscriber nhận và broadcast tới tất cả clients
-      await redisService.publish(REDIS_CHANNEL_CHAT(tenantId), message);
+      // Emit trực tiếp tới room (đảm bảo delivery ngay lập tức)
+      this.server.to(`chat:${tenantId}`).emit('chat:message', message);
+
+      // Publish qua Redis cho các server instance khác (nếu có)
+      redisService.publish(REDIS_CHANNEL_CHAT(tenantId), message).catch(() => {});
 
       return { success: true, message };
     } catch (error) {
