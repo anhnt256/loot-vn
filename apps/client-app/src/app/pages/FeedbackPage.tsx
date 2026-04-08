@@ -131,14 +131,10 @@ const FeedbackPage: React.FC = () => {
   const draftTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const draftLoadedRef = useRef(false);
 
-  const getFormSnapshot = useCallback(() => {
-    return JSON.stringify({ categories, feedbackImages, deviceFeedback, activeCategory });
-  }, [categories, feedbackImages, deviceFeedback, activeCategory]);
+  const getFormSnapshot = useCallback(() => JSON.stringify({ categories, feedbackImages, deviceFeedback, activeCategory }), [categories, feedbackImages, deviceFeedback, activeCategory]);
 
-  const hasFormData = useCallback(() => {
-    return categories.some((c) => c.selected && (c.rating > 0 || c.note.trim())) ||
-      Object.values(feedbackImages).some((v) => v?.trim());
-  }, [categories, feedbackImages]);
+  const hasFormData = useCallback(() => categories.some((c) => c.selected && (c.rating > 0 || c.note.trim())) ||
+      Object.values(feedbackImages).some((v) => v?.trim()), [categories, feedbackImages]);
 
   // Load draft on mount
   useEffect(() => {

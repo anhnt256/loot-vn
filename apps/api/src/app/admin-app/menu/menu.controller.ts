@@ -93,6 +93,7 @@ export class MenuController {
       scheduleTimeEnd?: string | null;
       scheduleDateStart?: string | null;
       scheduleDateEnd?: string | null;
+      scheduleDayRules?: string | null;
       scheduleMachineGroupIds?: string | null;
       requiredCategoryIds?: string | null;
     }

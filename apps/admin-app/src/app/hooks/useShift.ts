@@ -22,6 +22,7 @@ interface ShiftState {
   isOwner: boolean;
   canStartShift: boolean;
   workShiftSchedule: WorkShiftSchedule | null;
+  initialized: boolean;
 }
 
 /* ── singleton store ── */
@@ -33,9 +34,10 @@ let cached: ShiftState = loadFromStorage();
 function loadFromStorage(): ShiftState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : { shift: null, isOwner: false, canStartShift: true, workShiftSchedule: null };
+    const parsed = raw ? JSON.parse(raw) : { shift: null, isOwner: false, canStartShift: true, workShiftSchedule: null };
+    return { ...parsed, initialized: !!raw };
   } catch {
-    return { shift: null, isOwner: false, canStartShift: true, workShiftSchedule: null };
+    return { shift: null, isOwner: false, canStartShift: true, workShiftSchedule: null, initialized: false };
   }
 }
 
@@ -56,13 +58,13 @@ function getSnapshot(): ShiftState {
 
 function setState(state: ShiftState) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  cached = state;
+  cached = { ...state, initialized: true };
   emitChange();
 }
 
 function clearState() {
   localStorage.removeItem(STORAGE_KEY);
-  cached = { shift: null, isOwner: false, canStartShift: cached.canStartShift, workShiftSchedule: null };
+  cached = { shift: null, isOwner: false, canStartShift: cached.canStartShift, workShiftSchedule: null, initialized: true };
   emitChange();
 }
 
@@ -77,7 +79,7 @@ export function useShift() {
       const isOwner = res.data?.isOwner ?? false;
       const canStartShift = res.data?.canStartShift ?? true;
       const workShiftSchedule = res.data?.workShiftSchedule ?? null;
-      setState({ shift, isOwner, canStartShift, workShiftSchedule });
+      setState({ shift, isOwner, canStartShift, workShiftSchedule, initialized: true });
     } catch {
       /* silent */
     }
@@ -92,7 +94,7 @@ export function useShift() {
   const startShift = useCallback(async () => {
     const res = await apiClient.post('/admin/orders/shift/start');
     const shift = res.data?.data ?? null;
-    setState({ shift, isOwner: true, canStartShift: cached.canStartShift, workShiftSchedule: cached.workShiftSchedule });
+    setState({ shift, isOwner: true, canStartShift: cached.canStartShift, workShiftSchedule: cached.workShiftSchedule, initialized: true });
     // Fetch lại ngay để lấy workShiftSchedule mới nhất
     fetchShift();
     return shift;
@@ -113,6 +115,8 @@ export function useShift() {
     canStartShift: state.canStartShift,
     /** Lịch ca làm việc (giờ bắt đầu/kết thúc) */
     workShiftSchedule: state.workShiftSchedule,
+    /** Đã fetch dữ liệu ca ít nhất 1 lần */
+    initialized: state.initialized,
     startShift,
     endShift,
     refreshShift: fetchShift,

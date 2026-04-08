@@ -166,7 +166,7 @@ const RewardPunishRules: React.FC = () => {
       render: (_: any, record: RewardPunishRule) => (
         <Space size={[0, 4]} wrap>
           {record.severities.map((s) => (
-            <Tooltip key={s.occurrenceNumber} title={`${s.actionType === 'MONEY' ? (s.amount?.toLocaleString() + 'đ') : s.actionType}`}>
+            <Tooltip key={s.occurrenceNumber} title={`${s.actionType === 'MONEY' ? (`${s.amount?.toLocaleString()  }đ`) : s.actionType}`}>
                 <Tag className="rounded-full text-[11px]">Lần {s.occurrenceNumber}</Tag>
             </Tooltip>
           ))}

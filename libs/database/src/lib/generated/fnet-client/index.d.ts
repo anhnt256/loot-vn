@@ -310,12 +310,19 @@ export type trackguitb = $Result.DefaultSelection<Prisma.$trackguitbPayload>
 export type transferdetailtb = $Result.DefaultSelection<Prisma.$transferdetailtbPayload>
 /**
  * Model usagetimetb
- * 
+ * UserType values:
+ * 0,1 = Computer (khách lẻ)
+ * 2   = Hội viên
+ * 3   = Admin
+ * 4   = Staff
+ * 5   = Combo
+ * 6,7,8,9 = Hội viên nhóm khác (VIP)
  */
 export type usagetimetb = $Result.DefaultSelection<Prisma.$usagetimetbPayload>
 /**
  * Model usertb
  * This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+ * UserType: 0,1=Computer | 2=Hội viên | 3=Admin | 4=Staff | 5=Combo | 6,7,8,9=Hội viên VIP
  */
 export type usertb = $Result.DefaultSelection<Prisma.$usertbPayload>
 /**

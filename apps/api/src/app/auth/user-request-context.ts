@@ -8,6 +8,7 @@ export interface UserRequestContext {
   loginType: string;
   isAdmin?: boolean;
   staffType?: string;
+  rankId?: number;
   // client-specific
   computerId?: number;
   computerName?: string;

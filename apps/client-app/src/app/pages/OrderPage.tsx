@@ -3,7 +3,9 @@ import { useOutletContext } from 'react-router-dom';
 import { Input } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { apiClient } from '@gateway-workspace/shared/utils/client';
+
 import { useCart, MenuItem } from '../contexts/CartContext';
+import { useMenuCampaigns } from '../hooks/useMenuCampaigns';
 import type { DashboardOutletContext } from '../components/DashboardLayout';
 
 interface Category {
@@ -27,6 +29,9 @@ const OrderPage: React.FC = () => {
 
   // Cart state (shared via context)
   const { cart, setCart } = useCart();
+
+  // Menu campaign discounts
+  const { getItemDiscount } = useMenuCampaigns();
 
   // Required category modal
   const [requiredCatError, setRequiredCatError] = useState<{ itemName: string; missingCats: string[] } | null>(null);
@@ -74,14 +79,12 @@ const OrderPage: React.FC = () => {
     fetchMenu();
   }, [menuVersion]);
 
-  const filtered = useMemo(() => {
-    return items.filter((item) => {
+  const filtered = useMemo(() => items.filter((item) => {
       const secondaryIds: number[] = item.secondaryCategoryIds ? JSON.parse(item.secondaryCategoryIds) : [];
       const matchCat = selectedCat === null || item.categoryId === selectedCat || secondaryIds.includes(selectedCat);
       const matchSearch = item.name.toLowerCase().includes(search.toLowerCase());
       return matchCat && matchSearch;
-    });
-  }, [items, selectedCat, search]);
+    }), [items, selectedCat, search]);
 
   const handleCardClick = (item: MenuItem) => {
     if (item.availablePortions !== null && item.availablePortions <= 0) {
@@ -222,8 +225,16 @@ const OrderPage: React.FC = () => {
                 <div
                   key={item.id}
                   onClick={() => handleCardClick(item)}
-                  className="rounded-xl overflow-hidden bg-gray-800 border border-gray-700 hover:border-pink-500 transition-all cursor-pointer"
+                  className="relative rounded-xl overflow-hidden bg-gray-800 border border-gray-700 hover:border-pink-500 transition-all cursor-pointer"
                 >
+                  {(() => {
+                    const p = getItemDiscount(item.id, item.categoryId ?? 0, Number(item.salePrice));
+                    return p ? (
+                      <div className="absolute top-2 left-2 z-10 bg-pink-500 text-white text-xs px-2 py-0.5 rounded-full font-bold shadow">
+                        {p.campaign.discountType === 'PERCENTAGE' ? `−${p.campaign.discountValue}%` : `−${p.discount.toLocaleString()}đ`}
+                      </div>
+                    ) : null;
+                  })()}
                   <div className="aspect-[4/3] bg-gray-900 overflow-hidden">
                     {item.imageUrl ? (
                       <img
@@ -242,9 +253,19 @@ const OrderPage: React.FC = () => {
                       {item.name}
                     </p>
                     <div className="flex items-center justify-between mt-1">
-                      <p className="text-pink-400 font-semibold text-sm">
-                        {Number(item.salePrice) > 0 ? `${Number(item.salePrice).toLocaleString('vi-VN')}đ` : '0đ'}
-                      </p>
+                      {(() => {
+                        const promo = getItemDiscount(item.id, item.categoryId ?? 0, Number(item.salePrice));
+                        if (promo && Number(item.salePrice) > 0) {
+                          const newPrice = Number(item.salePrice) - promo.discount;
+                          return (
+                            <div className="flex flex-col">
+                              <span className="text-gray-500 line-through text-xs">{Number(item.salePrice).toLocaleString('vi-VN')}đ</span>
+                              <span className="text-pink-400 font-semibold text-sm">{newPrice.toLocaleString('vi-VN')}đ</span>
+                            </div>
+                          );
+                        }
+                        return <p className="text-pink-400 font-semibold text-sm">{Number(item.salePrice) > 0 ? `${Number(item.salePrice).toLocaleString('vi-VN')}đ` : '0đ'}</p>;
+                      })()}
                       {item.availablePortions !== null && (
                         item.availablePortions > 0
                           ? <span className="text-xs font-medium px-1.5 py-0.5 rounded" style={{ background: '#14532d', color: '#86efac' }}>còn {item.availablePortions}</span>
@@ -301,11 +322,40 @@ const OrderPage: React.FC = () => {
                 {selectedItem.category && (
                   <p className="text-gray-400 text-sm mt-0.5">{selectedItem.category.name}</p>
                 )}
-                <p className="text-pink-400 font-bold text-lg mt-1">
-                  {selectedItem.salePrice > 0
-                    ? `${Number(selectedItem.salePrice).toLocaleString('vi-VN')}đ`
-                    : '0đ'}
-                </p>
+                {(() => {
+                  const promo = getItemDiscount(selectedItem.id, selectedItem.categoryId ?? 0, Number(selectedItem.salePrice));
+                  if (promo && Number(selectedItem.salePrice) > 0) {
+                    const newPrice = Number(selectedItem.salePrice) - promo.discount;
+                    const c = promo.campaign;
+                    return (
+                      <>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-gray-500 line-through text-sm">{Number(selectedItem.salePrice).toLocaleString('vi-VN')}đ</span>
+                          <span className="text-pink-400 font-bold text-lg">{newPrice.toLocaleString('vi-VN')}đ</span>
+                          <span className="bg-pink-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+                            {c.discountType === 'PERCENTAGE' ? `−${c.discountValue}%` : `−${promo.discount.toLocaleString()}đ`}
+                          </span>
+                        </div>
+                        <div className="mt-2 p-3 rounded-xl border border-pink-500/30 bg-pink-500/5">
+                          <p className="text-pink-300 font-semibold text-sm">{c.name}</p>
+                          {c.description && <p className="text-gray-400 text-xs mt-0.5">{c.description}</p>}
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5 text-xs text-gray-400">
+                            <span>Từ {new Date(c.startDate).toLocaleDateString('vi-VN')} đến {new Date(c.endDate).toLocaleDateString('vi-VN')}</span>
+                            {c.maxDiscountAmount && <span>Giảm tối đa {c.maxDiscountAmount.toLocaleString()}đ</span>}
+                            {c.totalBudget && (
+                              <span>Còn {Math.max(0, Math.round(100 - (c.spentBudget / c.totalBudget) * 100))}% ngân sách</span>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    );
+                  }
+                  return (
+                    <p className="text-pink-400 font-bold text-lg mt-1">
+                      {selectedItem.salePrice > 0 ? `${Number(selectedItem.salePrice).toLocaleString('vi-VN')}đ` : '0đ'}
+                    </p>
+                  );
+                })()}
               </div>
 
               {/* Ingredients */}

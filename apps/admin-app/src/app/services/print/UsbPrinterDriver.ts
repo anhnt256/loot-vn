@@ -76,6 +76,19 @@ export async function connect(): Promise<PrinterDevice> {
     if (err.name === 'NotFoundError') {
       throw new Error('Không tìm thấy máy in. Hãy kiểm tra kết nối USB.');
     }
+    if (err.name === 'SecurityError') {
+      throw new Error(
+        'Không có quyền truy cập USB. Vui lòng đảm bảo:\n' +
+        '• Truy cập trang qua HTTPS hoặc localhost\n' +
+        '• Cho phép quyền USB trong trình duyệt (Chrome/Edge)',
+      );
+    }
+    if (err.name === 'NetworkError') {
+      throw new Error(
+        'Không thể mở thiết bị USB. Máy in có thể đang được sử dụng bởi ứng dụng khác. ' +
+        'Hãy thử rút và cắm lại cáp USB.',
+      );
+    }
     throw new Error(`Kết nối máy in thất bại: ${err.message}`);
   }
 }
@@ -163,8 +176,16 @@ async function openDevice(device: USBDevice): Promise<void> {
   try {
     await device.claimInterface(iface.interfaceNumber);
   } catch (err: any) {
-    // Already claimed — OK
-    if (!err.message?.includes('claimed')) throw err;
+    // Already claimed by us — OK
+    if (err.message?.includes('claimed')) return;
+    // Kernel driver or another app holds the interface
+    if (err.name === 'SecurityError' || err.message?.includes('Unable to claim')) {
+      throw new Error(
+        'Không thể chiếm quyền điều khiển máy in. Có thể driver hệ thống đang giữ thiết bị. ' +
+        'Hãy thử rút và cắm lại cáp USB, hoặc tắt driver máy in trong hệ điều hành.',
+      );
+    }
+    throw err;
   }
 }
 

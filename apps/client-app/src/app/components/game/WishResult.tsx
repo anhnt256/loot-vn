@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import { apiClient } from '@gateway-workspace/shared/utils/client';
+
 import { useUser } from '../../contexts/UserContext';
 
 dayjs.extend(utc);
@@ -91,7 +92,7 @@ export function WishResult({ isModalOpen, closeModal }: WishResultProps) {
       width: 140,
       render: (text: string) => {
         const name = (activeTab === '2' ? text : user?.userName) || '';
-        return <span title={name}>{name.length > 15 ? name.slice(0, 15) + '...' : name}</span>;
+        return <span title={name}>{name.length > 15 ? `${name.slice(0, 15)  }...` : name}</span>;
       },
     },
     {

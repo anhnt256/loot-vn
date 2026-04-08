@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import { apiClient } from '@gateway-workspace/shared/utils/client';
+
 import { useUser } from '../contexts/UserContext';
 
 interface CheckInDay {

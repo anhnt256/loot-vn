@@ -68,16 +68,18 @@ model CheckInPromotion {
 }
 
 model Item {
-  id         Int       @id @default(autoincrement())
-  name       String    @db.VarChar(255)
-  image_url  String    @db.VarChar(255)
-  rating     Float     @db.Float
-  value      Float     @db.Float
-  createdAt  DateTime? @default(now()) @db.DateTime(0)
-  updatedAt  DateTime? @default(now()) @updatedAt @db.DateTime(0)
-  title      String    @db.VarChar(500)
-  background String?   @db.VarChar(7)
-  textColor  String?   @db.VarChar(7)
+  id           Int       @id @default(autoincrement())
+  name         String    @db.VarChar(255)
+  image_url    String    @db.VarChar(255)
+  rating       Float     @db.Float
+  value        Float     @db.Float
+  createdAt    DateTime? @default(now()) @db.DateTime(0)
+  updatedAt    DateTime? @default(now()) @updatedAt @db.DateTime(0)
+  title        String    @db.VarChar(500)
+  background   String?   @db.VarChar(7)
+  textColor    String?   @db.VarChar(7)
+  displayOrder Int       @default(0)
+  showOnWheel  Boolean   @default(true)
 }
 
 model GameItemMap {
@@ -179,6 +181,7 @@ model Reward {
   UserRewardMap UserRewardMap[]
 }
 
+/// @deprecated Use CouponCode instead. Kept for UserRewardMap backward compat.
 model PromotionCode {
   id                 Int               @id @default(autoincrement())
   name               String?           @db.VarChar(45)
@@ -573,6 +576,7 @@ model BattlePassPremiumPackage {
   @@map("BattlePassPremiumPackage")
 }
 
+/// @deprecated Use EventPromotion + CouponBatch instead. Kept for UserRewardMap backward compat.
 model PromotionSetting {
   id             Int             @id @default(autoincrement())
   name           String
@@ -617,6 +621,15 @@ model ChatMessage {
   staffId     Int?
 
   @@index([createdAt])
+}
+
+model ChatLastSeen {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  lastSeenMsgId Int      @default(0)
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId])
 }
 
 model BirthdayTier {
@@ -829,6 +842,7 @@ model MenuCategory {
   scheduleTimeEnd         String?   @db.VarChar(5)
   scheduleDateStart       DateTime?
   scheduleDateEnd         DateTime?
+  scheduleDayRules        String?   @db.Text /// JSON: [{"days":[1,3,5],"timeStart":"08:00","timeEnd":"12:00"}]
   scheduleMachineGroupIds String?   @db.Text
   requiredCategoryIds     String?   @db.Text
   recipes                 Recipe[]
@@ -909,18 +923,20 @@ model InventoryTransaction {
 }
 
 model FoodOrder {
-  id            Int                      @id @default(autoincrement())
-  userId        Int
-  macAddress    String                   @db.VarChar(100) // Định danh máy ổn định, không đổi theo tên/IP
-  computerName  String?                  @db.VarChar(100) // Tên hiển thị (có thể null hoặc thay đổi)
-  tenantId      Int
-  status        FoodOrderStatus?
-  totalAmount   Decimal                  @db.Decimal(12, 2)
-  note          String?                  @db.Text
-  createdAt     DateTime                 @default(now())
-  updatedAt     DateTime                 @updatedAt
-  details       FoodOrderDetail[]
-  statusHistory FoodOrderStatusHistory[]
+  id             Int                      @id @default(autoincrement())
+  userId         Int
+  macAddress     String                   @db.VarChar(100) // Định danh máy ổn định, không đổi theo tên/IP
+  computerName   String?                  @db.VarChar(100) // Tên hiển thị (có thể null hoặc thay đổi)
+  tenantId       Int
+  status         FoodOrderStatus?
+  totalAmount    Decimal                  @db.Decimal(12, 2)
+  note           String?                  @db.Text
+  campaignId     Int?
+  discountAmount Decimal?                 @default(0) @db.Decimal(10, 0)
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+  details        FoodOrderDetail[]
+  statusHistory  FoodOrderStatusHistory[]
 
   @@index([userId])
   @@index([tenantId])
@@ -1130,34 +1146,23 @@ model GameAppointmentReward {
 }
 
 model Event {
-  id                      String             @id @default(cuid())
-  name                    String
-  description             String?            @db.Text
-  type                    EventType
-  status                  EventStatus
-  startDate               DateTime
-  endDate                 DateTime
-  registrationStart       DateTime?
-  registrationEnd         DateTime?
-  targetAudience          String?            @db.LongText
-  conditions              String?            @db.LongText
-  rules                   String?            @db.LongText
-  budget                  Int?
-  expectedParticipants    Int?
-  totalParticipants       Int                @default(0)
-  totalCodesGenerated     Int                @default(0)
-  totalCodesUsed          Int                @default(0)
-  totalRewardsDistributed Int                @default(0)
-  createdBy               Int?
-  approvedBy              Int?
-  approvedAt              DateTime?
-  isActive                Boolean            @default(true)
-  createdAt               DateTime           @default(now())
-  updatedAt               DateTime           @updatedAt
-  generateCodesAhead      Boolean            @default(false)
-  participants            EventParticipant[]
-  rewards                 EventReward[]
-  reports                 EventReport[]
+  id          String      @id @default(cuid())
+  name        String
+  description String?     @db.Text
+  type        EventType
+  status      EventStatus
+  startDate   DateTime
+  endDate     DateTime
+  budget      Int?
+  isActive    Boolean     @default(true)
+  createdBy   Int?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  targetRules  EventTargetRule[]
+  promotions   EventPromotion[]
+  participants EventParticipant[]
+  analytics    EventAnalytics[]
 
   @@index([status])
   @@index([type])
@@ -1187,45 +1192,134 @@ model EventParticipant {
   @@map("EventParticipant")
 }
 
-model EventReward {
-  id           Int        @id @default(autoincrement())
-  eventId      String
-  name         String
-  description  String?    @db.Text
-  rewardType   RewardType
-  rewardConfig String     @db.LongText
-  conditions   String?    @db.LongText
-  eligibility  String?    @db.LongText
-  maxQuantity  Int?
-  used         Int        @default(0)
-  maxPerUser   Int?
-  maxPerDay    Int?
-  validFrom    DateTime?
-  validTo      DateTime?
-  priority     Int        @default(1)
-  isActive     Boolean    @default(true)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  event        Event      @relation(fields: [eventId], references: [id])
+// ===== Event Promotion System (Phase 3) =====
+
+model EventTargetRule {
+  id       Int            @id @default(autoincrement())
+  eventId  String
+  type     TargetRuleType
+  operator String         @db.VarChar(10)
+  value    String         @db.VarChar(500)
+  event    Event          @relation(fields: [eventId], references: [id])
 
   @@index([eventId])
-  @@index([rewardType])
-  @@index([isActive])
-  @@map("EventReward")
+  @@map("EventTargetRule")
 }
 
-model EventReport {
-  id         Int      @id @default(autoincrement())
-  eventId    String
-  reportType String
-  reportDate DateTime
-  data       String   @db.LongText
-  createdAt  DateTime @default(now())
-  event      Event    @relation(fields: [eventId], references: [id])
+model EventPromotion {
+  id          Int      @id @default(autoincrement())
+  eventId     String
+  name        String
+  description String?  @db.Text
+  isActive    Boolean  @default(true)
+  priority    Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  event         Event                   @relation(fields: [eventId], references: [id])
+  conditions    PromotionCondition[]
+  rewardBundles PromotionRewardBundle[]
+  couponBatches CouponBatch[]
 
   @@index([eventId])
-  @@index([reportDate])
-  @@map("EventReport")
+  @@map("EventPromotion")
+}
+
+model PromotionCondition {
+  id            Int              @id @default(autoincrement())
+  promotionId   Int
+  triggerAction ConditionTrigger
+  operator      String           @db.VarChar(10)
+  value         Float
+  promotion     EventPromotion   @relation(fields: [promotionId], references: [id])
+
+  @@index([promotionId])
+  @@map("PromotionCondition")
+}
+
+model PromotionRewardBundle {
+  id          Int                   @id @default(autoincrement())
+  promotionId Int
+  name        String
+  promotion   EventPromotion        @relation(fields: [promotionId], references: [id])
+  items       PromotionRewardItem[]
+
+  @@index([promotionId])
+  @@map("PromotionRewardBundle")
+}
+
+model PromotionRewardItem {
+  id         Int                   @id @default(autoincrement())
+  bundleId   Int
+  rewardType EventRewardType
+  value      Float
+  walletType String?               @db.VarChar(10)
+  maxValue   Int?
+  metadata   String?               @db.Text
+  bundle     PromotionRewardBundle @relation(fields: [bundleId], references: [id])
+
+  @@index([bundleId])
+  @@map("PromotionRewardItem")
+}
+
+model CouponBatch {
+  id               Int            @id @default(autoincrement())
+  promotionId      Int
+  name             String
+  discountType     DiscountType
+  discountValue    Float
+  maxDiscountValue Int?
+  totalCodes       Int
+  validDays        Int?
+  validFrom        DateTime?
+  validTo          DateTime?
+  usageFrequency   UsageFrequency
+  maxUsagePerUser  Int            @default(1)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  promotion EventPromotion @relation(fields: [promotionId], references: [id])
+  codes     CouponCode[]
+
+  @@index([promotionId])
+  @@map("CouponBatch")
+}
+
+model CouponCode {
+  id        Int         @id @default(autoincrement())
+  batchId   Int
+  code      String      @unique @db.VarChar(20)
+  isUsed    Boolean     @default(false)
+  usedBy    Int?
+  usedAt    DateTime?
+  expiresAt DateTime?
+  createdAt DateTime    @default(now())
+  batch     CouponBatch @relation(fields: [batchId], references: [id])
+
+  @@index([batchId])
+  @@index([code])
+  @@index([usedBy])
+  @@map("CouponCode")
+}
+
+model EventAnalytics {
+  id                  Int      @id @default(autoincrement())
+  eventId             String
+  snapshotDate        DateTime @default(now())
+  totalEligible       Int      @default(0)
+  totalParticipants   Int      @default(0)
+  totalRewardsClaimed Int      @default(0)
+  totalCouponsIssued  Int      @default(0)
+  totalCouponsUsed    Int      @default(0)
+  totalRevenue        Decimal  @default(0) @db.Decimal(12, 0)
+  totalRewardCost     Decimal  @default(0) @db.Decimal(12, 0)
+  conversionRate      Float?
+  revenueBeforeEvent  Decimal? @db.Decimal(12, 0)
+  event               Event    @relation(fields: [eventId], references: [id])
+
+  @@index([eventId])
+  @@index([snapshotDate])
+  @@map("EventAnalytics")
 }
 
 model FfoodCredential {
@@ -1401,6 +1495,7 @@ enum ParticipantStatus {
   WITHDRAWN
 }
 
+/// @deprecated Was used by removed EventReward model. Use EventRewardType instead.
 enum RewardType {
   PERCENTAGE_DISCOUNT
   FIXED_DISCOUNT
@@ -1416,6 +1511,36 @@ enum RewardType {
 enum UserRewardMap_type {
   STARS
   EVENT
+}
+
+enum TargetRuleType {
+  RANK
+  MIN_TOTAL_PAYMENT
+  ZONE
+  SPECIFIC_USER
+}
+
+enum ConditionTrigger {
+  TOPUP
+  ORDER_FOOD
+  PLAY_TIME
+  TOTAL_SPEND
+}
+
+enum EventRewardType {
+  BONUS_PERCENT
+  TOPUP_FIXED
+  SPIN_TURNS
+  FREE_DRINK
+  FREE_FOOD
+  COUPON
+}
+
+enum UsageFrequency {
+  PER_WEEK
+  PER_MONTH
+  PER_EVENT
+  ONE_TIME
 }
 
 model RewardPunishRule {
@@ -1620,4 +1745,163 @@ enum RedemptionStatus {
   APPROVED
   COMPLETED
   REJECTED
+}
+
+// ============================================================
+// Phase 4: Menu Campaign System (Khuyến mãi Menu)
+// ============================================================
+
+model MenuCampaign {
+  id                        Int                      @id @default(autoincrement())
+  tenantId                  String                   @db.VarChar(100)
+  name                      String                   @db.VarChar(255)
+  description               String?                  @db.Text
+  status                    MenuCampaignStatus       @default(DRAFT)
+  discountType              MenuCampaignDiscountType
+  discountValue             Decimal                  @db.Decimal(10, 2)
+  maxDiscountAmount         Int?
+  startDate                 DateTime
+  endDate                   DateTime
+  totalBudget               Int?
+  spentBudget               Int                      @default(0)
+  totalUsageCount           Int                      @default(0)
+  maxUsesPerUserPerCampaign Int?
+  maxUsesPerUserPerDay      Int?
+  minOrderValue             Int?
+  priority                  Int                      @default(1)
+  testGroup                 String?                  @db.VarChar(10)
+  requiredBpLevel           Int?
+  requiredBpSeasonId        Int?
+  newMemberDaysThreshold    Int?
+  createdBy                 Int?
+  createdAt                 DateTime                 @default(now())
+  updatedAt                 DateTime                 @updatedAt
+
+  menuScopes     MenuCampaignMenuScope[]
+  customerScopes MenuCampaignCustomerScope[]
+  timeSlots      MenuCampaignTimeSlot[]
+  comboRules     MenuCampaignComboRule[]
+  usages         MenuCampaignUsage[]
+  analytics      MenuCampaignAnalytics[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([startDate])
+  @@index([endDate])
+  @@index([testGroup])
+  @@map("MenuCampaign")
+}
+
+enum MenuCampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  BUDGET_EXCEEDED
+  EXPIRED
+  CANCELLED
+}
+
+enum MenuCampaignDiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FLAT_PRICE
+  COMBO_DEAL
+}
+
+model MenuCampaignMenuScope {
+  id         Int           @id @default(autoincrement())
+  campaignId Int
+  scopeType  MenuScopeType
+  targetId   Int?
+
+  campaign MenuCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@map("MenuCampaignMenuScope")
+}
+
+enum MenuScopeType {
+  ALL
+  CATEGORY
+  RECIPE
+}
+
+model MenuCampaignCustomerScope {
+  id         Int               @id @default(autoincrement())
+  campaignId Int
+  scopeType  CustomerScopeType
+  targetId   Int?
+
+  campaign MenuCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@map("MenuCampaignCustomerScope")
+}
+
+enum CustomerScopeType {
+  ALL_CUSTOMERS
+  RANK
+  MACHINE_GROUP
+  SPECIFIC_USER
+  NEW_MEMBER
+}
+
+model MenuCampaignTimeSlot {
+  id         Int    @id @default(autoincrement())
+  campaignId Int
+  dayOfWeek  Int?
+  startTime  String @db.VarChar(5)
+  endTime    String @db.VarChar(5)
+
+  campaign MenuCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@map("MenuCampaignTimeSlot")
+}
+
+model MenuCampaignComboRule {
+  id          Int @id @default(autoincrement())
+  campaignId  Int
+  categoryId  Int
+  minQuantity Int @default(1)
+
+  campaign MenuCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@map("MenuCampaignComboRule")
+}
+
+model MenuCampaignUsage {
+  id             Int      @id @default(autoincrement())
+  campaignId     Int
+  userId         Int
+  orderId        Int
+  discountAmount Decimal  @db.Decimal(10, 0)
+  appliedAt      DateTime @default(now())
+
+  campaign MenuCampaign @relation(fields: [campaignId], references: [id])
+
+  @@index([campaignId])
+  @@index([userId])
+  @@index([orderId])
+  @@index([appliedAt])
+  @@map("MenuCampaignUsage")
+}
+
+model MenuCampaignAnalytics {
+  id                    Int      @id @default(autoincrement())
+  campaignId            Int
+  snapshotDate          DateTime @default(now())
+  totalUsages           Int      @default(0)
+  uniqueUsers           Int      @default(0)
+  totalDiscountGiven    Decimal  @default(0) @db.Decimal(12, 0)
+  totalRevenueGenerated Decimal  @default(0) @db.Decimal(12, 0)
+  averageOrderValue     Decimal? @db.Decimal(10, 0)
+  conversionRate        Float?
+
+  campaign MenuCampaign @relation(fields: [campaignId], references: [id])
+
+  @@index([campaignId])
+  @@index([snapshotDate])
+  @@map("MenuCampaignAnalytics")
 }

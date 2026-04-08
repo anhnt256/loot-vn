@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Drawer, Tabs, Button, Checkbox, Form, Input, Radio, Modal, message } from 'antd';
+import { Drawer, Tabs, Button, Checkbox, Form, Input, Radio, Modal, App } from 'antd';
 import { apiClient } from '@gateway-workspace/shared/utils/client';
 import { 
   DesktopOutlined, 
@@ -8,7 +8,8 @@ import {
   CustomerServiceOutlined, 
   SkinOutlined, 
   WifiOutlined,
-  EyeOutlined
+  EyeOutlined,
+  CopyOutlined
 } from '@ant-design/icons';
 
 interface ComputerDetailDrawerProps {
@@ -19,6 +20,7 @@ interface ComputerDetailDrawerProps {
 }
 
 const ComputerDetailDrawer: React.FC<ComputerDetailDrawerProps> = ({ computer, open, onClose, onUpdate }) => {
+  const { message } = App.useApp();
   const [showReportModal, setShowReportModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showNoteModal, setShowNoteModal] = useState(false);
@@ -275,7 +277,7 @@ const ComputerDetailDrawer: React.FC<ComputerDetailDrawerProps> = ({ computer, o
 
       </div>
 
-      <div className="h-[1px] w-full bg-gray-700 mb-6"></div>
+      <div className="h-[1px] w-full bg-gray-700 mb-6" />
 
       <h3 className="text-white font-bold text-base mb-4">Thông tin nhóm máy</h3>
       <div className="flex flex-col gap-3">
@@ -293,6 +295,13 @@ const ComputerDetailDrawer: React.FC<ComputerDetailDrawerProps> = ({ computer, o
           <div className="flex items-center">
             <span className="text-gray-400 w-28 text-[13px]">MAC Address:</span>
             <span className="text-cyan-400 font-mono font-bold text-[13px]">{computer.macAddress}</span>
+            <CopyOutlined
+              className="ml-2 text-gray-400 hover:text-white cursor-pointer text-[13px]"
+              onClick={() => {
+                navigator.clipboard.writeText(computer.macAddress);
+                message.success('Đã copy MAC Address');
+              }}
+            />
           </div>
         )}
       </div>
@@ -397,13 +406,13 @@ const ComputerDetailDrawer: React.FC<ComputerDetailDrawerProps> = ({ computer, o
           </div>
         </div>
 
-        <div className="h-[1px] w-full bg-gray-700 mb-6"></div>
+        <div className="h-[1px] w-full bg-gray-700 mb-6" />
 
         <h3 className="text-white font-bold text-base mb-4">Trạng thái thiết bị</h3>
         
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <div className={`flex items-center gap-2 w-1/2`}>
+            <div className="flex items-center gap-2 w-1/2">
               <DesktopOutlined className={`${monitor.color}`} />
               <span className="text-white text-[13px]">Màn hình</span>
             </div>
@@ -411,7 +420,7 @@ const ComputerDetailDrawer: React.FC<ComputerDetailDrawerProps> = ({ computer, o
           </div>
           
           <div className="flex items-center justify-between">
-            <div className={`flex items-center gap-2 w-1/2`}>
+            <div className="flex items-center gap-2 w-1/2">
               <AppstoreOutlined className={`${keyboard.color}`} />
               <span className="text-white text-[13px]">Bàn phím</span>
             </div>
@@ -419,7 +428,7 @@ const ComputerDetailDrawer: React.FC<ComputerDetailDrawerProps> = ({ computer, o
           </div>
 
           <div className="flex items-center justify-between">
-            <div className={`flex items-center gap-2 w-1/2`}>
+            <div className="flex items-center gap-2 w-1/2">
               <ControlOutlined className={`${mouse.color}`} />
               <span className="text-white text-[13px]">Chuột</span>
             </div>
@@ -427,7 +436,7 @@ const ComputerDetailDrawer: React.FC<ComputerDetailDrawerProps> = ({ computer, o
           </div>
 
           <div className="flex items-center justify-between">
-            <div className={`flex items-center gap-2 w-1/2`}>
+            <div className="flex items-center gap-2 w-1/2">
               <CustomerServiceOutlined className={`${headphone.color}`} />
               <span className="text-white text-[13px]">Tai nghe</span>
             </div>
@@ -435,7 +444,7 @@ const ComputerDetailDrawer: React.FC<ComputerDetailDrawerProps> = ({ computer, o
           </div>
 
           <div className="flex items-center justify-between">
-            <div className={`flex items-center gap-2 w-1/2`}>
+            <div className="flex items-center gap-2 w-1/2">
               <SkinOutlined className={`${chair.color}`} />
               <span className="text-white text-[13px]">Ghế</span>
             </div>
@@ -443,7 +452,7 @@ const ComputerDetailDrawer: React.FC<ComputerDetailDrawerProps> = ({ computer, o
           </div>
 
           <div className="flex items-center justify-between">
-            <div className={`flex items-center gap-2 w-1/2`}>
+            <div className="flex items-center gap-2 w-1/2">
               <WifiOutlined className={`${network.color}`} />
               <span className="text-white text-[13px]">Mạng</span>
             </div>
@@ -573,7 +582,7 @@ const ComputerDetailDrawer: React.FC<ComputerDetailDrawerProps> = ({ computer, o
     <Drawer
       title={<span className="text-white">Chi tiết máy {computer.name}</span>}
       placement="right"
-      width={600}
+      size={600}
       onClose={onClose}
       open={open}
       styles={{

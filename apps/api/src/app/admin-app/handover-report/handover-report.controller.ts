@@ -68,6 +68,29 @@ export class HandoverReportController {
     return this.handoverReportService.getShiftInventorySummary(tenantId, date, shift, reportType);
   }
 
+  @Get('check-start-reports')
+  async checkStartReports(
+    @Query('date') date: string,
+    @Query('shift') shift: string,
+    @Headers('x-tenant-id') tenantId: string,
+  ) {
+    if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    if (!date || !shift) throw new BadRequestException('Missing required parameters: date, shift');
+    return this.handoverReportService.checkStartReports(tenantId, date, shift);
+  }
+
+  @Get('check-end-reports')
+  async checkEndReports(
+    @Query('date') date: string,
+    @Query('shift') shift: string,
+    @Query('workShiftId') workShiftId: string,
+    @Headers('x-tenant-id') tenantId: string,
+  ) {
+    if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    if (!date || !shift) throw new BadRequestException('Missing required parameters: date, shift');
+    return this.handoverReportService.checkEndReports(tenantId, date, shift, workShiftId ? parseInt(workShiftId) : undefined);
+  }
+
   @Get('get-report-data')
   async getReportData(
     @Query('date') date: string,

@@ -188,7 +188,9 @@ exports.Prisma.ItemScalarFieldEnum = {
   updatedAt: 'updatedAt',
   title: 'title',
   background: 'background',
-  textColor: 'textColor'
+  textColor: 'textColor',
+  displayOrder: 'displayOrder',
+  showOnWheel: 'showOnWheel'
 };
 
 exports.Prisma.GameItemMapScalarFieldEnum = {
@@ -611,6 +613,13 @@ exports.Prisma.ChatMessageScalarFieldEnum = {
   staffId: 'staffId'
 };
 
+exports.Prisma.ChatLastSeenScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  lastSeenMsgId: 'lastSeenMsgId',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.BirthdayTierScalarFieldEnum = {
   id: 'id',
   tierName: 'tierName',
@@ -760,6 +769,7 @@ exports.Prisma.MenuCategoryScalarFieldEnum = {
   scheduleTimeEnd: 'scheduleTimeEnd',
   scheduleDateStart: 'scheduleDateStart',
   scheduleDateEnd: 'scheduleDateEnd',
+  scheduleDayRules: 'scheduleDayRules',
   scheduleMachineGroupIds: 'scheduleMachineGroupIds',
   requiredCategoryIds: 'requiredCategoryIds',
   createdAt: 'createdAt',
@@ -819,6 +829,8 @@ exports.Prisma.FoodOrderScalarFieldEnum = {
   status: 'status',
   totalAmount: 'totalAmount',
   note: 'note',
+  campaignId: 'campaignId',
+  discountAmount: 'discountAmount',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -970,24 +982,11 @@ exports.Prisma.EventScalarFieldEnum = {
   status: 'status',
   startDate: 'startDate',
   endDate: 'endDate',
-  registrationStart: 'registrationStart',
-  registrationEnd: 'registrationEnd',
-  targetAudience: 'targetAudience',
-  conditions: 'conditions',
-  rules: 'rules',
   budget: 'budget',
-  expectedParticipants: 'expectedParticipants',
-  totalParticipants: 'totalParticipants',
-  totalCodesGenerated: 'totalCodesGenerated',
-  totalCodesUsed: 'totalCodesUsed',
-  totalRewardsDistributed: 'totalRewardsDistributed',
-  createdBy: 'createdBy',
-  approvedBy: 'approvedBy',
-  approvedAt: 'approvedAt',
   isActive: 'isActive',
+  createdBy: 'createdBy',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  generateCodesAhead: 'generateCodesAhead'
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.EventParticipantScalarFieldEnum = {
@@ -1003,34 +1002,90 @@ exports.Prisma.EventParticipantScalarFieldEnum = {
   totalSpent: 'totalSpent'
 };
 
-exports.Prisma.EventRewardScalarFieldEnum = {
+exports.Prisma.EventTargetRuleScalarFieldEnum = {
+  id: 'id',
+  eventId: 'eventId',
+  type: 'type',
+  operator: 'operator',
+  value: 'value'
+};
+
+exports.Prisma.EventPromotionScalarFieldEnum = {
   id: 'id',
   eventId: 'eventId',
   name: 'name',
   description: 'description',
-  rewardType: 'rewardType',
-  rewardConfig: 'rewardConfig',
-  conditions: 'conditions',
-  eligibility: 'eligibility',
-  maxQuantity: 'maxQuantity',
-  used: 'used',
-  maxPerUser: 'maxPerUser',
-  maxPerDay: 'maxPerDay',
-  validFrom: 'validFrom',
-  validTo: 'validTo',
-  priority: 'priority',
   isActive: 'isActive',
+  priority: 'priority',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.EventReportScalarFieldEnum = {
+exports.Prisma.PromotionConditionScalarFieldEnum = {
+  id: 'id',
+  promotionId: 'promotionId',
+  triggerAction: 'triggerAction',
+  operator: 'operator',
+  value: 'value'
+};
+
+exports.Prisma.PromotionRewardBundleScalarFieldEnum = {
+  id: 'id',
+  promotionId: 'promotionId',
+  name: 'name'
+};
+
+exports.Prisma.PromotionRewardItemScalarFieldEnum = {
+  id: 'id',
+  bundleId: 'bundleId',
+  rewardType: 'rewardType',
+  value: 'value',
+  walletType: 'walletType',
+  maxValue: 'maxValue',
+  metadata: 'metadata'
+};
+
+exports.Prisma.CouponBatchScalarFieldEnum = {
+  id: 'id',
+  promotionId: 'promotionId',
+  name: 'name',
+  discountType: 'discountType',
+  discountValue: 'discountValue',
+  maxDiscountValue: 'maxDiscountValue',
+  totalCodes: 'totalCodes',
+  validDays: 'validDays',
+  validFrom: 'validFrom',
+  validTo: 'validTo',
+  usageFrequency: 'usageFrequency',
+  maxUsagePerUser: 'maxUsagePerUser',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CouponCodeScalarFieldEnum = {
+  id: 'id',
+  batchId: 'batchId',
+  code: 'code',
+  isUsed: 'isUsed',
+  usedBy: 'usedBy',
+  usedAt: 'usedAt',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.EventAnalyticsScalarFieldEnum = {
   id: 'id',
   eventId: 'eventId',
-  reportType: 'reportType',
-  reportDate: 'reportDate',
-  data: 'data',
-  createdAt: 'createdAt'
+  snapshotDate: 'snapshotDate',
+  totalEligible: 'totalEligible',
+  totalParticipants: 'totalParticipants',
+  totalRewardsClaimed: 'totalRewardsClaimed',
+  totalCouponsIssued: 'totalCouponsIssued',
+  totalCouponsUsed: 'totalCouponsUsed',
+  totalRevenue: 'totalRevenue',
+  totalRewardCost: 'totalRewardCost',
+  conversionRate: 'conversionRate',
+  revenueBeforeEvent: 'revenueBeforeEvent'
 };
 
 exports.Prisma.FfoodCredentialScalarFieldEnum = {
@@ -1156,6 +1211,83 @@ exports.Prisma.PromotionRewardRedemptionScalarFieldEnum = {
   note: 'note',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
+};
+
+exports.Prisma.MenuCampaignScalarFieldEnum = {
+  id: 'id',
+  tenantId: 'tenantId',
+  name: 'name',
+  description: 'description',
+  status: 'status',
+  discountType: 'discountType',
+  discountValue: 'discountValue',
+  maxDiscountAmount: 'maxDiscountAmount',
+  startDate: 'startDate',
+  endDate: 'endDate',
+  totalBudget: 'totalBudget',
+  spentBudget: 'spentBudget',
+  totalUsageCount: 'totalUsageCount',
+  maxUsesPerUserPerCampaign: 'maxUsesPerUserPerCampaign',
+  maxUsesPerUserPerDay: 'maxUsesPerUserPerDay',
+  minOrderValue: 'minOrderValue',
+  priority: 'priority',
+  testGroup: 'testGroup',
+  requiredBpLevel: 'requiredBpLevel',
+  requiredBpSeasonId: 'requiredBpSeasonId',
+  newMemberDaysThreshold: 'newMemberDaysThreshold',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.MenuCampaignMenuScopeScalarFieldEnum = {
+  id: 'id',
+  campaignId: 'campaignId',
+  scopeType: 'scopeType',
+  targetId: 'targetId'
+};
+
+exports.Prisma.MenuCampaignCustomerScopeScalarFieldEnum = {
+  id: 'id',
+  campaignId: 'campaignId',
+  scopeType: 'scopeType',
+  targetId: 'targetId'
+};
+
+exports.Prisma.MenuCampaignTimeSlotScalarFieldEnum = {
+  id: 'id',
+  campaignId: 'campaignId',
+  dayOfWeek: 'dayOfWeek',
+  startTime: 'startTime',
+  endTime: 'endTime'
+};
+
+exports.Prisma.MenuCampaignComboRuleScalarFieldEnum = {
+  id: 'id',
+  campaignId: 'campaignId',
+  categoryId: 'categoryId',
+  minQuantity: 'minQuantity'
+};
+
+exports.Prisma.MenuCampaignUsageScalarFieldEnum = {
+  id: 'id',
+  campaignId: 'campaignId',
+  userId: 'userId',
+  orderId: 'orderId',
+  discountAmount: 'discountAmount',
+  appliedAt: 'appliedAt'
+};
+
+exports.Prisma.MenuCampaignAnalyticsScalarFieldEnum = {
+  id: 'id',
+  campaignId: 'campaignId',
+  snapshotDate: 'snapshotDate',
+  totalUsages: 'totalUsages',
+  uniqueUsers: 'uniqueUsers',
+  totalDiscountGiven: 'totalDiscountGiven',
+  totalRevenueGenerated: 'totalRevenueGenerated',
+  averageOrderValue: 'averageOrderValue',
+  conversionRate: 'conversionRate'
 };
 
 exports.Prisma.SortOrder = {
@@ -1387,6 +1519,7 @@ exports.Prisma.MenuCategoryOrderByRelevanceFieldEnum = {
   name: 'name',
   scheduleTimeStart: 'scheduleTimeStart',
   scheduleTimeEnd: 'scheduleTimeEnd',
+  scheduleDayRules: 'scheduleDayRules',
   scheduleMachineGroupIds: 'scheduleMachineGroupIds',
   requiredCategoryIds: 'requiredCategoryIds'
 };
@@ -1488,10 +1621,7 @@ exports.Prisma.GameAppointmentRewardOrderByRelevanceFieldEnum = {
 exports.Prisma.EventOrderByRelevanceFieldEnum = {
   id: 'id',
   name: 'name',
-  description: 'description',
-  targetAudience: 'targetAudience',
-  conditions: 'conditions',
-  rules: 'rules'
+  description: 'description'
 };
 
 exports.Prisma.EventParticipantOrderByRelevanceFieldEnum = {
@@ -1500,19 +1630,41 @@ exports.Prisma.EventParticipantOrderByRelevanceFieldEnum = {
   rewardsReceived: 'rewardsReceived'
 };
 
-exports.Prisma.EventRewardOrderByRelevanceFieldEnum = {
+exports.Prisma.EventTargetRuleOrderByRelevanceFieldEnum = {
   eventId: 'eventId',
-  name: 'name',
-  description: 'description',
-  rewardConfig: 'rewardConfig',
-  conditions: 'conditions',
-  eligibility: 'eligibility'
+  operator: 'operator',
+  value: 'value'
 };
 
-exports.Prisma.EventReportOrderByRelevanceFieldEnum = {
+exports.Prisma.EventPromotionOrderByRelevanceFieldEnum = {
   eventId: 'eventId',
-  reportType: 'reportType',
-  data: 'data'
+  name: 'name',
+  description: 'description'
+};
+
+exports.Prisma.PromotionConditionOrderByRelevanceFieldEnum = {
+  operator: 'operator'
+};
+
+exports.Prisma.PromotionRewardBundleOrderByRelevanceFieldEnum = {
+  name: 'name'
+};
+
+exports.Prisma.PromotionRewardItemOrderByRelevanceFieldEnum = {
+  walletType: 'walletType',
+  metadata: 'metadata'
+};
+
+exports.Prisma.CouponBatchOrderByRelevanceFieldEnum = {
+  name: 'name'
+};
+
+exports.Prisma.CouponCodeOrderByRelevanceFieldEnum = {
+  code: 'code'
+};
+
+exports.Prisma.EventAnalyticsOrderByRelevanceFieldEnum = {
+  eventId: 'eventId'
 };
 
 exports.Prisma.FfoodCredentialOrderByRelevanceFieldEnum = {
@@ -1559,6 +1711,18 @@ exports.Prisma.PromotionRewardOrderByRelevanceFieldEnum = {
 exports.Prisma.PromotionRewardRedemptionOrderByRelevanceFieldEnum = {
   walletType: 'walletType',
   note: 'note'
+};
+
+exports.Prisma.MenuCampaignOrderByRelevanceFieldEnum = {
+  tenantId: 'tenantId',
+  name: 'name',
+  description: 'description',
+  testGroup: 'testGroup'
+};
+
+exports.Prisma.MenuCampaignTimeSlotOrderByRelevanceFieldEnum = {
+  startTime: 'startTime',
+  endTime: 'endTime'
 };
 exports.MissionType = exports.$Enums.MissionType = {
   HOURS: 'HOURS',
@@ -1721,16 +1885,34 @@ exports.ParticipantStatus = exports.$Enums.ParticipantStatus = {
   WITHDRAWN: 'WITHDRAWN'
 };
 
-exports.RewardType = exports.$Enums.RewardType = {
-  PERCENTAGE_DISCOUNT: 'PERCENTAGE_DISCOUNT',
-  FIXED_DISCOUNT: 'FIXED_DISCOUNT',
-  FREE_ITEM: 'FREE_ITEM',
-  BONUS_ITEM: 'BONUS_ITEM',
-  CASH_BACK: 'CASH_BACK',
-  MULTIPLIER: 'MULTIPLIER',
-  CONDITIONAL_REWARD: 'CONDITIONAL_REWARD',
-  MAIN_ACCOUNT_TOPUP: 'MAIN_ACCOUNT_TOPUP',
-  TOPUP_BONUS_PERCENTAGE: 'TOPUP_BONUS_PERCENTAGE'
+exports.TargetRuleType = exports.$Enums.TargetRuleType = {
+  RANK: 'RANK',
+  MIN_TOTAL_PAYMENT: 'MIN_TOTAL_PAYMENT',
+  ZONE: 'ZONE',
+  SPECIFIC_USER: 'SPECIFIC_USER'
+};
+
+exports.ConditionTrigger = exports.$Enums.ConditionTrigger = {
+  TOPUP: 'TOPUP',
+  ORDER_FOOD: 'ORDER_FOOD',
+  PLAY_TIME: 'PLAY_TIME',
+  TOTAL_SPEND: 'TOTAL_SPEND'
+};
+
+exports.EventRewardType = exports.$Enums.EventRewardType = {
+  BONUS_PERCENT: 'BONUS_PERCENT',
+  TOPUP_FIXED: 'TOPUP_FIXED',
+  SPIN_TURNS: 'SPIN_TURNS',
+  FREE_DRINK: 'FREE_DRINK',
+  FREE_FOOD: 'FREE_FOOD',
+  COUPON: 'COUPON'
+};
+
+exports.UsageFrequency = exports.$Enums.UsageFrequency = {
+  PER_WEEK: 'PER_WEEK',
+  PER_MONTH: 'PER_MONTH',
+  PER_EVENT: 'PER_EVENT',
+  ONE_TIME: 'ONE_TIME'
 };
 
 exports.RewardPunishType = exports.$Enums.RewardPunishType = {
@@ -1765,6 +1947,36 @@ exports.RedemptionStatus = exports.$Enums.RedemptionStatus = {
   APPROVED: 'APPROVED',
   COMPLETED: 'COMPLETED',
   REJECTED: 'REJECTED'
+};
+
+exports.MenuCampaignStatus = exports.$Enums.MenuCampaignStatus = {
+  DRAFT: 'DRAFT',
+  ACTIVE: 'ACTIVE',
+  PAUSED: 'PAUSED',
+  BUDGET_EXCEEDED: 'BUDGET_EXCEEDED',
+  EXPIRED: 'EXPIRED',
+  CANCELLED: 'CANCELLED'
+};
+
+exports.MenuCampaignDiscountType = exports.$Enums.MenuCampaignDiscountType = {
+  PERCENTAGE: 'PERCENTAGE',
+  FIXED_AMOUNT: 'FIXED_AMOUNT',
+  FLAT_PRICE: 'FLAT_PRICE',
+  COMBO_DEAL: 'COMBO_DEAL'
+};
+
+exports.MenuScopeType = exports.$Enums.MenuScopeType = {
+  ALL: 'ALL',
+  CATEGORY: 'CATEGORY',
+  RECIPE: 'RECIPE'
+};
+
+exports.CustomerScopeType = exports.$Enums.CustomerScopeType = {
+  ALL_CUSTOMERS: 'ALL_CUSTOMERS',
+  RANK: 'RANK',
+  MACHINE_GROUP: 'MACHINE_GROUP',
+  SPECIFIC_USER: 'SPECIFIC_USER',
+  NEW_MEMBER: 'NEW_MEMBER'
 };
 
 exports.Prisma.ModelName = {
@@ -1808,6 +2020,7 @@ exports.Prisma.ModelName = {
   PromotionSetting: 'PromotionSetting',
   BattlePassPremiumOrder: 'BattlePassPremiumOrder',
   ChatMessage: 'ChatMessage',
+  ChatLastSeen: 'ChatLastSeen',
   BirthdayTier: 'BirthdayTier',
   UserBirthdayProgress: 'UserBirthdayProgress',
   BirthdayTransaction: 'BirthdayTransaction',
@@ -1836,8 +2049,14 @@ exports.Prisma.ModelName = {
   GameAppointmentReward: 'GameAppointmentReward',
   Event: 'Event',
   EventParticipant: 'EventParticipant',
-  EventReward: 'EventReward',
-  EventReport: 'EventReport',
+  EventTargetRule: 'EventTargetRule',
+  EventPromotion: 'EventPromotion',
+  PromotionCondition: 'PromotionCondition',
+  PromotionRewardBundle: 'PromotionRewardBundle',
+  PromotionRewardItem: 'PromotionRewardItem',
+  CouponBatch: 'CouponBatch',
+  CouponCode: 'CouponCode',
+  EventAnalytics: 'EventAnalytics',
   FfoodCredential: 'FfoodCredential',
   MomoCredential: 'MomoCredential',
   RewardPunishRule: 'RewardPunishRule',
@@ -1848,7 +2067,14 @@ exports.Prisma.ModelName = {
   PromotionReward: 'PromotionReward',
   PromotionRewardRecipe: 'PromotionRewardRecipe',
   PromotionRewardCategory: 'PromotionRewardCategory',
-  PromotionRewardRedemption: 'PromotionRewardRedemption'
+  PromotionRewardRedemption: 'PromotionRewardRedemption',
+  MenuCampaign: 'MenuCampaign',
+  MenuCampaignMenuScope: 'MenuCampaignMenuScope',
+  MenuCampaignCustomerScope: 'MenuCampaignCustomerScope',
+  MenuCampaignTimeSlot: 'MenuCampaignTimeSlot',
+  MenuCampaignComboRule: 'MenuCampaignComboRule',
+  MenuCampaignUsage: 'MenuCampaignUsage',
+  MenuCampaignAnalytics: 'MenuCampaignAnalytics'
 };
 
 /**

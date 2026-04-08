@@ -155,7 +155,7 @@ const ComputerCard: React.FC<ComputerCardProps> = ({ computer, onClick, classNam
 
   return (
     <div
-      className={`${bgColor} text-white font-bold relative cursor-pointer hover:opacity-90 transition-opacity duration-200 rounded-lg shadow-md leading-[1.15] ${className ? className : 'h-[120px] w-[calc(50%-0.25rem)] sm:w-[140px]'}`}
+      className={`${bgColor} text-white font-bold relative cursor-pointer hover:opacity-90 transition-opacity duration-200 rounded-lg shadow-md leading-[1.15] ${className || 'h-[120px] w-[calc(50%-0.25rem)] sm:w-[140px]'}`}
       onClick={onClick}
     >
       {/* Bottom-left: group tag */}

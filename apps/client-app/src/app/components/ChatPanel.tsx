@@ -2,9 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { App } from 'antd';
 import { io, Socket } from 'socket.io-client';
 import { apiClient, getToken } from '@gateway-workspace/shared/utils/client';
+import { ChatWindow } from '@gateway-workspace/shared/chat';
+
 import { useUser } from '../contexts/UserContext';
 import { useCart } from '../contexts/CartContext';
-import { ChatWindow } from '@gateway-workspace/shared/chat';
+import { useMenuCampaigns } from '../hooks/useMenuCampaigns';
 
 interface FoodOrder {
   id: number;
@@ -46,6 +48,7 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat', onMenuUp
   const [activeTab, setActiveTab] = useState<'chat' | 'cart'>(defaultTab);
   const { user } = useUser();
   const { cart, setCart, clearCart } = useCart();
+  const { getItemDiscount, getCartTotalDiscount } = useMenuCampaigns();
 
   const handleChangeQty = (idx: number, delta: number) => {
     setCart((prev) => {
@@ -174,7 +177,35 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat', onMenuUp
     setCheckingOut(true);
     setCheckoutError(null);
     try {
-      const res = await apiClient.post('/dashboard/checkout', { cart });
+      // Calculate expected discount from client-side campaign data
+      const expectedDiscount = getCartTotalDiscount(
+        cart.map((ci: any) => ({
+          recipeId: ci.item?.id,
+          categoryId: ci.item?.categoryId ?? 0,
+          salePrice: Number(ci.item?.salePrice ?? 0),
+          quantity: ci.quantity ?? 1,
+        }))
+      );
+
+      const res = await apiClient.post('/dashboard/checkout', { cart, expectedDiscount });
+
+      // Handle price changed response
+      if (res.data?.code === 'PRICE_CHANGED') {
+        const prev = res.data.previousDiscount;
+        const curr = res.data.currentDiscount;
+        const newTotal = res.data.totalAfterDiscount;
+        notification.warning({
+          message: 'Giá khuyến mãi đã thay đổi!',
+          description: curr > 0
+            ? `Mức giảm đã đổi từ ${prev.toLocaleString()}đ → ${curr.toLocaleString()}đ. Tổng mới: ${newTotal.toLocaleString()}đ. Vui lòng kiểm tra và đặt lại.`
+            : `Khuyến mãi đã kết thúc. Giá gốc: ${res.data.totalBeforeDiscount?.toLocaleString()}đ. Vui lòng kiểm tra lại.`,
+          placement: 'topRight',
+          duration: 8,
+        });
+        setCheckoutError('Giá đã thay đổi, vui lòng kiểm tra lại giỏ hàng');
+        return;
+      }
+
       await clearCart();
       const list = await fetchCurrentOrder();
       const newOrder = res.data?.data ?? list[0];
@@ -317,7 +348,10 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat', onMenuUp
                     const imgSrc = cartItem.item.imageUrl
                       ? `${apiClient.defaults.baseURL ?? ''}${cartItem.item.imageUrl}`
                       : null;
-                    const subtotal = Number(cartItem.item.salePrice) * cartItem.quantity;
+                    const price = Number(cartItem.item.salePrice);
+                    const promo = getItemDiscount(cartItem.item.id, cartItem.item.categoryId ?? 0, price);
+                    const effectivePrice = promo ? price - promo.discount : price;
+                    const subtotal = effectivePrice * cartItem.quantity;
                     return (
                       <div key={idx} className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden flex gap-2.5 p-2">
                         <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-900">
@@ -353,12 +387,28 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat', onMenuUp
                 </div>
 
                 <div className="flex-shrink-0 px-3 pb-3 pt-1.5 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400 text-xs font-medium">Tổng cộng</span>
-                    <span className="font-bold text-sm text-pink-400">
-                      {cart.reduce((sum, ci) => sum + Number(ci.item.salePrice) * ci.quantity, 0).toLocaleString('vi-VN')}đ
-                    </span>
-                  </div>
+                  {(() => {
+                    const originalTotal = cart.reduce((sum, ci) => sum + Number(ci.item.salePrice) * ci.quantity, 0);
+                    const discount = getCartTotalDiscount(cart.map(ci => ({
+                      recipeId: ci.item.id, categoryId: ci.item.categoryId ?? 0,
+                      salePrice: Number(ci.item.salePrice), quantity: ci.quantity,
+                    })));
+                    const finalTotal = originalTotal - discount;
+                    return (
+                      <>
+                        {discount > 0 && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-green-400 text-[10px]">Bạn đã tiết kiệm được</span>
+                            <span className="text-green-400 text-[10px] font-semibold">{discount.toLocaleString('vi-VN')}đ</span>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-400 text-xs font-medium">Tổng cộng</span>
+                          <span className="font-bold text-sm text-pink-400">{finalTotal.toLocaleString('vi-VN')}đ</span>
+                        </div>
+                      </>
+                    );
+                  })()}
                   {checkoutError && <p className="text-red-400 text-[10px] text-center">{checkoutError}</p>}
                   <button
                     onClick={handleCheckout}

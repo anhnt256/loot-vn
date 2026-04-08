@@ -117,8 +117,12 @@ export class ChatGateway
   ) {
     const tenantId = client.data.tenantId;
     const userId = client.data.userId;
-    if (!tenantId || !userId || !data?.messageId) return;
-    await this.chatService.markSeen(tenantId, userId, data.messageId);
+    if (!tenantId || !userId) return;
+
+    // messageId > 0: mark as seen; messageId = 0: just refresh unread count
+    if (data?.messageId > 0) {
+      await this.chatService.markSeen(tenantId, userId, data.messageId);
+    }
     const count = await this.chatService.getUnreadCount(tenantId, userId);
     client.emit('chat:unread_count', { count });
   }

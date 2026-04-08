@@ -10,6 +10,7 @@
 import { buildReceiptFromTemplate, type ReceiptData } from './EscPosBuilder';
 import * as UsbPrinter from './UsbPrinterDriver';
 import { loadTemplate, type ReceiptTemplate, type ReceiptElement } from './receiptTemplate';
+import { usePrinterStore } from './usePrinterStore';
 
 /**
  * Print a receipt for the given order data.
@@ -18,7 +19,15 @@ import { loadTemplate, type ReceiptTemplate, type ReceiptElement } from './recei
 export async function printReceipt(data: ReceiptData): Promise<void> {
   const template = loadTemplate();
   const copies = template.copies || 1;
+  const printMode = usePrinterStore.getState().printMode;
 
+  // System print mode — always use OS printer driver (CSS print)
+  if (printMode === 'system') {
+    await cssPrintFallback(template, data);
+    return;
+  }
+
+  // USB mode — send ESC/POS via WebUSB, fallback to CSS print
   for (let i = 0; i < copies; i++) {
     if (UsbPrinter.isConnected()) {
       const bytes = buildReceiptFromTemplate(template, data);
@@ -107,9 +116,9 @@ function renderElementHtml(el: ReceiptElement, data: ReceiptData): string {
     case 'items':
       return data.items.map((item) =>
         `<div style="margin:4px 0">` +
-          `<div style="font-weight:bold;text-transform:uppercase">${esc(item.name)}</div>` +
-          (item.note ? `<div style="font-size:11px;color:#444">(${esc(item.note)})</div>` : '') +
-          `<div style="font-size:11px">${item.quantity} x ${fmtMoney(item.price)} = ${fmtMoney(item.subtotal)}</div>` +
+          `<div style="font-weight:bold;text-transform:uppercase">${esc(item.name)}</div>${ 
+          item.note ? `<div style="font-size:11px;color:#444">(${esc(item.note)})</div>` : '' 
+          }<div style="font-size:11px">${item.quantity} x ${fmtMoney(item.price)} = ${fmtMoney(item.subtotal)}</div>` +
         `</div>` +
         `<div style="border-top:1px dashed #ccc;margin:3px 0"></div>`
       ).join('');
@@ -151,7 +160,7 @@ ${bodyHtml}
 }
 
 function fmtMoney(v: number): string {
-  return Number(v).toLocaleString('vi-VN') + ' đ';
+  return `${Number(v).toLocaleString('vi-VN')  } đ`;
 }
 
 function esc(str: string): string {

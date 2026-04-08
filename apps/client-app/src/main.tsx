@@ -1,5 +1,7 @@
 import * as ReactDOM from 'react-dom/client';
+
 import App from './app/App';
+
 import './index.css';
 import { apiClient, removeToken } from '@gateway-workspace/shared/utils/client';
 
@@ -7,6 +9,13 @@ import { apiClient, removeToken } from '@gateway-workspace/shared/utils/client';
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (
+      error.response?.status === 503 &&
+      !window.location.pathname.includes('/maintenance')
+    ) {
+      window.location.href = '/maintenance';
+      return Promise.reject(error);
+    }
     if (
       error.response?.status === 401 &&
       !error.config?.url?.includes('/auth/') &&

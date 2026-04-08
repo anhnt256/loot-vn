@@ -302,6 +302,35 @@ export class MaterialService {
     });
   }
 
+  async findMaterialTransactions(tenantId: string, materialId: number) {
+    const db = await this.getGatewayClient(tenantId);
+    const tenantIdInt = parseInt(tenantId) || 1;
+
+    const transactions = await db.inventoryTransaction.findMany({
+      where: { tenantId: tenantIdInt, materialId },
+      include: { material: { select: { name: true, baseUnit: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+    });
+
+    // Resolve staffId → userName
+    const staffIds = [...new Set(transactions.map((t: any) => t.staffId).filter(Boolean))];
+    let staffMap: Record<number, string> = {};
+    if (staffIds.length > 0) {
+      const users: any[] = await db.user.findMany({
+        where: { userId: { in: staffIds as number[] } },
+        select: { userId: true, userName: true },
+      });
+      staffMap = Object.fromEntries(users.map((u: any) => [u.userId, u.userName || `#${u.userId}`]));
+    }
+
+    return transactions.map((t: any) => ({
+      ...t,
+      quantityChange: Number(t.quantityChange),
+      staffName: t.staffId ? (staffMap[t.staffId] || `#${t.staffId}`) : null,
+    }));
+  }
+
   /**
    * Danh sách ca làm việc kèm thống kê biến động kho trong ca
    */

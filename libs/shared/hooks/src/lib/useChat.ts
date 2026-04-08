@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useSSE } from './useSSE';
 import { apiClient } from '@gateway-workspace/shared/utils';
+
+import { useSSE } from './useSSE';
 
 export interface ChatMessage {
   id: number;
@@ -61,7 +62,7 @@ export function useChat({ machineName, onError }: UseChatOptions) {
   });
 
   // Load initial messages
-  const loadMessages = useCallback(async (page: number = 1, append: boolean = false) => {
+  const loadMessages = useCallback(async (page = 1, append = false) => {
     if (isLoading) return;
 
     setIsLoading(true);

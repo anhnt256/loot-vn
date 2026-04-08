@@ -5,6 +5,8 @@
  * 80mm paper ≈ 48 characters per line (Font A, normal size)
  */
 
+import type { ReceiptTemplate, ReceiptElement } from './receiptTemplate';
+
 const CHARS_PER_LINE = 48;
 
 const ESC = 0x1b;
@@ -175,8 +177,6 @@ export interface ReceiptData {
   footerLine2?: string;
 }
 
-import type { ReceiptTemplate, ReceiptElement } from './receiptTemplate';
-
 /**
  * Resolve a variable key to its value from ReceiptData.
  */
@@ -275,5 +275,5 @@ export function buildReceipt(data: ReceiptData): Uint8Array {
 }
 
 function fmtMoney(v: number): string {
-  return Number(v).toLocaleString('vi-VN') + ' d';
+  return `${Number(v).toLocaleString('vi-VN')  } d`;
 }

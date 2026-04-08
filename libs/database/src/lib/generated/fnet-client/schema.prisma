@@ -819,6 +819,13 @@ model usagetimedetailtb {
   @@ignore
 }
 
+/// UserType values:
+/// 0,1 = Computer (khách lẻ)
+/// 2   = Hội viên
+/// 3   = Admin
+/// 4   = Staff
+/// 5   = Combo
+/// 6,7,8,9 = Hội viên nhóm khác (VIP)
 model usagetimetb {
   UsageTimeId   Int     @id @default(autoincrement())
   UsageTimeName String? @db.VarChar(30)
@@ -828,6 +835,7 @@ model usagetimetb {
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// UserType: 0,1=Computer | 2=Hội viên | 3=Admin | 4=Staff | 5=Combo | 6,7,8,9=Hội viên VIP
 model usertb {
   UserId           Int       @id @default(autoincrement())
   FirstName        String?   @db.VarChar(100)

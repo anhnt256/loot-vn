@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
@@ -22,6 +22,10 @@ import { ClientDashboardModule } from './admin-app/dashboard/dashboard.module';
 import { OrderModule } from './admin-app/order/order.module';
 import { PromotionRewardModule } from './admin-app/promotion-reward/promotion-reward.module';
 import { ChatModule } from './admin-app/chat/chat.module';
+import { EventPromotionModule } from './admin-app/event-promotion/event-promotion.module';
+import { MenuCampaignModule } from './admin-app/menu-campaign/menu-campaign.module';
+import { MaintenanceModule } from './admin-app/maintenance/maintenance.module';
+import { MaintenanceMiddleware } from './middleware/maintenance.middleware';
 
 @Module({
   imports: [
@@ -46,8 +50,15 @@ import { ChatModule } from './admin-app/chat/chat.module';
     OrderModule,
     PromotionRewardModule,
     ChatModule,
+    EventPromotionModule,
+    MenuCampaignModule,
+    MaintenanceModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(MaintenanceMiddleware).forRoutes('*');
+  }
+}

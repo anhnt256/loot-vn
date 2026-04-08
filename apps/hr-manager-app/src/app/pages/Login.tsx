@@ -48,7 +48,7 @@ const Login: React.FC = () => {
     try {
       const result = await apiClient.post('/auth/login', {
         userName: username,
-        password: password,
+        password,
         loginMethod: 'staff',
       });
 

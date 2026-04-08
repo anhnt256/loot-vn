@@ -1,6 +1,7 @@
 import React from 'react';
 import { App as AntApp, ConfigProvider, theme } from 'antd';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+
 import Login from './pages/Login';
 import AdminLayout from './components/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -19,6 +20,9 @@ import OrderManagementPage from './pages/OrderManagementPage';
 import PrinterManagement from './pages/printer-management/PrinterManagement';
 import StatisticsPage from './pages/StatisticsPage';
 import FeedbackManagementPage from './pages/FeedbackManagementPage';
+import RewardExchangeManagementPage from './pages/RewardExchangeManagementPage';
+import EventPromotionPage from './pages/EventPromotionPage';
+import MenuCampaignPage from './pages/MenuCampaignPage';
 
 export function App() {
   return (
@@ -43,6 +47,9 @@ export function App() {
               <Route path="statistics" element={<StatisticsPage />} />
               <Route path="printer-management" element={<PrinterManagement />} />
               <Route path="feedback" element={<FeedbackManagementPage />} />
+              <Route path="reward-exchange" element={<RewardExchangeManagementPage />} />
+              <Route path="event-promotion" element={<EventPromotionPage />} />
+              <Route path="menu-campaign" element={<MenuCampaignPage />} />
               <Route path="*" element={<div className="p-8 text-white">Chức năng đang được phát triển...</div>} />
             </Route>
             <Route path="/" element={<Navigate to="/login" replace />} />

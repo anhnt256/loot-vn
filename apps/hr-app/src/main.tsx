@@ -1,8 +1,10 @@
 import { StrictMode } from 'react';
 import * as ReactDOM from 'react-dom/client';
+
 import './index.css';
-import App from './app/App';
 import { apiClient } from '@gateway-workspace/shared/utils';
+
+import App from './app/App';
 
 async function bootstrap() {
   if (typeof globalThis.window !== 'undefined') {

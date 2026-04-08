@@ -18,8 +18,8 @@ const PanContainer: React.FC<PanContainerProps> = ({ children, width = '2400px',
     let isPanActive = false;
     let startX = 0;
     let startY = 0;
-    let startScrollLeft = 0;
-    let startScrollTop = 0;
+    const startScrollLeft = 0;
+    const startScrollTop = 0;
 
     const onMouseDown = (e: MouseEvent) => {
       const target = e.target as HTMLElement;

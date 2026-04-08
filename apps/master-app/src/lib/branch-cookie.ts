@@ -18,7 +18,7 @@ function setCookie(name: string, value: string, maxAgeDays: number = defaultMaxA
 }
 
 function getCookie(name: string): string | null {
-  const key = name + '=';
+  const key = `${name  }=`;
   const parts = document.cookie.split(';');
   for (let i = 0; i < parts.length; i++) {
     const part = parts[i].trim();

@@ -4,6 +4,7 @@ import { PlusOutlined, SaveOutlined, DeleteOutlined, SwapRightOutlined } from '@
 import { apiClient } from '@gateway-workspace/shared/utils/client';
 // @ts-expect-error type resolution issue
 import RGL, { Layout, WidthProvider } from 'react-grid-layout/legacy';
+
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import ComputerCard from '../components/ComputerCard';
@@ -206,8 +207,7 @@ const LayoutManager: React.FC = () => {
     return computers.filter(c => c.zoneId === activeZoneId);
   }, [computers, activeZoneId]);
 
-  const gridLayouts: Layout[] = useMemo(() => {
-    return activeZoneComputers.map((c, index) => {
+  const gridLayouts: Layout[] = useMemo(() => activeZoneComputers.map((c, index) => {
       // Provide default position if null
       const l = c.layout || { x: (index * 3) % 24, y: Math.floor(index / 8) * 3, w: 3, h: 3 };
       const isLegacy = l.w === 2 && l.h === 2;
@@ -219,8 +219,7 @@ const LayoutManager: React.FC = () => {
         h: 3,
         isResizable: false,
       };
-    });
-  }, [activeZoneComputers]);
+    }), [activeZoneComputers]);
 
   const getGroupColor = (groupName: string) => {
     const colors = [
@@ -286,7 +285,7 @@ const LayoutManager: React.FC = () => {
       // Then quickly set its exact layout via Save API so it lands right where dropped
       await apiClient.post('/layout/layouts/save', { 
         layouts: [{
-          macAddress: macAddress,
+          macAddress,
           x: layoutItem.x,
           y: layoutItem.y,
           w: 3,
@@ -425,10 +424,10 @@ const LayoutManager: React.FC = () => {
                 onLayoutChange={onLayoutChange}
                 onDragStop={onNodeDragStop}
                 compactType={null} 
-                preventCollision={true}
+                preventCollision
                 isResizable={false}
-                isDraggable={true}
-                isDroppable={true}
+                isDraggable
+                isDroppable
                 onDrop={onDropLayout}
                 droppingItem={{ i: 'dropping-new', w: 3, h: 3 }}
               >

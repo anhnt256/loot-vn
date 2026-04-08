@@ -274,7 +274,7 @@ const FeedbackManagementPage: React.FC = () => {
       const issueRaw = userNote
         ? `[Feedback #${selectedFeedback.id}] ${userNote}`
         : `[Feedback #${selectedFeedback.id}] ${selectedFeedback.title}`;
-      const issue = issueRaw.length > 180 ? issueRaw.substring(0, 180) + '...' : issueRaw;
+      const issue = issueRaw.length > 180 ? `${issueRaw.substring(0, 180)  }...` : issueRaw;
       await apiClient.post(`/devices/${selectedFeedback.computerId}`, {
         type: 'REPORT',
         issue,
@@ -646,7 +646,7 @@ const FeedbackManagementPage: React.FC = () => {
                     // Fallback: parse device info from description text for old feedbacks
                     const descLines = selectedFeedback.description.split('\n');
                     const deviceLines = descLines.filter((l) =>
-                      DEVICE_ITEMS.some((d) => l.includes(d.name + ':'))
+                      DEVICE_ITEMS.some((d) => l.includes(`${d.name  }:`))
                     );
                     if (deviceLines.length > 0) {
                       return (

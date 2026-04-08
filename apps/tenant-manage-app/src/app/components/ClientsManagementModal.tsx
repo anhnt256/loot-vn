@@ -93,7 +93,7 @@ const ClientsManagementModal: React.FC<ClientsManagementModalProps> = ({
   };
 
   const handleSave = async () => {
-    let finalClients = [...clients];
+    const finalClients = [...clients];
 
     if (isAdding) {
       try {

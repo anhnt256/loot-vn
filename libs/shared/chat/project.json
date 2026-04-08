@@ -4,5 +4,15 @@
   "sourceRoot": "libs/shared/chat/src",
   "projectType": "library",
   "tags": [],
-  "targets": {}
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/shared/chat/src/**/*.{ts,tsx}"
+        ],
+        "maxWarnings": -1
+      }
+    }
+  }
 }

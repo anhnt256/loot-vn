@@ -1,6 +1,8 @@
 import { StrictMode } from 'react';
 import * as ReactDOM from 'react-dom/client';
+
 import App from './app/App';
+
 import './index.css';
 import { apiClient, removeToken } from '@gateway-workspace/shared/utils/client';
 

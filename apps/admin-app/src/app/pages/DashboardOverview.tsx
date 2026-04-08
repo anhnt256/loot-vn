@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Button, message, Drawer, Tabs, Select, Radio } from 'antd';
 import { UnorderedListOutlined, AppstoreOutlined, SyncOutlined } from '@ant-design/icons';
 import { apiClient } from '@gateway-workspace/shared/utils/client';
+import RGL, { WidthProvider } from 'react-grid-layout/legacy';
+
 import ComputerCard from '../components/ComputerCard';
 import ComputerDetailDrawer from '../components/ComputerDetailDrawer';
 import PanContainer from '../components/PanContainer';
 // @ts-expect-error type resolution issue
-import RGL, { WidthProvider } from 'react-grid-layout/legacy';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
@@ -113,8 +114,7 @@ const DashboardOverview: React.FC = () => {
   const countCombo = computers.filter((c) => c.userType === 5).length;
   const countActive = countOn + countCombo;
 
-  const mergedComputers = React.useMemo(() => {
-    return computers.map((c, index) => {
+  const mergedComputers = React.useMemo(() => computers.map((c, index) => {
       const layoutData = layouts.find((l: any) => l.computerName === c.name);
 
       return {
@@ -122,8 +122,7 @@ const DashboardOverview: React.FC = () => {
         zoneId: layoutData?.zoneId || null,
         layout: layoutData?.layout || null,
       };
-    });
-  }, [computers, layouts]);
+    }), [computers, layouts]);
 
   return (
     <div className="flex flex-col gap-4 h-[calc(100vh-100px)] pt-2 pb-6">
@@ -171,19 +170,19 @@ const DashboardOverview: React.FC = () => {
               <div className="text-gray-300">Dữ liệu sẽ cập nhật sau: {countdown}s</div>
               <div className="text-[#06b6d4] font-bold">Hoạt động: {countActive}/{total}</div>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#f97316]"></div>
+                <div className="w-2 h-2 rounded-full bg-[#f97316]" />
                 <span className="text-gray-300">Đang khởi động ({countReady})</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#3b82f6]"></div>
+                <div className="w-2 h-2 rounded-full bg-[#3b82f6]" />
                 <span className="text-gray-300">Đang sử dụng ({countOn})</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#a855f7]"></div>
+                <div className="w-2 h-2 rounded-full bg-[#a855f7]" />
                 <span className="text-gray-300">Combo ({countCombo})</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#9ca3af]"></div>
+                <div className="w-2 h-2 rounded-full bg-[#9ca3af]" />
                 <span className="text-gray-300">Máy tắt ({countOff})</span>
               </div>
             </div>
@@ -264,7 +263,7 @@ const DashboardOverview: React.FC = () => {
                     cols={dynamicCols}
                     rowHeight={34}
                     compactType={null}
-                    preventCollision={true}
+                    preventCollision
                     isDraggable={false}
                     isResizable={false}
                     style={{ minHeight: `${Math.max(dynamicHeight, 2400)}px`, width: `${dynamicWidth}px` }}

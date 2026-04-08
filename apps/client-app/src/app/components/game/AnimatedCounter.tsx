@@ -9,9 +9,7 @@ interface AnimatedCounterProps {
 
 export default function AnimatedCounter({ from, to, className = '' }: AnimatedCounterProps) {
   const count = useMotionValue(from);
-  const rounded = useTransform(count, (latest: number) => {
-    return new Intl.NumberFormat('en-US').format(Math.round(latest));
-  });
+  const rounded = useTransform(count, (latest: number) => new Intl.NumberFormat('en-US').format(Math.round(latest)));
 
   useEffect(() => {
     const controls = animate(count, to, {

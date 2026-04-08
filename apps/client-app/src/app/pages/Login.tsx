@@ -48,6 +48,12 @@ const Login: React.FC = () => {
     if (params.get('error') === 'expired') {
       message.error('Hệ thống đã hết hạn, vui lòng gia hạn để sử dụng');
     }
+    // Check maintenance on login page load
+    apiClient.get('/maintenance/status').then((res) => {
+      if (res.data?.enabled) {
+        navigate('/maintenance', { replace: true });
+      }
+    }).catch(() => {});
   }, []);
 
   if (token) return <Navigate to="/dashboard" replace />;

@@ -91,12 +91,12 @@ export default function TimeTracking({ staffId, month, year }: TimeTrackingProps
             <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Hôm nay</div>
             <div className="text-base font-bold text-blue-600">{stats.todayHours.toFixed(1)}h</div>
           </div>
-          <div className="h-8 w-[1px] bg-gray-100 mx-2"></div>
+          <div className="h-8 w-[1px] bg-gray-100 mx-2" />
           <div className="flex-1">
             <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Tuần này</div>
             <div className="text-base font-bold text-green-600">{stats.weekHours.toFixed(1)}h</div>
           </div>
-          <div className="h-8 w-[1px] bg-gray-100 mx-2"></div>
+          <div className="h-8 w-[1px] bg-gray-100 mx-2" />
           <div className="flex-1">
             <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Tháng này</div>
             <div className="text-base font-bold text-purple-600">{stats.monthHours.toFixed(1)}h</div>
@@ -154,7 +154,7 @@ export default function TimeTracking({ staffId, month, year }: TimeTrackingProps
 
                         return (
                           <div key={record.id} className={`relative pl-6 border-l-2 ${isWorking ? 'border-orange-100' : 'border-green-100'} last:pb-0 pb-4`}>
-                            <div className={`absolute left-[-9px] top-0 w-4 h-4 rounded-full border-4 border-white shadow-sm ${isWorking ? 'bg-orange-500 animate-pulse' : 'bg-green-500'}`}></div>
+                            <div className={`absolute left-[-9px] top-0 w-4 h-4 rounded-full border-4 border-white shadow-sm ${isWorking ? 'bg-orange-500 animate-pulse' : 'bg-green-500'}`} />
                             <div className="flex justify-between items-start mb-2">
                               <div>
                                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Lần {group.records.length - index}</span>

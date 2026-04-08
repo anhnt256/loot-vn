@@ -26,7 +26,25 @@ export interface ChatMessageWithUser {
 
 @Injectable()
 export class ChatService {
+  private tableEnsured = new Set<string>();
+
   constructor(private readonly tenantGateway: TenantGatewayService) {}
+
+  /** Auto-create ChatLastSeen table if not exists (once per tenant) */
+  private async ensureChatLastSeenTable(tenantId: string): Promise<void> {
+    if (this.tableEnsured.has(tenantId)) return;
+    const db = await this.tenantGateway.getGatewayClient(tenantId);
+    await (db as any).$queryRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS ChatLastSeen (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        userId INT NOT NULL,
+        lastSeenMsgId INT NOT NULL DEFAULT 0,
+        updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY ChatLastSeen_userId_key (userId)
+      )
+    `);
+    this.tableEnsured.add(tenantId);
+  }
 
   async saveMessage(
     tenantId: string,
@@ -90,13 +108,14 @@ export class ChatService {
          FROM ChatMessage cm
          LEFT JOIN User u ON cm.userId = u.userId
          LEFT JOIN Staff s ON cm.staffId = s.id
+         WHERE cm.createdAt >= NOW() - INTERVAL 3 DAY
          ORDER BY cm.createdAt DESC
          LIMIT ? OFFSET ?`,
         limit,
         offset,
       ),
       (db as any).$queryRawUnsafe(
-        `SELECT COUNT(*) as total FROM ChatMessage`,
+        `SELECT COUNT(*) as total FROM ChatMessage WHERE createdAt >= NOW() - INTERVAL 3 DAY`,
       ),
     ]);
 
@@ -119,14 +138,43 @@ export class ChatService {
   }
 
   async getLastSeenId(tenantId: string, userId: number): Promise<number> {
+    // Try Redis first (fast cache)
     const val = await redisService.get(LAST_SEEN_KEY(tenantId, userId));
-    return val ? parseInt(val, 10) : 0;
+    if (val) return parseInt(val, 10);
+
+    // Fallback to DB (persistent)
+    await this.ensureChatLastSeenTable(tenantId);
+    const db = await this.tenantGateway.getGatewayClient(tenantId);
+    const rows = await (db as any).$queryRawUnsafe(
+      `SELECT lastSeenMsgId FROM ChatLastSeen WHERE userId = ? LIMIT 1`,
+      userId,
+    );
+    const dbVal = Number(rows[0]?.lastSeenMsgId || 0);
+
+    // Re-populate Redis cache from DB
+    if (dbVal > 0) {
+      await redisService.set(LAST_SEEN_KEY(tenantId, userId), dbVal.toString());
+    }
+    return dbVal;
   }
 
   async markSeen(tenantId: string, userId: number, messageId: number): Promise<void> {
     const current = await this.getLastSeenId(tenantId, userId);
     if (messageId > current) {
+      // Update Redis cache
       await redisService.set(LAST_SEEN_KEY(tenantId, userId), messageId.toString());
+
+      // Persist to DB (upsert)
+      await this.ensureChatLastSeenTable(tenantId);
+      const db = await this.tenantGateway.getGatewayClient(tenantId);
+      await (db as any).$queryRawUnsafe(
+        `INSERT INTO ChatLastSeen (userId, lastSeenMsgId, updatedAt)
+         VALUES (?, ?, NOW())
+         ON DUPLICATE KEY UPDATE lastSeenMsgId = ?, updatedAt = NOW()`,
+        userId,
+        messageId,
+        messageId,
+      );
     }
   }
 
@@ -134,7 +182,7 @@ export class ChatService {
     const lastSeenId = await this.getLastSeenId(tenantId, userId);
     const db = await this.tenantGateway.getGatewayClient(tenantId);
     const result = await (db as any).$queryRawUnsafe(
-      `SELECT COUNT(*) as cnt FROM ChatMessage WHERE id > ?`,
+      `SELECT COUNT(*) as cnt FROM ChatMessage WHERE id > ? AND createdAt >= NOW() - INTERVAL 3 DAY`,
       lastSeenId,
     );
     return Number(result[0]?.cnt || 0);

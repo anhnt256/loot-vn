@@ -13,6 +13,7 @@ import {
 import { Clock, Calendar as CalendarIcon, User, ExternalLink, Download } from 'lucide-react';
 import dayjs from 'dayjs';
 import { apiClient } from '@gateway-workspace/shared/utils';
+
 import AttendanceModal from './components/AttendanceModal';
 
 const { Title, Text } = Typography;

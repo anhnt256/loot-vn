@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import AnimatedCounter from './AnimatedCounter';
 import { apiClient } from '@gateway-workspace/shared/utils/client';
+
+import AnimatedCounter from './AnimatedCounter';
 
 interface Segment {
   id: number;
@@ -61,9 +62,7 @@ const CircleSegments: React.FC<CircleSegmentsProps> = ({ segments }) => {
     const centerY = size / 2;
     const radius = size / 2 - 15;
 
-    const formatValue = (value: number): string => {
-      return new Intl.NumberFormat('en-US').format(value);
-    };
+    const formatValue = (value: number): string => new Intl.NumberFormat('en-US').format(value);
 
     const drawSegment = (startAngle: number, endAngle: number, segment: Segment) => {
       ctx.beginPath();
@@ -92,7 +91,7 @@ const CircleSegments: React.FC<CircleSegmentsProps> = ({ segments }) => {
       let currentLine = words[0];
 
       for (let i = 1; i < words.length; i++) {
-        const testLine = currentLine + ' ' + words[i];
+        const testLine = `${currentLine  } ${  words[i]}`;
         const metrics = ctx.measureText(testLine);
         if (metrics.width > radius * 0.55) {
           lines.push(currentLine);

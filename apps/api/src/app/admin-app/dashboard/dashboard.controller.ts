@@ -18,6 +18,7 @@ import { redisService } from '../../lib/redis-service';
 import { TenantGatewayService } from '../../database/tenant-gateway.service';
 import { OrderGateway } from '../order/order.gateway';
 import { DashboardService } from './dashboard.service';
+import { CampaignEngineService } from '../menu-campaign/campaign-engine.service';
 import { randomBytes } from 'crypto';
 
 @Controller('dashboard')
@@ -27,6 +28,7 @@ export class DashboardController {
     private readonly tenantGateway: TenantGatewayService,
     private readonly orderGateway: OrderGateway,
     private readonly dashboardService: DashboardService,
+    private readonly campaignEngine: CampaignEngineService,
   ) {}
 
   private cartKey(tenantId: string, macAddress: string): string {
@@ -106,7 +108,7 @@ export class DashboardController {
   async checkout(
     @Headers('x-tenant-id') tenantId: string,
     @CurrentUser() user: UserRequestContext,
-    @Body() body: { cart?: any[] },
+    @Body() body: { cart?: any[]; expectedDiscount?: number },
   ) {
     if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
     if (!user.macAddress) throw new BadRequestException('Không xác định được máy (macAddress thiếu trong token)');
@@ -205,6 +207,41 @@ export class DashboardController {
         };
       });
 
+      // 4b. Evaluate campaign discounts
+      let campaignId: number | null = null;
+      let discountAmount = 0;
+      try {
+        const orderItems = detailsData.map((d: any) => ({
+          recipeId: d.recipeId,
+          categoryId: cart.find((ci: any) => ci.item?.id === d.recipeId)?.item?.categoryId ?? 0,
+          salePrice: d.salePrice,
+          quantity: d.quantity,
+        }));
+        const discount = await this.campaignEngine.evaluateDiscounts(
+          tenantId, userId, (user as any).rankId ?? 0, (user as any).machineGroupId ?? null, orderItems,
+        );
+        if (discount.campaignId && discount.totalDiscount > 0) {
+          campaignId = discount.campaignId;
+          discountAmount = discount.totalDiscount;
+        }
+      } catch { /* campaign evaluation failure should not block order */ }
+
+      // Price guard: nếu client gửi expectedDiscount, so sánh với discount thực tế
+      if (body.expectedDiscount != null && body.expectedDiscount !== discountAmount) {
+        await redisService.releaseLock(lockKey, lockValue).catch(() => {});
+        return {
+          success: false,
+          code: 'PRICE_CHANGED',
+          message: 'Giá khuyến mãi đã thay đổi. Vui lòng kiểm tra lại giỏ hàng.',
+          previousDiscount: body.expectedDiscount,
+          currentDiscount: discountAmount,
+          totalBeforeDiscount: totalAmount,
+          totalAfterDiscount: Math.max(0, totalAmount - discountAmount),
+        };
+      }
+
+      const finalAmount = Math.max(0, totalAmount - discountAmount);
+
       // 5. Tạo FoodOrder + FoodOrderDetail trong transaction — status = PENDING
       const order = await db.$transaction(async (tx: any) => {
         return tx.foodOrder.create({
@@ -214,12 +251,19 @@ export class DashboardController {
             computerName: computerName ?? null,
             tenantId: parsedTenantId,
             status: 'PENDING',
-            totalAmount,
+            totalAmount: finalAmount,
             details: { create: detailsData },
           },
           include: { details: true },
         });
       });
+
+      // 5b. Apply campaign discount (record usage + update budget)
+      if (campaignId && discountAmount > 0) {
+        try {
+          await this.campaignEngine.applyDiscount(tenantId, campaignId, userId, order.id, discountAmount, db);
+        } catch { /* non-blocking */ }
+      }
 
       // 6. Xóa cart Redis
       await redisService.del(this.cartKey(tenantId, macAddress));

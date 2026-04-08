@@ -22,8 +22,7 @@ interface ColorInputProps {
   onChange?: (value: string) => void;
 }
 
-const ColorInput: React.FC<ColorInputProps> = ({ value, onChange }) => {
-  return (
+const ColorInput: React.FC<ColorInputProps> = ({ value, onChange }) => (
     <div className="flex bg-white border border-[#d9d9d9] rounded-lg overflow-hidden h-10 w-full focus-within:border-[#ff721f] focus-within:ring-1 focus-within:ring-[#ff721f] shadow-sm transition-all hover:border-[#ff721f]">
       <input
         type="color"
@@ -41,7 +40,6 @@ const ColorInput: React.FC<ColorInputProps> = ({ value, onChange }) => {
       />
     </div>
   );
-};
 
 const CreateOrgModal: React.FC<CreateOrgModalProps> = ({
   visible,

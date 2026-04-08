@@ -1,4 +1,5 @@
 import React from 'react';
+
 import RewardCard from './RewardCard';
 
 interface Reward {

@@ -338,6 +338,28 @@ export class PromotionRewardService {
             r.recipes.push(item);
           }
         }
+        // Calculate stock availability for each recipe
+        for (const recipe of r.recipes) {
+          const qty = recipe.quantity || 1;
+          const stockRows: any[] = await gateway.$queryRawUnsafe(`
+            SELECT FLOOR(MIN(m.quantityInStock / (ri.quantity * ?))) as maxServings
+            FROM RecipeItem ri
+            JOIN Material m ON m.id = ri.materialId
+            JOIN RecipeVersion rv ON rv.id = ri.recipeVersionId
+            WHERE rv.recipeId = ? AND rv.isActive = true AND ri.quantity > 0
+          `, qty, recipe.recipeId);
+          recipe.availableStock = stockRows[0]?.maxServings != null ? Number(stockRows[0].maxServings) : 0;
+        }
+      }
+      // Calculate remaining redemption quantity
+      if (r.totalQuantity) {
+        const [{ cnt }]: any[] = await gateway.$queryRawUnsafe(`
+          SELECT COUNT(*) as cnt FROM PromotionRewardRedemption
+          WHERE promotionRewardId = ? AND status != 'REJECTED'
+        `, r.id);
+        r.remainingQuantity = Number(r.totalQuantity) - Number(cnt);
+      } else {
+        r.remainingQuantity = null;
       }
     }
     return rewards;
@@ -417,6 +439,27 @@ export class PromotionRewardService {
       }
     }
 
+    // Check material stock before allowing redemption for FOOD/DRINK
+    if (['FOOD', 'DRINK'].includes(reward.type) && chosenRecipeId) {
+      const stockCheck: any[] = await gateway.$queryRawUnsafe(`
+        SELECT m.name as materialName, m.baseUnit,
+          m.quantityInStock as stock,
+          (ri.quantity * ?) as needed
+        FROM RecipeItem ri
+        JOIN Material m ON m.id = ri.materialId
+        JOIN RecipeVersion rv ON rv.id = ri.recipeVersionId
+        WHERE rv.recipeId = ? AND rv.isActive = true
+          AND m.quantityInStock < (ri.quantity * ?)
+      `, chosenQuantity, chosenRecipeId, chosenQuantity);
+
+      if (stockCheck.length > 0) {
+        const outOfStock = stockCheck.map((s: any) =>
+          `${s.materialName} (còn ${Number(s.stock)} ${s.baseUnit}, cần ${Number(s.needed)} ${s.baseUnit})`
+        ).join(', ');
+        throw new BadRequestException(`Hết hàng — không đủ nguyên liệu: ${outOfStock}`);
+      }
+    }
+
     // Deduct stars
     const oldStars = user.stars;
     const newStars = oldStars - reward.starsCost;
@@ -445,6 +488,15 @@ export class PromotionRewardService {
 
   // ─── Admin: Manage redemptions ───
 
+  async getPendingRedemptionCount(tenantId: string) {
+    const { gateway } = await this.getClients(tenantId);
+    await this.ensureSchema(gateway);
+    const rows: any[] = await gateway.$queryRawUnsafe(
+      `SELECT COUNT(*) as cnt FROM PromotionRewardRedemption WHERE status = 'PENDING'`,
+    );
+    return { count: Number(rows[0]?.cnt ?? 0) };
+  }
+
   async getRedemptions(tenantId: string, status?: string, from?: string, to?: string) {
     const { gateway } = await this.getClients(tenantId);
     await this.ensureSchema(gateway);
@@ -456,10 +508,12 @@ export class PromotionRewardService {
 
     const redemptions: any[] = await gateway.$queryRawUnsafe(`
       SELECT r.*, pr.name as rewardName, pr.type as prType,
-        rec.name as recipeName
+        rec.name as recipeName,
+        u.userName
       FROM PromotionRewardRedemption r
       LEFT JOIN PromotionReward pr ON pr.id = r.promotionRewardId
       LEFT JOIN Recipe rec ON rec.id = r.chosenRecipeId
+      LEFT JOIN User u ON u.userId = r.userId
       ${where}
       ORDER BY r.createdAt DESC
       LIMIT 500
@@ -532,21 +586,98 @@ export class PromotionRewardService {
       `, actualCost, workShiftId || null, staffId, redemptionId);
 
     } else if (['FOOD', 'DRINK'].includes(redemption.rewardType)) {
-      // Calculate actual cost from recipe ingredients
+      // Check stock availability before approving
       if (redemption.chosenRecipeId) {
-        const costRows: any[] = await gateway.$queryRawUnsafe(`
-          SELECT COALESCE(SUM(ri.quantity * m.costPrice * ?), 0) as cost
+        const chosenQty = redemption.chosenQuantity || 1;
+        const stockCheck: any[] = await gateway.$queryRawUnsafe(`
+          SELECT m.name as materialName, m.baseUnit,
+            m.quantityInStock as stock,
+            (ri.quantity * ?) as needed
           FROM RecipeItem ri
           JOIN Material m ON m.id = ri.materialId
           JOIN RecipeVersion rv ON rv.id = ri.recipeVersionId
           WHERE rv.recipeId = ? AND rv.isActive = true
-        `, redemption.chosenQuantity || 1, redemption.chosenRecipeId);
-        actualCost = Number(costRows[0]?.cost) || 0;
+            AND m.quantityInStock < (ri.quantity * ?)
+        `, chosenQty, redemption.chosenRecipeId, chosenQty);
+
+        if (stockCheck.length > 0) {
+          const outOfStock = stockCheck.map((s: any) =>
+            `${s.materialName} (còn ${Number(s.stock)} ${s.baseUnit}, cần ${Number(s.needed)} ${s.baseUnit})`
+          ).join(', ');
+          throw new BadRequestException(`Không đủ nguyên liệu: ${outOfStock}`);
+        }
+
+        // Get recipe info + active version for order creation
+        const recipeRows: any[] = await gateway.$queryRawUnsafe(
+          `SELECT id, name, salePrice FROM Recipe WHERE id = ?`, redemption.chosenRecipeId,
+        );
+        const recipe = recipeRows[0];
+        const recipeName = recipe?.name || `Recipe #${redemption.chosenRecipeId}`;
+        const salePrice = Number(recipe?.salePrice) || 0;
+
+        const versionRows: any[] = await gateway.$queryRawUnsafe(`
+          SELECT rv.id, rv.recipeId FROM RecipeVersion rv
+          WHERE rv.recipeId = ? AND rv.isActive = true
+          ORDER BY rv.effectiveFrom DESC LIMIT 1
+        `, redemption.chosenRecipeId);
+        const activeVersion = versionRows[0];
+
+        // Get recipe ingredients for cost calculation and stock deduction
+        const ingredients: any[] = await gateway.$queryRawUnsafe(`
+          SELECT ri.materialId, ri.quantity, m.costPrice, m.name as materialName
+          FROM RecipeItem ri
+          JOIN Material m ON m.id = ri.materialId
+          JOIN RecipeVersion rv ON rv.id = ri.recipeVersionId
+          WHERE rv.recipeId = ? AND rv.isActive = true
+        `, redemption.chosenRecipeId);
+
+        // Calculate actual cost
+        actualCost = ingredients.reduce((sum: number, ing: any) =>
+          sum + Number(ing.quantity) * Number(ing.costPrice) * chosenQty, 0);
+
+        // Deduct stock and create inventory transactions
+        const tenantIdInt = parseInt(tenantId) || 1;
+        for (const ing of ingredients) {
+          const deduction = Number(ing.quantity) * chosenQty;
+          await gateway.$executeRawUnsafe(
+            `UPDATE Material SET quantityInStock = quantityInStock - ? WHERE id = ?`,
+            deduction, ing.materialId,
+          );
+          await gateway.$executeRawUnsafe(`
+            INSERT INTO InventoryTransaction (materialId, type, quantityChange, reason, referenceId, staffId, tenantId, createdAt)
+            VALUES (?, 'REDEMPTION', ?, ?, ?, ?, ?, NOW())
+          `, ing.materialId, -deduction, `Đổi thưởng: ${recipeName}`, String(redemptionId), staffId, tenantIdInt);
+        }
+
+        // Create FoodOrder for FOOD/DRINK reward
+        const subtotal = salePrice * chosenQty;
+        const recipeSnapshot = JSON.stringify(ingredients.map((ing: any) => ({
+          materialId: Number(ing.materialId), quantity: Number(ing.quantity), materialName: ing.materialName,
+        })));
+
+        await gateway.$executeRawUnsafe(`
+          INSERT INTO FoodOrder (userId, macAddress, computerName, tenantId, status, totalAmount, note, createdAt, updatedAt)
+          VALUES (?, 'REWARD_REDEMPTION', NULL, ?, 'HOAN_THANH', ?, ?, NOW(), NOW())
+        `, redemption.userId, tenantIdInt, subtotal, `Đổi thưởng #${redemptionId}: ${recipeName}`);
+
+        const orderIdRows: any[] = await gateway.$queryRawUnsafe(`SELECT LAST_INSERT_ID() as lastId`);
+        const orderId = Number(orderIdRows[0]?.lastId);
+
+        await gateway.$executeRawUnsafe(`
+          INSERT INTO FoodOrderDetail (orderId, recipeId, recipeVersionId, recipeName, salePrice, quantity, subtotal, note, recipeSnapshot)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, orderId, redemption.chosenRecipeId, activeVersion?.id || 0, recipeName, salePrice, chosenQty, subtotal,
+           `Đổi thưởng #${redemptionId}`, recipeSnapshot);
+
+        await gateway.$executeRawUnsafe(`
+          INSERT INTO FoodOrderStatusHistory (orderId, status, changedBy, note, changedAt)
+          VALUES (?, 'HOAN_THANH', ?, ?, NOW())
+        `, orderId, staffId, `Đổi thưởng tự động #${redemptionId}`);
       }
 
       await gateway.$executeRawUnsafe(`
         UPDATE PromotionRewardRedemption
-        SET status = 'APPROVED', actualCost = ?, workShiftId = ?, approvedBy = ?, updatedAt = NOW()
+        SET status = 'COMPLETED', actualCost = ?, workShiftId = ?, approvedBy = ?, updatedAt = NOW()
         WHERE id = ?
       `, actualCost, workShiftId || null, staffId, redemptionId);
 
@@ -559,19 +690,7 @@ export class PromotionRewardService {
       `, workShiftId || null, staffId, redemptionId);
     }
 
-    return { success: true };
-  }
-
-  async completeRedemption(tenantId: string, redemptionId: number) {
-    const { gateway } = await this.getClients(tenantId);
-    const rows: any[] = await gateway.$queryRawUnsafe(`SELECT * FROM PromotionRewardRedemption WHERE id = ?`, redemptionId);
-    if (!rows.length) throw new BadRequestException('Không tìm thấy');
-    if (rows[0].status !== 'APPROVED') throw new BadRequestException('Chỉ có thể hoàn thành yêu cầu đã duyệt');
-
-    await gateway.$executeRawUnsafe(`
-      UPDATE PromotionRewardRedemption SET status = 'COMPLETED', updatedAt = NOW() WHERE id = ?
-    `, redemptionId);
-    return { success: true };
+    return { success: true, userId: Number(redemption.userId) };
   }
 
   async rejectRedemption(tenantId: string, redemptionId: number, note?: string) {
@@ -579,7 +698,7 @@ export class PromotionRewardService {
     const rows: any[] = await gateway.$queryRawUnsafe(`SELECT * FROM PromotionRewardRedemption WHERE id = ?`, redemptionId);
     if (!rows.length) throw new BadRequestException('Không tìm thấy');
     const redemption = rows[0];
-    if (!['PENDING', 'APPROVED'].includes(redemption.status)) throw new BadRequestException('Không thể từ chối');
+    if (redemption.status !== 'PENDING') throw new BadRequestException('Chỉ có thể từ chối yêu cầu đang chờ duyệt');
 
     // Refund stars
     const users: any[] = await gateway.$queryRawUnsafe(`SELECT stars FROM User WHERE userId = ?`, redemption.userId);
@@ -596,7 +715,7 @@ export class PromotionRewardService {
     await gateway.$executeRawUnsafe(`
       UPDATE PromotionRewardRedemption SET status = 'REJECTED', note = ?, updatedAt = NOW() WHERE id = ?
     `, note || 'Từ chối bởi admin', redemptionId);
-    return { success: true };
+    return { success: true, userId: Number(redemption.userId) };
   }
 
   // ─── Reports ───

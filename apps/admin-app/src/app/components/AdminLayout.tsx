@@ -21,24 +21,31 @@ import {
   MenuUnfoldOutlined,
   HistoryOutlined,
   LogoutOutlined,
+  UserOutlined,
   InboxOutlined,
   BarChartOutlined,
   PrinterOutlined,
   AuditOutlined,
 } from '@ant-design/icons';
 import { apiClient, removeToken, getToken } from '@gateway-workspace/shared/utils/client';
+import { ChatButton } from '@gateway-workspace/shared/chat';
+
+import { usePrinterStore } from '../services/print';
+import { useShift } from '../hooks/useShift';
+import { useShiftEndWarning } from '../hooks/useShiftEndWarning';
+
 import OrderDrawer from './OrderDrawer';
 import ShiftButton from './ShiftButton';
-import { usePrinterStore } from '../services/print';
-import { useShiftEndWarning } from '../hooks/useShiftEndWarning';
-import { ChatButton } from '@gateway-workspace/shared/chat';
+import ShiftWelcomeGate from './ShiftWelcomeGate';
+import ShiftEndGate from './ShiftEndGate';
+import MaintenanceButton from './MaintenanceButton';
 
 function parseJwtPayload(token: string) {
   try {
     const base64 = token.split('.')[1];
     const bytes = atob(base64);
     const text = decodeURIComponent(
-      bytes.split('').map(c => '%' + c.charCodeAt(0).toString(16).padStart(2, '0')).join('')
+      bytes.split('').map(c => `%${  c.charCodeAt(0).toString(16).padStart(2, '0')}`).join('')
     );
     return JSON.parse(text);
   } catch {
@@ -51,9 +58,26 @@ const { Header, Sider, Content } = Layout;
 const AdminLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [fundAmount, setFundAmount] = useState<number | null>(null);
+  const [showEndGate, setShowEndGate] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const printerReconnect = usePrinterStore((s) => s.reconnect);
+  const printMode = usePrinterStore((s) => s.printMode);
+
+  // Shift gate: chặn nhân viên ca nếu chưa có ca hoạt động
+  const { hasShift } = useShift();
+
+  // Listen for end-gate event from ShiftButton
+  React.useEffect(() => {
+    const openHandler = () => setShowEndGate(true);
+    const closeHandler = () => setShowEndGate(false);
+    window.addEventListener('shift:open-end-gate', openHandler);
+    window.addEventListener('shift:close-end-gate', closeHandler);
+    return () => {
+      window.removeEventListener('shift:open-end-gate', openHandler);
+      window.removeEventListener('shift:close-end-gate', closeHandler);
+    };
+  }, []);
 
   // Cảnh báo 15 phút trước khi hết giờ ca
   useShiftEndWarning();
@@ -83,8 +107,8 @@ const AdminLayout: React.FC = () => {
 
   // Auto-reconnect USB printer on login (silent — no dialog, uses previously paired device)
   React.useEffect(() => {
-    printerReconnect();
-  }, []);
+    if (printMode === 'usb') printerReconnect();
+  }, [printMode]);
 
   const handleLogout = () => {
     removeToken();
@@ -99,10 +123,44 @@ const AdminLayout: React.FC = () => {
   const primaryColor = defaultTenantConfig?.primaryColor || '#1677ff';
   const secondaryColor = defaultTenantConfig?.secondaryColor || '#f97316';
 
+  // Shift gate: check JWT trực tiếp để xác định nhân viên ca (không cần chờ API)
+  // Nếu là nhân viên ca và chưa có ca hoạt động → hiển thị màn hình welcome
+  // Drawer báo cáo NVL mở trực tiếp trên gate, không cần bypass route
+  const NON_SHIFT_TYPES = ['MANAGER', 'SUPER_ADMIN', 'BRANCH_ADMIN'];
+  const jwtToken = getToken() || '';
+  const jwtPayload = parseJwtPayload(jwtToken);
+  const isShiftStaff = jwtPayload && !jwtPayload.isAdmin && (!jwtPayload.staffType || !NON_SHIFT_TYPES.includes(jwtPayload.staffType));
+  const showShiftGate = isShiftStaff && !hasShift;
+
+  if (showShiftGate) {
+    const staffName = jwtPayload?.fullName || jwtPayload?.userName || 'Nhân viên';
+
+    return (
+      <ShiftWelcomeGate
+        staffName={staffName}
+        tenantLogo={tenantLogo}
+        primaryColor={primaryColor}
+        workShifts={jwtPayload?.workShifts || []}
+      />
+    );
+  }
+
+  if (showEndGate) {
+    return (
+      <ShiftEndGate
+        onClose={() => setShowEndGate(false)}
+        primaryColor={primaryColor}
+        workShifts={jwtPayload?.workShifts || []}
+      />
+    );
+  }
+
   const menuItems = [
     { key: '/dashboard', icon: <DashboardOutlined />, label: 'Dashboard' },
     { key: '/dashboard/order-management', icon: <ShoppingCartOutlined />, label: 'Quản lý Đơn hàng' },
     { key: '/dashboard/reward-exchange', icon: <SwapOutlined />, label: 'Quản lý đổi thưởng' },
+    { key: '/dashboard/event-promotion', icon: <GiftOutlined />, label: 'Sự kiện & Khuyến mãi' },
+    { key: '/dashboard/menu-campaign', icon: <CrownOutlined />, label: 'KM Menu' },
     { key: '/dashboard/handover-reports', icon: <FileTextOutlined />, label: 'Báo cáo NVL' },
     { key: '/dashboard/reports', icon: <SnippetsOutlined />, label: 'Báo cáo bàn giao' },
     { key: '/dashboard/inventory-audit', icon: <AuditOutlined />, label: 'Báo cáo kết ca' },
@@ -153,13 +211,14 @@ const AdminLayout: React.FC = () => {
       }}
     >
       <Layout style={{ minHeight: '100vh' }}>
-        <Sider 
-          collapsible 
-          collapsed={collapsed} 
+        <Sider
+          collapsible
+          collapsed={collapsed}
           onCollapse={(value) => setCollapsed(value)}
           breakpoint="lg"
           collapsedWidth="0"
           width={260}
+          trigger={null}
           className="border-r border-gray-700 h-screen overflow-y-auto"
           style={{ position: 'sticky', top: 0, left: 0, zIndex: 100 }}
         >
@@ -187,16 +246,21 @@ const AdminLayout: React.FC = () => {
             items={menuItems}
             onClick={({ key }) => navigate(key)}
           />
-          <div className="px-3 py-3 border-t border-gray-700">
+          <div className="py-3 border-t border-gray-700 flex items-center" style={{ paddingLeft: 24, paddingRight: 12 }}>
+            <UserOutlined className="shrink-0" style={{ color: primaryColor, fontSize: 16 }} />
+            {!collapsed && (
+              <span className="text-sm truncate flex-1 ml-2.5" style={{ color: primaryColor }}>
+                {jwtPayload?.fullName || jwtPayload?.userName || 'Admin'}
+              </span>
+            )}
             <Button
               type="text"
               icon={<LogoutOutlined />}
               onClick={handleLogout}
-              className="text-gray-400 hover:text-red-400 w-full"
-              style={{ textAlign: collapsed ? 'center' : 'left' }}
-            >
-              {!collapsed && 'Đăng xuất'}
-            </Button>
+              className="shrink-0"
+              size="small"
+              style={{ color: secondaryColor }}
+            />
           </div>
         </Sider>
         <Layout className="min-w-0 transition-all duration-200 relative">
@@ -209,7 +273,7 @@ const AdminLayout: React.FC = () => {
                 className="text-white lg:hidden shrink-0"
                 style={{ fontSize: '18px', width: 40, height: 40 }}
               />
-              <div className="hidden sm:block text-xl font-bold text-white"></div>
+              <div className="hidden sm:block text-xl font-bold text-white" />
               {fundAmount !== null && (
                 <div 
                   className="flex items-center px-4 py-1.5 rounded-lg border"
@@ -226,6 +290,7 @@ const AdminLayout: React.FC = () => {
               )}
             </div>
             <div className="flex items-center gap-3">
+              {jwtPayload?.staffType === 'SUPER_ADMIN' && <MaintenanceButton />}
               <ShiftButton />
               <OrderDrawer tenantId={apiClient.defaults.headers.common['x-tenant-id'] as string ?? ''} />
             </div>

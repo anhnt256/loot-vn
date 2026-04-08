@@ -1,7 +1,6 @@
 import React from 'react';
 
-const DashboardHome = () => {
-  return (
+const DashboardHome = () => (
     <div className="space-y-6">
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold text-[#1e293b]">Endpoint Access</h1>
@@ -29,6 +28,5 @@ const DashboardHome = () => {
       </div>
     </div>
   );
-};
 
 export default DashboardHome;

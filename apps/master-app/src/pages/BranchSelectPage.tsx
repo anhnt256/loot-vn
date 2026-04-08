@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building, MapPin, CheckCircle2, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
 import { setBranchCookie } from '../lib/branch-cookie';
 
 // Mock list of branches returned from the API (user mappings)

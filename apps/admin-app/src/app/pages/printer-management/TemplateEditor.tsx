@@ -6,6 +6,7 @@ import {
   BoldOutlined, HolderOutlined, MinusOutlined,
   ArrowUpOutlined, ArrowDownOutlined, PrinterOutlined,
 } from '@ant-design/icons';
+
 import { printReceipt } from '../../services/print';
 import type { ReceiptData } from '../../services/print';
 import {
@@ -25,7 +26,7 @@ function getTagSample(key: string): string {
 }
 
 function fmtMoney(v: number): string {
-  return Number(v).toLocaleString('vi-VN') + ' đ';
+  return `${Number(v).toLocaleString('vi-VN')  } đ`;
 }
 
 /* ─── main component ─── */

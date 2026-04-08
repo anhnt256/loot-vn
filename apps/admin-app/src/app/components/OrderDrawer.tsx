@@ -3,6 +3,7 @@ import { Drawer, Badge, Button, Tag, Spin, Empty, App } from 'antd';
 import { ShoppingOutlined, ReloadOutlined, PrinterOutlined } from '@ant-design/icons';
 import { io, Socket } from 'socket.io-client';
 import { apiClient, getToken } from '@gateway-workspace/shared/utils/client';
+
 import { useShift } from '../hooks/useShift';
 import { printReceipt } from '../services/print';
 import type { ReceiptData } from '../services/print';
@@ -30,6 +31,8 @@ interface FoodOrder {
   computerName: string | null;
   status: string | null;
   totalAmount: number;
+  campaignId?: number | null;
+  discountAmount?: number | null;
   createdAt: string;
   details: OrderDetail[];
   statusHistory: StatusHistory[];
@@ -79,6 +82,22 @@ const OrderDrawer: React.FC<Props> = ({ tenantId }) => {
   const [loadingMore, setLoadingMore] = useState(false);
   const { currentShift, hasShift, isShiftOwner } = useShift();
   const socketRef = useRef<Socket | null>(null);
+
+  // Preload audio after first user interaction (browser autoplay policy)
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    const unlock = () => {
+      if (!audioRef.current) {
+        const audio = new Audio('/Order.mp3');
+        audio.volume = 1;
+        audio.load();
+        audioRef.current = audio;
+      }
+      document.removeEventListener('click', unlock);
+    };
+    document.addEventListener('click', unlock);
+    return () => document.removeEventListener('click', unlock);
+  }, []);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const fetchOrders = async () => {
@@ -115,6 +134,10 @@ const OrderDrawer: React.FC<Props> = ({ tenantId }) => {
         if (exists) return prev;
         return [order, ...prev];
       });
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(() => {});
+      }
       notification.info({
         message: `Đơn hàng mới #${order.id}`,
         description: `Máy ${order.computerName || order.macAddress} — ${Number(order.totalAmount).toLocaleString('vi-VN')}đ`,
@@ -253,7 +276,7 @@ const OrderDrawer: React.FC<Props> = ({ tenantId }) => {
           </div>
         }
         placement="right"
-        width={500}
+        size={500}
         open={open}
         onClose={() => setOpen(false)}
         styles={{ body: { padding: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' } }}
@@ -352,15 +375,20 @@ const OrderDrawer: React.FC<Props> = ({ tenantId }) => {
                       ))}
                     </div>
 
-                    {/* Total */}
-                    <div
-                      className="flex justify-between items-center px-4 py-2 border-t"
-                      style={{ borderColor: '#1f2937' }}
-                    >
-                      <span className="text-gray-400 text-sm">Tổng cộng</span>
-                      <span className="text-pink-400 font-bold text-base">
-                        {Number(order.totalAmount).toLocaleString('vi-VN')}đ
-                      </span>
+                    {/* Discount + Total */}
+                    <div className="px-4 py-2 border-t space-y-1" style={{ borderColor: '#1f2937' }}>
+                      {Number(order.discountAmount) > 0 && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-green-400 text-xs">KM giảm</span>
+                          <span className="text-green-400 text-xs font-semibold">−{Number(order.discountAmount).toLocaleString('vi-VN')}đ</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400 text-sm">Tổng cộng</span>
+                        <span className="text-pink-400 font-bold text-base">
+                          {Number(order.totalAmount).toLocaleString('vi-VN')}đ
+                        </span>
+                      </div>
                     </div>
 
                     {/* Status history */}

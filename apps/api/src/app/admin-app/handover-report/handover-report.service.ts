@@ -551,6 +551,84 @@ export class HandoverReportService {
     }
   }
 
+  /**
+   * Check if both BAO_CAO_BEP and BAO_CAO_NUOC have START submitted
+   * for the given shift on the given date.
+   */
+  async checkStartReports(tenantId: string, date: string, shift: string) {
+    const gatewayClient = await this.getGatewayClient(tenantId);
+    const formattedDate = new Date(date).toISOString().split('T')[0];
+
+    const reports: any[] = await gatewayClient.$queryRaw`
+      SELECT reportType, metadata
+      FROM HandoverReport
+      WHERE DATE(date) = ${formattedDate}
+    `;
+
+    const result = { BAO_CAO_BEP: false, BAO_CAO_NUOC: false };
+
+    for (const r of reports) {
+      let metadata = r.metadata;
+      if (typeof metadata === 'string') {
+        try { metadata = JSON.parse(metadata); } catch { metadata = {}; }
+      }
+      if (metadata?.[shift]?.start) {
+        result[r.reportType as keyof typeof result] = true;
+      }
+    }
+
+    return {
+      allReady: result.BAO_CAO_BEP && result.BAO_CAO_NUOC,
+      bep: result.BAO_CAO_BEP,
+      nuoc: result.BAO_CAO_NUOC,
+    };
+  }
+
+  /**
+   * Check if END reports (Bếp, Nước) + Shift Handover Report (Bàn giao) exist
+   * for the given shift on the given date.
+   */
+  async checkEndReports(tenantId: string, date: string, shift: string, workShiftId?: number) {
+    const gatewayClient = await this.getGatewayClient(tenantId);
+    const formattedDate = new Date(date).toISOString().split('T')[0];
+
+    // 1. Check NVL END reports (Bếp + Nước)
+    const reports: any[] = await gatewayClient.$queryRaw`
+      SELECT reportType, metadata
+      FROM HandoverReport
+      WHERE DATE(date) = ${formattedDate}
+    `;
+
+    const nvlResult = { BAO_CAO_BEP: false, BAO_CAO_NUOC: false };
+
+    for (const r of reports) {
+      let metadata = r.metadata;
+      if (typeof metadata === 'string') {
+        try { metadata = JSON.parse(metadata); } catch { metadata = {}; }
+      }
+      if (metadata?.[shift]?.end) {
+        nvlResult[r.reportType as keyof typeof nvlResult] = true;
+      }
+    }
+
+    // 2. Check Shift Handover Report (Báo cáo Bàn giao)
+    let bandGiao = false;
+    if (workShiftId) {
+      const targetDate = new Date(`${formattedDate}T00:00:00.000Z`);
+      const existing = await gatewayClient.shiftHandoverReport.findFirst({
+        where: { date: targetDate, workShiftId },
+      });
+      bandGiao = !!existing;
+    }
+
+    return {
+      allReady: nvlResult.BAO_CAO_BEP && nvlResult.BAO_CAO_NUOC && bandGiao,
+      bep: nvlResult.BAO_CAO_BEP,
+      nuoc: nvlResult.BAO_CAO_NUOC,
+      bandGiao,
+    };
+  }
+
   async submitReport(tenantId: string, payload: any) {
     try {
       const { date, shift, reportType, staffId, materials, step } = payload;

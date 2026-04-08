@@ -1,7 +1,9 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { App as AntdApp, ConfigProvider, theme } from 'antd';
+
 import Login from './pages/Login';
+import Maintenance from './pages/Maintenance';
 import DashboardLayout from './components/DashboardLayout';
 import CheckIn from './pages/CheckIn';
 import Game from './pages/Game';
@@ -31,6 +33,7 @@ export function App() {
       <AntdApp>
         <BrowserRouter>
           <Routes>
+            <Route path="/maintenance" element={<Maintenance />} />
             <Route path="/login" element={<Login />} />
             <Route
               path="/dashboard"

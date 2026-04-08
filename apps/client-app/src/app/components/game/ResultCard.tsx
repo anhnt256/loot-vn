@@ -19,8 +19,7 @@ const textColors = {
   Jackpot: 'text-red-500',
 };
 
-const ResultCard: React.FC<CardProps> = ({ rarity, prize }) => {
-  return (
+const ResultCard: React.FC<CardProps> = ({ rarity, prize }) => (
     <div
       className={`
         relative w-64 h-96
@@ -53,6 +52,5 @@ const ResultCard: React.FC<CardProps> = ({ rarity, prize }) => {
       {rarity === 'Jackpot' && <div className="absolute inset-0 bg-red-500/10" />}
     </div>
   );
-};
 
 export default ResultCard;

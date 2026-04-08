@@ -2,7 +2,6 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Card, Input, Button, Typography, ConfigProvider, theme, App, Alert } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-
 import { apiClient, setToken } from '@gateway-workspace/shared/utils';
 
 const { Title, Text } = Typography;
@@ -63,7 +62,7 @@ const Login: React.FC = () => {
       console.log('Login attempt:', { username });
       const result = await apiClient.post('/auth/login', {
         userName: username,
-        password: password,
+        password,
         loginMethod: 'staff',
       });
 

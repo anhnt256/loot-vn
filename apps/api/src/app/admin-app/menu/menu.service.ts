@@ -66,6 +66,7 @@ export class MenuService {
     scheduleTimeEnd?: string | null;
     scheduleDateStart?: Date | null;
     scheduleDateEnd?: Date | null;
+    scheduleDayRules?: string | null;
     scheduleMachineGroupIds?: string | null;
     requiredCategoryIds?: string | null;
   }) {
@@ -99,8 +100,24 @@ export class MenuService {
       if (cat.scheduleDateStart && currentDate < new Date(cat.scheduleDateStart.getFullYear(), cat.scheduleDateStart.getMonth(), cat.scheduleDateStart.getDate())) return false;
       if (cat.scheduleDateEnd && currentDate > new Date(cat.scheduleDateEnd.getFullYear(), cat.scheduleDateEnd.getMonth(), cat.scheduleDateEnd.getDate())) return false;
 
-      // Kiểm tra khoảng giờ
-      if (cat.scheduleTimeStart && cat.scheduleTimeEnd) {
+      // Kiểm tra lịch theo ngày trong tuần
+      if (cat.scheduleDayRules) {
+        try {
+          const daySchedules: { day: number; enabled: boolean; timeStart: string; timeEnd: string }[] = JSON.parse(cat.scheduleDayRules);
+          const currentDay = now.getDay(); // 0=CN, 1=T2, ..., 6=T7
+          const todaySchedule = daySchedules.find((d) => d.day === currentDay);
+          if (!todaySchedule || !todaySchedule.enabled) return false;
+          if (todaySchedule.timeStart && todaySchedule.timeEnd) {
+            if (currentTime < todaySchedule.timeStart || currentTime > todaySchedule.timeEnd) return false;
+          }
+        } catch {
+          // Invalid JSON → fallback to legacy time check
+          if (cat.scheduleTimeStart && cat.scheduleTimeEnd) {
+            if (currentTime < cat.scheduleTimeStart || currentTime > cat.scheduleTimeEnd) return false;
+          }
+        }
+      } else if (cat.scheduleTimeStart && cat.scheduleTimeEnd) {
+        // Legacy: dùng khung giờ mặc định cũ
         if (currentTime < cat.scheduleTimeStart || currentTime > cat.scheduleTimeEnd) return false;
       }
 

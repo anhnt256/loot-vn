@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { PlusOutlined, EditOutlined, ReloadOutlined, DatabaseOutlined, ImportOutlined, ExportOutlined } from '@ant-design/icons';
-import { Table, Tag, Button, Modal, Form, Input, Switch, message, Select, Card, Breadcrumb, InputNumber } from "antd";
+import { PlusOutlined, EditOutlined, ReloadOutlined, DatabaseOutlined, ImportOutlined, ExportOutlined, HistoryOutlined } from '@ant-design/icons';
+import { Table, Tag, Button, Modal, Form, Input, Switch, message, Select, Card, Breadcrumb, InputNumber, Spin } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import dayjs from "dayjs";
+import { apiClient } from "@gateway-workspace/shared/utils/client";
+
 import {
   REPORT_TYPE_ENUM,
   REPORT_TYPE_LABELS,
   ReportType,
 } from "./handover-reports/constants";
-import { apiClient } from "@gateway-workspace/shared/utils/client";
 
 interface Material {
   id: number;
@@ -20,6 +22,25 @@ interface Material {
   isActive: boolean;
   reportType?: string;
 }
+
+interface InventoryTx {
+  id: number;
+  type: string;
+  quantityChange: number;
+  reason?: string;
+  staffName?: string;
+  createdAt: string;
+}
+
+const TX_TYPE_MAP: Record<string, { label: string; color: string }> = {
+  RECEIPT: { label: 'Nhập kho', color: 'green' },
+  ISSUE: { label: 'Xuất kho', color: 'orange' },
+  SALE: { label: 'Bán hàng', color: 'blue' },
+  REFUND: { label: 'Hoàn kho', color: 'cyan' },
+  REDEMPTION: { label: 'Đổi thưởng', color: 'purple' },
+  ADJUST: { label: 'Điều chỉnh', color: 'gold' },
+  WASTE: { label: 'Hao hụt', color: 'red' },
+};
 
 export default function MaterialManagementPage() {
   const [materials, setMaterials] = useState<Material[]>([]);
@@ -37,6 +58,12 @@ export default function MaterialManagementPage() {
   const [stockType, setStockType] = useState<'RECEIPT' | 'ISSUE'>('RECEIPT');
   const [stockForm] = Form.useForm();
   const [stockSearch, setStockSearch] = useState("");
+
+  // Transaction history modal
+  const [txModalVisible, setTxModalVisible] = useState(false);
+  const [txMaterial, setTxMaterial] = useState<Material | null>(null);
+  const [txData, setTxData] = useState<InventoryTx[]>([]);
+  const [txLoading, setTxLoading] = useState(false);
 
   // --- Main table columns (danh mục) ---
   const columns: ColumnsType<Material> = [
@@ -76,7 +103,10 @@ export default function MaterialManagementPage() {
       key: "quantityInStock",
       align: "right",
       render: (val: number, record: Material) => (
-        <span className={val <= record.minStockLevel ? "text-red-500 font-bold" : "text-green-400"}>
+        <span
+          className={`cursor-pointer hover:underline ${val <= record.minStockLevel ? "text-red-500 font-bold" : "text-green-400"}`}
+          onClick={() => openTxModal(record)}
+        >
           {Number(val).toLocaleString()} {record.baseUnit || ''}
         </span>
       ),
@@ -262,6 +292,22 @@ export default function MaterialManagementPage() {
       message.error(error.response?.data?.message || 'Có lỗi xảy ra!');
     } finally {
       setSubmitLoading(false);
+    }
+  };
+
+  // --- Transaction history ---
+  const openTxModal = async (material: Material) => {
+    setTxMaterial(material);
+    setTxModalVisible(true);
+    setTxLoading(true);
+    try {
+      const res = await apiClient.get<InventoryTx[]>(`/admin/materials/${material.id}/transactions`);
+      setTxData(res.data);
+    } catch {
+      message.error("Không thể tải lịch sử giao dịch");
+      setTxData([]);
+    } finally {
+      setTxLoading(false);
     }
   };
 
@@ -451,6 +497,78 @@ export default function MaterialManagementPage() {
             </Button>
           </div>
         </Form>
+      </Modal>
+
+      {/* Modal: Lịch sử giao dịch kho */}
+      <Modal
+        title={
+          <span className="text-lg font-bold">
+            <HistoryOutlined className="mr-2" />
+            Lịch sử kho — {txMaterial?.name}
+            <Tag className="ml-2">{txMaterial?.baseUnit}</Tag>
+          </span>
+        }
+        open={txModalVisible}
+        onCancel={() => { setTxModalVisible(false); setTxMaterial(null); setTxData([]); }}
+        footer={null}
+        width={900}
+        destroyOnHidden
+      >
+        {txLoading ? (
+          <div className="flex justify-center py-12"><Spin size="large" /></div>
+        ) : (
+          <Table
+            dataSource={txData}
+            rowKey="id"
+            size="small"
+            pagination={{ pageSize: 15, showTotal: (total) => `${total} giao dịch` }}
+            scroll={{ y: 500 }}
+            columns={[
+              {
+                title: 'Thời gian',
+                dataIndex: 'createdAt',
+                key: 'createdAt',
+                width: 160,
+                render: (val: string) => dayjs(val).format('DD/MM/YYYY HH:mm'),
+              },
+              {
+                title: 'Loại',
+                dataIndex: 'type',
+                key: 'type',
+                width: 120,
+                render: (type: string) => {
+                  const info = TX_TYPE_MAP[type] || { label: type, color: 'default' };
+                  return <Tag color={info.color}>{info.label}</Tag>;
+                },
+              },
+              {
+                title: 'Số lượng',
+                dataIndex: 'quantityChange',
+                key: 'quantityChange',
+                align: 'right',
+                width: 120,
+                render: (val: number) => (
+                  <span className={val > 0 ? 'text-green-400 font-bold' : 'text-red-400 font-bold'}>
+                    {val > 0 ? '+' : ''}{Number(val).toLocaleString()}
+                  </span>
+                ),
+              },
+              {
+                title: 'Lý do',
+                dataIndex: 'reason',
+                key: 'reason',
+                ellipsis: true,
+              },
+              {
+                title: 'Người xử lý',
+                dataIndex: 'staffName',
+                key: 'staffName',
+                width: 140,
+                render: (val: string) => val || <span className="text-gray-500">—</span>,
+              },
+            ]}
+          />
+        )}
       </Modal>
     </div>
   );

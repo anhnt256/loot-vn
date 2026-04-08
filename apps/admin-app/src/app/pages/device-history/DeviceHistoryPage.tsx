@@ -290,7 +290,7 @@ export default function DeviceHistoryPage() {
       <div className="flex flex-col gap-2 relative min-h-[400px]">
         {loading && histories.length === 0 ? (
           <div className="flex justify-center items-center py-20">
-            <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : histories.length > 0 ? (
           <div className="flex flex-col h-full w-full">

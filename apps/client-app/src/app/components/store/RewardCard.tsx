@@ -1,12 +1,14 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { App, Modal } from 'antd';
 import { apiClient } from '@gateway-workspace/shared/utils/client';
+
 import { useUser } from '../../contexts/UserContext';
 
 interface Recipe {
   recipeId: number;
   recipeName: string;
   recipeImageUrl?: string;
+  availableStock?: number;
 }
 
 interface RewardCardProps {
@@ -19,6 +21,8 @@ interface RewardCardProps {
     walletType?: string;
     moneyAmount?: number;
     recipes?: Recipe[];
+    remainingQuantity?: number | null;
+    totalQuantity?: number | null;
   };
   onRewardSuccess: () => void;
 }
@@ -52,7 +56,7 @@ const ACCENTS: Record<string, { gradient: string; btn: string; shine: string }> 
 };
 
 const RewardCard: React.FC<RewardCardProps> = ({ data, onRewardSuccess }) => {
-  const { id, name, starsCost, type, walletType, recipes } = data;
+  const { id, name, starsCost, type, walletType, recipes, remainingQuantity, totalQuantity } = data;
   const { user, refreshUser } = useUser();
   const { message } = App.useApp();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -67,6 +71,7 @@ const RewardCard: React.FC<RewardCardProps> = ({ data, onRewardSuccess }) => {
   const accent = ACCENTS[type] || ACCENTS.OTHER;
   const hasMultipleRecipes = ['FOOD', 'DRINK'].includes(type) && recipes && recipes.length > 1;
   const recipeCount = recipes?.length || 0;
+  const isOutOfQuota = remainingQuantity !== null && remainingQuantity !== undefined && remainingQuantity <= 0;
 
   let tag = '';
   if (type === 'PLAY_TIME') tag = walletType === 'MAIN' ? 'TK Chính' : 'TK Phụ';
@@ -102,8 +107,14 @@ const RewardCard: React.FC<RewardCardProps> = ({ data, onRewardSuccess }) => {
     setConfirmInfo({ recipeId, recipeName });
   };
 
+  // Check if single recipe is out of stock
+  const singleRecipeOutOfStock = !hasMultipleRecipes && recipes?.[0]?.availableStock !== undefined && recipes[0].availableStock <= 0;
+  const allRecipesOutOfStock = ['FOOD', 'DRINK'].includes(type) && recipes?.length
+    ? recipes.every((r) => r.availableStock !== undefined && r.availableStock <= 0)
+    : false;
+
   const handleClick = () => {
-    if (!canRedeem || loading) return;
+    if (!canRedeem || loading || isOutOfQuota || singleRecipeOutOfStock) return;
     if (hasMultipleRecipes) {
       setModalOpen(true);
     } else {
@@ -166,19 +177,33 @@ const RewardCard: React.FC<RewardCardProps> = ({ data, onRewardSuccess }) => {
             </div>
 
             {/* Stars */}
-            <div className="flex items-center gap-2 mb-5">
+            <div className="flex items-center gap-2 mb-2">
               <span className="text-yellow-300 text-lg drop-shadow-md">⭐</span>
               <span className="text-2xl font-black text-white tracking-tight drop-shadow-sm">
                 {starsCost.toLocaleString()}
               </span>
             </div>
 
+            {/* Remaining quantity & stock info */}
+            <div className="mb-3 text-[11px] space-y-0.5">
+              {remainingQuantity != null && (
+                <p className={remainingQuantity <= 0 ? 'text-red-400' : remainingQuantity <= 5 ? 'text-amber-400' : 'text-white/50'}>
+                  Còn lại: {remainingQuantity}/{totalQuantity} lượt
+                </p>
+              )}
+              {['FOOD', 'DRINK'].includes(type) && recipes?.length === 1 && recipes[0].availableStock != null && (
+                <p className={recipes[0].availableStock <= 0 ? 'text-red-400' : recipes[0].availableStock <= 5 ? 'text-amber-400' : 'text-white/50'}>
+                  {recipes[0].availableStock <= 0 ? 'Hết tồn kho' : `Tồn kho: ${recipes[0].availableStock}`}
+                </p>
+              )}
+            </div>
+
             {/* Button */}
             <button
-              disabled={!canRedeem || loading}
+              disabled={!canRedeem || loading || isOutOfQuota || singleRecipeOutOfStock || allRecipesOutOfStock}
               onClick={handleClick}
               className={`w-full py-2.5 rounded-xl text-sm font-bold tracking-wide transition-all duration-200 ${
-                canRedeem && !loading
+                canRedeem && !loading && !isOutOfQuota && !singleRecipeOutOfStock && !allRecipesOutOfStock
                   ? `bg-gradient-to-r ${accent.btn} text-white shadow-lg shadow-black/30 cursor-pointer active:scale-[0.96]`
                   : 'bg-black/30 text-white/25 cursor-not-allowed border border-white/5'
               }`}
@@ -187,6 +212,10 @@ const RewardCard: React.FC<RewardCardProps> = ({ data, onRewardSuccess }) => {
                 <span className="flex items-center justify-center gap-2">
                   <span className="w-4 h-4 border-2 border-white/50 border-t-transparent rounded-full animate-spin" />
                 </span>
+              ) : isOutOfQuota ? (
+                'HẾT LƯỢT ĐỔI'
+              ) : singleRecipeOutOfStock || allRecipesOutOfStock ? (
+                'HẾT HÀNG'
               ) : !canRedeem ? (
                 'KHÔNG ĐỦ SAO'
               ) : hasMultipleRecipes ? (
@@ -216,7 +245,10 @@ const RewardCard: React.FC<RewardCardProps> = ({ data, onRewardSuccess }) => {
           overflow: 'auto',
           padding: '12px 0',
         }}>
-          {recipes?.map((r) => (
+          {recipes?.map((r) => {
+            const outOfStock = r.availableStock !== undefined && r.availableStock <= 0;
+            const disabled = loading || outOfStock;
+            return (
             <div
               key={r.recipeId}
               style={{
@@ -225,12 +257,13 @@ const RewardCard: React.FC<RewardCardProps> = ({ data, onRewardSuccess }) => {
                 border: '1.5px solid rgba(75,85,99,0.5)',
                 background: 'rgba(31,41,55,0.8)',
                 transition: 'all 0.2s',
+                opacity: outOfStock ? 0.5 : 1,
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.5)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+              onMouseEnter={(e) => { if (!outOfStock) { e.currentTarget.style.borderColor = 'rgba(99,102,241,0.5)'; e.currentTarget.style.transform = 'translateY(-2px)'; } }}
               onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(75,85,99,0.5)'; e.currentTarget.style.transform = 'translateY(0)'; }}
             >
               {/* Image */}
-              <div style={{ aspectRatio: '4/3', background: '#111827', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ aspectRatio: '4/3', background: '#111827', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                 {r.recipeImageUrl ? (
                   <img
                     src={`${apiClient.defaults.baseURL ?? ''}${r.recipeImageUrl}`}
@@ -242,24 +275,42 @@ const RewardCard: React.FC<RewardCardProps> = ({ data, onRewardSuccess }) => {
                     {type === 'FOOD' ? '🍜' : '🧋'}
                   </span>
                 )}
+                {outOfStock && (
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    background: 'rgba(0,0,0,0.6)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <span style={{ color: '#ef4444', fontWeight: 700, fontSize: 14 }}>HẾT HÀNG</span>
+                  </div>
+                )}
               </div>
 
-              {/* Name + Button */}
+              {/* Name + Stock + Button */}
               <div style={{ padding: '10px 12px' }}>
                 <p style={{
                   color: '#e5e7eb',
                   fontWeight: 600,
                   fontSize: 13,
-                  marginBottom: 8,
+                  marginBottom: 4,
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                 }} title={r.recipeName}>
                   {r.recipeName}
                 </p>
+                <p style={{
+                  fontSize: 11,
+                  marginBottom: 8,
+                  color: outOfStock ? '#ef4444' : r.availableStock != null && r.availableStock <= 5 ? '#f59e0b' : '#9ca3af',
+                }}>
+                  {r.availableStock != null
+                    ? outOfStock ? 'Hết tồn kho' : `Tồn kho: ${r.availableStock}`
+                    : ''}
+                </p>
                 <button
-                  disabled={loading}
-                  onClick={() => confirmRedeem(r.recipeId, r.recipeName)}
+                  disabled={disabled}
+                  onClick={() => !disabled && confirmRedeem(r.recipeId, r.recipeName)}
                   style={{
                     width: '100%',
                     padding: '8px',
@@ -267,17 +318,18 @@ const RewardCard: React.FC<RewardCardProps> = ({ data, onRewardSuccess }) => {
                     border: 'none',
                     fontSize: 12,
                     fontWeight: 700,
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    background: loading ? '#374151' : 'linear-gradient(135deg, #6366f1, #4f46e5)',
-                    color: loading ? '#6b7280' : '#fff',
+                    cursor: disabled ? 'not-allowed' : 'pointer',
+                    background: disabled ? '#374151' : 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                    color: disabled ? '#6b7280' : '#fff',
                     transition: 'all 0.2s',
                   }}
                 >
-                  {loading ? '...' : 'ĐỔI NGAY'}
+                  {loading ? '...' : outOfStock ? 'HẾT HÀNG' : 'ĐỔI NGAY'}
                 </button>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </Modal>
 

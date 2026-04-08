@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Modal } from 'antd';
 import dayjs from 'dayjs';
 import { apiClient } from '@gateway-workspace/shared/utils/client';
+
 import { useShift, WorkShiftSchedule } from './useShift';
 
 const WARNING_MINUTES = 15;
@@ -41,19 +42,31 @@ export function useShiftEndWarning() {
   const { isShiftOwner, workShiftSchedule, currentShift } = useShift();
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const shownRef = useRef(false);
+  const lastShiftIdRef = useRef<number | null>(null);
+
+  // Dùng primitive values làm deps để tránh re-run effect khi object reference thay đổi
+  const shiftId = currentShift?.id ?? null;
+  const scheduleStart = workShiftSchedule?.startTime ?? null;
+  const scheduleEnd = workShiftSchedule?.endTime ?? null;
+  const scheduleOvernight = workShiftSchedule?.isOvernight ?? null;
 
   useEffect(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    shownRef.current = false;
 
-    if (!isShiftOwner || !workShiftSchedule || !currentShift) return;
+    // Chỉ reset shownRef khi shift thực sự đổi (khác ID)
+    if (shiftId !== lastShiftIdRef.current) {
+      shownRef.current = false;
+      lastShiftIdRef.current = shiftId;
+    }
+
+    if (!isShiftOwner || !workShiftSchedule || !shiftId) return;
 
     // Kiểm tra đã dismiss warning cho ca này chưa
     const dismissedShiftId = localStorage.getItem(STORAGE_KEY);
-    if (dismissedShiftId === String(currentShift.id)) {
+    if (dismissedShiftId === String(shiftId)) {
       shownRef.current = true;
       return;
     }
@@ -68,7 +81,7 @@ export function useShiftEndWarning() {
       // Chỉ hiện cảnh báo khi còn <= 15 phút VÀ chưa quá giờ
       if (diffMin <= WARNING_MINUTES && diffMin > 0) {
         shownRef.current = true;
-        showWarningModal(Math.round(diffMin));
+        showWarningModal(Math.round(diffMin), shiftId);
       }
     };
 
@@ -79,9 +92,9 @@ export function useShiftEndWarning() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isShiftOwner, workShiftSchedule, currentShift]);
+  }, [isShiftOwner, shiftId, scheduleStart, scheduleEnd, scheduleOvernight]);
 
-  const showWarningModal = (minutesLeft: number) => {
+  const showWarningModal = (minutesLeft: number, shiftIdForDismiss: number) => {
     Modal.confirm({
       title: 'Sắp hết giờ ca',
       content: `Còn ${minutesLeft} phút sẽ hết giờ ca. Bạn có muốn Ngưng nhận đơn để tiến hành kết ca không?`,
@@ -95,19 +108,13 @@ export function useShiftEndWarning() {
             resumeAt,
             note: 'Tự động ngưng nhận đơn trước khi kết ca',
           });
-          // Lưu đã dismiss cho ca này
-          if (currentShift) {
-            localStorage.setItem(STORAGE_KEY, String(currentShift.id));
-          }
+          localStorage.setItem(STORAGE_KEY, String(shiftIdForDismiss));
         } catch {
           // silent — PauseOrderButton sẽ hiện trạng thái
         }
       },
       onCancel: () => {
-        // Lưu đã dismiss cho ca này để không hỏi lại
-        if (currentShift) {
-          localStorage.setItem(STORAGE_KEY, String(currentShift.id));
-        }
+        localStorage.setItem(STORAGE_KEY, String(shiftIdForDismiss));
       },
     });
   };

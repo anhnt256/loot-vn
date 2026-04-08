@@ -1,28 +1,65 @@
 import { useCallback, useRef } from 'react';
 import { Modal } from 'antd';
-import { apiClient } from '@gateway-workspace/shared/utils/client';
+import { apiClient, getToken } from '@gateway-workspace/shared/utils/client';
 
-/**
- * Xác định khung ca dựa vào giờ hiện tại.
- *   Sáng:  06:00 – 13:59
- *   Chiều: 14:00 – 21:59
- *   Tối:   22:00 – 05:59
- */
-function getCurrentShiftPeriod(): { label: string; keywords: string[] } {
-  const hour = new Date().getHours();
-  if (hour >= 6 && hour < 14) return { label: 'Ca Sáng', keywords: ['sáng', 'sang'] };
-  if (hour >= 14 && hour < 22) return { label: 'Ca Chiều', keywords: ['chiều', 'chieu'] };
-  return { label: 'Ca Tối', keywords: ['tối', 'toi', 'đêm', 'dem'] };
+function parseJwtPayload(token: string) {
+  try {
+    const base64 = token.split('.')[1];
+    const bytes = atob(base64);
+    const text = decodeURIComponent(
+      bytes.split('').map(c => `%${  c.charCodeAt(0).toString(16).padStart(2, '0')}`).join('')
+    );
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
+function removeDiacritics(str: string): string {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\u0111/g, 'd').replace(/\u0110/g, 'D');
+}
+
+interface WorkShiftJwt {
+  id: number;
+  name: string;
+  startTime: string;
+  endTime: string;
+  isOvernight: boolean | number;
 }
 
 /**
- * Kiểm tra tên tài khoản có chứa từ khoá ca nào không.
+ * Find the WorkShift matching the current time from JWT workShifts
  */
-function detectAccountShift(name: string): string | null {
-  const lower = name.toLowerCase();
-  if (lower.includes('sáng') || lower.includes('sang')) return 'Ca Sáng';
-  if (lower.includes('chiều') || lower.includes('chieu')) return 'Ca Chiều';
-  if (lower.includes('tối') || lower.includes('toi') || lower.includes('đêm') || lower.includes('dem')) return 'Ca Tối';
+function findCurrentWorkShift(workShifts: WorkShiftJwt[]): WorkShiftJwt | null {
+  if (!workShifts?.length) return null;
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  for (const ws of workShifts) {
+    const [sH, sM] = String(ws.startTime).split(':').map(Number);
+    const [eH, eM] = String(ws.endTime).split(':').map(Number);
+    const start = sH * 60 + sM;
+    const end = eH * 60 + eM;
+    const overnight = !!ws.isOvernight;
+
+    const inShift = overnight
+      ? (currentMinutes >= start || currentMinutes <= end)
+      : (currentMinutes >= start && currentMinutes <= end);
+
+    if (inShift) return ws;
+  }
+  return workShifts[0] || null;
+}
+
+/**
+ * Detect which WorkShift the account name refers to
+ */
+function detectAccountShiftName(accountName: string, workShifts: WorkShiftJwt[]): WorkShiftJwt | null {
+  const norm = removeDiacritics(accountName).toLowerCase();
+  for (const ws of workShifts) {
+    const wsNorm = removeDiacritics(ws.name).toLowerCase().replace(/\s/g, '');
+    if (norm.includes(wsNorm)) return ws;
+  }
   return null;
 }
 
@@ -40,7 +77,7 @@ interface UserInfo {
  * Hook kiểm tra quyền + cảnh báo trước khi nhận ca.
  *
  * 1. Chặn hoàn toàn nếu tài khoản là Admin/Manager/không có ca
- * 2. Cảnh báo nếu tài khoản không khớp khung giờ hiện tại
+ * 2. Cảnh báo nếu tài khoản không khớp ca làm việc hiện tại (dựa trên WorkShift data từ JWT)
  */
 export function useShiftGuard() {
   const userInfoCache = useRef<UserInfo | null>(null);
@@ -68,11 +105,11 @@ export function useShiftGuard() {
    */
   const confirmShiftStart = useCallback(async (): Promise<boolean> => {
     const userInfo = await fetchUserInfo();
-    if (!userInfo) return true; // Không lấy được info → để backend chặn
+    if (!userInfo) return true;
 
     const accountName = userInfo.fullName || userInfo.userName || '';
 
-    // ── Chặn hoàn toàn: Admin / Manager / staffType không được nhận ca ──
+    // Chặn hoàn toàn: Admin / Manager / staffType không được nhận ca
     if (userInfo.isAdmin || (userInfo.staffType && NON_SHIFT_TYPES.includes(userInfo.staffType))) {
       Modal.error({
         title: 'Không được phép nhận ca',
@@ -82,19 +119,24 @@ export function useShiftGuard() {
       return false;
     }
 
-    // ── Cảnh báo: tài khoản có tên ca nhưng không khớp khung giờ ──
-    const accountShift = detectAccountShift(accountName);
-    if (!accountShift) return true; // Không detect được ca → cho qua
+    // Lấy WorkShift data từ JWT để xác định ca hiện tại
+    const token = getToken() || '';
+    const jwt = parseJwtPayload(token);
+    const workShifts: WorkShiftJwt[] = jwt?.workShifts || [];
 
-    const currentPeriod = getCurrentShiftPeriod();
-    const isMatch = currentPeriod.keywords.some((kw) => accountName.toLowerCase().includes(kw));
-    if (isMatch) return true; // Khớp → cho qua
+    if (!workShifts.length) return true;
+
+    const currentWs = findCurrentWorkShift(workShifts);
+    const accountWs = detectAccountShiftName(accountName, workShifts);
+
+    if (!accountWs || !currentWs) return true;
+    if (accountWs.id === currentWs.id) return true;
 
     // Không khớp → hỏi xác nhận
     return new Promise<boolean>((resolve) => {
       Modal.confirm({
         title: 'Kiểm tra tài khoản nhận ca',
-        content: `Hiện tại đang là khung giờ ${currentPeriod.label}, nhưng bạn đang sử dụng tài khoản "${accountName}" (${accountShift}).\n\nBạn vẫn muốn tiếp tục nhận ca chứ?`,
+        content: `Hiện tại đang là khung giờ ${currentWs.name}, nhưng bạn đang sử dụng tài khoản "${accountName}" (${accountWs.name}).\n\nBạn vẫn muốn tiếp tục nhận ca chứ?`,
         okText: 'Vẫn nhận ca',
         cancelText: 'Huỷ',
         okButtonProps: { danger: true },

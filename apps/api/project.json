@@ -5,6 +5,15 @@
   "projectType": "application",
   "tags": [],
   "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": [
+          "apps/api/src/**/*.ts"
+        ],
+        "maxWarnings": -1
+      }
+    },
     "build": {
       "executor": "nx:run-commands",
       "options": {
@@ -22,14 +31,16 @@
           }
         },
         "production": {
-           "env": {
-             "NODE_ENV": "production"
-           }
+          "env": {
+            "NODE_ENV": "production"
+          }
         }
       }
     },
     "prune-lockfile": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "cache": true,
       "executor": "@nx/js:prune-lockfile",
       "outputs": [
@@ -41,27 +52,38 @@
       }
     },
     "copy-workspace-modules": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "cache": true,
-      "outputs": ["{workspaceRoot}/dist/apps/api/workspace_modules"],
+      "outputs": [
+        "{workspaceRoot}/dist/apps/api/workspace_modules"
+      ],
       "executor": "@nx/js:copy-workspace-modules",
       "options": {
         "buildTarget": "build"
       }
     },
     "prune": {
-      "dependsOn": ["prune-lockfile", "copy-workspace-modules"],
+      "dependsOn": [
+        "prune-lockfile",
+        "copy-workspace-modules"
+      ],
       "executor": "nx:noop"
     },
     "serve": {
       "continuous": true,
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "options": {
         "buildTarget": "api:build",
         "runBuildTargetDependencies": false,
-        "runtimeArgs": ["--max-old-space-size=8192"]
+        "runtimeArgs": [
+          "--max-old-space-size=8192"
+        ]
       },
       "configurations": {
         "development": {

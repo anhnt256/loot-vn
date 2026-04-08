@@ -12,12 +12,16 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PromotionRewardService } from './promotion-reward.service';
+import { PromotionRewardGateway } from './promotion-reward.gateway';
 import { AuthGuard } from '../../auth/auth.guard';
 import { CurrentUser, UserRequestContext } from '../../auth/user-request-context';
 
 @Controller('promotion-reward')
 export class PromotionRewardController {
-  constructor(private readonly service: PromotionRewardService) {}
+  constructor(
+    private readonly service: PromotionRewardService,
+    private readonly gateway: PromotionRewardGateway,
+  ) {}
 
   // ─── Static GET routes FIRST ───
 
@@ -31,6 +35,13 @@ export class PromotionRewardController {
   ) {
     if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
     return this.service.getRedemptions(tenantId, status, from, to);
+  }
+
+  @Get('redemptions/pending-count')
+  @UseGuards(AuthGuard)
+  async getPendingRedemptionCount(@Headers('x-tenant-id') tenantId: string) {
+    if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    return this.service.getPendingRedemptionCount(tenantId);
   }
 
   @Get('report/summary')
@@ -98,7 +109,9 @@ export class PromotionRewardController {
   ) {
     if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
     if (!body.rewardId) throw new BadRequestException('rewardId is required');
-    return this.service.redeem(tenantId, user.userId, body.rewardId, body.chosenRecipeId);
+    const result = await this.service.redeem(tenantId, user.userId, body.rewardId, body.chosenRecipeId);
+    this.gateway.publishNewRedemption(tenantId, { userId: user.userId, rewardId: body.rewardId, redemptionId: result.id }).catch(() => {});
+    return result;
   }
 
   @Post()
@@ -143,17 +156,9 @@ export class PromotionRewardController {
     @Body() body: { workShiftId?: number },
   ) {
     if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
-    return this.service.approveRedemption(tenantId, parseInt(id, 10), user?.userId || 0, body.workShiftId);
-  }
-
-  @Patch('redemptions/:id/complete')
-  @UseGuards(AuthGuard)
-  async completeRedemption(
-    @Headers('x-tenant-id') tenantId: string,
-    @Param('id') id: string,
-  ) {
-    if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
-    return this.service.completeRedemption(tenantId, parseInt(id, 10));
+    const result = await this.service.approveRedemption(tenantId, parseInt(id, 10), user?.userId || 0, body.workShiftId);
+    this.gateway.publishRedemptionStatus(tenantId, parseInt(id, 10), { status: 'COMPLETED', userId: (result as any).userId }).catch(() => {});
+    return result;
   }
 
   @Patch('redemptions/:id/reject')
@@ -164,7 +169,9 @@ export class PromotionRewardController {
     @Body() body: { note?: string },
   ) {
     if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
-    return this.service.rejectRedemption(tenantId, parseInt(id, 10), body.note);
+    const result = await this.service.rejectRedemption(tenantId, parseInt(id, 10), body.note);
+    this.gateway.publishRedemptionStatus(tenantId, parseInt(id, 10), { status: 'REJECTED', userId: (result as any).userId, note: body.note }).catch(() => {});
+    return result;
   }
 
   @Patch(':id/toggle')

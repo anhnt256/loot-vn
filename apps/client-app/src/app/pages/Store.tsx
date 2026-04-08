@@ -1,5 +1,7 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { apiClient } from '@gateway-workspace/shared/utils/client';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { apiClient, getToken } from '@gateway-workspace/shared/utils/client';
+import { io, Socket } from 'socket.io-client';
+
 import { useUser } from '../contexts/UserContext';
 import RewardList from '../components/store/RewardList';
 import RewardHistory from '../components/store/RewardHistory';
@@ -38,7 +40,7 @@ const TABS = [
 ];
 
 const Store: React.FC = () => {
-  const { user } = useUser();
+  const { user, refreshUser } = useUser();
   const [rewards, setRewards] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -62,6 +64,30 @@ const Store: React.FC = () => {
     setRefreshKey((k) => k + 1);
     fetchRewards();
   };
+
+  // Socket.IO: listen for redemption status updates (admin approved/rejected)
+  useEffect(() => {
+    const tenantId = apiClient.defaults.headers.common['x-tenant-id'] as string;
+    if (!tenantId || !user) return;
+
+    const token = getToken();
+    const socket: Socket = io(`${apiClient.defaults.baseURL ?? ''}/redemptions`, {
+      auth: { tenantId, token },
+      transports: ['websocket'],
+    });
+
+    socket.on('connect', () => {
+      socket.emit('join:user', { userId: user.userId });
+    });
+
+    socket.on('my-redemption:status', () => {
+      setRefreshKey((k) => k + 1);
+      fetchRewards();
+      refreshUser();
+    });
+
+    return () => { socket.disconnect(); };
+  }, [user, fetchRewards]);
 
   const filteredRewards = useMemo(
     () => rewards.filter((r) => r.type === activeTab),

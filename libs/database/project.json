@@ -5,9 +5,20 @@
   "projectType": "library",
   "tags": [],
   "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/database/src/**/*.ts"
+        ],
+        "maxWarnings": -1
+      }
+    },
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "options": {
         "outputPath": "libs/database/dist",
         "tsConfig": "libs/database/tsconfig.lib.json",

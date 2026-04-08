@@ -107,7 +107,7 @@ function WheelPreview({ items }: { items: GameItem[] }) {
       ctx.fillStyle = seg.textColor;
       ctx.textAlign = 'center';
       ctx.font = 'bold 11px Arial';
-      ctx.fillText(seg.title.length > 12 ? seg.title.slice(0, 12) + '…' : seg.title, 0, -4);
+      ctx.fillText(seg.title.length > 12 ? `${seg.title.slice(0, 12)  }…` : seg.title, 0, -4);
       ctx.font = '10px Arial';
       ctx.fillText(seg.value.toLocaleString(), 0, 10);
       ctx.restore();

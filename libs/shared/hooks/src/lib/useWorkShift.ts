@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { useLocalStorageValue } from "./useLocalStorageValue";
 import { CURRENT_USER, apiClient } from "@gateway-workspace/shared/utils";
+
+import { useLocalStorageValue } from "./useLocalStorageValue";
 import {
   WorkShift,
   getCurrentShift,
@@ -69,29 +70,21 @@ export const useWorkShift = () => {
 
   // Get shift by name
   const getShift = useCallback(
-    (name: string): WorkShift | null => {
-      return getShiftByName(workShifts, name);
-    },
+    (name: string): WorkShift | null => getShiftByName(workShifts, name),
     [workShifts],
   );
 
   // Get shift by enum (SANG, CHIEU, TOI)
   const getShiftByShiftEnum = useCallback(
-    (shiftEnum: string): WorkShift | null => {
-      return getShiftByEnum(workShifts, shiftEnum);
-    },
+    (shiftEnum: string): WorkShift | null => getShiftByEnum(workShifts, shiftEnum),
     [workShifts],
   );
 
   // Map work shift name to shift enum
-  const mapNameToEnum = useCallback((name: string): string => {
-    return mapWorkShiftNameToShiftEnum(name);
-  }, []);
+  const mapNameToEnum = useCallback((name: string): string => mapWorkShiftNameToShiftEnum(name), []);
 
   // Map shift enum to work shift name
-  const mapEnumToName = useCallback((shiftEnum: string): string => {
-    return mapShiftEnumToWorkShiftName(shiftEnum);
-  }, []);
+  const mapEnumToName = useCallback((shiftEnum: string): string => mapShiftEnumToWorkShiftName(shiftEnum), []);
 
   // Refresh current shift (useful when time changes)
   const refreshCurrentShift = useCallback(() => {

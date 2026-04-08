@@ -289,9 +289,7 @@ export default function ShiftReports() {
     }
   };
 
-  const formatMoney = (val: number) => {
-    return val?.toLocaleString('en-US') || '0';
-  };
+  const formatMoney = (val: number) => val?.toLocaleString('en-US') || '0';
 
   const numberFormatter = (val: any) => {
     if (!val) return '';
@@ -608,7 +606,7 @@ export default function ShiftReports() {
           return record.isParent ? "bg-gray-800/60 font-medium hover:bg-gray-700/80 transition-colors cursor-pointer" : "bg-transparent hover:bg-gray-800/40 transition-colors";
         }}
         className="custom-dark-table shadow-2xl"
-        defaultExpandAllRows={true}
+        defaultExpandAllRows
         expandable={{
           expandRowByClick: true,
         }}
@@ -692,7 +690,7 @@ export default function ShiftReports() {
                   </div>
                 </Col>
              </Row>
-             <div className="my-5 border-t border-dashed border-gray-600"></div>
+             <div className="my-5 border-t border-dashed border-gray-600" />
              <Row gutter={20} className="items-center">
                 <Col span={12}>
                   <Form.Item label={<span className="text-gray-300 text-base">Thực nhận</span>} name="actualReceived" rules={[{ required: true, message: 'Vui lòng điền thực nhận' }]} style={{ marginBottom: 0 }}>

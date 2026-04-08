@@ -112,6 +112,15 @@ export class MaterialController {
     return this.materialService.getProfitAnalysis(tenantId);
   }
 
+  @Get(':id/transactions')
+  async findMaterialTransactions(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    return this.materialService.findMaterialTransactions(tenantId, id);
+  }
+
   @Post('recipes')
   async createRecipe(
     @Headers('x-tenant-id') tenantId: string,

@@ -59,9 +59,9 @@ export default function CheckInComponent({ staffId, month, year }: CheckInProps)
       updateTimer();
       const interval = setInterval(updateTimer, 1000);
       return () => clearInterval(interval);
-    } else {
+    } 
       setElapsedTime("00:00");
-    }
+    
   }, [currentWorkingRecord]);
 
   const fetchTodayData = async () => {
@@ -147,7 +147,7 @@ export default function CheckInComponent({ staffId, month, year }: CheckInProps)
             <>
               <div className="space-y-2">
                 <div className="text-sm text-orange-600 font-semibold flex items-center justify-center gap-1">
-                   <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse mr-1"></div> Đang làm việc
+                   <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse mr-1" /> Đang làm việc
                 </div>
                 <div className="text-5xl font-black text-orange-700 tracking-tight">{elapsedTime}</div>
                 <div className="inline-block bg-white px-3 py-1 rounded-full text-xs text-orange-500 font-medium shadow-sm">
@@ -220,7 +220,7 @@ export default function CheckInComponent({ staffId, month, year }: CheckInProps)
 
               return (
                 <div key={record.id} className={`relative pl-6 border-l-2 ${isWorking ? 'border-orange-100' : 'border-green-100'} last:pb-0 pb-4`}>
-                  <div className={`absolute left-[-9px] top-0 w-4 h-4 rounded-full border-4 border-white shadow-sm ${isWorking ? 'bg-orange-500 animate-pulse' : 'bg-green-500'}`}></div>
+                  <div className={`absolute left-[-9px] top-0 w-4 h-4 rounded-full border-4 border-white shadow-sm ${isWorking ? 'bg-orange-500 animate-pulse' : 'bg-green-500'}`} />
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Lần {todayRecords.length - index}</span>

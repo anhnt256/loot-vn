@@ -9,7 +9,7 @@ import {
   EyeInvisibleOutlined,
   HolderOutlined,
   ClockCircleOutlined,
-} from "@ant-design/icons";
+ TagOutlined } from "@ant-design/icons";
 import {
   DndContext,
   closestCenter,
@@ -46,6 +46,16 @@ import {
 } from "antd";
 import { apiClient } from "@gateway-workspace/shared/utils/client";
 
+interface ActiveCampaign {
+  id: number;
+  name: string;
+  discountType: string;
+  discountValue: number;
+  maxDiscountAmount: number | null;
+  status: string;
+  menuScopes: { scopeType: string; targetId: number | null }[];
+}
+
 const API_BASE = apiClient.defaults.baseURL || "";
 
 function getImageUrl(imageUrl: string | null) {
@@ -70,6 +80,7 @@ interface MenuCategory {
   scheduleTimeEnd: string | null;
   scheduleDateStart: string | null;
   scheduleDateEnd: string | null;
+  scheduleDayRules: string | null;
   scheduleMachineGroupIds: string | null;
   requiredCategoryIds: string | null;
 }
@@ -88,6 +99,44 @@ interface MenuItem {
 function parseSecondaryIds(raw: string | null): number[] {
   if (!raw) return [];
   try { return JSON.parse(raw); } catch { return []; }
+}
+
+interface DaySchedule {
+  day: number;     // 0=CN, 1=T2, ..., 6=T7
+  enabled: boolean;
+  timeStart: string; // "HH:mm"
+  timeEnd: string;   // "HH:mm"
+}
+
+const DAY_LABELS: { value: number; label: string }[] = [
+  { value: 1, label: "Thứ 2" },
+  { value: 2, label: "Thứ 3" },
+  { value: 3, label: "Thứ 4" },
+  { value: 4, label: "Thứ 5" },
+  { value: 5, label: "Thứ 6" },
+  { value: 6, label: "Thứ 7" },
+  { value: 0, label: "CN" },
+];
+
+const DEFAULT_DAY_SCHEDULES: DaySchedule[] = DAY_LABELS.map((d) => ({
+  day: d.value,
+  enabled: true,
+  timeStart: "00:00",
+  timeEnd: "23:59",
+}));
+
+function parseDaySchedules(raw: string | null): DaySchedule[] {
+  if (!raw) return DEFAULT_DAY_SCHEDULES.map((d) => ({ ...d }));
+  try {
+    const parsed = JSON.parse(raw) as DaySchedule[];
+    // Ensure all 7 days exist
+    return DAY_LABELS.map((d) => {
+      const found = parsed.find((p) => p.day === d.value);
+      return found ?? { day: d.value, enabled: true, timeStart: "00:00", timeEnd: "23:59" };
+    });
+  } catch {
+    return DEFAULT_DAY_SCHEDULES.map((d) => ({ ...d }));
+  }
 }
 
 function SortableCategoryItem({
@@ -191,8 +240,7 @@ export default function MenuManagementPage() {
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const [machineGroups, setMachineGroups] = useState<MachineGroup[]>([]);
-  const [catScheduleEnabled, setCatScheduleEnabled] = useState(false);
-
+  const [daySchedules, setDaySchedules] = useState<DaySchedule[]>(DEFAULT_DAY_SCHEDULES.map((d) => ({ ...d })));
 
   /* ── Assign products modal ── */
   const [assignModalVisible, setAssignModalVisible] = useState(false);
@@ -202,12 +250,36 @@ export default function MenuManagementPage() {
   // IDs of items to keep in both categories (secondary)
   const [assignKeepBoth, setAssignKeepBoth] = useState<number[]>([]);
 
+  const [activeCampaigns, setActiveCampaigns] = useState<ActiveCampaign[]>([]);
+
   useEffect(() => {
     fetchData();
     apiClient.get<MachineGroup[]>("/admin/menu/machine-groups")
       .then(r => setMachineGroups(r.data || []))
       .catch(() => {});
+    apiClient.get("/menu-campaign", { params: { status: "ACTIVE" } })
+      .then(r => setActiveCampaigns(r.data || []))
+      .catch(() => {});
   }, []);
+
+  const getItemCampaign = (item: MenuItem): { campaign: ActiveCampaign; discount: number } | null => {
+    for (const c of activeCampaigns) {
+      const scopes = c.menuScopes || [];
+      const hasAll = scopes.some(s => s.scopeType === "ALL");
+      const hasCat = scopes.some(s => s.scopeType === "CATEGORY" && s.targetId === item.categoryId);
+      const hasRecipe = scopes.some(s => s.scopeType === "RECIPE" && s.targetId === item.id);
+      if (!scopes.length || hasAll || hasCat || hasRecipe) {
+        let discount = 0;
+        const price = Number(item.salePrice);
+        if (c.discountType === "PERCENTAGE") discount = price * c.discountValue / 100;
+        else if (c.discountType === "FIXED_AMOUNT") discount = Math.min(c.discountValue, price);
+        else if (c.discountType === "FLAT_PRICE") discount = Math.max(0, price - c.discountValue);
+        if (c.maxDiscountAmount) discount = Math.min(discount, c.maxDiscountAmount);
+        if (discount > 0) return { campaign: c, discount: Math.round(discount) };
+      }
+    }
+    return null;
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -238,14 +310,9 @@ export default function MenuManagementPage() {
   // --- Category CRUD ---
   const openCatModal = (cat?: MenuCategory) => {
     setEditingCat(cat || null);
-    const enabled = cat?.scheduleEnabled ?? false;
-    setCatScheduleEnabled(enabled);
+    setDaySchedules(parseDaySchedules(cat?.scheduleDayRules ?? null));
     catForm.setFieldsValue({
       name: cat?.name ?? "",
-      scheduleEnabled: enabled,
-      scheduleTime: cat?.scheduleTimeStart && cat?.scheduleTimeEnd
-        ? [dayjs(cat.scheduleTimeStart, "HH:mm"), dayjs(cat.scheduleTimeEnd, "HH:mm")]
-        : null,
       scheduleDate: cat?.scheduleDateStart && cat?.scheduleDateEnd
         ? [dayjs(cat.scheduleDateStart), dayjs(cat.scheduleDateEnd)]
         : null,
@@ -263,11 +330,12 @@ export default function MenuManagementPage() {
     try {
       const payload: any = {
         name: values.name,
-        scheduleEnabled: values.scheduleEnabled ?? false,
-        scheduleTimeStart: values.scheduleTime?.[0]?.format("HH:mm") ?? null,
-        scheduleTimeEnd: values.scheduleTime?.[1]?.format("HH:mm") ?? null,
+        scheduleEnabled: true,
+        scheduleTimeStart: null,
+        scheduleTimeEnd: null,
         scheduleDateStart: values.scheduleDate?.[0]?.toISOString() ?? null,
         scheduleDateEnd: values.scheduleDate?.[1]?.toISOString() ?? null,
+        scheduleDayRules: JSON.stringify(daySchedules),
         scheduleMachineGroupIds: values.scheduleMachineGroupIds?.length
           ? JSON.stringify(values.scheduleMachineGroupIds)
           : null,
@@ -396,7 +464,19 @@ export default function MenuManagementPage() {
             {totalItems} sản phẩm &middot; {activeItems} đang hiển thị &middot; {uncategorized} chưa phân loại
           </div>
         </div>
-        <Button icon={<ReloadOutlined />} onClick={fetchData} loading={loading}>Làm mới</Button>
+        <div className="flex items-center gap-2">
+          {activeCampaigns.map(c => (
+            <span key={c.id} className="flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border"
+              style={{ borderColor: 'var(--ant-color-primary)', color: 'var(--ant-color-primary)', background: 'color-mix(in srgb, var(--ant-color-primary) 10%, transparent)' }}>
+              <TagOutlined />
+              {c.name}
+              <span className="opacity-70">
+                {c.discountType === 'PERCENTAGE' ? `−${c.discountValue}%` : c.discountType === 'FLAT_PRICE' ? `Đồng giá ${c.discountValue.toLocaleString()}đ` : `−${c.discountValue.toLocaleString()}đ`}
+              </span>
+            </span>
+          ))}
+          <Button icon={<ReloadOutlined />} onClick={fetchData} loading={loading}>Làm mới</Button>
+        </div>
       </div>
 
       <div className="flex gap-4">
@@ -500,10 +580,29 @@ export default function MenuManagementPage() {
                   </div>
                   <div className="p-3">
                     <div className="font-bold text-gray-100 text-sm truncate">{item.name}</div>
-                    <div className="text-pink-400 font-extrabold text-base mt-1">
-                      {Number(item.salePrice).toLocaleString()}đ
-                    </div>
+                    {(() => {
+                      const promo = getItemCampaign(item);
+                      if (promo && Number(item.salePrice) > 0) {
+                        const newPrice = Number(item.salePrice) - promo.discount;
+                        return (
+                          <div className="mt-1 flex items-center gap-2">
+                            <span className="text-gray-500 line-through text-sm">{Number(item.salePrice).toLocaleString()}đ</span>
+                            <span className="font-extrabold text-base" style={{ color: 'var(--ant-color-primary)' }}>{newPrice.toLocaleString()}đ</span>
+                          </div>
+                        );
+                      }
+                      return <div className="text-pink-400 font-extrabold text-base mt-1">{Number(item.salePrice).toLocaleString()}đ</div>;
+                    })()}
                   </div>
+                  {(() => {
+                    const promo = getItemCampaign(item);
+                    return promo ? (
+                      <div className="absolute top-2 left-2 text-white text-xs px-2 py-0.5 rounded-full font-bold"
+                        style={{ background: 'var(--ant-color-primary)' }}>
+                        {promo.campaign.discountType === 'PERCENTAGE' ? `−${promo.campaign.discountValue}%` : `−${promo.discount.toLocaleString()}đ`}
+                      </div>
+                    ) : null;
+                  })()}
                   {!item.isActive && (
                     <div className="absolute top-2 right-2 bg-red-500/80 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
                       <EyeInvisibleOutlined /> Ẩn
@@ -531,29 +630,51 @@ export default function MenuManagementPage() {
 
           <Divider className="my-3" />
 
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-gray-200 font-medium flex items-center gap-2">
-              <ClockCircleOutlined className="text-cyan-400" /> Hẹn giờ hiển thị
-            </span>
-            <Form.Item name="scheduleEnabled" valuePropName="checked" className="mb-0">
-              <Switch
-                checkedChildren="Bật"
-                unCheckedChildren="Tắt"
-                onChange={setCatScheduleEnabled}
-              />
-            </Form.Item>
-          </div>
-
-          {catScheduleEnabled && (
-            <div className="bg-gray-900 rounded-lg p-4 flex flex-col gap-4">
-              <Form.Item name="scheduleTime" label="Khung giờ hiển thị" className="mb-0">
-                <TimePicker.RangePicker
-                  format="HH:mm"
-                  minuteStep={15}
-                  style={{ width: "100%" }}
-                  placeholder={["Từ giờ", "Đến giờ"]}
-                />
-              </Form.Item>
+          <div className="bg-gray-900 rounded-lg p-4 flex flex-col gap-4">
+              {/* Lịch theo ngày trong tuần */}
+              <div>
+                <div className="text-gray-300 text-sm font-medium mb-2">Khung giờ theo ngày</div>
+                <div className="flex flex-col gap-1">
+                  {daySchedules.map((ds, idx) => {
+                    const label = DAY_LABELS.find((d) => d.value === ds.day)?.label ?? "";
+                    return (
+                      <div
+                        key={ds.day}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded ${ds.enabled ? "bg-gray-800" : "bg-gray-800/40 opacity-60"}`}
+                      >
+                        <Switch
+                          size="small"
+                          checked={ds.enabled}
+                          onChange={(checked) => {
+                            const updated = [...daySchedules];
+                            updated[idx] = { ...updated[idx], enabled: checked };
+                            setDaySchedules(updated);
+                          }}
+                        />
+                        <span className="text-gray-200 text-sm w-12 font-medium">{label}</span>
+                        <TimePicker.RangePicker
+                          format="HH:mm"
+                          minuteStep={15}
+                          size="small"
+                          disabled={!ds.enabled}
+                          style={{ flex: 1 }}
+                          placeholder={["Từ", "Đến"]}
+                          value={[dayjs(ds.timeStart, "HH:mm"), dayjs(ds.timeEnd, "HH:mm")]}
+                          onChange={(values) => {
+                            const updated = [...daySchedules];
+                            updated[idx] = {
+                              ...updated[idx],
+                              timeStart: values?.[0]?.format("HH:mm") ?? "00:00",
+                              timeEnd: values?.[1]?.format("HH:mm") ?? "23:59",
+                            };
+                            setDaySchedules(updated);
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
 
               <Form.Item name="scheduleDate" label="Khoảng ngày áp dụng (để trống = luôn luôn)" className="mb-0">
                 <DatePicker.RangePicker
@@ -575,7 +696,6 @@ export default function MenuManagementPage() {
                 />
               </Form.Item>
             </div>
-          )}
 
           <Divider className="my-3" />
 

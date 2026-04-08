@@ -1,11 +1,13 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { apiClient, removeToken } from '@gateway-workspace/shared/utils/client';
+import { Spin } from 'antd';
+
 import { cn } from '../../lib/utils';
-import ChatPanel from './ChatPanel';
 import { CartProvider } from '../contexts/CartContext';
 import { UserProvider, useUser } from '../contexts/UserContext';
-import { Spin } from 'antd';
+
+import ChatPanel from './ChatPanel';
 
 const navLinks = [
   { href: '/dashboard/check-in', label: 'Điểm danh' },
@@ -27,6 +29,24 @@ const DashboardContent: React.FC = () => {
   const { user, loading } = useUser();
   const [menuVersion, setMenuVersion] = useState(0);
   const handleMenuUpdated = useCallback(() => setMenuVersion((v) => v + 1), []);
+
+  // Poll maintenance status every 10s
+  useEffect(() => {
+    let mounted = true;
+    const check = async () => {
+      try {
+        const res = await apiClient.get('/maintenance/status');
+        if (mounted && res.data?.enabled) {
+          window.location.href = '/maintenance';
+        }
+      } catch {
+        // ignore
+      }
+    };
+    check();
+    const interval = setInterval(check, 10000);
+    return () => { mounted = false; clearInterval(interval); };
+  }, []);
 
   const handleLogout = async () => {
     try { await apiClient.delete('/dashboard/cart'); } catch { /* ignore */ }

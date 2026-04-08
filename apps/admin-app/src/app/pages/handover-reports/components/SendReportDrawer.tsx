@@ -3,6 +3,7 @@ import { CloseOutlined, SendOutlined } from "@ant-design/icons";
 import { Table, Button, Select, Form, Input, message, Spin } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { apiClient } from "@gateway-workspace/shared/utils/client";
+
 import { 
   REPORT_TYPE_ENUM, 
   SHIFT_ENUM, 
@@ -16,6 +17,8 @@ interface SendReportDrawerProps {
   selectedDate: Date | null;
   selectedReportType: string;
   onSuccess: () => void;
+  /** Ca mặc định khi mở drawer (ưu tiên cao nhất) */
+  defaultShift?: ShiftType;
 }
 
 interface Staff {
@@ -39,6 +42,7 @@ export default function SendReportDrawer({
   selectedDate,
   selectedReportType,
   onSuccess,
+  defaultShift,
 }: SendReportDrawerProps) {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -58,6 +62,10 @@ export default function SendReportDrawer({
         onClose();
         return;
       }
+      // Set default shift ngay lập tức khi mở (trước khi fetch async)
+      if (defaultShift) {
+        setSelectedShift(defaultShift);
+      }
       fetchStaffs();
       fetchWorkShifts();
       fetchReportData();
@@ -73,9 +81,18 @@ export default function SendReportDrawer({
     // Auto-select shift/staff if possible
     if (reportData && !selectedShift) {
        const metadata = reportData.submissionTracking?.metadata || {};
-       
-       // Try finding a shift that is already started but not ended yet
-       const activeShift = (Object.values(SHIFT_ENUM) as ShiftType[]).find(s => 
+
+       // Ưu tiên 1: defaultShift (ca hiện tại của user đang login)
+       if (defaultShift) {
+          setSelectedShift(defaultShift);
+          if (metadata[defaultShift]?.start?.staffId) {
+             setSelectedStaff(metadata[defaultShift].start.staffId);
+          }
+          return;
+       }
+
+       // Ưu tiên 2: ca đang active (đã bắt đầu nhưng chưa kết thúc)
+       const activeShift = (Object.values(SHIFT_ENUM) as ShiftType[]).find(s =>
           metadata[s]?.start && !metadata[s]?.end
        );
 
@@ -85,14 +102,14 @@ export default function SendReportDrawer({
              setSelectedStaff(metadata[activeShift].start.staffId);
           }
        } else {
-          // If none active, find first not started yet
-          const nextShift = (Object.values(SHIFT_ENUM) as ShiftType[]).find(s => 
+          // Ưu tiên 3: ca chưa bắt đầu đầu tiên
+          const nextShift = (Object.values(SHIFT_ENUM) as ShiftType[]).find(s =>
              !metadata[s]?.start
           );
           if (nextShift) setSelectedShift(nextShift);
        }
     }
-  }, [reportData, selectedShift]);
+  }, [reportData, selectedShift, defaultShift]);
 
   const fetchStaffs = async () => {
     try {
@@ -223,14 +240,14 @@ export default function SendReportDrawer({
     if (!reportData?.submissionTracking) return false;
     const tracking = reportData.submissionTracking;
     const metadata = tracking.metadata || {};
-    return metadata[shift]?.end ? true : false;
+    return !!metadata[shift]?.end;
   };
 
   const getShiftStartedStatus = (shift: ShiftType) => {
     if (!reportData?.submissionTracking) return false;
     const tracking = reportData.submissionTracking;
     const metadata = tracking.metadata || {};
-    return metadata[shift]?.start ? true : false;
+    return !!metadata[shift]?.start;
   };
 
   const mapMaterialData = (shift: ShiftType) => {
@@ -250,8 +267,8 @@ export default function SendReportDrawer({
 
     const mapped = availableMaterials.map((mat: any) => {
       let beginning = 0;
-      let received: number | undefined = undefined;
-      let issued: number | undefined = undefined;
+      let received: number | undefined;
+      let issued: number | undefined;
 
       const currentDayMat = currentDay.find((m: any) => m.id === mat.id);
       
@@ -346,7 +363,7 @@ export default function SendReportDrawer({
          shift: selectedShift,
          reportType: selectedReportType,
          staffId: selectedStaff,
-         step: step,
+         step,
          materials: materials.map(m => ({
             id: m.id,
             materialName: m.materialName,

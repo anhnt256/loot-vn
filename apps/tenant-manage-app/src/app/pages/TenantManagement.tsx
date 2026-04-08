@@ -22,6 +22,7 @@ import {
   CopyOutlined,
   CheckOutlined
 } from '@ant-design/icons';
+
 import CreateTenantModal from '../components/CreateTenantModal';
 import ClientsManagementModal from '../components/ClientsManagementModal';
 

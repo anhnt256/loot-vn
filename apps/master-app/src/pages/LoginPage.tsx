@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Lock, EyeOff, Eye } from 'lucide-react';
-import { getBranchFromCookie } from '../lib/branch-cookie';
 import { apiClient } from '@gateway-workspace/shared/utils';
+
+import { getBranchFromCookie } from '../lib/branch-cookie';
 
 export default function LoginPage() {
   const navigate = useNavigate();

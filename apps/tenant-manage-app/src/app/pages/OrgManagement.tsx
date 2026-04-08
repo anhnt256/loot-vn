@@ -14,6 +14,7 @@ import {
   SearchOutlined, 
   PlusOutlined, 
 } from '@ant-design/icons';
+
 import CreateOrgModal from '../components/CreateOrgModal';
 
 const { Title } = Typography;

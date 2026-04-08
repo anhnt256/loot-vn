@@ -12,6 +12,7 @@ import {
 import dayjs from 'dayjs';
 import { apiClient, getToken } from '@gateway-workspace/shared/utils/client';
 import { io, Socket } from 'socket.io-client';
+
 import { useShift } from '../hooks/useShift';
 import { useShiftGuard } from '../hooks/useShiftGuard';
 import { printReceipt, usePrinterStore } from '../services/print';
@@ -79,7 +80,7 @@ function statusLabel(s: string | null) {
 }
 
 function fmtMoney(v: number | string) {
-  return Number(v).toLocaleString('vi-VN') + ' đ';
+  return `${Number(v).toLocaleString('vi-VN')  } đ`;
 }
 
 /* ---------- flattened row for table ---------- */

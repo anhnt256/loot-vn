@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+
 import CheckInCard from '../components/CheckInCard';
 import CheckInCalendar from '../components/CheckInCalendar';
 
