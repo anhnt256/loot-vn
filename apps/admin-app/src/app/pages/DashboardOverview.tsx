@@ -7,7 +7,6 @@ import RGL, { WidthProvider } from 'react-grid-layout/legacy';
 import ComputerCard from '../components/ComputerCard';
 import ComputerDetailDrawer from '../components/ComputerDetailDrawer';
 import PanContainer from '../components/PanContainer';
-// @ts-expect-error type resolution issue
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 

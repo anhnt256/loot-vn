@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
     && dpkg-reconfigure -f noninteractive tzdata \
     && rm -rf /var/lib/apt/lists/*
 
-COPY package*.json ./
+COPY package*.json .npmrc ./
 COPY nx.json ./
 COPY tsconfig.base.json ./
 

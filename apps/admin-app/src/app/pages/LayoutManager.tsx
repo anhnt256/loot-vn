@@ -2,8 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Card, Button, Input, List, Select, message, Checkbox, Modal, Form, Typography, Popconfirm, Tabs } from 'antd';
 import { PlusOutlined, SaveOutlined, DeleteOutlined, SwapRightOutlined } from '@ant-design/icons';
 import { apiClient } from '@gateway-workspace/shared/utils/client';
-// @ts-expect-error type resolution issue
-import RGL, { Layout, WidthProvider } from 'react-grid-layout/legacy';
+import RGL, { Layout, LayoutItem, WidthProvider } from 'react-grid-layout/legacy';
 
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -207,7 +206,7 @@ const LayoutManager: React.FC = () => {
     return computers.filter(c => c.zoneId === activeZoneId);
   }, [computers, activeZoneId]);
 
-  const gridLayouts: Layout[] = useMemo(() => activeZoneComputers.map((c, index) => {
+  const gridLayouts: LayoutItem[] = useMemo(() => activeZoneComputers.map((c, index) => {
       // Provide default position if null
       const l = c.layout || { x: (index * 3) % 24, y: Math.floor(index / 8) * 3, w: 3, h: 3 };
       const isLegacy = l.w === 2 && l.h === 2;
@@ -234,8 +233,8 @@ const LayoutManager: React.FC = () => {
     return colors[Math.abs(hash) % colors.length];
   };
 
-  const [currentLayout, setCurrentLayout] = useState<Layout[]>([]);
-  const onLayoutChange = (layout: Layout[]) => {
+  const [currentLayout, setCurrentLayout] = useState<Layout>([]);
+  const onLayoutChange = (layout: Layout) => {
     setCurrentLayout(layout);
   };
 
@@ -257,9 +256,9 @@ const LayoutManager: React.FC = () => {
     }
   };
 
-  const onNodeDragStop = async (layout: Layout[], oldItem: Layout, newItem: Layout, placeholder: Layout, e: MouseEvent, element: HTMLElement) => {
-    const clientX = e.clientX ?? (e as any).changedTouches?.[0]?.clientX;
-    if (clientX !== undefined && clientX < 350) {
+  const onNodeDragStop = async (layout: Layout, oldItem: LayoutItem | null, newItem: LayoutItem | null, placeholder: LayoutItem | null, e: Event, element: HTMLElement | undefined) => {
+    const clientX = (e as MouseEvent).clientX ?? (e as any).changedTouches?.[0]?.clientX;
+    if (clientX !== undefined && clientX < 350 && newItem) {
       try {
         await apiClient.post('/layout/computers/move', { zoneId: null, macAddresses: [newItem.i] });
         message.success('Đã đưa máy về Danh sách chưa phân bổ');
@@ -270,10 +269,10 @@ const LayoutManager: React.FC = () => {
     }
   };
 
-  const onDropLayout = async (layout: Layout[], layoutItem: Layout, e: Event) => {
+  const onDropLayout = async (layout: Layout, layoutItem: LayoutItem | undefined, e: Event) => {
     const dragEvent = e as unknown as React.DragEvent;
     const macAddress = dragEvent.dataTransfer?.getData('text/plain');
-    if (!macAddress || !activeZoneId) return;
+    if (!macAddress || !activeZoneId || !layoutItem) return;
     
     // Check if it's already in the zone
     const computer = computers.find(c => c.macAddress === macAddress);
@@ -429,7 +428,7 @@ const LayoutManager: React.FC = () => {
                 isDraggable
                 isDroppable
                 onDrop={onDropLayout}
-                droppingItem={{ i: 'dropping-new', w: 3, h: 3 }}
+                droppingItem={{ i: 'dropping-new', x: 0, y: 0, w: 3, h: 3 }}
               >
               {activeZoneComputers.map(c => (
                 <div 
