@@ -1,0 +1,35 @@
+{
+  "name": "gateway-gaming-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win nsis --config.win.signAndEditExecutable=false"
+  },
+  "build": {
+    "appId": "gateway-app",
+    "win": {
+      "target": "nsis",
+      "icon": "assets/logo.ico",
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": true,
+      "perMachine": false,
+      "differentialPackage": false
+    },
+    "asar": true,
+    "directories": {
+      "output": "dist"
+    }
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^34.0.2",
+    "electron-builder": "^25.1.8"
+  }
+}
