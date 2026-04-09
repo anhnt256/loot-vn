@@ -343,6 +343,115 @@ export class MenuCampaignService {
     return { success: true, status };
   }
 
+  async getUsages(tenantId: string, campaignId: number, opts: { page: number; limit: number; orderId?: number; recipeName?: string }) {
+    const { gateway } = await this.getClients(tenantId);
+    await this.ensureSchema(gateway, tenantId);
+
+    let whereExtra = '';
+    const params: any[] = [campaignId];
+
+    if (opts.orderId) {
+      whereExtra += ' AND u.orderId = ?';
+      params.push(opts.orderId);
+    }
+    if (opts.recipeName) {
+      whereExtra += ' AND EXISTS (SELECT 1 FROM FoodOrderDetail d WHERE d.orderId = u.orderId AND d.recipeName LIKE ?)';
+      params.push(`%${opts.recipeName}%`);
+    }
+
+    const countRows: any[] = await gateway.$queryRawUnsafe(
+      `SELECT COUNT(*) as total FROM MenuCampaignUsage u WHERE u.campaignId = ?${whereExtra}`,
+      ...params,
+    );
+    const total = Number(countRows[0]?.total ?? 0);
+
+    const offset = (opts.page - 1) * opts.limit;
+    const usages: any[] = await gateway.$queryRawUnsafe(
+      `SELECT u.id, u.orderId, u.userId, u.discountAmount, u.appliedAt,
+              o.totalAmount, o.computerName, o.status as orderStatus, o.createdAt as orderCreatedAt,
+              usr.userName
+       FROM MenuCampaignUsage u
+       LEFT JOIN FoodOrder o ON o.id = u.orderId
+       LEFT JOIN User usr ON usr.userId = u.userId
+       WHERE u.campaignId = ?${whereExtra}
+       ORDER BY u.appliedAt DESC
+       LIMIT ? OFFSET ?`,
+      ...params, opts.limit, offset,
+    );
+
+    // Summary: thực chi (HOAN_THANH) vs đợi duyệt (not HOAN_THANH, not HUY)
+    const summaryRows: any[] = await gateway.$queryRawUnsafe(
+      `SELECT
+         COALESCE(SUM(CASE WHEN o.status = 'HOAN_THANH' THEN u.discountAmount ELSE 0 END), 0) as totalCompleted,
+         COALESCE(SUM(CASE WHEN o.status NOT IN ('HOAN_THANH','HUY') OR o.status IS NULL THEN u.discountAmount ELSE 0 END), 0) as totalPending
+       FROM MenuCampaignUsage u
+       LEFT JOIN FoodOrder o ON o.id = u.orderId
+       WHERE u.campaignId = ?${whereExtra}`,
+      ...params,
+    );
+
+    // Top users by discount amount
+    const topUsers: any[] = await gateway.$queryRawUnsafe(
+      `SELECT u.userId, usr.userName, COUNT(*) as usageCount, SUM(u.discountAmount) as totalDiscount
+       FROM MenuCampaignUsage u
+       LEFT JOIN User usr ON usr.userId = u.userId
+       WHERE u.campaignId = ?${whereExtra}
+       GROUP BY u.userId, usr.userName
+       ORDER BY totalDiscount DESC
+       LIMIT 10`,
+      ...params,
+    );
+
+    const orderIds = [...new Set(usages.map((u: any) => Number(u.orderId)))];
+    const detailsMap: Record<number, any[]> = {};
+    if (orderIds.length > 0) {
+      const placeholders = orderIds.map(() => '?').join(',');
+      const details: any[] = await gateway.$queryRawUnsafe(
+        `SELECT orderId, recipeName, quantity, salePrice, subtotal FROM FoodOrderDetail WHERE orderId IN (${placeholders})`,
+        ...orderIds,
+      );
+      for (const d of details) {
+        const oid = Number(d.orderId);
+        if (!detailsMap[oid]) detailsMap[oid] = [];
+        detailsMap[oid].push({
+          recipeName: d.recipeName,
+          quantity: Number(d.quantity),
+          salePrice: Number(d.salePrice),
+          subtotal: Number(d.subtotal),
+        });
+      }
+    }
+
+    return {
+      data: usages.map((u: any) => ({
+        id: Number(u.id),
+        orderId: Number(u.orderId),
+        userId: Number(u.userId),
+        userName: u.userName || null,
+        discountAmount: Number(u.discountAmount),
+        appliedAt: u.appliedAt,
+        orderTotal: Number(u.totalAmount ?? 0),
+        computerName: u.computerName,
+        orderStatus: u.orderStatus,
+        orderCreatedAt: u.orderCreatedAt,
+        items: detailsMap[Number(u.orderId)] || [],
+      })),
+      total,
+      page: opts.page,
+      limit: opts.limit,
+      summary: {
+        totalCompleted: Number(summaryRows[0]?.totalCompleted ?? 0),
+        totalPending: Number(summaryRows[0]?.totalPending ?? 0),
+      },
+      topUsers: topUsers.map((t: any) => ({
+        userId: Number(t.userId),
+        userName: t.userName || null,
+        usageCount: Number(t.usageCount),
+        totalDiscount: Number(t.totalDiscount),
+      })),
+    };
+  }
+
   async delete(tenantId: string, id: number) {
     const { gateway } = await this.getClients(tenantId);
     await this.ensureSchema(gateway, tenantId);

@@ -43,6 +43,25 @@ export class MenuCampaignController {
     return this.engine.getBudgetProgress(tenantId, parseInt(id, 10));
   }
 
+  @Get(':id/usages')
+  @UseGuards(AuthGuard)
+  async getUsages(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('orderId') orderId?: string,
+    @Query('recipeName') recipeName?: string,
+  ) {
+    if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    return this.service.getUsages(tenantId, parseInt(id, 10), {
+      page: Math.max(1, parseInt(page ?? '1') || 1),
+      limit: Math.min(50, Math.max(1, parseInt(limit ?? '10') || 10)),
+      orderId: orderId ? parseInt(orderId, 10) : undefined,
+      recipeName: recipeName?.trim() || undefined,
+    });
+  }
+
   @Get(':id')
   @UseGuards(AuthGuard)
   async getById(@Headers('x-tenant-id') tenantId: string, @Param('id') id: string) {

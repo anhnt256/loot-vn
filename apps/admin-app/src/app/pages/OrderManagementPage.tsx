@@ -43,6 +43,8 @@ interface FoodOrder {
   computerName: string | null;
   status: string | null;
   totalAmount: number;
+  discountAmount: number | null;
+  campaignId: number | null;
   createdAt: string;
   details: OrderDetail[];
   statusHistory: StatusHistory[];
@@ -353,12 +355,23 @@ const OrderManagementPage: React.FC = () => {
     },
     {
       title: 'TỔNG',
-      width: 100,
+      width: 130,
       align: 'right' as const,
       render: (_, row) => {
         if (row.detailIndex !== 0) return { children: null, props: { rowSpan: 0 } };
+        const discount = Number(row.order.discountAmount) || 0;
         return {
-          children: <span className="text-red-400 font-bold">{fmtMoney(row.order.totalAmount)}</span>,
+          children: (
+            <div>
+              <span className="text-red-400 font-bold">{fmtMoney(row.order.totalAmount)}</span>
+              {discount > 0 && (
+                <div className="mt-0.5">
+                  <span className="text-green-400 text-xs">KM −{fmtMoney(discount)} </span>
+                  <span className="text-gray-500 text-xs line-through">{fmtMoney(Number(row.order.totalAmount) + discount)}</span>
+                </div>
+              )}
+            </div>
+          ),
           props: { rowSpan: row.detailCount },
         };
       },

@@ -2,13 +2,14 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   Table, Button, Tag, App, Modal, Form, Input, InputNumber, Select,
   DatePicker, Card, Statistic, Row, Col, Space, Popconfirm, Progress, Tabs,
+  Tooltip,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
   PlusOutlined, ReloadOutlined, EditOutlined, DeleteOutlined,
   PlayCircleOutlined, PauseCircleOutlined, StopOutlined,
   DollarOutlined, ShoppingCartOutlined, UserOutlined, PercentageOutlined,
-  ThunderboltOutlined, FireOutlined,
+  ThunderboltOutlined, FireOutlined, EyeOutlined, SearchOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { apiClient } from '@gateway-workspace/shared/utils/client';
@@ -56,6 +57,36 @@ const DISCOUNT_TYPE_CONFIG: Record<string, { label: string; icon: React.ReactNod
   COMBO_DEAL: { label: 'Combo', icon: <FireOutlined /> },
 };
 
+interface UsageRecord {
+  id: number;
+  orderId: number;
+  userId: number;
+  userName: string | null;
+  discountAmount: number;
+  appliedAt: string;
+  orderTotal: number;
+  computerName: string | null;
+  orderStatus: string | null;
+  orderCreatedAt: string;
+  items: { recipeName: string; quantity: number; salePrice: number; subtotal: number }[];
+}
+
+interface TopUser {
+  userId: number;
+  userName: string | null;
+  usageCount: number;
+  totalDiscount: number;
+}
+
+const STATUS_ORDER: Record<string, { label: string; color: string }> = {
+  PENDING: { label: 'Chờ xác nhận', color: 'gold' },
+  CHAP_NHAN: { label: 'Chấp nhận', color: 'blue' },
+  THU_TIEN: { label: 'Thu tiền', color: 'purple' },
+  PHUC_VU: { label: 'Phục vụ', color: 'orange' },
+  HOAN_THANH: { label: 'Hoàn thành', color: 'green' },
+  HUY: { label: 'Đã hủy', color: 'red' },
+};
+
 const fmtMoney = (v: number) => `${v?.toLocaleString('vi-VN')  }đ`;
 
 const MenuCampaignPage: React.FC = () => {
@@ -67,6 +98,17 @@ const MenuCampaignPage: React.FC = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
+
+  // Usage modal state
+  const [usageModal, setUsageModal] = useState<{ id: number; name: string } | null>(null);
+  const [usages, setUsages] = useState<UsageRecord[]>([]);
+  const [usageLoading, setUsageLoading] = useState(false);
+  const [usageTotal, setUsageTotal] = useState(0);
+  const [usagePage, setUsagePage] = useState(1);
+  const [usageOrderSearch, setUsageOrderSearch] = useState('');
+  const [usageRecipeFilter, setUsageRecipeFilter] = useState('');
+  const [usageSummary, setUsageSummary] = useState({ totalCompleted: 0, totalPending: 0 });
+  const [topUsers, setTopUsers] = useState<TopUser[]>([]);
 
   // Lookup data for scope selectors
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
@@ -94,6 +136,44 @@ const MenuCampaignPage: React.FC = () => {
   }, [statusFilter]);
 
   useEffect(() => { fetchCampaigns(); }, [fetchCampaigns]);
+
+  const fetchUsages = useCallback(async (campaignId: number, page = 1, orderId = '', recipeName = '') => {
+    setUsageLoading(true);
+    try {
+      const params: any = { page, limit: 10 };
+      if (orderId.trim()) params.orderId = orderId.trim();
+      if (recipeName.trim()) params.recipeName = recipeName.trim();
+      const res = await apiClient.get(`/menu-campaign/${campaignId}/usages`, { params });
+      setUsages(res.data.data);
+      setUsageTotal(res.data.total);
+      setUsageSummary(res.data.summary ?? { totalCompleted: 0, totalPending: 0 });
+      setTopUsers(res.data.topUsers ?? []);
+    } catch {
+      notification.error({ message: 'Không thể tải dữ liệu sử dụng KM' });
+    } finally {
+      setUsageLoading(false);
+    }
+  }, []);
+
+  const handleOpenUsage = (campaign: Campaign) => {
+    setUsageModal({ id: campaign.id, name: campaign.name });
+    setUsagePage(1);
+    setUsageOrderSearch('');
+    setUsageRecipeFilter('');
+    fetchUsages(campaign.id);
+  };
+
+  useEffect(() => {
+    if (usageModal) {
+      fetchUsages(usageModal.id, usagePage, usageOrderSearch, usageRecipeFilter);
+    }
+  }, [usagePage]);
+
+  const handleUsageSearch = () => {
+    if (!usageModal) return;
+    setUsagePage(1);
+    fetchUsages(usageModal.id, 1, usageOrderSearch, usageRecipeFilter);
+  };
 
   const handleOpenCreate = () => {
     setEditingId(null);
@@ -228,8 +308,12 @@ const MenuCampaignPage: React.FC = () => {
       ),
     },
     {
-      title: 'Sử dụng', dataIndex: 'totalUsageCount', key: 'usage', width: 80,
-      render: (v) => <Tag>{v} lần</Tag>,
+      title: 'Sử dụng', dataIndex: 'totalUsageCount', key: 'usage', width: 100,
+      render: (v, r) => (
+        <Tooltip title="Xem chi tiết">
+          <Tag className="cursor-pointer" onClick={() => handleOpenUsage(r)}><EyeOutlined className="mr-1" />{v} lần</Tag>
+        </Tooltip>
+      ),
     },
     {
       title: 'Ưu tiên', dataIndex: 'priority', key: 'priority', width: 70,
@@ -313,6 +397,158 @@ const MenuCampaignPage: React.FC = () => {
         pagination={{ pageSize: 20 }}
         size="small"
       />
+
+      {/* Usage Detail Modal */}
+      <Modal
+        title={`Chi tiết sử dụng KM: ${usageModal?.name ?? ''}`}
+        open={!!usageModal}
+        onCancel={() => setUsageModal(null)}
+        footer={null}
+        width={1000}
+      >
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          <Input
+            placeholder="Tìm theo mã đơn..."
+            prefix={<SearchOutlined />}
+            value={usageOrderSearch}
+            onChange={(e) => setUsageOrderSearch(e.target.value)}
+            onPressEnter={handleUsageSearch}
+            style={{ width: 180 }}
+            allowClear
+          />
+          <Input
+            placeholder="Lọc theo tên món..."
+            value={usageRecipeFilter}
+            onChange={(e) => setUsageRecipeFilter(e.target.value)}
+            onPressEnter={handleUsageSearch}
+            style={{ width: 200 }}
+            allowClear
+          />
+          <Button type="primary" icon={<SearchOutlined />} onClick={handleUsageSearch}>Tìm</Button>
+        </div>
+
+        <Row gutter={12} className="mb-3">
+          <Col span={12}>
+            <div className="rounded-lg px-4 py-2.5 border" style={{ background: '#062e16', borderColor: '#166534' }}>
+              <div className="text-xs text-green-400/80">Thực chi (Hoàn thành)</div>
+              <div className="text-lg font-bold text-green-400">{fmtMoney(usageSummary.totalCompleted)}</div>
+            </div>
+          </Col>
+          <Col span={12}>
+            <div className="rounded-lg px-4 py-2.5 border" style={{ background: '#1a1523', borderColor: '#5b21b6' }}>
+              <div className="text-xs text-purple-400/80">Đợi duyệt (Đang xử lý)</div>
+              <div className="text-lg font-bold text-purple-400">{fmtMoney(usageSummary.totalPending)}</div>
+            </div>
+          </Col>
+        </Row>
+
+        <Table
+          dataSource={usages}
+          rowKey="id"
+          loading={usageLoading}
+          size="small"
+          pagination={{
+            current: usagePage,
+            pageSize: 10,
+            total: usageTotal,
+            onChange: (p) => setUsagePage(p),
+            showTotal: (t) => `Tổng ${t} lượt`,
+            size: 'small',
+          }}
+          columns={[
+            {
+              title: 'Đơn #', dataIndex: 'orderId', width: 70,
+              render: (v) => <span className="font-semibold">#{v}</span>,
+            },
+            {
+              title: 'Khách hàng', key: 'user', width: 120,
+              render: (_, r: UsageRecord) => r.userName ? (
+                <div>
+                  <div className="text-sm font-medium">{r.userName}</div>
+                  <div className="text-xs text-gray-500">ID: {r.userId}</div>
+                </div>
+              ) : (
+                <span className="text-gray-400">#{r.userId}</span>
+              ),
+            },
+            {
+              title: 'Máy', dataIndex: 'computerName', width: 90,
+              render: (v) => <span className="text-blue-400">{v || '—'}</span>,
+            },
+            {
+              title: 'Sản phẩm', key: 'items',
+              render: (_, r: UsageRecord) => (
+                <div className="space-y-0.5">
+                  {r.items.map((item, i) => (
+                    <div key={i} className="text-xs">
+                      <span className="font-medium">{item.recipeName}</span>
+                      <span className="text-gray-400 ml-1">x{item.quantity}</span>
+                      <span className="text-gray-400 ml-2">{fmtMoney(item.subtotal)}</span>
+                    </div>
+                  ))}
+                </div>
+              ),
+            },
+            {
+              title: 'KM giảm', dataIndex: 'discountAmount', width: 100, align: 'right' as const,
+              render: (v) => <span className="text-green-400 font-semibold">−{fmtMoney(v)}</span>,
+            },
+            {
+              title: 'Tổng đơn', dataIndex: 'orderTotal', width: 100, align: 'right' as const,
+              render: (v, r: UsageRecord) => (
+                <div>
+                  <div className="font-semibold">{fmtMoney(v)}</div>
+                  <div className="text-xs text-gray-500 line-through">{fmtMoney(v + r.discountAmount)}</div>
+                </div>
+              ),
+            },
+            {
+              title: 'Thời gian', dataIndex: 'appliedAt', width: 130,
+              render: (v) => <span className="text-xs text-gray-400">{dayjs(v).format('HH:mm DD/MM/YY')}</span>,
+            },
+            {
+              title: 'TT đơn', dataIndex: 'orderStatus', width: 100,
+              render: (s) => {
+                const cfg = STATUS_ORDER[s] ?? { label: s || 'N/A', color: 'default' };
+                return <Tag color={cfg.color} className="text-xs">{cfg.label}</Tag>;
+              },
+            },
+          ]}
+        />
+
+        {topUsers.length > 0 && (
+          <div className="mt-4">
+            <div className="text-sm font-semibold text-gray-300 mb-2"><UserOutlined className="mr-1" />Top khách hàng sử dụng KM</div>
+            <Table
+              dataSource={topUsers}
+              rowKey="userId"
+              size="small"
+              pagination={false}
+              columns={[
+                {
+                  title: '#', width: 40, render: (_, __, i) => <span className="text-gray-400">{i + 1}</span>,
+                },
+                {
+                  title: 'Khách hàng', key: 'user',
+                  render: (_, r: TopUser) => r.userName ? (
+                    <span>{r.userName} <span className="text-gray-500 text-xs">(ID: {r.userId})</span></span>
+                  ) : (
+                    <span className="text-gray-400">#{r.userId}</span>
+                  ),
+                },
+                {
+                  title: 'Số lần', dataIndex: 'usageCount', width: 80, align: 'center' as const,
+                  render: (v) => <Tag>{v} lần</Tag>,
+                },
+                {
+                  title: 'Tổng KM đã dùng', dataIndex: 'totalDiscount', width: 140, align: 'right' as const,
+                  render: (v) => <span className="text-green-400 font-semibold">{fmtMoney(v)}</span>,
+                },
+              ]}
+            />
+          </div>
+        )}
+      </Modal>
 
       {/* Create/Edit Modal */}
       <Modal

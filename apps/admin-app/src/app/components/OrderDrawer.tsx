@@ -375,20 +375,20 @@ const OrderDrawer: React.FC<Props> = ({ tenantId }) => {
                       ))}
                     </div>
 
-                    {/* Discount + Total */}
+                    {/* Total + Discount */}
                     <div className="px-4 py-2 border-t space-y-1" style={{ borderColor: '#1f2937' }}>
-                      {Number(order.discountAmount) > 0 && (
-                        <div className="flex justify-between items-center">
-                          <span className="text-green-400 text-xs">KM giảm</span>
-                          <span className="text-green-400 text-xs font-semibold">−{Number(order.discountAmount).toLocaleString('vi-VN')}đ</span>
-                        </div>
-                      )}
                       <div className="flex justify-between items-center">
                         <span className="text-gray-400 text-sm">Tổng cộng</span>
                         <span className="text-pink-400 font-bold text-base">
                           {Number(order.totalAmount).toLocaleString('vi-VN')}đ
                         </span>
                       </div>
+                      {Number(order.discountAmount) > 0 && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-green-400 text-xs">KM giảm {Number(order.discountAmount).toLocaleString('vi-VN')}đ</span>
+                          <span className="text-gray-500 text-xs line-through">{(Number(order.totalAmount) + Number(order.discountAmount)).toLocaleString('vi-VN')}đ</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Status history */}
