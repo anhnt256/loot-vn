@@ -12,6 +12,8 @@ export interface StaffShift {
 }
 
 export interface WorkShiftSchedule {
+  id: number;
+  name: string;
   startTime: string; // HH:mm:ss
   endTime: string;   // HH:mm:ss
   isOvernight: boolean;

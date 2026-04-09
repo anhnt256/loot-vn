@@ -91,7 +91,7 @@ interface ShiftSummary {
 const ShiftEndGate: React.FC<ShiftEndGateProps> = ({ onClose, primaryColor, workShifts }) => {
   const navigate = useNavigate();
   const { notification, modal } = App.useApp();
-  const { endShift, currentShift } = useShift();
+  const { endShift, currentShift, workShiftSchedule } = useShift();
 
   const [reportStatus, setReportStatus] = useState<{ bep: boolean; nuoc: boolean; bandGiao: boolean } | null>(null);
   const [checking, setChecking] = useState(true);
@@ -110,7 +110,11 @@ const ShiftEndGate: React.FC<ShiftEndGateProps> = ({ onClose, primaryColor, work
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerReportType, setDrawerReportType] = useState<string>(REPORT_TYPE_ENUM.BAO_CAO_BEP);
 
-  const currentWorkShift = useMemo(() => findCurrentWorkShift(workShifts), [workShifts]);
+  // Ưu tiên workShiftSchedule từ API (đã match theo staffId), fallback tìm theo giờ
+  const currentWorkShift = useMemo(() => {
+    if (workShiftSchedule) return workShiftSchedule as WorkShiftJwt;
+    return findCurrentWorkShift(workShifts);
+  }, [workShiftSchedule, workShifts]);
   const currentShiftEnum = currentWorkShift ? mapWorkShiftNameToEnum(currentWorkShift.name) : 'SANG';
 
   // For overnight shifts (e.g. Ca Tối 22:50–06:00), after midnight the NVL

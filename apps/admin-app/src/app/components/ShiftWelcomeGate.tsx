@@ -114,7 +114,7 @@ function formatShiftName(ws: WorkShiftJwt): string {
 const ShiftWelcomeGate: React.FC<ShiftWelcomeGateProps> = ({ staffName, tenantLogo, primaryColor, workShifts }) => {
   const navigate = useNavigate();
   const { notification } = App.useApp();
-  const { startShift } = useShift();
+  const { startShift, workShiftSchedule } = useShift();
   const { confirmShiftStart } = useShiftGuard();
 
   const [reportStatus, setReportStatus] = useState<{ bep: boolean; nuoc: boolean } | null>(null);
@@ -125,8 +125,11 @@ const ShiftWelcomeGate: React.FC<ShiftWelcomeGateProps> = ({ staffName, tenantLo
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerReportType, setDrawerReportType] = useState<string>(REPORT_TYPE_ENUM.BAO_CAO_BEP);
 
-  // Determine current shift from WorkShift data
-  const currentWorkShift = useMemo(() => findCurrentWorkShift(workShifts), [workShifts]);
+  // Ưu tiên workShiftSchedule từ API (match theo staffId), fallback tìm theo giờ
+  const currentWorkShift = useMemo(() => {
+    if (workShiftSchedule) return workShiftSchedule as WorkShiftJwt;
+    return findCurrentWorkShift(workShifts);
+  }, [workShiftSchedule, workShifts]);
   const currentShiftEnum = currentWorkShift ? mapWorkShiftNameToEnum(currentWorkShift.name) : 'SANG';
   const currentShiftDisplay = currentWorkShift ? formatShiftName(currentWorkShift) : 'Ca';
 

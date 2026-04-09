@@ -168,30 +168,36 @@ export class OrderController {
       orderBy: { startedAt: 'desc' },
     });
 
-    // Xác định WorkShift schedule từ JWT workShifts — match theo giờ hiện tại
-    let workShiftSchedule: { startTime: string; endTime: string; isOvernight: boolean } | null = null;
+    // Xác định WorkShift schedule — ưu tiên match theo staffId (assigned shift), fallback theo giờ
+    let workShiftSchedule: { id: number; name: string; startTime: string; endTime: string; isOvernight: boolean } | null = null;
     if (shift && user.workShifts?.length) {
-      const now = new Date();
-      const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-      for (const ws of user.workShifts) {
-        const [sH, sM] = String(ws.startTime).split(':').map(Number);
-        const [eH, eM] = String(ws.endTime).split(':').map(Number);
-        const start = sH * 60 + sM;
-        const end = eH * 60 + eM;
-        const overnight = !!ws.isOvernight;
-
-        const inShift = overnight
-          ? (currentMinutes >= start || currentMinutes <= end)
-          : (currentMinutes >= start && currentMinutes <= end);
-
-        if (inShift) {
-          workShiftSchedule = {
-            startTime: String(ws.startTime),
-            endTime: String(ws.endTime),
-            isOvernight: overnight,
-          };
-          break;
+      // 1. Match theo staffId — ca được gán cho user này
+      const assignedWs = user.workShifts.find((ws: any) => ws.staff_id === staffId || ws.staffId === staffId);
+      if (assignedWs) {
+        workShiftSchedule = {
+          id: assignedWs.id,
+          name: assignedWs.name,
+          startTime: String(assignedWs.startTime),
+          endTime: String(assignedWs.endTime),
+          isOvernight: !!assignedWs.isOvernight,
+        };
+      } else {
+        // 2. Fallback: match theo giờ hiện tại
+        const now = new Date();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        for (const ws of user.workShifts) {
+          const [sH, sM] = String(ws.startTime).split(':').map(Number);
+          const [eH, eM] = String(ws.endTime).split(':').map(Number);
+          const start = sH * 60 + sM;
+          const end = eH * 60 + eM;
+          const overnight = !!ws.isOvernight;
+          const inShift = overnight
+            ? (currentMinutes >= start || currentMinutes <= end)
+            : (currentMinutes >= start && currentMinutes <= end);
+          if (inShift) {
+            workShiftSchedule = { id: ws.id, name: ws.name, startTime: String(ws.startTime), endTime: String(ws.endTime), isOvernight: overnight };
+            break;
+          }
         }
       }
     }
