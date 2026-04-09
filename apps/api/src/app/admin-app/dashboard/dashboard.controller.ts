@@ -185,12 +185,24 @@ export class DashboardController {
         }
       }
 
-      // 4. Chuẩn bị detail data với snapshot
+      // 3b. Query giá thực từ DB — không tin giá client gửi lên
+      const recipes = await (db.recipe as any).findMany({
+        where: { id: { in: recipeIds }, isActive: true },
+        select: { id: true, name: true, salePrice: true, categoryId: true },
+      });
+      const recipeMap = new Map<number, any>();
+      for (const r of recipes) {
+        recipeMap.set(r.id, r);
+      }
+
+      // 4. Chuẩn bị detail data với snapshot — dùng giá từ DB
       let totalAmount = 0;
       const detailsData = cart.map((ci: any) => {
         const recipeId: number = ci.item?.id;
         const quantity: number = ci.quantity ?? 1;
-        const salePrice: number = Number(ci.item?.salePrice ?? 0);
+        const dbRecipe = recipeMap.get(recipeId);
+        if (!dbRecipe) throw new BadRequestException(`Món #${recipeId} không tồn tại hoặc đã ngưng bán`);
+        const salePrice: number = Number(dbRecipe.salePrice);
         const subtotal = salePrice * quantity;
         totalAmount += subtotal;
 
@@ -198,7 +210,7 @@ export class DashboardController {
         return {
           recipeId,
           recipeVersionId: version?.id ?? 0,
-          recipeName: ci.item?.name ?? '',
+          recipeName: dbRecipe.name,
           salePrice,
           quantity,
           subtotal,
@@ -213,7 +225,7 @@ export class DashboardController {
       try {
         const orderItems = detailsData.map((d: any) => ({
           recipeId: d.recipeId,
-          categoryId: cart.find((ci: any) => ci.item?.id === d.recipeId)?.item?.categoryId ?? 0,
+          categoryId: recipeMap.get(d.recipeId)?.categoryId ?? 0,
           salePrice: d.salePrice,
           quantity: d.quantity,
         }));
@@ -225,20 +237,6 @@ export class DashboardController {
           discountAmount = discount.totalDiscount;
         }
       } catch { /* campaign evaluation failure should not block order */ }
-
-      // Price guard: nếu client gửi expectedDiscount, so sánh với discount thực tế
-      if (body.expectedDiscount != null && body.expectedDiscount !== discountAmount) {
-        await redisService.releaseLock(lockKey, lockValue).catch(() => {});
-        return {
-          success: false,
-          code: 'PRICE_CHANGED',
-          message: 'Giá khuyến mãi đã thay đổi. Vui lòng kiểm tra lại giỏ hàng.',
-          previousDiscount: body.expectedDiscount,
-          currentDiscount: discountAmount,
-          totalBeforeDiscount: totalAmount,
-          totalAfterDiscount: Math.max(0, totalAmount - discountAmount),
-        };
-      }
 
       const finalAmount = Math.max(0, totalAmount - discountAmount);
 

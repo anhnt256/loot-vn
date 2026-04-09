@@ -177,34 +177,7 @@ const ChatPanel: React.FC<Props> = ({ machineName, defaultTab = 'chat', onMenuUp
     setCheckingOut(true);
     setCheckoutError(null);
     try {
-      // Calculate expected discount from client-side campaign data
-      const expectedDiscount = getCartTotalDiscount(
-        cart.map((ci: any) => ({
-          recipeId: ci.item?.id,
-          categoryId: ci.item?.categoryId ?? 0,
-          salePrice: Number(ci.item?.salePrice ?? 0),
-          quantity: ci.quantity ?? 1,
-        }))
-      );
-
-      const res = await apiClient.post('/dashboard/checkout', { cart, expectedDiscount });
-
-      // Handle price changed response
-      if (res.data?.code === 'PRICE_CHANGED') {
-        const prev = res.data.previousDiscount;
-        const curr = res.data.currentDiscount;
-        const newTotal = res.data.totalAfterDiscount;
-        notification.warning({
-          message: 'Giá khuyến mãi đã thay đổi!',
-          description: curr > 0
-            ? `Mức giảm đã đổi từ ${prev.toLocaleString()}đ → ${curr.toLocaleString()}đ. Tổng mới: ${newTotal.toLocaleString()}đ. Vui lòng kiểm tra và đặt lại.`
-            : `Khuyến mãi đã kết thúc. Giá gốc: ${res.data.totalBeforeDiscount?.toLocaleString()}đ. Vui lòng kiểm tra lại.`,
-          placement: 'topRight',
-          duration: 8,
-        });
-        setCheckoutError('Giá đã thay đổi, vui lòng kiểm tra lại giỏ hàng');
-        return;
-      }
+      const res = await apiClient.post('/dashboard/checkout', { cart });
 
       await clearCart();
       const list = await fetchCurrentOrder();

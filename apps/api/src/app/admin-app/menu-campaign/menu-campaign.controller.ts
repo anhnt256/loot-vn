@@ -16,6 +16,7 @@ export class MenuCampaignController {
   ) {}
 
   private async notifyChange(tenantId: string, action: string) {
+    await this.engine.invalidateCache(tenantId);
     await this.gateway.publishCampaignChanged(tenantId, action);
   }
 

@@ -47,10 +47,10 @@ export class CampaignEngineService {
       FROM MenuCampaign mc
       LEFT JOIN MenuCampaignMenuScope ms ON ms.campaignId = mc.id
       LEFT JOIN MenuCampaignCustomerScope cs ON cs.campaignId = mc.id
-      WHERE mc.tenantId = ? AND mc.status = 'ACTIVE' AND mc.startDate <= ? AND mc.endDate >= ?
+      WHERE mc.status = 'ACTIVE' AND mc.startDate <= ? AND mc.endDate >= ?
       GROUP BY mc.id
       ORDER BY mc.priority DESC
-    `, tenantId, now, now);
+    `, now, now);
 
     // Parse scopes + load timeSlots + comboRules
     for (const c of campaigns) {
@@ -336,7 +336,7 @@ export class CampaignEngineService {
   async getBudgetProgress(tenantId: string, campaignId: number) {
     const { gateway } = await this.campaignService.getClients(tenantId);
     const rows: any[] = await gateway.$queryRawUnsafe(
-      `SELECT totalBudget, spentBudget, name, status FROM MenuCampaign WHERE id = ? AND tenantId = ?`, campaignId, tenantId,
+      `SELECT totalBudget, spentBudget, name, status FROM MenuCampaign WHERE id = ?`, campaignId,
     );
     if (!rows.length) return null;
     const c = rows[0];

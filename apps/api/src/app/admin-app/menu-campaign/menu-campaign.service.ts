@@ -37,7 +37,6 @@ export class MenuCampaignService {
     await gateway.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS MenuCampaign (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        tenantId VARCHAR(100) NOT NULL,
         name VARCHAR(255) NOT NULL,
         description TEXT,
         status ENUM('DRAFT','ACTIVE','PAUSED','BUDGET_EXCEEDED','EXPIRED','CANCELLED') DEFAULT 'DRAFT',
@@ -60,7 +59,6 @@ export class MenuCampaignService {
         createdBy INT,
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        INDEX idx_tenant (tenantId),
         INDEX idx_status (status),
         INDEX idx_start (startDate),
         INDEX idx_end (endDate),
@@ -168,7 +166,6 @@ export class MenuCampaignService {
   private normalize(c: any) {
     return {
       id: Number(c.id),
-      tenantId: Number(c.tenantId),
       name: c.name,
       description: c.description,
       status: c.status,
@@ -233,8 +230,8 @@ export class MenuCampaignService {
     if (status && !VALID_STATUSES.includes(status)) {
       throw new BadRequestException(`Status không hợp lệ. Chấp nhận: ${VALID_STATUSES.join(', ')}`);
     }
-    let query = `SELECT * FROM MenuCampaign WHERE tenantId = ?`;
-    const params: any[] = [tenantId];
+    let query = `SELECT * FROM MenuCampaign WHERE 1=1`;
+    const params: any[] = [];
     if (status) { query += ` AND status = ?`; params.push(status); }
     query += ` ORDER BY priority DESC, createdAt DESC`;
     const campaigns: any[] = await gateway.$queryRawUnsafe(query, ...params);
@@ -249,7 +246,7 @@ export class MenuCampaignService {
   async getById(tenantId: string, id: number) {
     const { gateway } = await this.getClients(tenantId);
     await this.ensureSchema(gateway, tenantId);
-    const rows: any[] = await gateway.$queryRawUnsafe(`SELECT * FROM MenuCampaign WHERE id = ? AND tenantId = ?`, id, tenantId);
+    const rows: any[] = await gateway.$queryRawUnsafe(`SELECT * FROM MenuCampaign WHERE id = ?`, id);
     if (!rows.length) throw new NotFoundException('Campaign không tồn tại');
     const n = this.normalize(rows[0]);
     const children = await this.loadChildren(gateway, id);
@@ -284,11 +281,11 @@ export class MenuCampaignService {
     await gateway.$executeRawUnsafe(`START TRANSACTION`);
     try {
       await gateway.$executeRawUnsafe(`
-        INSERT INTO MenuCampaign (tenantId, name, description, discountType, discountValue, maxDiscountAmount,
+        INSERT INTO MenuCampaign (name, description, discountType, discountValue, maxDiscountAmount,
           startDate, endDate, totalBudget, maxUsesPerUserPerCampaign, maxUsesPerUserPerDay, minOrderValue,
           priority, testGroup, requiredBpLevel, requiredBpSeasonId, newMemberDaysThreshold, createdBy)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        tenantId, name, description ?? null, discountType, discountValue, maxDiscountAmount ?? null,
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        name, description ?? null, discountType, discountValue, maxDiscountAmount ?? null,
         s, e, totalBudget ?? null, maxUsesPerUserPerCampaign ?? null, maxUsesPerUserPerDay ?? null,
         minOrderValue ?? null, priority ?? 1, testGroup ?? null, requiredBattlePassLevel ?? null,
         requiredBattlePassSeasonId ?? null, newMemberDaysThreshold ?? null, createdBy ?? null);
@@ -303,7 +300,7 @@ export class MenuCampaignService {
   async update(tenantId: string, id: number, data: any) {
     const { gateway } = await this.getClients(tenantId);
     await this.ensureSchema(gateway, tenantId);
-    const existing: any[] = await gateway.$queryRawUnsafe(`SELECT id, status FROM MenuCampaign WHERE id = ? AND tenantId = ?`, id, tenantId);
+    const existing: any[] = await gateway.$queryRawUnsafe(`SELECT id, status FROM MenuCampaign WHERE id = ?`, id);
     if (!existing.length) throw new NotFoundException('Campaign không tồn tại');
     if (!EDITABLE_STATUSES.includes(existing[0].status)) {
       throw new BadRequestException(`Chỉ chỉnh sửa được campaign ${EDITABLE_STATUSES.join('/')}. Hiện: ${existing[0].status}`);
@@ -322,11 +319,11 @@ export class MenuCampaignService {
         UPDATE MenuCampaign SET name=?, description=?, discountType=?, discountValue=?, maxDiscountAmount=?,
           startDate=?, endDate=?, totalBudget=?, maxUsesPerUserPerCampaign=?, maxUsesPerUserPerDay=?,
           minOrderValue=?, priority=?, testGroup=?, requiredBpLevel=?, requiredBpSeasonId=?, newMemberDaysThreshold=?
-        WHERE id=? AND tenantId=?`,
+        WHERE id=?`,
         name, description ?? null, discountType, discountValue, maxDiscountAmount ?? null,
         s, e, totalBudget ?? null, maxUsesPerUserPerCampaign ?? null, maxUsesPerUserPerDay ?? null,
         minOrderValue ?? null, priority ?? 1, testGroup ?? null, requiredBattlePassLevel ?? null,
-        requiredBattlePassSeasonId ?? null, newMemberDaysThreshold ?? null, id, tenantId);
+        requiredBattlePassSeasonId ?? null, newMemberDaysThreshold ?? null, id);
       for (const t of ['MenuCampaignMenuScope', 'MenuCampaignCustomerScope', 'MenuCampaignTimeSlot', 'MenuCampaignComboRule']) {
         await gateway.$executeRawUnsafe(`DELETE FROM ${t} WHERE campaignId = ?`, id);
       }
@@ -340,7 +337,7 @@ export class MenuCampaignService {
     const { gateway } = await this.getClients(tenantId);
     await this.ensureSchema(gateway, tenantId);
     if (!VALID_STATUSES.includes(status)) throw new BadRequestException(`Status không hợp lệ: ${VALID_STATUSES.join(', ')}`);
-    const existing: any[] = await gateway.$queryRawUnsafe(`SELECT id FROM MenuCampaign WHERE id = ? AND tenantId = ?`, id, tenantId);
+    const existing: any[] = await gateway.$queryRawUnsafe(`SELECT id FROM MenuCampaign WHERE id = ?`, id);
     if (!existing.length) throw new NotFoundException('Campaign không tồn tại');
     await gateway.$executeRawUnsafe(`UPDATE MenuCampaign SET status = ? WHERE id = ?`, status, id);
     return { success: true, status };
@@ -349,7 +346,7 @@ export class MenuCampaignService {
   async delete(tenantId: string, id: number) {
     const { gateway } = await this.getClients(tenantId);
     await this.ensureSchema(gateway, tenantId);
-    const existing: any[] = await gateway.$queryRawUnsafe(`SELECT id, status FROM MenuCampaign WHERE id = ? AND tenantId = ?`, id, tenantId);
+    const existing: any[] = await gateway.$queryRawUnsafe(`SELECT id, status FROM MenuCampaign WHERE id = ?`, id);
     if (!existing.length) throw new NotFoundException('Campaign không tồn tại');
     if (existing[0].status !== 'DRAFT') throw new BadRequestException('Chỉ xoá được campaign DRAFT');
     await gateway.$executeRawUnsafe(`DELETE FROM MenuCampaign WHERE id = ?`, id);
