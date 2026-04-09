@@ -16,7 +16,6 @@ export class MenuCampaignController {
   ) {}
 
   private async notifyChange(tenantId: string, action: string) {
-    await this.notifyChange(tenantId, 'update');
     await this.gateway.publishCampaignChanged(tenantId, action);
   }
 
