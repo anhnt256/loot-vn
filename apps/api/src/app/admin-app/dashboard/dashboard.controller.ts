@@ -250,6 +250,8 @@ export class DashboardController {
             tenantId: parsedTenantId,
             status: 'PENDING',
             totalAmount: finalAmount,
+            campaignId,
+            discountAmount,
             details: { create: detailsData },
           },
           include: { details: true },
