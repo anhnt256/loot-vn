@@ -25,6 +25,7 @@ import { ChatModule } from './admin-app/chat/chat.module';
 import { EventPromotionModule } from './admin-app/event-promotion/event-promotion.module';
 import { MenuCampaignModule } from './admin-app/menu-campaign/menu-campaign.module';
 import { MaintenanceModule } from './admin-app/maintenance/maintenance.module';
+import { TodoTaskModule } from './admin-app/todo-task/todo-task.module';
 import { MaintenanceMiddleware } from './middleware/maintenance.middleware';
 
 @Module({
@@ -53,6 +54,7 @@ import { MaintenanceMiddleware } from './middleware/maintenance.middleware';
     EventPromotionModule,
     MenuCampaignModule,
     MaintenanceModule,
+    TodoTaskModule,
   ],
   controllers: [AppController],
   providers: [AppService],

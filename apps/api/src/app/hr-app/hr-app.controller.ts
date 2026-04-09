@@ -116,4 +116,20 @@ export class HrAppController {
     const data = await this.hrAppService.changePassword(user.userName, body, tenantId);
     return { success: true, ...data };
   }
+
+  @Get('regulations/status')
+  @UseGuards(AuthGuard)
+  async getRegulationStatus(@Req() req: any, @CurrentUser() user: UserRequestContext) {
+    const tenantId = this.getTenantId(req);
+    const data = await this.hrAppService.getRegulationStatus(tenantId, user.userName);
+    return { success: true, data };
+  }
+
+  @Post('regulations/:id/acknowledge')
+  @UseGuards(AuthGuard)
+  async acknowledgeRegulation(@Req() req: any, @CurrentUser() user: UserRequestContext, @Param('id') id: string) {
+    const tenantId = this.getTenantId(req);
+    await this.hrAppService.acknowledgeRegulation(tenantId, user.userName, +id);
+    return { success: true };
+  }
 }

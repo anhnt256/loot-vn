@@ -124,6 +124,13 @@ const WorkShiftModal: React.FC<WorkShiftModalProps> = ({ open, onClose, onSucces
           </Form.Item>
 
           <Form.Item
+            name="momoId"
+            label="Momo ID"
+          >
+            <Input placeholder="Nhập ID trên hệ thống Momo" />
+          </Form.Item>
+
+          <Form.Item
             name="staffId"
             label="Staff ID"
           >

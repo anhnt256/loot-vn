@@ -23,6 +23,7 @@ import FeedbackManagementPage from './pages/FeedbackManagementPage';
 import RewardExchangeManagementPage from './pages/RewardExchangeManagementPage';
 import EventPromotionPage from './pages/EventPromotionPage';
 import MenuCampaignPage from './pages/MenuCampaignPage';
+import TodoTaskPage from './pages/TodoTaskPage';
 
 export function App() {
   return (
@@ -50,6 +51,7 @@ export function App() {
               <Route path="reward-exchange" element={<RewardExchangeManagementPage />} />
               <Route path="event-promotion" element={<EventPromotionPage />} />
               <Route path="menu-campaign" element={<MenuCampaignPage />} />
+              <Route path="todo-tasks" element={<TodoTaskPage />} />
               <Route path="*" element={<div className="p-8 text-white">Chức năng đang được phát triển...</div>} />
             </Route>
             <Route path="/" element={<Navigate to="/login" replace />} />

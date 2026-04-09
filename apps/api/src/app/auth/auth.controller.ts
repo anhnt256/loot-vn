@@ -5,12 +5,14 @@ import { CurrentUser, UserRequestContext } from './user-request-context';
 import { Response } from 'express';
 import { getTenantIdFromRequest } from '../hr-app/tenant-from-request';
 import { ConfigService } from '../admin-app/config/config.service';
+import { TenantGatewayService } from '../database/tenant-gateway.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
+    private readonly tenantGateway: TenantGatewayService,
   ) {}
 
   @Get('tenant-info')
@@ -33,7 +35,20 @@ export class AuthController {
     } catch {
       // keep defaults
     }
-    return res.json({ success: true, data: { ...tenantInfo, spendPerRound, upRateAmount } });
+    // Fetch latest published regulation
+    let latestRegulation = null;
+    try {
+      const gateway = await this.tenantGateway.getGatewayClient(tenantId);
+      latestRegulation = await gateway.regulation.findFirst({
+        where: { publishedAt: { not: null } },
+        orderBy: { version: 'desc' },
+        select: { id: true, version: true, title: true, content: true, publishedAt: true },
+      });
+    } catch {
+      // Regulation table might not exist yet — skip
+    }
+
+    return res.json({ success: true, data: { ...tenantInfo, spendPerRound, upRateAmount, latestRegulation } });
   }
 
   @Post('login')

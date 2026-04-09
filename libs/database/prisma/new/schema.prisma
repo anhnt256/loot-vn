@@ -276,6 +276,9 @@ model Staff {
   staffViolations          StaffViolation[]
   staffTimeTrackings       StaffTimeTracking[]
   staffRequests            StaffRequest[]
+  regulationAcknowledgments RegulationAcknowledgment[]
+  schedulesCreated         ScheduleTask[] @relation("ScheduleCreatedBy")
+  schedulesAssigned        ScheduleTask[] @relation("ScheduleAssignee")
 }
 
 /// Request entity: type, status, metadata. One-to-one with StaffRequest (links to staff).
@@ -327,6 +330,7 @@ model WorkShift {
   updatedAt   DateTime @updatedAt
   isOvernight Boolean  @default(false)
   ffoodId     String?  @map("ffood_id") @db.Char(36)
+  momoId      String?  @map("momo_id") @db.VarChar(100)
   staffId     Int?     @map("staff_id")
   staffs      Staff[]
   shiftHandoverReports ShiftHandoverReport[]
@@ -1336,16 +1340,16 @@ model FfoodCredential {
 }
 
 model MomoCredential {
-  id          Int       @id @default(autoincrement())
-  store_id    String?   @db.VarChar(100)
-  momoUrl     String    @map("momo_url") @db.VarChar(500)
-  username    String    @db.VarChar(255)
-  password    String    @db.VarChar(500)
-  token       String?   @db.Text
-  expired     DateTime? @db.DateTime(0)
-  createdAt   DateTime  @default(now()) @db.DateTime(0)
-  updatedAt   DateTime  @updatedAt @db.DateTime(0)
-  merchant_id Int?
+  id         Int       @id @default(autoincrement())
+  storeId    String?   @map("store_id") @db.VarChar(100)
+  momoUrl    String    @map("momo_url") @db.VarChar(500)
+  merchantId String?   @map("merchant_id") @db.VarChar(100)
+  username   String    @db.VarChar(255)
+  password   String    @db.VarChar(500)
+  token      String?   @db.Text
+  expired    DateTime? @db.DateTime(0)
+  createdAt  DateTime  @default(now()) @db.DateTime(0)
+  updatedAt  DateTime  @updatedAt @db.DateTime(0)
 }
 
 enum FoodOrderStatus {
@@ -1906,4 +1910,69 @@ model MenuCampaignAnalytics {
   @@index([campaignId])
   @@index([snapshotDate])
   @@map("MenuCampaignAnalytics")
+}
+
+model Regulation {
+  id          Int       @id @default(autoincrement())
+  version     Int       @default(1)
+  title       String    @db.VarChar(255)
+  content     String    @db.Text
+  publishedAt DateTime?
+  createdBy   String?   @db.VarChar(255)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  acknowledgments RegulationAcknowledgment[]
+
+  @@index([version])
+}
+
+model ScheduleTask {
+  id              Int      @id @default(autoincrement())
+  title           String   @db.VarChar(500)
+  description     String?  @db.Text
+  startTime       String   @db.VarChar(5)   /// HH:mm
+  daysOfWeek      Json     @db.Json         /// [0,1,2,3,4,5,6] - 0=CN, 1=T2...6=T7
+  assigneeId      Int
+  createdById     Int
+  color           String?  @db.VarChar(20)
+  repeatInterval  Int      @default(0)      /// Nhắc lại sau X phút (0 = không nhắc lại)
+  repeatMaxTimes  Int      @default(0)      /// Tối đa bao nhiêu lần nhắc lại
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  createdBy   Staff             @relation("ScheduleCreatedBy", fields: [createdById], references: [id])
+  assignee    Staff             @relation("ScheduleAssignee", fields: [assigneeId], references: [id])
+  logs        ScheduleTaskLog[]
+
+  @@index([assigneeId])
+  @@index([isActive])
+}
+
+model ScheduleTaskLog {
+  id             Int      @id @default(autoincrement())
+  taskId         Int
+  notifiedAt     DateTime               /// Thời gian hệ thống gửi thông báo
+  acknowledgedAt DateTime?              /// Thời gian user bấm xác nhận
+  repeatCount    Int      @default(0)   /// Lần nhắc thứ mấy (0 = lần đầu)
+
+  task ScheduleTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([notifiedAt])
+}
+
+model RegulationAcknowledgment {
+  id             Int      @id @default(autoincrement())
+  regulationId   Int
+  staffId        Int
+  acknowledgedAt DateTime @default(now())
+
+  regulation Regulation @relation(fields: [regulationId], references: [id], onDelete: Cascade)
+  staff      Staff      @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@unique([regulationId, staffId])
+  @@index([regulationId])
+  @@index([staffId])
 }

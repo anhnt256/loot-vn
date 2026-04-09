@@ -56,7 +56,7 @@ export class StaffManagementController {
   }
 
   @Post(':id/reset-password')
-  resetPassword(@Req() req: any, @Param('id', ParseIntPipe) id: number) {
-    return this.staffManagementService.resetPassword(this.getTenantId(req), id);
+  resetPassword(@Req() req: any, @Param('id', ParseIntPipe) id: number, @Body() body: { newPassword: string }) {
+    return this.staffManagementService.resetPassword(this.getTenantId(req), id, body.newPassword);
   }
 }

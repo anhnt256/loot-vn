@@ -80,6 +80,7 @@ export const DashboardLayout = () => {
     { category: 'Cài đặt', items: [
       { id: 'work-shifts', label: 'Ca làm việc', icon: Clock, path: '/dashboard/settings/work-shifts' },
       { id: 'reward-punish', label: 'Quy tắc Thưởng/Phạt', icon: ShieldAlert, path: '/dashboard/settings/reward-punish' },
+      { id: 'regulations', label: 'Nội quy', icon: FileText, path: '/dashboard/settings/regulations' },
     ]}
   ];
 

@@ -13,30 +13,8 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
 
   const defaultTenantConfig = (typeof window !== 'undefined' && (window as any).__TENANT_CONFIG__) || {};
-  const [tenantLogo, setTenantLogo] = useState<string | null>(defaultTenantConfig?.logo?.url || defaultTenantConfig?.logo || null);
-  const [tenantColor, setTenantColor] = useState<string>(defaultTenantConfig?.primaryColor || '#ff721f');
-
-  React.useEffect(() => {
-    const fetchTenantInfo = async () => {
-      try {
-        const result = await apiClient.get('/auth/tenant-info');
-        if (result.data?.success && result.data?.data) {
-          const tenantData = result.data.data;
-          let logo = tenantData.logo;
-          if (typeof logo === 'object') {
-            logo = logo?.url || null;
-          }
-          setTenantLogo(logo);
-          if (tenantData.primaryColor) {
-            setTenantColor(tenantData.primaryColor);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to fetch tenant info:', err);
-      }
-    };
-    fetchTenantInfo();
-  }, []);
+  const tenantLogo: string | null = defaultTenantConfig?.logo?.url || defaultTenantConfig?.logo || null;
+  const tenantColor: string = defaultTenantConfig?.primaryColor || '#ff721f';
 
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);

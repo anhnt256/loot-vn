@@ -121,14 +121,16 @@ export class StaffManagementService {
     });
   }
 
-  async resetPassword(tenantId: string, id: number) {
+  async resetPassword(tenantId: string, id: number, newPassword: string) {
+    if (!newPassword || newPassword.length < 6) {
+      throw new BadRequestException('Mật khẩu mới phải có ít nhất 6 ký tự');
+    }
     await this.findOne(tenantId, id);
     const gateway = await this.tenantGateway.getGatewayClient(tenantId);
-    const resetPasswordHash = this.hashPassword(`RESET_PASSWORD_REQUIRED_${id}`);
     return gateway.staff.update({
       where: { id },
       data: {
-        password: resetPasswordHash,
+        password: this.hashPassword(newPassword),
         updatedAt: new Date(),
       },
     });

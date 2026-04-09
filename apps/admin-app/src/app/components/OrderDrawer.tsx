@@ -88,7 +88,7 @@ const OrderDrawer: React.FC<Props> = ({ tenantId }) => {
   useEffect(() => {
     const unlock = () => {
       if (!audioRef.current) {
-        const audio = new Audio('/Order.mp3');
+        const audio = new Audio('/ting2.mp3');
         audio.volume = 1;
         audio.load();
         audioRef.current = audio;

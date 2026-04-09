@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Card, Input, Button, Typography, message, ConfigProvider, theme } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -13,30 +13,8 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
 
   const defaultTenantConfig = (typeof window !== 'undefined' && (window as any).__TENANT_CONFIG__) || {};
-  const [tenantLogo, setTenantLogo] = useState<string | null>(defaultTenantConfig?.logo?.url || defaultTenantConfig?.logo || null);
-  const [tenantColor, setTenantColor] = useState<string>(defaultTenantConfig?.primaryColor || '#ff721f');
-
-  useEffect(() => {
-    const fetchTenantInfo = async () => {
-      try {
-        const result = await apiClient.get('/auth/tenant-info');
-        if (result.data?.success && result.data?.data) {
-          const tenantData = result.data.data;
-          let logo = tenantData.logo;
-          if (typeof logo === 'object') {
-            logo = logo?.url || null;
-          }
-          setTenantLogo(logo);
-          if (tenantData.primaryColor) {
-            setTenantColor(tenantData.primaryColor);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to fetch tenant info:', err);
-      }
-    };
-    fetchTenantInfo();
-  }, []);
+  const tenantLogo: string | null = defaultTenantConfig?.logo?.url || defaultTenantConfig?.logo || null;
+  const tenantColor: string = defaultTenantConfig?.primaryColor || '#ff721f';
 
   const handleLogin = useCallback(async () => {
     if (!username || !password) {

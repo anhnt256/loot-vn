@@ -380,6 +380,7 @@ exports.Prisma.WorkShiftScalarFieldEnum = {
   updatedAt: 'updatedAt',
   isOvernight: 'isOvernight',
   ffoodId: 'ffoodId',
+  momoId: 'momoId',
   staffId: 'staffId'
 };
 
@@ -1102,15 +1103,15 @@ exports.Prisma.FfoodCredentialScalarFieldEnum = {
 
 exports.Prisma.MomoCredentialScalarFieldEnum = {
   id: 'id',
-  store_id: 'store_id',
+  storeId: 'storeId',
   momoUrl: 'momoUrl',
+  merchantId: 'merchantId',
   username: 'username',
   password: 'password',
   token: 'token',
   expired: 'expired',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  merchant_id: 'merchant_id'
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.RewardPunishRuleScalarFieldEnum = {
@@ -1290,6 +1291,48 @@ exports.Prisma.MenuCampaignAnalyticsScalarFieldEnum = {
   conversionRate: 'conversionRate'
 };
 
+exports.Prisma.RegulationScalarFieldEnum = {
+  id: 'id',
+  version: 'version',
+  title: 'title',
+  content: 'content',
+  publishedAt: 'publishedAt',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ScheduleTaskScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  description: 'description',
+  startTime: 'startTime',
+  daysOfWeek: 'daysOfWeek',
+  assigneeId: 'assigneeId',
+  createdById: 'createdById',
+  color: 'color',
+  repeatInterval: 'repeatInterval',
+  repeatMaxTimes: 'repeatMaxTimes',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ScheduleTaskLogScalarFieldEnum = {
+  id: 'id',
+  taskId: 'taskId',
+  notifiedAt: 'notifiedAt',
+  acknowledgedAt: 'acknowledgedAt',
+  repeatCount: 'repeatCount'
+};
+
+exports.Prisma.RegulationAcknowledgmentScalarFieldEnum = {
+  id: 'id',
+  regulationId: 'regulationId',
+  staffId: 'staffId',
+  acknowledgedAt: 'acknowledgedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1297,6 +1340,10 @@ exports.Prisma.SortOrder = {
 
 exports.Prisma.NullableJsonNullValueInput = {
   DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
+};
+
+exports.Prisma.JsonNullValueInput = {
   JsonNull: Prisma.JsonNull
 };
 
@@ -1400,7 +1447,8 @@ exports.Prisma.RequestOrderByRelevanceFieldEnum = {
 
 exports.Prisma.WorkShiftOrderByRelevanceFieldEnum = {
   name: 'name',
-  ffoodId: 'ffoodId'
+  ffoodId: 'ffoodId',
+  momoId: 'momoId'
 };
 
 exports.Prisma.FraudLoginAlertOrderByRelevanceFieldEnum = {
@@ -1676,8 +1724,9 @@ exports.Prisma.FfoodCredentialOrderByRelevanceFieldEnum = {
 };
 
 exports.Prisma.MomoCredentialOrderByRelevanceFieldEnum = {
-  store_id: 'store_id',
+  storeId: 'storeId',
   momoUrl: 'momoUrl',
+  merchantId: 'merchantId',
   username: 'username',
   password: 'password',
   token: 'token'
@@ -1723,6 +1772,19 @@ exports.Prisma.MenuCampaignOrderByRelevanceFieldEnum = {
 exports.Prisma.MenuCampaignTimeSlotOrderByRelevanceFieldEnum = {
   startTime: 'startTime',
   endTime: 'endTime'
+};
+
+exports.Prisma.RegulationOrderByRelevanceFieldEnum = {
+  title: 'title',
+  content: 'content',
+  createdBy: 'createdBy'
+};
+
+exports.Prisma.ScheduleTaskOrderByRelevanceFieldEnum = {
+  title: 'title',
+  description: 'description',
+  startTime: 'startTime',
+  color: 'color'
 };
 exports.MissionType = exports.$Enums.MissionType = {
   HOURS: 'HOURS',
@@ -2074,7 +2136,11 @@ exports.Prisma.ModelName = {
   MenuCampaignTimeSlot: 'MenuCampaignTimeSlot',
   MenuCampaignComboRule: 'MenuCampaignComboRule',
   MenuCampaignUsage: 'MenuCampaignUsage',
-  MenuCampaignAnalytics: 'MenuCampaignAnalytics'
+  MenuCampaignAnalytics: 'MenuCampaignAnalytics',
+  Regulation: 'Regulation',
+  ScheduleTask: 'ScheduleTask',
+  ScheduleTaskLog: 'ScheduleTaskLog',
+  RegulationAcknowledgment: 'RegulationAcknowledgment'
 };
 
 /**

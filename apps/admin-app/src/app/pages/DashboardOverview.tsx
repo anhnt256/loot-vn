@@ -19,12 +19,15 @@ const EnumComputerStatus = {
   CRASH: 4,
 };
 
+const DEFAULT_REFRESH_INTERVAL = 60;
+
 const DashboardOverview: React.FC = () => {
   const [computers, setComputers] = useState<any[]>([]);
   const [zones, setZones] = useState<any[]>([]);
   const [layouts, setLayouts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [countdown, setCountdown] = useState(90);
+  const [refreshInterval, setRefreshInterval] = useState(DEFAULT_REFRESH_INTERVAL);
+  const [countdown, setCountdown] = useState(DEFAULT_REFRESH_INTERVAL);
   const [activeTab, setActiveTab] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [currentComputer, setCurrentComputer] = useState<any | undefined>();
@@ -40,8 +43,8 @@ const DashboardOverview: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const fetchComputers = async () => {
-    setLoading(true);
+  const fetchComputers = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const [compRes, zoneRes, layoutRes] = await Promise.all([
         apiClient.get('/computer').catch(() => ({ data: [] })),
@@ -53,7 +56,6 @@ const DashboardOverview: React.FC = () => {
       setComputers(sorted);
       setZones(zoneRes.data || []);
       setLayouts(layoutRes.data || []);
-      setCountdown(90);
     } catch (err) {
       console.error(err);
     } finally {
@@ -66,7 +68,7 @@ const DashboardOverview: React.FC = () => {
     try {
       const res = await apiClient.post('/user/sync-fnet');
       message.success(res.data?.message || 'Đồng bộ tài khoản Fnet thành công');
-      fetchComputers();
+      fetchComputers(true);
     } catch (err: any) {
       message.error(err?.response?.data?.message || 'Đồng bộ thất bại');
     } finally {
@@ -74,16 +76,28 @@ const DashboardOverview: React.FC = () => {
     }
   };
 
+  // Load refresh interval from system config
   useEffect(() => {
-    fetchComputers();
+    apiClient.get('/system-config').then((res) => {
+      const val = Number(res.data?.DASHBOARD_REFRESH_INTERVAL);
+      if (val >= 10) {
+        setRefreshInterval(val);
+        setCountdown(val);
+      }
+    }).catch(() => {});
+  }, []);
 
-    // Setup polling every 90s
+  useEffect(() => {
+    fetchComputers().then(() => setCountdown(refreshInterval));
+
+    // Setup polling based on configurable interval (silent refresh)
     const interval = setInterval(() => {
-      fetchComputers();
-    }, 90000);
+      fetchComputers(true);
+      setCountdown(refreshInterval);
+    }, refreshInterval * 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [refreshInterval]);
 
   // Ensure currentComputer stays in sync with live DB updates when the drawer is open
   useEffect(() => {
@@ -321,7 +335,7 @@ const DashboardOverview: React.FC = () => {
                return c;
              }));
           }
-          fetchComputers();
+          fetchComputers(true);
         }}
       />
     </div>

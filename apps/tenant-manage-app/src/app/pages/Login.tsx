@@ -131,7 +131,7 @@ const Login: React.FC = () => {
           
           <div className="mt-8 text-center">
             <Text style={{ color: '#484f58', fontSize: '12px' }}>
-              © 2026 Loot VN. All rights reserved.
+              © 2026. All rights reserved.
             </Text>
           </div>
         </div>

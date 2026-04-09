@@ -6,6 +6,7 @@ import { FilterShiftReportDto } from './dto/filter-shift-report.dto';
 import { dayjs } from '@gateway-workspace/shared/utils';
 import { getMomoStatisticsByShift, loginAndGetMomoToken } from '../../lib/momo-report';
 import { getFnetDB } from '../../lib/db';
+import { decrypt } from '../../lib/crypto';
 
 @Injectable()
 export class ShiftHandoverReportService {
@@ -149,7 +150,7 @@ export class ShiftHandoverReportService {
           
           if (isExpired && momoCred.username && momoCred.password) {
             console.log('[Autofill] Refreshing Momo token...');
-            const loginRes = await loginAndGetMomoToken({ username: momoCred.username, password: momoCred.password });
+            const loginRes = await loginAndGetMomoToken({ username: momoCred.username, password: decrypt(momoCred.password) });
             if (loginRes) {
               token = loginRes.token;
               await gatewayClient.momoCredential.update({
@@ -162,7 +163,7 @@ export class ShiftHandoverReportService {
             }
           }
 
-          if (token && momoCred.merchant_id && momoCred.store_id) {
+          if (token && momoCred.merchantId && momoCred.storeId) {
             const shiftObj = {
               id: shift.id,
               name: shift.name,
@@ -174,8 +175,8 @@ export class ShiftHandoverReportService {
             console.log(`[Autofill] Momo Shift: ${JSON.stringify(shiftObj)}`);
             const momoStats = await getMomoStatisticsByShift({
               token,
-              merchantId: momoCred.merchant_id.toString(),
-              storeId: momoCred.store_id,
+              merchantId: momoCred.merchantId,
+              storeId: momoCred.storeId,
               shift: shiftObj as any,
               date: dateStr
             });

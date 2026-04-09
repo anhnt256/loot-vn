@@ -431,4 +431,34 @@ export class HrAppService {
 
     return { success: true };
   }
+
+  async getRegulationStatus(tenantId: string, userName: string) {
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
+    const regulation = await gateway.regulation.findFirst({
+      where: { publishedAt: { not: null } },
+      orderBy: { version: 'desc' },
+      select: { id: true, version: true, title: true, content: true, publishedAt: true },
+    });
+    if (!regulation) return { regulation: null, acknowledged: true };
+
+    const staff = await gateway.staff.findFirst({ where: { userName, isDeleted: false } });
+    if (!staff) return { regulation, acknowledged: false };
+
+    const ack = await gateway.regulationAcknowledgment.findUnique({
+      where: { regulationId_staffId: { regulationId: regulation.id, staffId: staff.id } },
+    });
+    return { regulation, acknowledged: !!ack };
+  }
+
+  async acknowledgeRegulation(tenantId: string, userName: string, regulationId: number) {
+    const gateway = await this.tenantGateway.getGatewayClient(tenantId);
+    const staff = await gateway.staff.findFirst({ where: { userName, isDeleted: false } });
+    if (!staff) throw new NotFoundException('Không tìm thấy nhân viên');
+
+    return gateway.regulationAcknowledgment.upsert({
+      where: { regulationId_staffId: { regulationId, staffId: staff.id } },
+      update: { acknowledgedAt: new Date() },
+      create: { regulationId, staffId: staff.id },
+    });
+  }
 }

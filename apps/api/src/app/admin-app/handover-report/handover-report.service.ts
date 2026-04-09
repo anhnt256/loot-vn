@@ -698,53 +698,62 @@ export class HandoverReportService {
           JSON.stringify(metadata), currentTime, handoverReportId
         );
 
-        for (const materialData of materials) {
-          const materialId = materialData.id;
-          const beginning = parseFloat(materialData.beginning || 0);
-          const received = parseFloat(materialData.received || 0);
-          const issued = parseFloat(materialData.issued || 0);
-          
-          if (received < 0 || issued < 0) throw new BadRequestException(`Amount cannot be negative for ${materialData.materialName || materialId}`);
-          
+        // Validate trước khi query
+        const parsedMaterials = materials.map((m: any) => {
+          const beginning = parseFloat(m.beginning || 0);
+          const received = parseFloat(m.received || 0);
+          const issued = parseFloat(m.issued || 0);
+          if (received < 0 || issued < 0) throw new BadRequestException(`Amount cannot be negative for ${m.materialName || m.id}`);
           const ending = beginning + received - issued;
-          if (ending < 0 && step === 'END') throw new BadRequestException(`Ending balance cannot be negative for ${materialData.materialName || materialId}`);
+          if (ending < 0 && step === 'END') throw new BadRequestException(`Ending balance cannot be negative for ${m.materialName || m.id}`);
+          return { materialId: m.id, beginning, received, issued, ending };
+        });
 
-          const existingHM = await tx.$queryRaw`SELECT id FROM HandoverMaterial WHERE handoverReportId = ${handoverReportId} AND materialId = ${materialId} LIMIT 1` as any[];
+        // 1 query lấy tất cả existing materials thay vì N query
+        const materialIds = parsedMaterials.map((m: any) => m.materialId);
+        const existingHMs = await tx.$queryRawUnsafe(
+          `SELECT id, materialId FROM HandoverMaterial WHERE handoverReportId = ${handoverReportId} AND materialId IN (${materialIds.join(',')})`,
+        ) as any[];
+        const existingMap = new Map(existingHMs.map((h: any) => [Number(h.materialId), Number(h.id)]));
 
-          if (existingHM.length > 0) {
-            let sql = "";
-            if (shift === SHIFT_ENUM.SANG) {
-               sql = step === 'START' 
-                 ? `UPDATE HandoverMaterial SET morningBeginning = ${beginning}, updatedAt = NOW() WHERE id = ${existingHM[0].id}`
-                 : `UPDATE HandoverMaterial SET morningBeginning = ${beginning}, morningReceived = ${received}, morningIssued = ${issued}, morningEnding = ${ending}, updatedAt = NOW() WHERE id = ${existingHM[0].id}`;
-            } else if (shift === SHIFT_ENUM.CHIEU) {
-               sql = step === 'START'
-                 ? `UPDATE HandoverMaterial SET afternoonBeginning = ${beginning}, updatedAt = NOW() WHERE id = ${existingHM[0].id}`
-                 : `UPDATE HandoverMaterial SET afternoonBeginning = ${beginning}, afternoonReceived = ${received}, afternoonIssued = ${issued}, afternoonEnding = ${ending}, updatedAt = NOW() WHERE id = ${existingHM[0].id}`;
-            } else {
-               sql = step === 'START'
-                 ? `UPDATE HandoverMaterial SET eveningBeginning = ${beginning}, updatedAt = NOW() WHERE id = ${existingHM[0].id}`
-                 : `UPDATE HandoverMaterial SET eveningBeginning = ${beginning}, eveningReceived = ${received}, eveningIssued = ${issued}, eveningEnding = ${ending}, updatedAt = NOW() WHERE id = ${existingHM[0].id}`;
-            }
-            await tx.$executeRawUnsafe(sql);
+        // Prefix column theo ca
+        const prefix = shift === SHIFT_ENUM.SANG ? 'morning' : shift === SHIFT_ENUM.CHIEU ? 'afternoon' : 'evening';
+
+        // Gom UPDATE batch và INSERT batch
+        const updateSqls: string[] = [];
+        const insertRows: string[] = [];
+
+        for (const m of parsedMaterials) {
+          const hmId = existingMap.get(m.materialId);
+          if (hmId) {
+            const setCols = step === 'START'
+              ? `${prefix}Beginning = ${m.beginning}`
+              : `${prefix}Beginning = ${m.beginning}, ${prefix}Received = ${m.received}, ${prefix}Issued = ${m.issued}, ${prefix}Ending = ${m.ending}`;
+            updateSqls.push(`UPDATE HandoverMaterial SET ${setCols}, updatedAt = NOW() WHERE id = ${hmId}`);
           } else {
-            // Insert new HandoverMaterial
-            let cols = "handoverReportId, materialId, createdAt, updatedAt";
-            let vals = `${handoverReportId}, ${materialId}, NOW(), NOW()`;
-            if (shift === SHIFT_ENUM.SANG) {
-              cols += ", morningBeginning" + (step === 'END' ? ", morningReceived, morningIssued, morningEnding" : "");
-              vals += `, ${beginning}` + (step === 'END' ? `, ${received}, ${issued}, ${ending}` : "");
-            } else if (shift === SHIFT_ENUM.CHIEU) {
-              cols += ", afternoonBeginning" + (step === 'END' ? ", afternoonReceived, afternoonIssued, afternoonEnding" : "");
-              vals += `, ${beginning}` + (step === 'END' ? `, ${received}, ${issued}, ${ending}` : "");
-            } else {
-              cols += ", eveningBeginning" + (step === 'END' ? ", eveningReceived, eveningIssued, eveningEnding" : "");
-              vals += `, ${beginning}` + (step === 'END' ? `, ${received}, ${issued}, ${ending}` : "");
-            }
-            await tx.$executeRawUnsafe(`INSERT INTO HandoverMaterial (${cols}) VALUES (${vals})`);
+            const cols = step === 'START'
+              ? `handoverReportId, materialId, ${prefix}Beginning, createdAt, updatedAt`
+              : `handoverReportId, materialId, ${prefix}Beginning, ${prefix}Received, ${prefix}Issued, ${prefix}Ending, createdAt, updatedAt`;
+            const vals = step === 'START'
+              ? `${handoverReportId}, ${m.materialId}, ${m.beginning}, NOW(), NOW()`
+              : `${handoverReportId}, ${m.materialId}, ${m.beginning}, ${m.received}, ${m.issued}, ${m.ending}, NOW(), NOW()`;
+            insertRows.push(`(${vals})`);
           }
         }
-      });
+
+        // Execute updates (gom thành 1 multi-statement)
+        for (const sql of updateSqls) {
+          await tx.$executeRawUnsafe(sql);
+        }
+
+        // Execute inserts batch
+        if (insertRows.length > 0) {
+          const insertCols = step === 'START'
+            ? `handoverReportId, materialId, ${prefix}Beginning, createdAt, updatedAt`
+            : `handoverReportId, materialId, ${prefix}Beginning, ${prefix}Received, ${prefix}Issued, ${prefix}Ending, createdAt, updatedAt`;
+          await tx.$executeRawUnsafe(`INSERT INTO HandoverMaterial (${insertCols}) VALUES ${insertRows.join(',')}`);
+        }
+      }, { timeout: 30000 });
 
       return { success: true, data: { id: handoverReportId } };
     } catch (error) {

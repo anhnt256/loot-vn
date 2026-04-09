@@ -22,7 +22,7 @@ import {
   PlusOutlined, 
   EditOutlined, 
   DeleteOutlined,
-  KeyOutlined,
+  LockOutlined,
   FilterOutlined,
 } from '@ant-design/icons';
 import { Users, Filter, LayoutGrid, List } from 'lucide-react';
@@ -128,21 +128,25 @@ const StaffManagement: React.FC = () => {
     });
   };
 
-  const handleResetPassword = (id: number) => {
-    Modal.confirm({
-      title: 'Đặt lại mật khẩu',
-      content: 'Nhân viên sẽ được yêu cầu đổi mật khẩu trong lần đăng nhập tiếp theo. Đặt lại ngay?',
-      okText: 'Đặt lại',
-      cancelText: 'Hủy',
-      onOk: async () => {
-        try {
-          await apiClient.post(`/hr-manager/staff/${id}/reset-password`);
-          message.success('Mật khẩu đã được đặt lại');
-        } catch (error: any) {
-          message.error(error.response?.data?.message || 'Không thể đặt lại mật khẩu');
-        }
-      },
-    });
+  const [resetPwdStaffId, setResetPwdStaffId] = useState<number | null>(null);
+  const [resetPwdLoading, setResetPwdLoading] = useState(false);
+  const [resetPwdForm] = Form.useForm();
+
+  const handleResetPassword = async (values: any) => {
+    if (!resetPwdStaffId) return;
+    try {
+      setResetPwdLoading(true);
+      await apiClient.post(`/hr-manager/staff/${resetPwdStaffId}/reset-password`, {
+        newPassword: values.newPassword,
+      });
+      message.success('Đặt lại mật khẩu thành công');
+      setResetPwdStaffId(null);
+      resetPwdForm.resetFields();
+    } catch (error: any) {
+      message.error(error.response?.data?.message || 'Không thể đặt lại mật khẩu');
+    } finally {
+      setResetPwdLoading(false);
+    }
   };
 
   const handleEdit = (record: Staff) => {
@@ -295,11 +299,11 @@ const StaffManagement: React.FC = () => {
           {!record.isDeleted && (
             <>
               <Tooltip title="Đặt lại mật khẩu">
-                <Button 
-                  type="text" 
-                  icon={<KeyOutlined />} 
-                  className="text-orange-500 hover:text-orange-600" 
-                  onClick={() => handleResetPassword(record.id)}
+                <Button
+                  type="text"
+                  icon={<LockOutlined />}
+                  className="text-orange-500 hover:text-orange-600"
+                  onClick={() => setResetPwdStaffId(record.id)}
                 />
               </Tooltip>
               <Tooltip title="Xóa">
@@ -569,6 +573,41 @@ const StaffManagement: React.FC = () => {
           />
         </Form>
       </Drawer>
+
+      <Modal
+        title="Đặt lại mật khẩu"
+        open={resetPwdStaffId !== null}
+        onCancel={() => { setResetPwdStaffId(null); resetPwdForm.resetFields(); }}
+        footer={null}
+        width={400}
+        destroyOnClose
+      >
+        <Form form={resetPwdForm} layout="vertical" onFinish={handleResetPassword} requiredMark={false}>
+          <Form.Item name="newPassword" label="Mật khẩu mới" rules={[{ required: true, message: 'Bắt buộc' }, { min: 6, message: 'Tối thiểu 6 ký tự' }]}>
+            <Input.Password size="large" placeholder="Nhập mật khẩu mới" />
+          </Form.Item>
+          <Form.Item
+            name="confirmPassword"
+            label="Xác nhận mật khẩu mới"
+            dependencies={['newPassword']}
+            rules={[
+              { required: true, message: 'Bắt buộc' },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue('newPassword') === value) return Promise.resolve();
+                  return Promise.reject(new Error('Mật khẩu xác nhận không khớp'));
+                },
+              }),
+            ]}
+          >
+            <Input.Password size="large" placeholder="Nhập lại mật khẩu mới" />
+          </Form.Item>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            <Button onClick={() => { setResetPwdStaffId(null); resetPwdForm.resetFields(); }}>Hủy</Button>
+            <Button type="primary" htmlType="submit" loading={resetPwdLoading}>Đặt lại</Button>
+          </div>
+        </Form>
+      </Modal>
     </div>
   );
 };

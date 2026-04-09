@@ -18,6 +18,7 @@ import {
   Tag,
   Popconfirm,
   Checkbox,
+  ColorPicker,
   Empty,
 } from 'antd';
 import {
@@ -181,13 +182,167 @@ interface GameItem {
   displayOrder: number;
 }
 
-// ─── System Tab (placeholder) ───
+// ─── System Tab ───
 function SystemTab() {
+  const [form] = Form.useForm();
+  const [generalForm] = Form.useForm();
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [savingGeneral, setSavingGeneral] = useState(false);
+  const [hasExisting, setHasExisting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    fetchMomoCred();
+    fetchGeneralConfig();
+  }, []);
+
+  const fetchGeneralConfig = async () => {
+    try {
+      const res = await apiClient.get('/system-config');
+      const data = res.data || {};
+      generalForm.setFieldsValue({
+        DASHBOARD_REFRESH_INTERVAL: data.DASHBOARD_REFRESH_INTERVAL ? Number(data.DASHBOARD_REFRESH_INTERVAL) : 60,
+      });
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleSaveGeneral = async (values: any) => {
+    try {
+      setSavingGeneral(true);
+      await apiClient.post('/system-config', values);
+      message.success('Cập nhật cấu hình thành công!');
+    } catch {
+      message.error('Không thể lưu cấu hình');
+    } finally {
+      setSavingGeneral(false);
+    }
+  };
+
+  const fetchMomoCred = async () => {
+    try {
+      setLoading(true);
+      const res = await apiClient.get('/system-config/momo-credential');
+      if (res.data) {
+        setHasExisting(true);
+        form.setFieldsValue({
+          storeId: res.data.storeId,
+          momoUrl: res.data.momoUrl,
+          merchantId: res.data.merchantId,
+          username: res.data.username,
+          password: '',
+        });
+      }
+    } catch {
+      // No credential yet
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async (values: any) => {
+    try {
+      setSaving(true);
+      const payload: any = {
+        storeId: values.storeId || '',
+        momoUrl: values.momoUrl,
+        merchantId: values.merchantId || '',
+        username: values.username,
+      };
+      if (values.password) {
+        payload.password = values.password;
+      }
+      await apiClient.post('/system-config/momo-credential', payload);
+      message.success('Lưu Momo Credential thành công!');
+      setHasExisting(true);
+    } catch (err: any) {
+      message.error(err?.response?.data?.message || 'Không thể lưu Momo Credential');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <Skeleton active paragraph={{ rows: 4 }} />;
+
   return (
-    <div style={{ padding: '40px 0', textAlign: 'center', color: '#6b7280' }}>
-      <SettingOutlined style={{ fontSize: 48, marginBottom: 16, display: 'block' }} />
-      <div style={{ fontSize: 16 }}>Chưa có cấu hình hệ thống.</div>
-      <div style={{ fontSize: 13, marginTop: 4 }}>Các cấu hình chung sẽ được thêm tại đây.</div>
+    <div style={{ columns: '2 400px', columnGap: 16 }}>
+      {/* General Config Card */}
+      <div style={{ breakInside: 'avoid', marginBottom: 16, backgroundColor: '#111827', borderRadius: 10, border: '1px solid #374151', padding: '18px 20px 20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+          <SettingOutlined style={{ color: 'var(--primary-color, #1677ff)', fontSize: 15 }} />
+          <span style={{ color: '#e5e7eb', fontWeight: 600, fontSize: 14 }}>Cấu hình chung</span>
+        </div>
+        <Form form={generalForm} layout="vertical" onFinish={handleSaveGeneral} requiredMark={false}>
+          <Form.Item
+            name="DASHBOARD_REFRESH_INTERVAL"
+            label={<span style={{ color: '#e5e7eb', fontWeight: 500 }}>Thời gian tự động cập nhật Dashboard (giây)</span>}
+            rules={[{ required: true, message: 'Bắt buộc' }]}
+            extra={<span style={{ color: '#6b7280', fontSize: 12 }}>Tối thiểu 10 giây, tối đa 300 giây</span>}
+          >
+            <InputNumber size="large" min={10} max={300} style={{ width: '100%' }} placeholder="60" />
+          </Form.Item>
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Button type="primary" htmlType="submit" icon={<SaveOutlined />} loading={savingGeneral}>
+              Lưu cấu hình
+            </Button>
+          </div>
+        </Form>
+      </div>
+
+      {/* Momo Credential Card */}
+      <div style={{ breakInside: 'avoid', marginBottom: 16, backgroundColor: '#111827', borderRadius: 10, border: '1px solid #374151', padding: '18px 20px 20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+          <LockOutlined style={{ color: 'var(--primary-color, #1677ff)', fontSize: 15 }} />
+          <span style={{ color: '#e5e7eb', fontWeight: 600, fontSize: 14 }}>Momo Credential</span>
+        </div>
+        <div style={{ color: '#6b7280', fontSize: 12, marginBottom: 14 }}>Cấu hình tài khoản Momo Business để tự động lấy doanh thu</div>
+        <Form form={form} layout="vertical" onFinish={handleSave} requiredMark={false}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
+            <Form.Item name="storeId" label={<span style={{ color: '#e5e7eb', fontWeight: 500 }}>Store ID</span>}>
+              <Input size="large" placeholder="VD: 12345" />
+            </Form.Item>
+            <Form.Item name="merchantId" label={<span style={{ color: '#e5e7eb', fontWeight: 500 }}>Merchant ID</span>}>
+              <Input size="large" placeholder="VD: 67890" />
+            </Form.Item>
+          </div>
+          <Form.Item name="momoUrl" label={<span style={{ color: '#e5e7eb', fontWeight: 500 }}>Momo URL</span>} rules={[{ required: true, message: 'Bắt buộc' }]}>
+            <Input size="large" placeholder="https://business.momo.vn" />
+          </Form.Item>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
+            <Form.Item name="username" label={<span style={{ color: '#e5e7eb', fontWeight: 500 }}>Username</span>} rules={[{ required: true, message: 'Bắt buộc' }]}>
+              <Input size="large" placeholder="Tên đăng nhập Momo" />
+            </Form.Item>
+            <Form.Item
+              name="password"
+              label={<span style={{ color: '#e5e7eb', fontWeight: 500 }}>Password</span>}
+              rules={hasExisting ? [] : [{ required: true, message: 'Bắt buộc' }]}
+              extra={hasExisting ? <span style={{ color: '#6b7280', fontSize: 12 }}>Để trống nếu không muốn đổi mật khẩu</span> : undefined}
+            >
+              <Input
+                size="large"
+                type={showPassword ? 'text' : 'password'}
+                placeholder={hasExisting ? '••••••••' : 'Mật khẩu Momo'}
+                suffix={
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={showPassword ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{ color: '#6b7280' }}
+                  />
+                }
+              />
+            </Form.Item>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+            <Button type="primary" htmlType="submit" icon={<SaveOutlined />} loading={saving}>
+              {hasExisting ? 'Cập nhật' : 'Lưu cấu hình'}
+            </Button>
+          </div>
+        </Form>
+      </div>
     </div>
   );
 }
@@ -462,8 +617,8 @@ function GameTab({
             <Form.Item name="rating" label={editingItem && lockedIds.has(editingItem.id) ? <span>Tỉ lệ trúng (%) <LockOutlined style={{ color: '#f59e0b', fontSize: 12 }} /></span> : 'Tỉ lệ trúng (%)'}>
               <InputNumber style={{ width: '100%' }} size="large" min={0} max={100} step={0.1} disabled={!!editingItem && lockedIds.has(editingItem.id)} />
             </Form.Item>
-            <Form.Item name="background" label="Màu nền"><Input size="large" /></Form.Item>
-            <Form.Item name="textColor" label="Màu chữ"><Input size="large" /></Form.Item>
+            <Form.Item name="background" label="Màu nền" getValueFromEvent={(color) => (typeof color === 'string' ? color : color?.toHexString())}><ColorPicker size="large" showText allowClear format="hex" /></Form.Item>
+            <Form.Item name="textColor" label="Màu chữ" getValueFromEvent={(color) => (typeof color === 'string' ? color : color?.toHexString())}><ColorPicker size="large" showText allowClear format="hex" /></Form.Item>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
             <Button onClick={() => setEditModalOpen(false)}>Hủy</Button>
