@@ -12,6 +12,8 @@ import FeedbackPage from './pages/FeedbackPage';
 import BattlePass from './pages/BattlePass';
 import Voucher from './pages/Voucher';
 import OrderPage from './pages/OrderPage';
+import EventsPage from './pages/EventsPage';
+import SupportPage from './pages/SupportPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 export function App() {
@@ -43,13 +45,15 @@ export function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<Navigate to="check-in" replace />} />
+              <Route index element={<Navigate to="order" replace />} />
+              <Route path="order" element={<OrderPage />} />
               <Route path="check-in" element={<CheckIn />} />
               <Route path="games" element={<Game />} />
-              <Route path="order" element={<OrderPage />} />
               <Route path="store" element={<Store />} />
               <Route path="feedback" element={<FeedbackPage />} />
+              <Route path="support" element={<SupportPage />} />
               <Route path="battle-pass" element={<BattlePass />} />
+              <Route path="events" element={<EventsPage />} />
               <Route path="voucher" element={<Voucher />} />
             </Route>
             <Route path="/" element={<Navigate to="/login" replace />} />

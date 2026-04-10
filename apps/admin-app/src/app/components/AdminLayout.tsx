@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layout, Menu, Button, Select, ConfigProvider, theme, Modal, Form, Input, message } from 'antd';
+import { Layout, Menu, Button, Select, ConfigProvider, theme, Modal, Form, Input, message, App } from 'antd';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   DashboardOutlined,
@@ -26,7 +26,9 @@ import {
   AuditOutlined,
   KeyOutlined,
   CarryOutOutlined,
+  ExclamationCircleOutlined,
 } from '@ant-design/icons';
+import dayjs from 'dayjs';
 import { apiClient, removeToken, getToken } from '@gateway-workspace/shared/utils/client';
 import { ChatButton } from '@gateway-workspace/shared/chat';
 
@@ -66,7 +68,8 @@ const AdminLayout: React.FC = () => {
   const printMode = usePrinterStore((s) => s.printMode);
 
   // Shift gate: chặn nhân viên ca nếu chưa có ca hoạt động
-  const { hasShift } = useShift();
+  const { hasShift, currentShift, refreshShift } = useShift();
+  const [forceEnding, setForceEnding] = useState(false);
 
   // Listen for end-gate event from ShiftButton
   React.useEffect(() => {
@@ -157,7 +160,60 @@ const AdminLayout: React.FC = () => {
   const jwtToken = getToken() || '';
   const jwtPayload = parseJwtPayload(jwtToken);
   const isShiftStaff = jwtPayload && !jwtPayload.isAdmin && (!jwtPayload.staffType || !NON_SHIFT_TYPES.includes(jwtPayload.staffType));
+
+  // Detect stale shift: ca từ ngày hôm qua vẫn active
+  const isStaleShift = !!(currentShift?.startedAt && dayjs(currentShift.startedAt).isBefore(dayjs().startOf('day')));
+
+  const handleForceEndStaleShift = async () => {
+    setForceEnding(true);
+    try {
+      await apiClient.post('/admin/orders/shift/force-end');
+      message.success('Đã kết thúc ca cũ. Vui lòng nhận ca mới.');
+      await refreshShift();
+    } catch (err: any) {
+      message.error(err?.response?.data?.message || 'Không thể kết thúc ca cũ');
+    } finally {
+      setForceEnding(false);
+    }
+  };
+
   const showShiftGate = isShiftStaff && !hasShift;
+
+  // Ca cũ qua ngày → hiện cảnh báo yêu cầu kết thúc ca cũ trước
+  if (isShiftStaff && isStaleShift) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-900">
+        <div className="max-w-md w-full mx-4 text-center">
+          <ExclamationCircleOutlined style={{ fontSize: 56, color: '#f59e0b' }} />
+          <h2 className="text-xl font-bold text-white mt-4 mb-2">Ca làm việc chưa được kết thúc</h2>
+          <p className="text-gray-400 mb-1">
+            Ca của <span className="text-yellow-400 font-medium">{currentShift!.staffName}</span> bắt đầu từ{' '}
+            <span className="text-white">{dayjs(currentShift!.startedAt).format('HH:mm DD/MM/YYYY')}</span> vẫn đang hoạt động.
+          </p>
+          <p className="text-gray-500 text-sm mb-6">
+            Cần kết thúc ca cũ trước khi nhận ca mới cho ngày hôm nay.
+          </p>
+          <Button
+            type="primary"
+            danger
+            size="large"
+            loading={forceEnding}
+            onClick={handleForceEndStaleShift}
+            className="w-full h-12 text-base font-bold"
+          >
+            Kết thúc ca cũ & Nhận ca mới
+          </Button>
+          <Button
+            size="large"
+            onClick={handleLogout}
+            className="w-full h-12 text-base mt-3"
+          >
+            Đăng xuất
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (showShiftGate) {
     const staffName = jwtPayload?.fullName || jwtPayload?.userName || 'Nhân viên';

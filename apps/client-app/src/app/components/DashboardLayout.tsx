@@ -10,13 +10,15 @@ import { UserProvider, useUser } from '../contexts/UserContext';
 import ChatPanel from './ChatPanel';
 
 const navLinks = [
+  { href: '/dashboard/order', label: 'Dịch vụ ăn uống' },
   { href: '/dashboard/check-in', label: 'Điểm danh' },
   { href: '/dashboard/games', label: 'Trò chơi' },
-  { href: '/dashboard/order', label: 'Đặt hàng' },
   { href: '/dashboard/store', label: 'Đổi thưởng' },
   { href: '/dashboard/feedback', label: 'Gửi Phản Hồi' },
+  { href: '/dashboard/support', label: 'Hỗ trợ kỹ thuật' },
   { href: '/dashboard/battle-pass', label: 'Battle Pass' },
-  { href: '/dashboard/voucher', label: 'Voucher' },
+  { href: '/dashboard/events', label: 'Sự kiện có quà' },
+  { href: '/dashboard/voucher', label: 'Voucher của bạn' },
 ];
 
 export interface DashboardOutletContext {

@@ -520,6 +520,7 @@ const ShiftEndGate: React.FC<ShiftEndGateProps> = ({ onClose, primaryColor, work
         selectedReportType={drawerReportType}
         onSuccess={handleDrawerSuccess}
         defaultShift={currentShiftEnum as any}
+        forceEndStep
       />
     </>
   );

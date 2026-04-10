@@ -46,6 +46,20 @@ export default function HandoverReports() {
     [SHIFT_ENUM.TOI]: ['tối', 'toi'],
   };
 
+  /** Map WorkShift name → SHIFT_ENUM key */
+  const mapWorkShiftToEnum = (ws: any): string | null => {
+    const name = ws.name?.toLowerCase() || '';
+    for (const [enumKey, keywords] of Object.entries(SHIFT_NAME_KEYWORDS)) {
+      if (keywords.some((kw) => name.includes(kw))) return enumKey;
+    }
+    return null;
+  };
+
+  /** Thứ tự logic: sáng → tối → đêm (SANG → TOI → CHIEU) */
+  const sortedShifts: string[] = useMemo(() => {
+    return [SHIFT_ENUM.SANG, SHIFT_ENUM.TOI, SHIFT_ENUM.CHIEU];
+  }, []);
+
   const getWorkShiftName = (shift: string) => {
     const keywords = SHIFT_NAME_KEYWORDS[shift];
     const ws = workShifts.find((w: any) =>
@@ -97,23 +111,27 @@ export default function HandoverReports() {
     csvContent += `Báo cáo: ${REPORT_TYPE_LABELS[report.reportType]}\n`;
     csvContent += `Ngày: ${format(new Date(report.date), "dd/MM/yyyy")}\n\n`;
     
-    const sangName = getWorkShiftName(SHIFT_ENUM.SANG);
-    const chieuName = getWorkShiftName(SHIFT_ENUM.CHIEU);
-    const toiName = getWorkShiftName(SHIFT_ENUM.TOI);
+    const shiftStaffName = (shift: string) => {
+      if (shift === SHIFT_ENUM.SANG) return report.morningStaffName;
+      if (shift === SHIFT_ENUM.CHIEU) return report.afternoonStaffName;
+      return report.eveningStaffName;
+    };
 
     csvContent += "Nhân viên trực:\n";
-    csvContent += `${sangName}: ${report.morningStaffName || "Chưa có"}\n`;
-    csvContent += `${chieuName}: ${report.afternoonStaffName || "Chưa có"}\n`;
-    csvContent += `${toiName}: ${report.eveningStaffName || "Chưa có"}\n\n`;
+    for (const shift of sortedShifts) {
+      csvContent += `${getWorkShiftName(shift)}: ${shiftStaffName(shift) || "Chưa có"}\n`;
+    }
+    csvContent += "\n";
 
-    csvContent += `Tên HH,${sangName} (Tồn Đ,Nhập,Xuất/Hủy,Tồn C),${chieuName} (Tồn Đ,Nhập,Xuất/Hủy,Tồn C),${toiName} (Tồn Đ,Nhập,Xuất/Hủy,Tồn C)\n`;
-    
-    report.materials.forEach((mat) => {
-      const { morning: m, afternoon: a, evening: e } = mat;
+    csvContent += `Tên HH,${sortedShifts.map(s => `${getWorkShiftName(s)} (Tồn Đ,Nhập,Xuất/Hủy,Tồn C)`).join(',')}\n`;
+
+    report.materials.forEach((mat: any) => {
       csvContent += `${mat.materialName},`;
-      csvContent += `${m.beginning || 0},${m.received || 0},${m.issued || 0},${m.ending || 0},`;
-      csvContent += `${a.beginning || 0},${a.received || 0},${a.issued || 0},${a.ending || 0},`;
-      csvContent += `${e.beginning || 0},${e.received || 0},${e.issued || 0},${e.ending || 0}\n`;
+      csvContent += sortedShifts.map(s => {
+        const d = mat[shiftDataField(s)] || {};
+        return `${d.beginning || 0},${d.received || 0},${d.issued || 0},${d.ending || 0}`;
+      }).join(',');
+      csvContent += '\n';
     });
     
     const blob = new Blob([`\ufeff${  csvContent}`], { type: "text/csv;charset=utf-8;" });
@@ -126,6 +144,10 @@ export default function HandoverReports() {
     document.body.removeChild(link);
   };
 
+  /** Map shift enum → data field name (morning/afternoon/evening) */
+  const shiftDataField = (shift: string): string =>
+    shift === SHIFT_ENUM.SANG ? 'morning' : shift === SHIFT_ENUM.CHIEU ? 'afternoon' : 'evening';
+
   const columns: ColumnsType<any> = useMemo(() => {
     const report = reports[0];
     const metadata = report?.metadata || {};
@@ -136,33 +158,47 @@ export default function HandoverReports() {
 
       if (field === "beginning") {
          if (!isStarted) return "";
-         
+
          const beginningVal = val || 0;
          let isDiff = false;
-         
-         // Compare with previous shift ending if available
-         if (shift === SHIFT_ENUM.CHIEU) {
-            const morningEnded = metadata[SHIFT_ENUM.SANG]?.end;
-            if (morningEnded && beginningVal !== (record.morning?.ending || 0)) {
-               isDiff = true;
-            }
-         } else if (shift === SHIFT_ENUM.TOI) {
-            const afternoonEnded = metadata[SHIFT_ENUM.CHIEU]?.end;
-            if (afternoonEnded && beginningVal !== (record.afternoon?.ending || 0)) {
-               isDiff = true;
+
+         // Compare with previous shift ending (based on sorted order)
+         const idx = sortedShifts.indexOf(shift);
+         if (idx > 0) {
+            const prevShift = sortedShifts[idx - 1];
+            const prevEnded = metadata[prevShift]?.end;
+            if (prevEnded) {
+               const prevField = shiftDataField(prevShift);
+               if (beginningVal !== (record[prevField]?.ending || 0)) {
+                  isDiff = true;
+               }
             }
          }
-         
+
          return (
             <span style={isDiff ? { color: '#ff4d4f', fontWeight: 'bold' } : {}}>
                {beginningVal}
             </span>
          );
       }
-      
+
       // For received, issued, ending, only show if shift is ended
       return isEnded ? (val || 0) : "";
     };
+
+    const shiftColumns = sortedShifts.map((shift, i) => {
+      const dataField = shiftDataField(shift);
+      const isLast = i === sortedShifts.length - 1;
+      return {
+        title: getWorkShiftName(shift),
+        children: [
+          { title: "Tồn Đ.", dataIndex: [dataField, "beginning"], width: 80, align: 'center' as const, render: (val: any, record: any) => renderShiftCell(shift, "beginning", val, record) },
+          { title: "Nhập", dataIndex: [dataField, "received"], width: 80, align: 'center' as const, render: (val: any, record: any) => renderShiftCell(shift, "received", val, record) },
+          { title: "Xuất", dataIndex: [dataField, "issued"], width: 80, align: 'center' as const, render: (val: any, record: any) => renderShiftCell(shift, "issued", val, record) },
+          { title: "Tồn C.", dataIndex: [dataField, "ending"], width: 80, align: 'center' as const, className: !isLast ? 'border-r-2 border-r-gray-600' : '', render: (val: any, record: any) => renderShiftCell(shift, "ending", val, record) },
+        ],
+      };
+    });
 
     return [
       {
@@ -170,38 +206,12 @@ export default function HandoverReports() {
         dataIndex: "materialName",
         key: "materialName",
         width: 200,
-        fixed: 'left',
+        fixed: 'left' as const,
         className: 'border-r-2 border-r-gray-600',
       },
-      {
-        title: getWorkShiftName(SHIFT_ENUM.SANG),
-        children: [
-           { title: "Tồn Đ.", dataIndex: ["morning", "beginning"], width: 80, align: 'center', render: (val, record) => renderShiftCell(SHIFT_ENUM.SANG, "beginning", val, record) },
-           { title: "Nhập", dataIndex: ["morning", "received"], width: 80, align: 'center', render: (val, record) => renderShiftCell(SHIFT_ENUM.SANG, "received", val, record) },
-           { title: "Xuất", dataIndex: ["morning", "issued"], width: 80, align: 'center', render: (val, record) => renderShiftCell(SHIFT_ENUM.SANG, "issued", val, record) },
-           { title: "Tồn C.", dataIndex: ["morning", "ending"], width: 80, align: 'center', className: 'border-r-2 border-r-gray-600', render: (val, record) => renderShiftCell(SHIFT_ENUM.SANG, "ending", val, record) },
-        ]
-      },
-      {
-        title: getWorkShiftName(SHIFT_ENUM.CHIEU),
-        children: [
-           { title: "Tồn Đ.", dataIndex: ["afternoon", "beginning"], width: 80, align: 'center', render: (val, record) => renderShiftCell(SHIFT_ENUM.CHIEU, "beginning", val, record) },
-           { title: "Nhập", dataIndex: ["afternoon", "received"], width: 80, align: 'center', render: (val, record) => renderShiftCell(SHIFT_ENUM.CHIEU, "received", val, record) },
-           { title: "Xuất", dataIndex: ["afternoon", "issued"], width: 80, align: 'center', render: (val, record) => renderShiftCell(SHIFT_ENUM.CHIEU, "issued", val, record) },
-           { title: "Tồn C.", dataIndex: ["afternoon", "ending"], width: 80, align: 'center', className: 'border-r-2 border-r-gray-600', render: (val, record) => renderShiftCell(SHIFT_ENUM.CHIEU, "ending", val, record) },
-        ]
-      },
-      {
-        title: getWorkShiftName(SHIFT_ENUM.TOI),
-        children: [
-           { title: "Tồn Đ.", dataIndex: ["evening", "beginning"], width: 80, align: 'center', render: (val, record) => renderShiftCell(SHIFT_ENUM.TOI, "beginning", val, record) },
-           { title: "Nhập", dataIndex: ["evening", "received"], width: 80, align: 'center', render: (val, record) => renderShiftCell(SHIFT_ENUM.TOI, "received", val, record) },
-           { title: "Xuất", dataIndex: ["evening", "issued"], width: 80, align: 'center', render: (val, record) => renderShiftCell(SHIFT_ENUM.TOI, "issued", val, record) },
-           { title: "Tồn C.", dataIndex: ["evening", "ending"], width: 80, align: 'center', render: (val, record) => renderShiftCell(SHIFT_ENUM.TOI, "ending", val, record) },
-        ]
-      }
+      ...shiftColumns,
     ];
-  }, [reports, workShifts]);
+  }, [reports, workShifts, sortedShifts]);
 
   return (
     <div className="p-0">
@@ -265,7 +275,7 @@ export default function HandoverReports() {
         ) : (
            <div>
              <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {[SHIFT_ENUM.SANG, SHIFT_ENUM.CHIEU, SHIFT_ENUM.TOI].map((shift) => {
+                {sortedShifts.map((shift) => {
                    const m = reports[0].metadata || {};
                    const startTime = m[shift]?.start?.at;
                    const endTime = m[shift]?.end?.at;

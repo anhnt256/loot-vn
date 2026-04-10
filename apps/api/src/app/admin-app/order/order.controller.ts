@@ -152,6 +152,49 @@ export class OrderController {
     return { success: true, count: updated.count };
   }
 
+  /**
+   * POST /admin/orders/shift/force-end — kết thúc ca cũ qua ngày (stale shift)
+   * Không yêu cầu là shift owner. Chỉ cho phép khi ca bắt đầu trước ngày hôm nay.
+   */
+  @Post('shift/force-end')
+  async forceEndStaleShift(
+    @Headers('x-tenant-id') tenantId: string,
+    @CurrentUser() user: UserRequestContext,
+  ) {
+    if (!tenantId) throw new BadRequestException('x-tenant-id header is missing');
+    const parsedTenantId = parseInt(tenantId) || 1;
+
+    const db = await this.tenantGateway.getGatewayClient(tenantId);
+
+    const activeShift = await ((db as any).staffShift as any).findFirst({
+      where: { tenantId: parsedTenantId, isActive: true },
+    });
+    if (!activeShift) throw new BadRequestException('Không có ca nào đang hoạt động');
+
+    // Chỉ cho force-end khi ca bắt đầu trước ngày hôm nay
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (new Date(activeShift.startedAt) >= today) {
+      throw new BadRequestException('Ca hiện tại chưa qua ngày, không thể dùng force-end. Hãy kết ca bình thường.');
+    }
+
+    await ((db as any).staffShift as any).updateMany({
+      where: { tenantId: parsedTenantId, isActive: true },
+      data: { isActive: false, endedAt: new Date() },
+    });
+
+    // Xoá pause state
+    await redisService.setex(pauseKey(tenantId), 24 * 3600, {
+      resumeAt: null,
+      note: null,
+      pausedAt: new Date().toISOString(),
+    });
+    this.orderGateway.broadcastPause(tenantId, { resumeAt: null as any, note: null });
+    this.orderGateway.broadcastShiftEnd(tenantId);
+
+    return { success: true, message: `Đã kết thúc ca cũ của ${activeShift.staffName}` };
+  }
+
   /** GET /admin/orders/shift/current — lấy ca hiện tại đang active */
   @Get('shift/current')
   async getCurrentShift(

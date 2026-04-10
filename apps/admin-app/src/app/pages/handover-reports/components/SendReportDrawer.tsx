@@ -19,6 +19,8 @@ interface SendReportDrawerProps {
   onSuccess: () => void;
   /** Ca mặc định khi mở drawer (ưu tiên cao nhất) */
   defaultShift?: ShiftType;
+  /** Khi mở từ ShiftEndGate: bỏ qua bước START, vào thẳng END */
+  forceEndStep?: boolean;
 }
 
 interface Staff {
@@ -43,6 +45,7 @@ export default function SendReportDrawer({
   selectedReportType,
   onSuccess,
   defaultShift,
+  forceEndStep,
 }: SendReportDrawerProps) {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -263,6 +266,7 @@ export default function SendReportDrawer({
     // Auto-select step based on status
     if (isEnded) setStep('END');
     else if (isStarted) setStep('END');
+    else if (forceEndStep) setStep('END');
     else setStep('START');
 
     const mapped = availableMaterials.map((mat: any) => {
@@ -408,7 +412,8 @@ export default function SendReportDrawer({
         width: 120,
         render: (val, record) => {
           const isEnded = selectedShift ? getShiftCompleteStatus(selectedShift) : false;
-          const disabled = isEnded || step !== 'START';
+          const isStarted = selectedShift ? getShiftStartedStatus(selectedShift) : false;
+          const disabled = isEnded || (step === 'END' && isStarted);
           return (
             <Input 
                type="number"
@@ -552,24 +557,24 @@ export default function SendReportDrawer({
                     <div className="flex justify-center my-2 p-1 bg-gray-800 rounded-lg border border-gray-700">
                        <button
                           onClick={() => setStep('START')}
-                          disabled={getShiftStartedStatus(selectedShift)}
+                          disabled={getShiftStartedStatus(selectedShift) || forceEndStep}
                           className={`flex-1 py-2 px-4 rounded-md transition-all ${
-                             step === 'START' 
-                             ? 'text-white shadow-lg' 
+                             step === 'START'
+                             ? 'text-white shadow-lg'
                              : 'text-gray-400 hover:text-gray-200'
-                          } ${getShiftStartedStatus(selectedShift) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          } ${(getShiftStartedStatus(selectedShift) || forceEndStep) ? 'opacity-50 cursor-not-allowed' : ''}`}
                           style={step === 'START' ? { backgroundColor: 'var(--primary-color)' } : {}}
                        >
                           1. Báo cáo Đầu ca
                        </button>
                        <button
                           onClick={() => setStep('END')}
-                          disabled={!getShiftStartedStatus(selectedShift) || getShiftCompleteStatus(selectedShift)}
+                          disabled={(!getShiftStartedStatus(selectedShift) && !forceEndStep) || getShiftCompleteStatus(selectedShift)}
                           className={`flex-1 py-2 px-4 rounded-md transition-all ${
-                             step === 'END' 
-                             ? 'text-white shadow-lg' 
+                             step === 'END'
+                             ? 'text-white shadow-lg'
                              : 'text-gray-400 hover:text-gray-200'
-                          } ${(!getShiftStartedStatus(selectedShift) || getShiftCompleteStatus(selectedShift)) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          } ${((!getShiftStartedStatus(selectedShift) && !forceEndStep) || getShiftCompleteStatus(selectedShift)) ? 'opacity-50 cursor-not-allowed' : ''}`}
                           style={step === 'END' ? { backgroundColor: 'var(--primary-color)' } : {}}
                        >
                           2. Báo cáo Cuối ca
