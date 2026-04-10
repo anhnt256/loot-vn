@@ -490,10 +490,8 @@ export class HandoverReportService {
       const dateStr = new Date(date).toISOString().split('T')[0];
       const pad = (n: number) => String(n).padStart(2, '0');
 
-      const startTime = workShift.startTime;
-      const endTime = workShift.endTime;
-      const startTimeStr = `${pad(startTime.getUTCHours())}:${pad(startTime.getUTCMinutes())}:${pad(startTime.getUTCSeconds())}`;
-      const endTimeStr = `${pad(endTime.getUTCHours())}:${pad(endTime.getUTCMinutes())}:${pad(endTime.getUTCSeconds())}`;
+      const startTimeStr = `${workShift.startTime}:00`;
+      const endTimeStr = `${workShift.endTime}:00`;
 
       const shiftStartDatetime = `${dateStr} ${startTimeStr}`;
       let shiftEndDatetime: string;

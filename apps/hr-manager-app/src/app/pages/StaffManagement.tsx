@@ -532,7 +532,7 @@ const StaffManagement: React.FC = () => {
                           placeholder="Chọn ca làm việc"
                           allowClear
                           options={workShifts.map(shift => ({
-                            label: `${shift.name} (${dayjs(shift.startTime).format('HH:mm')} - ${dayjs(shift.endTime).format('HH:mm')})`,
+                            label: `${shift.name} (${shift.startTime} - ${shift.endTime})`,
                             value: shift.id
                           }))}
                         />

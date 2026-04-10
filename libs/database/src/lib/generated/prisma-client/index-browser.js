@@ -1447,6 +1447,8 @@ exports.Prisma.RequestOrderByRelevanceFieldEnum = {
 
 exports.Prisma.WorkShiftOrderByRelevanceFieldEnum = {
   name: 'name',
+  startTime: 'startTime',
+  endTime: 'endTime',
   ffoodId: 'ffoodId',
   momoId: 'momoId'
 };

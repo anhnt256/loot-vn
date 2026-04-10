@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Table, Button, Space, Typography, Tag, message, Modal, Input, Tooltip } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import { Clock } from 'lucide-react';
-import dayjs from 'dayjs';
 import { apiClient } from '@gateway-workspace/shared/utils';
 
 import WorkShiftModal from './components/WorkShiftModal';
@@ -77,7 +76,7 @@ const WorkShiftManagement: React.FC = () => {
         <Space direction="vertical" size={0}>
           <Space>
             <Tag color="blue" className="rounded-full font-medium">
-              {dayjs(record.startTime).format('HH:mm')} - {dayjs(record.endTime).format('HH:mm')}
+              {record.startTime} - {record.endTime}
             </Tag>
             {record.isOvernight && <Tag color="orange" className="rounded-full text-[10px]">Qua đêm</Tag>}
           </Space>

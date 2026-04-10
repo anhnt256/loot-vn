@@ -167,8 +167,8 @@ export class ShiftHandoverReportService {
             const shiftObj = {
               id: shift.id,
               name: shift.name,
-              startTime: dayjs(shift.startTime).format('HH:mm:ss'),
-              endTime: dayjs(shift.endTime).format('HH:mm:ss'),
+              startTime: shift.startTime,
+              endTime: shift.endTime,
               isOvernight: shift.isOvernight,
               branch: tenant.tenantId
             };

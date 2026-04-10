@@ -18,8 +18,8 @@ const WorkShiftModal: React.FC<WorkShiftModalProps> = ({ open, onClose, onSucces
       if (initialData) {
         form.setFieldsValue({
           ...initialData,
-          startTime: initialData.startTime ? dayjs(initialData.startTime) : null,
-          endTime: initialData.endTime ? dayjs(initialData.endTime) : null,
+          startTime: initialData.startTime ? dayjs(initialData.startTime, 'HH:mm') : null,
+          endTime: initialData.endTime ? dayjs(initialData.endTime, 'HH:mm') : null,
         });
       } else {
         form.resetFields();
